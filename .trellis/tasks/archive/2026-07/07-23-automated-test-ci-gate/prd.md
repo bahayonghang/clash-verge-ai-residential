@@ -24,13 +24,13 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1：现有 35 个测试在标准测试运行器下保持通过，新增安全扫描回归测试也通过。
-- [ ] AC2：`npm run ci` 在本地 Node.js 环境通过，且不读取被忽略的本地 TOML/生成脚本。
-- [ ] AC3：GitHub Actions 在 Ubuntu Node.js 18/20/22 和 Windows 最新 Node.js 上完成验证。
-- [ ] AC4：无论矩阵如何扩展，GitHub 都产生一个稳定命名、只有在全部验证成功时才成功的必需检查。
-- [ ] AC5：CI 工作流权限为只读，具备合理超时，并能取消同一 PR/分支的过期运行。
-- [ ] AC6：README 或贡献文档说明自动化与人工验证流程，PR 模板与该流程一致。
-- [ ] AC7：Trellis 质量规范准确反映最终测试命令、扫描范围和 GitHub CI 门禁。
+- [x] AC1：现有 35 个测试在标准测试运行器下保持通过，新增安全扫描回归测试也通过。
+- [x] AC2：`npm run ci` 在本地 Node.js 环境通过，且不读取被忽略的本地 TOML/生成脚本。
+- [x] AC3：GitHub Actions 在 Ubuntu Node.js 18/20/22 和 Windows 最新 Node.js 上完成验证。
+- [x] AC4：无论矩阵如何扩展，GitHub 都产生一个稳定命名、只有在全部验证成功时才成功的必需检查。
+- [x] AC5：CI 工作流权限为只读，具备合理超时，并能取消同一 PR/分支的过期运行。
+- [x] AC6：README 或贡献文档说明自动化与人工验证流程，PR 模板与该流程一致。
+- [x] AC7：Trellis 质量规范准确反映最终测试命令、扫描范围和 GitHub CI 门禁。
 
 ## Out of Scope
 

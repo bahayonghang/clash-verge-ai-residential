@@ -56,6 +56,100 @@ Windows with Node 22. Branch protection depends only on the stable
 routing, also test a sanitized real Clash profile when practical; the Node
 suite cannot emulate the Clash JavaScript host or Mihomo.
 
+## Scenario: Main Branch Protection
+
+### 1. Scope / Trigger
+
+Apply this contract whenever `.github/workflows/ci.yml`, the stable required
+job name, or GitHub `main` branch protection changes.
+
+### 2. Signatures
+
+- Read checks: `GET /repos/{owner}/{repo}/commits/{sha}/check-runs`
+- Apply protection: `PUT /repos/{owner}/{repo}/branches/main/protection`
+- Verify protection: `GET /repos/{owner}/{repo}/branches/main/protection`
+
+### 3. Contracts
+
+- Discover the successful `Required checks` run on the current `main` SHA and
+  bind protection to its GitHub App `app_id`; do not hardcode an unverified app.
+- Send `required_status_checks.strict = true` with app-bound `checks` containing
+  exactly `Required checks`.
+- Require pull requests with zero approvals for the single-maintainer repository,
+  enforce administrators, resolve conversations, and require linear history.
+- Disable force pushes and branch deletion. Do not add deployment, CODEOWNERS,
+  bypass-actor, or other-branch requirements without a separate decision.
+
+### 4. Validation & Error Matrix
+
+- Missing or unsuccessful `Required checks` on `main` -> stop before protection.
+- Environment PAT returns `403` -> clear `GH_TOKEN`/`GITHUB_TOKEN` for the
+  process and use the authenticated GitHub CLI keyring credential.
+- `required_status_checks` includes both legacy `contexts` and app-bound
+  `checks` -> GitHub may return `422`; omit `contexts` from the PUT request.
+- The GET response may derive a legacy `contexts` list from `checks`; verify its
+  names, but use `checks` and `app_id` as the authoritative app binding.
+- Any GET field differs from the approved contract -> fail verification and
+  inspect actual state before sending a corrective full request.
+
+### 5. Good / Base / Bad Cases
+
+- Good: all matrix jobs and `Required checks` pass on `main`, then protection is
+  applied and independently read back.
+- Base: a PR is blocked while checks are pending and becomes mergeable after the
+  current head SHA passes the stable gate.
+- Bad: direct administrator push, force push, deletion, a stale branch, or a
+  same-name check from an unbound app satisfies the policy.
+
+### 6. Tests Required
+
+- Assert the PR head SHA before merge and use `--match-head-commit`.
+- Assert all PR checks succeed, then assert the `main` push run succeeds.
+- Assert the protection GET response covers strict/app-bound checks, PR count,
+  administrators, conversations, linear history, force pushes, and deletion.
+- Complete the Trellis closeout through a protected PR to prove the maintenance
+  workflow remains usable without an administrator bypass.
+
+### 7. Wrong vs Correct
+
+Wrong `required_status_checks` fragment: legacy and app-bound selectors are
+mixed.
+
+```json
+{
+  "strict": true,
+  "contexts": [],
+  "checks": [
+    {"context": "Required checks", "app_id": 15368}
+  ]
+}
+```
+
+Correct PUT body after discovering `app_id` from the successful check run:
+
+```json
+{
+  "required_status_checks": {
+    "strict": true,
+    "checks": [
+      {"context": "Required checks", "app_id": 15368}
+    ]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "dismiss_stale_reviews": false,
+    "require_code_owner_reviews": false,
+    "required_approving_review_count": 0,
+    "require_last_push_approval": false
+  },
+  "restrictions": null,
+  "required_linear_history": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "required_conversation_resolution": true
+}
+```
+
 ## Security And Generated Files
 
 `HOME_PROXY_TEMPLATE.server`, `.username`, and `.password` must remain `"xxx"`
