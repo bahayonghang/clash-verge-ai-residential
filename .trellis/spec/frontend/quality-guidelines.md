@@ -28,10 +28,12 @@ Add focused assertions beside the relevant section in
 `tests/regression.test.js`. A new routed domain or regex requires both positive
 coverage for the intended AI endpoint and negative coverage for nearby shared,
 marketplace, update, CDN, media, advertising, telemetry, or public-DNS traffic.
-Migration changes require legacy cleanup and repeated-execution coverage.
-Renderer changes require successful-output and rejection coverage in
-`tests/sync-local-config.test.js`, including proof that the public template is
-unchanged.
+Managed-rule ownership changes require current-output cleanup, unknown/retired
+rule preservation, and repeated-execution coverage. Renderer changes require
+successful-output and rejection coverage in `tests/sync-local-config.test.js`,
+including proof that the public template is unchanged and failed validation
+does not create a partial output. Generated-script behavior should be probed in
+a separate Node process when a public default is overridden.
 
 ## Validation Gate
 

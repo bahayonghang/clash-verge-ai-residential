@@ -2,7 +2,7 @@
 
 ## Residential SOCKS5
 
-Use the ignored `clash-verge-ai-residential.local.toml` to store local endpoint and credential values, then run `just render-local` to produce `clash-verge-ai-residential.local.js`. Do not edit the public `clash-verge-ai-residential.js` template with real values.
+Use the ignored `clash-verge-ai-residential.local.toml` to store local endpoint, credential, and switch values, then run `just render-local` or `node scripts/sync-local-config.js` to produce `clash-verge-ai-residential.local.js`. Do not edit the public template or the generated script; change the TOML and render again.
 
 ```toml
 [home_proxy]
@@ -40,21 +40,40 @@ The final `HOME_PROXY_TEMPLATE["dialer-proxy"]` value remains the preferred cros
 
 ## Scope switches
 
-The defaults intentionally minimize residential traffic. Keep shared dependencies and process-wide fallbacks disabled unless a captured connection proves they are required:
+The optional `[routing]` and `[runtime]` TOML tables accept partial overrides. Omitted keys inherit the public-script defaults. The defaults intentionally minimize residential traffic; enabling permissive or shared-infrastructure switches can change privacy, cost, compatibility, and traffic scope.
 
-```javascript
-const ROUTE_OPENAI_SHARED_DEPENDENCIES = false;
-const ROUTE_CLAUDE_SHARED_DEPENDENCIES = false;
-const ROUTE_ANTIGRAVITY_GOOGLE_AUTH = false;
-const ROUTE_ANTIGRAVITY_PROJECT_APIS = false;
-const ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY = false;
-const ROUTE_CURSOR_PROCESS_FALLBACK = false;
-const ROUTE_SHARED_REALTIME_INFRASTRUCTURE = false;
-const ROUTE_GLOBAL_REALTIME_PORTS = false;
-const ROUTE_PUBLIC_ENCRYPTED_DNS = false;
-```
+### Routing table
 
-Enabling a switch changes the privacy and cost boundary. Add a regression test for every switch change.
+| TOML key | JavaScript constant | Default | Effect | Dependency or risk |
+| --- | --- | --- | --- | --- |
+| `routing.openai_shared_dependencies` | `ROUTE_OPENAI_SHARED_DEPENDENCIES` | `false` | Routes OpenAI shared identity, support, telemetry, and payment dependencies. | Expands beyond model traffic. |
+| `routing.claude_shared_dependencies` | `ROUTE_CLAUDE_SHARED_DEPENDENCIES` | `false` | Routes Claude analytics, support, risk-control, and other shared dependencies. | Expands beyond model traffic. |
+| `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `false` | Routes the shared Google authentication entry used by Antigravity. | Can affect authentication for other Google products. |
+| `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | Routes project-management APIs such as Service Usage, Resource Manager, IAM, and API Hub. | These are project configuration rather than inference. |
+| `routing.antigravity_update_and_telemetry` | `ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY` | `false` | Routes Antigravity updates, extension marketplace, and telemetry. | Expands into update and analytics traffic. |
+| `routing.gemini_web_core` | `ROUTE_GEMINI_WEB_CORE` | `true` | Routes Gemini Web and Google AI Studio product endpoints. | None. |
+| `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `false` | Routes Cursor AI APIs, Tab, Agent, indexing, Cloud Agent, and product-specific authentication. | Cursor users must opt in explicitly. |
+| `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | Adds Cursor process-level fallback rules. | Requires `routing.ai_process_fallback = true` and can capture non-AI requests. |
+| `routing.claude_code_auxiliary` | `ROUTE_CLAUDE_CODE_AUXILIARY` | `false` | Routes Claude Code installation, update, documentation, and package endpoints. | These are auxiliary rather than inference traffic. |
+| `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | Adds process-level fallbacks for known AI applications. | Can capture non-AI requests made by those processes. |
+| `routing.anthropic_ip_fallback` | `ENABLE_ANTHROPIC_IP_FALLBACK` | `true` | Routes Anthropic's official inbound IP ranges when domain matching is unavailable. | None. |
+| `routing.shared_realtime_infrastructure` | `ROUTE_SHARED_REALTIME_INFRASTRUCTURE` | `false` | Routes shared STUN/TURN infrastructure. | Can capture realtime traffic from unrelated applications. |
+| `routing.global_realtime_ports` | `ROUTE_GLOBAL_REALTIME_PORTS` | `false` | Adds broad realtime UDP-port rules. | Requires `routing.shared_realtime_infrastructure = true`; scope is intentionally broad. |
+| `routing.public_encrypted_dns` | `ROUTE_PUBLIC_ENCRYPTED_DNS` | `false` | Routes public DoH/DoT services. | Affects shared DNS traffic. |
+
+### Runtime table
+
+| TOML key | JavaScript constant | Default | Effect | Dependency or risk |
+| --- | --- | --- | --- | --- |
+| `runtime.allow_final_rule_upstream_fallback` | `ALLOW_FINAL_RULE_UPSTREAM_FALLBACK` | `true` | Tries the final `MATCH` / `FINAL` target when named candidates do not match. | The target still passes structural and recursion validation. |
+| `runtime.allow_heuristic_upstream_fallback` | `ALLOW_HEURISTIC_UPSTREAM_FALLBACK` | `false` | Guesses an upstream from group-name semantics. | Used only after earlier candidates fail and can choose the wrong exit. |
+| `runtime.preserve_unmanaged_nameserver_policy` | `PRESERVE_UNMANAGED_NAMESERVER_POLICY` | `false` | Preserves subscription `nameserver-policy` entries not managed by the script. | Relaxes the strict DNS-rebuild boundary. |
+| `runtime.enable_domain_sniffer` | `ENABLE_DOMAIN_SNIFFER` | `true` | Hardens domain sniffing for IP-only connections and missing DNS mappings. | Does not globally override destinations. |
+| `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | Completes DNS-hijack entries for an already enabled TUN. | Effective only when the Profile has TUN enabled. |
+| `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | Enables `strict-route` on the existing TUN. | Requires enabled TUN and `runtime.harden_existing_tun_dns_hijack = true`; may affect VMs or special routes. |
+| `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | Warns when a reachable child group or node explicitly disables UDP. | A top-level upstream with UDP disabled still fails validation. |
+
+The detailed Chinese-language setup guide in [Local TOML configuration and sync](local-configuration.md) includes both `just` and direct Node workflows. Keep shared dependencies and process-wide fallbacks disabled unless sanitized connection evidence proves they are required.
 
 ## Clash Verge Rev settings
 

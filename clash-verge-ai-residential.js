@@ -2,21 +2,20 @@
 
 /**
  * Clash Verge Rev 全局扩展脚本
- * Claude / ChatGPT / Gemini / Google Antigravity / Cursor AI 核心家宽链路 · v5.4
+ * Claude / ChatGPT / Gemini / Google Antigravity 核心家宽链路 · Cursor 可选 · v5.5
  *
  * 数据路径：
  *   本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
  *
- * v5.4 重点：
+ * v5.5 重点：
  *   - 默认只让 AI 产品核心、模型推理、代码补全、Agent、索引与产品专属认证流量走家宽。
- *   - 删除 Cursor 插件市场、更新、下载、CDN、Remote-SSH 资产等非推理地址。
+ *   - Cursor 核心路由默认关闭；需要时可通过本地 TOML 或脚本开关启用。
+ *   - 删除 Cursor 冗余匹配，保留窄范围 API、Tab、Agent 与索引目录。
  *   - 不注入 YouTube、Maps、广告、统计、通用 Google 静态资源等共享域名。
- *   - Cursor 不再使用 cursor.sh / cursor.com / cursorapi.com / cursor-cdn.com 宽泛后缀。
  *   - 默认关闭进程级兜底、共享遥测、通用 STUN/TURN、公共 DoH/DoT 劫持。
  *   - AI 域名 DNS 经家宽；其他域名 DNS 经当前 Profile 的机场上游，不再默认占用家宽。
- *   - Vertex AI 与 Cursor 滚动端点使用窄范围 DOMAIN-REGEX；已知主机同时进入 DNS policy。
- *   - 保留多 Profile 上游解析、递归链防护、严格配置校验与幂等迁移。
- *   - 自动清理 v5.3 的宽泛规则和旧 DNS policy。
+ *   - 保留多 Profile 上游解析、递归链防护、严格配置校验与幂等重建。
+ *   - 只清理当前版本可生成的托管规则；未知用户规则始终保留。
  *
  * 运行环境：Clash Verge Rev 的 JavaScript 扩展脚本环境。
  * 入口签名：main(config, profileName)
@@ -28,10 +27,9 @@
 // 0. 脚本标识与保留名称
 // ============================================================
 
-const SCRIPT_VERSION = "5.4.0";
+const SCRIPT_VERSION = "5.5.0";
 const AI_GROUP = "AI-家宽";
 const HOME_PROXY_NAME = "家宽-SOCKS5";
-const LEGACY_GROUPS = ["Claude-家宽"];
 
 // ============================================================
 // 1. 用户配置
@@ -114,8 +112,8 @@ const ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY = false;
 // Gemini Web / Google AI Studio 产品入口。
 const ROUTE_GEMINI_WEB_CORE = true;
 
-// Cursor AI API、Tab、Agent、索引、Cloud Agent 与产品专属认证。
-const ROUTE_CURSOR_CORE = true;
+// Cursor AI API、Tab、Agent、索引、Cloud Agent 与产品专属认证；默认关闭。
+const ROUTE_CURSOR_CORE = false;
 
 // Cursor 进程会访问插件市场、GitHub、npm、MCP 和用户后端；默认不做进程级全量代理。
 const ROUTE_CURSOR_PROCESS_FALLBACK = false;
@@ -221,7 +219,6 @@ const CURSOR_SUFFIX_DOMAINS = [
 const CURSOR_EXACT_DOMAINS = [
   "api3.cursor.sh",
   "api4.cursor.sh",
-  "repo42.cursor.sh",
   "authenticator.cursor.sh",
 
   // Cursor Cloud Agent / Bugbot AI API；不会匹配 cursor.com 其他页面。
@@ -229,77 +226,8 @@ const CURSOR_EXACT_DOMAINS = [
 ];
 
 const CURSOR_DOMAIN_REGEXES = [
-  // Cursor API5 的滚动子域，例如 agent.api5.cursor.sh。
-  "^[a-z0-9-]+\\.api5\\.cursor\\.sh$",
-
   // 代码库索引端点可能滚动编号，例如 repo42.cursor.sh。
-  "^repo[0-9]+\\.cursor\\.sh$",
-
-  // Cursor Tab 的区域化 GCPP 端点。
-  "^(?:us-asia|us-eu|us-only)\\.gcpp\\.cursor\\.sh$"
-];
-
-// 仅用于删除 v5.3 及更早版本注入的宽泛/非推理规则，不会重新注入。
-const LEGACY_V53_SUFFIX_DOMAINS = [
-  "anthropic.com",
-  "openai.com",
-  "oaistatic.com",
-  "oaistatsig.com",
-  "gemini.google",
-  "cursor.sh",
-  "cursor.com",
-  "cursorapi.com",
-  "cursor-cdn.com"
-];
-
-const LEGACY_V53_NON_AI_EXACT_DOMAINS = [
-  // 旧 Claude/OpenAI Web、认证和静态基础设施
-  "servd-anthropic-website.b-cdn.net",
-  "anthropic.com.cdn.cloudflare.net",
-  "anthropic.auth0.com",
-  "anthropic-com.ghost.io",
-  "cdn.openaimerge.com",
-
-  // 旧 Gemini 共享/辅助主机：产品 UI、YouTube、Maps、广告与遥测
-  "jnn-pa.googleapis.com",
-  "waa-pa.clients6.google.com",
-  "ogads-pa.clients6.google.com",
-  "optimizationguide-pa.googleapis.com",
-  "content-autofill.googleapis.com",
-  "lh5.googleusercontent.com",
-  "www.googleapis.com",
-  "ssl.gstatic.com",
-  "fonts.googleapis.com",
-  "play.google.com",
-  "ogs.google.com",
-  "www.google.com",
-  "apis.google.com",
-  "i.ytimg.com",
-  "yt3.ggpht.com",
-  "lh3.googleusercontent.com",
-  "maps.gstatic.com",
-  "lh3.google.com",
-  "csp.withgoogle.com",
-  "www.youtube.com",
-  "fonts.gstatic.com",
-  "maps.googleapis.com",
-  "www.gstatic.com",
-  "encrypted-tbn0.gstatic.com",
-  "encrypted-tbn1.gstatic.com",
-  "encrypted-tbn2.gstatic.com",
-  "encrypted-tbn3.gstatic.com",
-  "streetviewpixels-pa.googleapis.com",
-  "www.googletagmanager.com",
-  "static.doubleclick.net",
-  "td.doubleclick.net",
-  "googleads.g.doubleclick.net",
-  "www.google-analytics.com",
-
-  // 旧 Cursor 插件市场、下载、CDN、更新和远程开发资产
-  "marketplace.cursorapi.com",
-  "downloads.cursor.com",
-  "anysphere-binaries.s3.us-east-1.amazonaws.com",
-  "cursor.blob.core.windows.net"
+  "^repo[0-9]+\\.cursor\\.sh$"
 ];
 
 const OPENAI_SHARED_SUFFIX_DOMAINS = [
@@ -372,13 +300,6 @@ const CLAUDE_CODE_AUXILIARY_EXACT_DOMAINS = [
   "raw.githubusercontent.com",
   "formulae.brew.sh",
   "registry.npmjs.org"
-];
-
-// 仅用于清理 v4/v5.0 旧规则，不会默认重新注入。
-const LEGACY_EXACT_DOMAINS = [
-  "antigravity.google.com",
-  "www.googleapis.com",
-  "ws.chatgpt.com"
 ];
 
 // ============================================================
@@ -465,6 +386,9 @@ function buildUpstreamDoh(upstreamName) {
 
   if (!target) {
     throw new Error(`[${AI_GROUP}] 无法为非 AI DNS 构造机场上游`);
+  }
+  if (/[#&]/.test(target)) {
+    throw new Error(`[${AI_GROUP}] 非 AI DNS 上游名称“${target}”不能包含 # 或 &`);
   }
 
   return NON_AI_DOH_ENDPOINTS.map(
@@ -606,7 +530,6 @@ function isForbiddenUpstreamName(name) {
   return [
     AI_GROUP,
     HOME_PROXY_NAME,
-    ...LEGACY_GROUPS,
     "DIRECT",
     "REJECT",
     "REJECT-DROP",
@@ -653,12 +576,6 @@ function validateReservedNameCollisions(config) {
   }
   if (findNamedItem(proxies, AI_GROUP)) {
     throw new Error(`[${AI_GROUP}] 保留名称“${AI_GROUP}”已被代理节点占用`);
-  }
-
-  for (const legacyName of LEGACY_GROUPS) {
-    if (findNamedItem(proxies, legacyName)) {
-      throw new Error(`[${AI_GROUP}] 旧保留名称“${legacyName}”已被代理节点占用`);
-    }
   }
 
   const existingHome = findNamedItem(proxies, HOME_PROXY_NAME);
@@ -924,7 +841,7 @@ function validateHomeProxy(homeProxy) {
 // ============================================================
 
 function injectedNames() {
-  return [HOME_PROXY_NAME, AI_GROUP, ...LEGACY_GROUPS];
+  return [HOME_PROXY_NAME, AI_GROUP];
 }
 
 function groupHasAlternativeSource(group) {
@@ -1118,7 +1035,6 @@ function allPossibleSuffixDomains() {
     ...CORE_SUFFIX_DOMAINS,
     ...GEMINI_WEB_SUFFIX_DOMAINS,
     ...CURSOR_SUFFIX_DOMAINS,
-    ...LEGACY_V53_SUFFIX_DOMAINS,
     ...OPENAI_SHARED_SUFFIX_DOMAINS,
     ...CLAUDE_SHARED_SUFFIX_DOMAINS,
     ...ANTIGRAVITY_UPDATE_AND_TELEMETRY_SUFFIX_DOMAINS,
@@ -1131,15 +1047,13 @@ function allPossibleExactDomains() {
     ...CORE_EXACT_DOMAINS,
     ...GEMINI_WEB_EXACT_DOMAINS,
     ...CURSOR_EXACT_DOMAINS,
-    ...LEGACY_V53_NON_AI_EXACT_DOMAINS,
     ...OPENAI_SHARED_EXACT_DOMAINS,
     ...CLAUDE_SHARED_EXACT_DOMAINS,
     ...ANTIGRAVITY_GOOGLE_AUTH_DOMAINS,
     ...ANTIGRAVITY_PROJECT_API_DOMAINS,
     ...ANTIGRAVITY_UPDATE_AND_TELEMETRY_EXACT_DOMAINS,
     ...CLAUDE_CODE_AUXILIARY_EXACT_DOMAINS,
-    ...REALTIME_EXACT_DOMAINS,
-    ...LEGACY_EXACT_DOMAINS
+    ...REALTIME_EXACT_DOMAINS
   ]);
 }
 
@@ -1273,89 +1187,37 @@ function buildInjectedRules() {
 }
 
 // ============================================================
-// 11. 旧规则清理与迁移
+// 11. 当前版本托管规则清理
 // ============================================================
-
-const LEGACY_RULE_TEMPLATES = [
-  "DOMAIN-KEYWORD,datadog,{GROUP}",
-  "DOMAIN-KEYWORD,sift,{GROUP}",
-  "DOMAIN-KEYWORD,stun,{GROUP}",
-  "DOMAIN-KEYWORD,turn,{GROUP}",
-  "DOMAIN-SUFFIX,stun.l.google.com,{GROUP}",
-  "DST-PORT,3478-3481,{GROUP}",
-  "DST-PORT,19302-19309,{GROUP}",
-  "IP-CIDR,160.79.104.0/21,{GROUP},no-resolve",
-  "IP-CIDR6,2607:6bc0::/32,{GROUP},no-resolve",
-  "IP-ASN,399358,{GROUP},no-resolve"
-];
-
-const LEGACY_PROCESS_RULE_TEMPLATES = [
-  "PROCESS-NAME-REGEX,(?i)^(?:antigravity(?:[ _-]ide)?|chatgpt(?: helper.*)?|claude(?: desktop)?)(?:\\.exe)?$,{GROUP}",
-  "PROCESS-PATH-REGEX,(?i).*[/\\\\](?:antigravity|chatgpt|claude)(?:[ _-][^/\\\\]+)?[/\\\\].*,{GROUP}"
-];
 
 function buildManagedRuleSet() {
   const managed = new Set(buildPrivateDirectRules());
-  const targets = [AI_GROUP, ...LEGACY_GROUPS];
-
-  for (const target of targets) {
-    for (const domain of allPossibleSuffixDomains()) {
-      managed.add(`DOMAIN-SUFFIX,${domain},${target}`);
-    }
-    for (const domain of allPossibleExactDomains()) {
-      managed.add(`DOMAIN,${domain},${target}`);
-    }
-    for (const pattern of allPossibleDomainRegexes()) {
-      managed.add(`DOMAIN-REGEX,${pattern},${target}`);
-    }
-    for (const domain of REALTIME_SUFFIX_DOMAINS) {
-      managed.add(`DOMAIN-SUFFIX,${domain},${target}`);
-    }
-    for (const rule of buildRealtimeRules(target, true)) managed.add(rule);
-    for (const rule of buildDnsLeakRules(target, true)) managed.add(rule);
-    for (const rule of buildAllProcessRules(target)) managed.add(rule);
-    for (const template of ANTHROPIC_INBOUND_IP_RULE_TEMPLATES) {
-      managed.add(template.replace("{GROUP}", target));
-    }
-    for (const template of LEGACY_RULE_TEMPLATES) {
-      managed.add(template.replace("{GROUP}", target));
-    }
-    for (const template of LEGACY_PROCESS_RULE_TEMPLATES) {
-      managed.add(template.replace("{GROUP}", target));
-    }
+  for (const domain of allPossibleSuffixDomains()) {
+    managed.add(`DOMAIN-SUFFIX,${domain},${AI_GROUP}`);
+  }
+  for (const domain of allPossibleExactDomains()) {
+    managed.add(`DOMAIN,${domain},${AI_GROUP}`);
+  }
+  for (const pattern of allPossibleDomainRegexes()) {
+    managed.add(`DOMAIN-REGEX,${pattern},${AI_GROUP}`);
+  }
+  for (const rule of buildRealtimeRules(AI_GROUP, true)) managed.add(rule);
+  for (const rule of buildDnsLeakRules(AI_GROUP, true)) managed.add(rule);
+  for (const rule of buildAllProcessRules(AI_GROUP)) managed.add(rule);
+  for (const template of ANTHROPIC_INBOUND_IP_RULE_TEMPLATES) {
+    managed.add(template.replace("{GROUP}", AI_GROUP));
   }
 
   return managed;
 }
 
-function migrateLegacyRuleTarget(rule) {
-  if (typeof rule !== "string") return rule;
-  const parts = rule.split(",");
-  let changed = false;
-
-  for (let index = 0; index < parts.length; index += 1) {
-    const trimmed = parts[index].trim();
-    if (LEGACY_GROUPS.indexOf(trimmed) !== -1) {
-      const prefixLength = parts[index].length - parts[index].trimStart().length;
-      const suffixLength = parts[index].length - parts[index].trimEnd().length;
-      parts[index] =
-        parts[index].slice(0, prefixLength) +
-        AI_GROUP +
-        (suffixLength > 0 ? parts[index].slice(parts[index].length - suffixLength) : "");
-      changed = true;
-    }
-  }
-
-  return changed ? parts.join(",") : rule;
-}
-
-function cleanAndMigrateExistingRules(rules) {
+function cleanExistingManagedRules(rules) {
   const managed = buildManagedRuleSet();
   const result = [];
 
   for (const rule of Array.isArray(rules) ? rules : []) {
     if (typeof rule === "string" && managed.has(rule)) continue;
-    result.push(migrateLegacyRuleTarget(rule));
+    result.push(rule);
   }
 
   return dedupeRuleEntries(result);
@@ -1486,27 +1348,6 @@ function upsertNamedItem(items, item) {
   return result;
 }
 
-function migrateLegacyGroupReferences(groups) {
-  const result = Array.isArray(groups) ? groups : [];
-
-  for (const group of result) {
-    if (!group || !Array.isArray(group.proxies)) continue;
-    group.proxies = uniqueStrings(
-      group.proxies.map((name) =>
-        LEGACY_GROUPS.indexOf(name) !== -1 ? AI_GROUP : name
-      )
-    );
-  }
-
-  return result;
-}
-
-function removeLegacyGroups(groups) {
-  return (Array.isArray(groups) ? groups : []).filter(
-    (group) => !group || LEGACY_GROUPS.indexOf(group.name) === -1
-  );
-}
-
 function buildAiGroup(config) {
   const existing = findNamedItem(config["proxy-groups"], AI_GROUP) || {};
   return {
@@ -1586,48 +1427,44 @@ function main(config, profileName) {
   if (!Array.isArray(config["proxy-groups"])) config["proxy-groups"] = [];
   if (!Array.isArray(config.rules)) config.rules = [];
 
-  // 1. 在任何覆盖或迁移前检查保留名称，防止静默破坏用户配置。
+  // 1. 在任何覆盖前检查保留名称，防止静默破坏用户配置。
   validateReservedNameCollisions(config);
 
   // 2. 为当前 Profile 动态解析一个真实存在的上游名称。
   const upstreamName = resolveUpstreamName(config, profileName);
 
-  // 3. 迁移旧组引用并移除旧组本体。
-  config["proxy-groups"] = migrateLegacyGroupReferences(config["proxy-groups"]);
-  config["proxy-groups"] = removeLegacyGroups(config["proxy-groups"]);
-
-  // 4. 防止 include-all / 嵌套组把家宽节点重新纳入上游，形成递归链。
+  // 3. 防止 include-all / 嵌套组把家宽节点重新纳入上游，形成递归链。
   hardenAllIncludeAllGroups(config["proxy-groups"]);
   hardenReachableUpstreamGraph(config, upstreamName);
   validateTopLevelUpstream(config, upstreamName);
 
-  // 5. 构建家宽 SOCKS5，dialer-proxy 始终是单一、已解析名称。
+  // 4. 构建家宽 SOCKS5，dialer-proxy 始终是单一、已解析名称。
   const homeProxy = buildHomeProxy(config, upstreamName);
   validateHomeProxy(homeProxy);
   config.proxies = upsertNamedItem(config.proxies, homeProxy);
 
-  // 6. 注入统一 AI 出口组；不提供 DIRECT 回退，故障时 fail closed。
+  // 5. 注入统一 AI 出口组；不提供 DIRECT 回退，故障时 fail closed。
   config["proxy-groups"] = upsertNamedItem(
     config["proxy-groups"],
     buildAiGroup(config)
   );
 
-  // 7. 精确清理脚本管理的旧规则；未知自定义规则保留并迁移旧组目标。
-  const existingRules = cleanAndMigrateExistingRules(config.rules);
+  // 6. 精确清理当前版本管理的规则；未知自定义规则原样保留。
+  const existingRules = cleanExistingManagedRules(config.rules);
   config.rules = dedupeRuleEntries([
     ...buildInjectedRules(),
     ...existingRules
   ]);
 
-  // 8. 重建严格 DNS 路径。
+  // 7. 重建严格 DNS 路径。
   config.dns = buildDnsConfig(config.dns, upstreamName);
 
-  // 9. 加固用户已经启用的 TUN 与域名嗅探；进程级全量代理默认关闭。
+  // 8. 加固用户已经启用的 TUN 与域名嗅探；进程级全量代理默认关闭。
   hardenTun(config);
   hardenSniffer(config);
   ensureProcessLookup(config);
 
-  // 10. 统一关闭 Mihomo IPv6；操作系统层仍需由 TUN/系统路由约束。
+  // 9. 统一关闭 Mihomo IPv6；操作系统层仍需由 TUN/系统路由约束。
   config.ipv6 = false;
 
   info(
@@ -1647,7 +1484,7 @@ if (typeof module !== "undefined" && module.exports) {
     buildUpstreamDoh,
     buildInjectedRules,
     buildNameserverPolicy,
-    cleanAndMigrateExistingRules,
+    cleanExistingManagedRules,
     constants: {
       SCRIPT_VERSION,
       AI_GROUP,
@@ -1668,9 +1505,7 @@ if (typeof module !== "undefined" && module.exports) {
       GEMINI_DOMAIN_REGEXES,
       CURSOR_SUFFIX_DOMAINS,
       CURSOR_EXACT_DOMAINS,
-      CURSOR_DOMAIN_REGEXES,
-      LEGACY_V53_SUFFIX_DOMAINS,
-      LEGACY_V53_NON_AI_EXACT_DOMAINS
+      CURSOR_DOMAIN_REGEXES
     }
   };
 }

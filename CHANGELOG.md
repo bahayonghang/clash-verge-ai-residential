@@ -9,6 +9,30 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - Add sanitized real-profile integration fixtures.
 - Add automated domain-source freshness checks where upstream providers publish machine-readable inventories.
 
+## [5.5.0] - 2026-07-23
+
+### Added
+
+- Optional `[routing]` and `[runtime]` local TOML tables covering every scalar user switch while preserving home-proxy-only configuration files.
+- Exact-one boolean-anchor validation and atomic local-script rendering for partial switch overrides.
+- Validation that rejects upstream names containing `#` or `&` before constructing a Mihomo DoH URL.
+- Complete `just render-local` and direct Node setup paths, with the Clash Verge Rev Global Extend Script screenshot.
+
+### Changed
+
+- Cursor core routing is now opt-in and disabled by default; the narrow catalog remains available through `routing.cursor_core = true`.
+- Removed three redundant Cursor catalog matches covered by retained suffix or bounded repository rules.
+- Current-version managed rules are still replaced when switches change, while unknown rules targeting `AI-家宽` remain user-owned.
+- Documented the retained strict-DNS first-query latency trade-off and the original-Profile login versus residential model-traffic exit split.
+
+### Removed
+
+- Removed the unreleased pre-v5.4 legacy migration catalogs, retargeting, group-reference migration, and legacy-group cleanup.
+- If v5.4 generated output was manually persisted in a subscription or Merge layer, remove these now-retired user-owned rules there before refreshing:
+  - `DOMAIN,repo42.cursor.sh,AI-家宽`
+  - `DOMAIN-REGEX,^[a-z0-9-]+\.api5\.cursor\.sh$,AI-家宽`
+  - `DOMAIN-REGEX,^(?:us-asia|us-eu|us-only)\.gcpp\.cursor\.sh$,AI-家宽`
+
 ## [5.4.0] - 2026-07-22
 
 ### Added

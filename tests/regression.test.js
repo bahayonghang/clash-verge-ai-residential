@@ -12,7 +12,7 @@ const {
   buildInjectedRules,
   buildNameserverPolicy,
   buildUpstreamDoh,
-  cleanAndMigrateExistingRules,
+  cleanExistingManagedRules,
   constants
 } = script;
 
@@ -33,9 +33,7 @@ const {
   GEMINI_DOMAIN_REGEXES,
   CURSOR_SUFFIX_DOMAINS,
   CURSOR_EXACT_DOMAINS,
-  CURSOR_DOMAIN_REGEXES,
-  LEGACY_V53_SUFFIX_DOMAINS,
-  LEGACY_V53_NON_AI_EXACT_DOMAINS
+  CURSOR_DOMAIN_REGEXES
 } = constants;
 
 let passed = 0;
@@ -173,7 +171,7 @@ function assertAiRoute(rules, hosts) {
 // ---------------------------------------------------------------------------
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
-  assert.equal(SCRIPT_VERSION, "5.4.0");
+  assert.equal(SCRIPT_VERSION, "5.5.0");
   assert.equal(template["dialer-proxy"], "🚀节点选择");
 });
 
@@ -394,17 +392,28 @@ test("Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走�
   ]);
 });
 
-test("Cursor 仅匹配 AI API、Tab、Agent、索引、Cloud Agent 与专属认证", () => {
-  assert.equal(ROUTE_CURSOR_CORE, true);
+test("Cursor 核心路由默认关闭，并保留窄范围目录供本地选择性开启", () => {
+  assert.equal(ROUTE_CURSOR_CORE, false);
   assert.deepEqual(
     CURSOR_SUFFIX_DOMAINS,
     ["api2.cursor.sh", "api5.cursor.sh", "gcpp.cursor.sh", "authentication.cursor.sh"]
   );
-  assert.ok(CURSOR_EXACT_DOMAINS.includes("api.cursor.com"));
-  assert.ok(CURSOR_DOMAIN_REGEXES.includes("^repo[0-9]+\\.cursor\\.sh$"));
+  assert.deepEqual(
+    CURSOR_EXACT_DOMAINS,
+    ["api3.cursor.sh", "api4.cursor.sh", "authenticator.cursor.sh", "api.cursor.com"]
+  );
+  assert.deepEqual(CURSOR_DOMAIN_REGEXES, ["^repo[0-9]+\\.cursor\\.sh$"]);
+  assert.equal(
+    new RegExp(CURSOR_DOMAIN_REGEXES[0]).test("repo42.cursor.sh"),
+    true
+  );
+  assert.equal(
+    new RegExp(CURSOR_DOMAIN_REGEXES[0]).test("repo99.cursor.sh"),
+    true
+  );
 
   const rules = buildInjectedRules();
-  assertAiRoute(rules, [
+  assertNoAiRoute(rules, [
     "api2.cursor.sh",
     "feature.api2.cursor.sh",
     "api3.cursor.sh",
@@ -473,6 +482,7 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "sentry.io",
     "statsigapi.net",
     "js.stripe.com",
+    "auth.openai.com",
     "accounts.google.com",
     "serviceusage.googleapis.com",
     "update.googleapis.com",
@@ -481,37 +491,39 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
 });
 
 // ---------------------------------------------------------------------------
-// 迁移与幂等
+// 当前托管规则与幂等
 // ---------------------------------------------------------------------------
 
-test("v5.3 宽泛 Cursor/Gemini 与非 AI 规则会被精确清理", () => {
-  assert.ok(LEGACY_V53_SUFFIX_DOMAINS.includes("cursor.com"));
-  assert.ok(LEGACY_V53_NON_AI_EXACT_DOMAINS.includes("www.youtube.com"));
-  assert.ok(LEGACY_V53_NON_AI_EXACT_DOMAINS.includes("marketplace.cursorapi.com"));
-
-  const oldRules = [
-    `DOMAIN-SUFFIX,oaistatic.com,${AI_GROUP}`,
-    `DOMAIN-SUFFIX,cursor.sh,${AI_GROUP}`,
+test("开关关闭后清理当前托管规则，并保留退役或用户自写规则", () => {
+  const currentManagedRules = [
+    `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
+    `DOMAIN,api.cursor.com,${AI_GROUP}`,
+    `DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`
+  ];
+  const userOwnedRules = [
+    `DOMAIN,repo42.cursor.sh,${AI_GROUP}`,
+    `DOMAIN-REGEX,^[a-z0-9-]+\\.api5\\.cursor\\.sh$,${AI_GROUP}`,
+    `DOMAIN-REGEX,^(?:us-asia|us-eu|us-only)\\.gcpp\\.cursor\\.sh$,${AI_GROUP}`,
     `DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`,
-    `DOMAIN-SUFFIX,cursorapi.com,${AI_GROUP}`,
-    `DOMAIN-SUFFIX,cursor-cdn.com,${AI_GROUP}`,
-    `DOMAIN-SUFFIX,gemini.google,${AI_GROUP}`,
     `DOMAIN,www.youtube.com,${AI_GROUP}`,
-    `DOMAIN,maps.googleapis.com,${AI_GROUP}`,
-    `DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`,
-    `DOMAIN,downloads.cursor.com,${AI_GROUP}`,
-    `DOMAIN,anysphere-binaries.s3.us-east-1.amazonaws.com,${AI_GROUP}`,
-    `DOMAIN,cursor.blob.core.windows.net,${AI_GROUP}`,
     "MATCH,🚀节点选择"
   ];
-  const cleaned = cleanAndMigrateExistingRules(oldRules);
-  assert.deepEqual(cleaned, ["MATCH,🚀节点选择"]);
+  const cleaned = cleanExistingManagedRules([
+    ...currentManagedRules,
+    ...userOwnedRules
+  ]);
+  assert.deepEqual(cleaned, userOwnedRules);
 });
 
 test("脚本执行两次保持幂等，并保留用户自定义非托管规则", () => {
   const customAiRule = `DOMAIN,custom-ai.example,${AI_GROUP}`;
   const normalYoutubeRule = "DOMAIN-SUFFIX,youtube.com,Proxy";
   const normalMarketplaceRule = "DOMAIN,marketplace.cursorapi.com,Proxy";
+  const retiredCursorRules = [
+    `DOMAIN,repo42.cursor.sh,${AI_GROUP}`,
+    `DOMAIN-REGEX,^[a-z0-9-]+\\.api5\\.cursor\\.sh$,${AI_GROUP}`,
+    `DOMAIN-REGEX,^(?:us-asia|us-eu|us-only)\\.gcpp\\.cursor\\.sh$,${AI_GROUP}`
+  ];
   const config = configFixture({
     proxies: [airportNode("HK")],
     groups: [group("🚀节点选择", ["HK"]), group("Proxy", ["HK"])],
@@ -523,6 +535,8 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
       `DOMAIN,www.youtube.com,${AI_GROUP}`,
       `DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`,
       `DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`,
+      `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
+      ...retiredCursorRules,
       `IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`,
       `IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`,
       "MATCH,Proxy"
@@ -537,11 +551,13 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
   assert.equal(config.rules.filter((rule) => rule === customAiRule).length, 1);
   assert.equal(config.rules.includes(normalYoutubeRule), true);
   assert.equal(config.rules.includes(normalMarketplaceRule), true);
-  assert.equal(config.rules.includes(`DOMAIN,www.youtube.com,${AI_GROUP}`), false);
-  assert.equal(config.rules.includes(`DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`), false);
-  assert.equal(config.rules.includes(`DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`), false);
-  assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), false);
-  assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`), false);
+  assert.equal(config.rules.includes(`DOMAIN,www.youtube.com,${AI_GROUP}`), true);
+  assert.equal(config.rules.includes(`DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`), true);
+  assert.equal(config.rules.includes(`DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`), true);
+  assert.equal(config.rules.includes(`DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`), false);
+  for (const rule of retiredCursorRules) assert.equal(config.rules.includes(rule), true);
+  assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), true);
+  assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`), true);
   assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`), true);
   assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`), true);
   assert.equal(new Set(config.rules).size, config.rules.length);
@@ -558,13 +574,22 @@ test("非 AI 默认 DoH 绑定当前 Profile 上游，而不是 AI-家宽", () =
   assert.ok(doh.every((value) => !value.includes(`#${AI_GROUP}`)));
 });
 
+test("非 AI DoH 拒绝会破坏 Mihomo URL 绑定语义的上游名称", () => {
+  assert.throws(
+    () => buildUpstreamDoh("Proxy#fallback"),
+    /Proxy#fallback.*不能包含 # 或 &/
+  );
+  assert.throws(
+    () => buildUpstreamDoh("Proxy&fallback"),
+    /Proxy&fallback.*不能包含 # 或 &/
+  );
+});
+
 test("AI DNS policy 仅覆盖 AI 核心域名，排除 YouTube 与插件市场", () => {
   const policy = buildNameserverPolicy({});
   assert.deepEqual(policy["+.gemini.google.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.aistudio.google.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["generativelanguage.googleapis.com"], RESIDENTIAL_DOH);
-  assert.deepEqual(policy["+.api2.cursor.sh"], RESIDENTIAL_DOH);
-  assert.deepEqual(policy["authenticator.cursor.sh"], RESIDENTIAL_DOH);
 
   for (const key of [
     "www.youtube.com",
@@ -572,6 +597,8 @@ test("AI DNS policy 仅覆盖 AI 核心域名，排除 YouTube 与插件市场",
     "maps.googleapis.com",
     "marketplace.cursorapi.com",
     "downloads.cursor.com",
+    "+.api2.cursor.sh",
+    "authenticator.cursor.sh",
     "+.cursor.com",
     "+.cursorapi.com",
     "+.cursor-cdn.com"
@@ -639,4 +666,4 @@ test("最终注入规则不存在重复项", () => {
   assert.equal(new Set(rules).size, rules.length);
 });
 
-console.log(`All ${passed} v5.4 regression tests passed.`);
+console.log(`All ${passed} v5.5 regression tests passed.`);

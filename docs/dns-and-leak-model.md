@@ -26,6 +26,14 @@ Proxy-server lookup  -> bootstrap/direct resolver to avoid recursion
 
 This is intentionally different from a global DNS-leak-test configuration. A generic DNS leak test may show the airport or domestic resolver because non-AI queries are not sent through the residential route. The invariant is narrower: AI domain resolution and AI application connections must use the intended residential path.
 
+## Strict-DNS performance trade-off
+
+The script deliberately rebuilds DNS policy instead of inheriting arbitrary subscription paths. Real non-AI overseas lookups are sent through DoH bound to the current Profile upstream. When a GEOIP fallback needs the first real lookup for a new domain, establishing that path can add roughly one airport round trip; subsequent cache hits do not pay the same lookup cost. v5.5 retains this trade-off for resolver consistency and pollution resistance.
+
+## Login and model exit split
+
+Shared authentication hosts are outside the default AI-only scope. `auth.openai.com` and `accounts.google.com` therefore use the original Profile, while core chat/model requests use the residential exit. A strict risk-control system can observe different login and model-traffic IPs and request additional verification. The script does not add either shared authentication host merely to hide this split; opt-in shared-dependency switches should be enabled only with evidence and an understood scope.
+
 ## What the script mitigates
 
 - DNS divergence between AI application traffic and AI domain resolution.

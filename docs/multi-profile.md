@@ -12,6 +12,8 @@ Mihomo's `dialer-proxy` field is a single name. The script resolves one valid na
 
 The first existing and structurally valid proxy/group is selected. Resolution never writes an array to `dialer-proxy` and never silently falls back to `DIRECT`.
 
+Spaces and emoji are valid in an upstream name. `#` and `&` are not: Mihomo uses them as delimiters in the upstream-bound DoH URL, so the script rejects a selected name containing either character before building DNS configuration.
+
 ## Recursion protection
 
 Before injecting the residential node, the script:
@@ -32,7 +34,7 @@ Static configuration can prove that a selector exists, but it cannot reliably re
 The script logs one line after successful transformation:
 
 ```text
-[AI-家宽 v5.4.0] Profile“<name>”：dialer-proxy -> <resolved group>
+[AI-家宽 v5.5.0] Profile“<name>”：dialer-proxy -> <resolved group>
 ```
 
 When resolution fails, use the sanitized proxy-group names and the final `MATCH`/`FINAL` rule to update the candidate list. Do not publish node endpoints or provider URLs.

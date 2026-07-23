@@ -14,7 +14,7 @@ object after a validated, idempotent transformation:
 ```js
 function main(config, profileName) {
   if (!config || typeof config !== "object") return config;
-  // validate, migrate, and rebuild managed configuration
+  // validate, clean current-managed state, and rebuild configuration
   return config;
 }
 ```
@@ -41,7 +41,7 @@ ignored `.local.js` file. `tests/regression.test.js` and
 - Read the relevant section of `clash-verge-ai-residential.js` before changing a
   constant, rule list, DNS policy, or reserved name.
 - Search `tests/regression.test.js` for the existing positive, negative,
-  migration, and idempotence coverage for that behavior.
+  managed-rule ownership, and idempotence coverage for that behavior.
 - For local rendering changes, read `scripts/sync-local-config.js`,
   `tests/sync-local-config.test.js`, and `docs/local-configuration.md` together.
 - Keep the public `HOME_PROXY_TEMPLATE` credentials as `"xxx"` or `""`; never

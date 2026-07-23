@@ -17,6 +17,33 @@ const REQUIRED_KEYS = [
   "udp",
   "dialer-proxy"
 ];
+const SWITCH_CONFIG_FIELDS = Object.freeze([
+  { table: "routing", key: "openai_shared_dependencies", constant: "ROUTE_OPENAI_SHARED_DEPENDENCIES", type: "boolean" },
+  { table: "routing", key: "claude_shared_dependencies", constant: "ROUTE_CLAUDE_SHARED_DEPENDENCIES", type: "boolean" },
+  { table: "routing", key: "antigravity_google_auth", constant: "ROUTE_ANTIGRAVITY_GOOGLE_AUTH", type: "boolean" },
+  { table: "routing", key: "antigravity_project_apis", constant: "ROUTE_ANTIGRAVITY_PROJECT_APIS", type: "boolean" },
+  { table: "routing", key: "antigravity_update_and_telemetry", constant: "ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY", type: "boolean" },
+  { table: "routing", key: "gemini_web_core", constant: "ROUTE_GEMINI_WEB_CORE", type: "boolean" },
+  { table: "routing", key: "cursor_core", constant: "ROUTE_CURSOR_CORE", type: "boolean" },
+  { table: "routing", key: "cursor_process_fallback", constant: "ROUTE_CURSOR_PROCESS_FALLBACK", type: "boolean" },
+  { table: "routing", key: "claude_code_auxiliary", constant: "ROUTE_CLAUDE_CODE_AUXILIARY", type: "boolean" },
+  { table: "routing", key: "ai_process_fallback", constant: "ENABLE_AI_PROCESS_FALLBACK", type: "boolean" },
+  { table: "routing", key: "anthropic_ip_fallback", constant: "ENABLE_ANTHROPIC_IP_FALLBACK", type: "boolean" },
+  { table: "routing", key: "shared_realtime_infrastructure", constant: "ROUTE_SHARED_REALTIME_INFRASTRUCTURE", type: "boolean" },
+  { table: "routing", key: "global_realtime_ports", constant: "ROUTE_GLOBAL_REALTIME_PORTS", type: "boolean" },
+  { table: "routing", key: "public_encrypted_dns", constant: "ROUTE_PUBLIC_ENCRYPTED_DNS", type: "boolean" },
+  { table: "runtime", key: "allow_final_rule_upstream_fallback", constant: "ALLOW_FINAL_RULE_UPSTREAM_FALLBACK", type: "boolean" },
+  { table: "runtime", key: "allow_heuristic_upstream_fallback", constant: "ALLOW_HEURISTIC_UPSTREAM_FALLBACK", type: "boolean" },
+  { table: "runtime", key: "preserve_unmanaged_nameserver_policy", constant: "PRESERVE_UNMANAGED_NAMESERVER_POLICY", type: "boolean" },
+  { table: "runtime", key: "enable_domain_sniffer", constant: "ENABLE_DOMAIN_SNIFFER", type: "boolean" },
+  { table: "runtime", key: "harden_existing_tun_dns_hijack", constant: "HARDEN_EXISTING_TUN_DNS_HIJACK", type: "boolean" },
+  { table: "runtime", key: "enable_tun_strict_route", constant: "ENABLE_TUN_STRICT_ROUTE", type: "boolean" },
+  { table: "runtime", key: "warn_on_reachable_udp_disabled", constant: "WARN_ON_REACHABLE_UDP_DISABLED", type: "boolean" }
+].map((field) => Object.freeze(field)));
+const SWITCH_TABLES = Object.freeze([
+  ...new Set(SWITCH_CONFIG_FIELDS.map((field) => field.table))
+]);
+const SUPPORTED_TABLES = new Set(["home_proxy", ...SWITCH_TABLES]);
 
 function configurationError(message) {
   return new Error(`本地 TOML 配置无效：${message}`);
@@ -146,29 +173,39 @@ function parseValue(value, lineNumber) {
   throw configurationError(`第 ${lineNumber} 行只支持字符串、整数和布尔值`);
 }
 
-function parseHomeProxyToml(source) {
-  const values = {};
-  let inHomeProxyTable = false;
+function parseLocalToml(source) {
+  const values = {
+    homeProxy: {}
+  };
+  for (const table of SWITCH_TABLES) values[table] = {};
+  const seenTables = new Set();
+  let currentTable = null;
 
   for (const [offset, rawLine] of source.replace(/^\uFEFF/, "").split(/\r?\n/).entries()) {
     const lineNumber = offset + 1;
     const line = stripComment(rawLine).trim();
     if (!line) continue;
 
-    if (line === "[home_proxy]") {
-      if (inHomeProxyTable) {
-        throw configurationError(`第 ${lineNumber} 行重复定义 [home_proxy]`);
+    const tableMatch = line.match(/^\[([A-Za-z0-9_-]+)\]$/);
+    if (tableMatch) {
+      const table = tableMatch[1];
+      if (!SUPPORTED_TABLES.has(table)) {
+        throw configurationError(`第 ${lineNumber} 行包含未知配置表 [${table}]`);
       }
-      inHomeProxyTable = true;
+      if (seenTables.has(table)) {
+        throw configurationError(`第 ${lineNumber} 行重复定义 [${table}]`);
+      }
+      seenTables.add(table);
+      currentTable = table;
       continue;
     }
 
-    if (/^\[.*\]$/.test(line)) {
-      throw configurationError(`第 ${lineNumber} 行只能使用 [home_proxy] 表`);
+    if (line.startsWith("[") || line.endsWith("]")) {
+      throw configurationError(`第 ${lineNumber} 行不是受支持的配置表声明`);
     }
 
-    if (!inHomeProxyTable) {
-      throw configurationError(`第 ${lineNumber} 行必须位于 [home_proxy] 表内`);
+    if (!currentTable) {
+      throw configurationError(`第 ${lineNumber} 行必须位于配置表内`);
     }
 
     const assignment = line.match(/^([A-Za-z0-9_-]+)\s*=\s*(.*)$/);
@@ -177,19 +214,35 @@ function parseHomeProxyToml(source) {
     }
 
     const [, key, rawValue] = assignment;
-    if (!REQUIRED_KEYS.includes(key)) {
-      throw configurationError(`第 ${lineNumber} 行包含未知字段 ${key}`);
+    const switchField = SWITCH_CONFIG_FIELDS.find(
+      (field) => field.table === currentTable && field.key === key
+    );
+    if (currentTable === "home_proxy" && !REQUIRED_KEYS.includes(key)) {
+      throw configurationError(`第 ${lineNumber} 行包含未知字段 home_proxy.${key}`);
     }
-    if (Object.hasOwn(values, key)) {
-      throw configurationError(`第 ${lineNumber} 行重复定义字段 ${key}`);
+    if (currentTable !== "home_proxy" && !switchField) {
+      throw configurationError(`第 ${lineNumber} 行包含未知字段 ${currentTable}.${key}`);
     }
-    values[key] = parseValue(rawValue.trim(), lineNumber);
+
+    const target = currentTable === "home_proxy" ? values.homeProxy : values[currentTable];
+    if (Object.hasOwn(target, key)) {
+      throw configurationError(`第 ${lineNumber} 行重复定义字段 ${currentTable}.${key}`);
+    }
+    const parsedValue = parseValue(rawValue.trim(), lineNumber);
+    if (switchField && typeof parsedValue !== switchField.type) {
+      throw configurationError(`第 ${lineNumber} 行字段 ${currentTable}.${key} 必须是 true 或 false`);
+    }
+    target[key] = parsedValue;
   }
 
-  if (!inHomeProxyTable) {
+  if (!seenTables.has("home_proxy")) {
     throw configurationError("缺少 [home_proxy] 表");
   }
   return values;
+}
+
+function parseHomeProxyToml(source) {
+  return parseLocalToml(source).homeProxy;
 }
 
 function extractHomeProxyName(templateSource) {
@@ -232,6 +285,34 @@ function validateHomeProxyConfig(config, homeProxyName) {
   }
 }
 
+function validateLocalConfig(config, homeProxyName) {
+  if (!config || typeof config !== "object" || Array.isArray(config)) {
+    throw configurationError("配置根必须是对象");
+  }
+  validateHomeProxyConfig(config.homeProxy, homeProxyName);
+
+  for (const table of SWITCH_TABLES) {
+    const values = config[table];
+    if (!values || typeof values !== "object" || Array.isArray(values)) {
+      throw configurationError(`[${table}] 必须是配置表`);
+    }
+    const knownFields = new Map(
+      SWITCH_CONFIG_FIELDS
+        .filter((field) => field.table === table)
+        .map((field) => [field.key, field])
+    );
+    for (const [key, value] of Object.entries(values)) {
+      const field = knownFields.get(key);
+      if (!field) {
+        throw configurationError(`包含未知字段 ${table}.${key}`);
+      }
+      if (typeof value !== field.type) {
+        throw configurationError(`字段 ${table}.${key} 必须是 true 或 false`);
+      }
+    }
+  }
+}
+
 function renderHomeProxyTemplate(config) {
   return [
     "const HOME_PROXY_TEMPLATE = {",
@@ -254,6 +335,39 @@ function injectHomeProxyTemplate(templateSource, renderedTemplate) {
     throw new Error("模板中必须且只能包含一个 HOME_PROXY_TEMPLATE");
   }
   return templateSource.replace(pattern, renderedTemplate);
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function booleanConstantPattern(constantName) {
+  return new RegExp(
+    `^([ \\t]*const[ \\t]+${escapeRegExp(constantName)}[ \\t]*=[ \\t]*)(true|false)([ \\t]*;[ \\t]*)(\\r?)$`,
+    "gm"
+  );
+}
+
+function injectBooleanConstants(templateSource, config) {
+  let output = templateSource;
+
+  for (const field of SWITCH_CONFIG_FIELDS) {
+    const table = config[field.table];
+    if (!Object.hasOwn(table, field.key)) continue;
+
+    const pattern = booleanConstantPattern(field.constant);
+    const matches = output.match(pattern);
+    if (!matches || matches.length !== 1) {
+      throw new Error(`模板中必须且只能包含一个布尔常量 ${field.constant}`);
+    }
+    output = output.replace(
+      pattern,
+      (match, before, current, after, carriageReturn) =>
+        `${before}${table[field.key]}${after}${carriageReturn}`
+    );
+  }
+
+  return output;
 }
 
 function writeFileAtomically(outputPath, content) {
@@ -286,17 +400,21 @@ function syncLocalConfig({
   }
 
   const templateSource = fs.readFileSync(resolvedTemplatePath, "utf8");
-  const config = parseHomeProxyToml(fs.readFileSync(resolvedConfigPath, "utf8"));
-  validateHomeProxyConfig(config, extractHomeProxyName(templateSource));
+  const config = parseLocalToml(fs.readFileSync(resolvedConfigPath, "utf8"));
+  validateLocalConfig(config, extractHomeProxyName(templateSource));
 
   const banner = [
     "/*",
     ` * 由 ${path.basename(resolvedTemplatePath)} 与 ${path.basename(resolvedConfigPath)} 自动生成。`,
-    " * 请编辑 TOML 后运行 `just render-local`，不要直接修改此文件。",
+    " * 请编辑 TOML 后重新生成，不要直接修改此文件。",
     " */",
     ""
   ].join("\n");
-  const output = banner + injectHomeProxyTemplate(templateSource, renderHomeProxyTemplate(config));
+  const renderedTemplate = renderHomeProxyTemplate(config.homeProxy);
+  const output = banner + injectBooleanConstants(
+    injectHomeProxyTemplate(templateSource, renderedTemplate),
+    config
+  );
   writeFileAtomically(resolvedOutputPath, output);
 
   return { configPath: resolvedConfigPath, outputPath: resolvedOutputPath };
@@ -321,8 +439,12 @@ if (require.main === module) {
 }
 
 module.exports = {
+  SWITCH_CONFIG_FIELDS,
+  parseLocalToml,
   parseHomeProxyToml,
+  validateLocalConfig,
   validateHomeProxyConfig,
   renderHomeProxyTemplate,
+  injectBooleanConstants,
   syncLocalConfig
 };

@@ -9,3 +9,30 @@ username = "xxx"
 password = "xxx"
 udp = true
 dialer-proxy = "🚀节点选择"
+
+# 住宅链路范围开关。共享依赖、进程兜底和通用基础设施默认关闭。
+[routing]
+openai_shared_dependencies = false
+claude_shared_dependencies = false
+antigravity_google_auth = false
+antigravity_project_apis = false
+antigravity_update_and_telemetry = false
+gemini_web_core = true
+cursor_core = false
+cursor_process_fallback = false
+claude_code_auxiliary = false
+ai_process_fallback = false
+anthropic_ip_fallback = true
+shared_realtime_infrastructure = false
+global_realtime_ports = false
+public_encrypted_dns = false
+
+# 上游解析、DNS、嗅探和已有 TUN 的运行时行为。
+[runtime]
+allow_final_rule_upstream_fallback = true
+allow_heuristic_upstream_fallback = false
+preserve_unmanaged_nameserver_policy = false
+enable_domain_sniffer = true
+harden_existing_tun_dns_hijack = true
+enable_tun_strict_route = false
+warn_on_reachable_udp_disabled = true

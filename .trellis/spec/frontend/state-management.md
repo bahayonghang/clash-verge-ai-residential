@@ -9,9 +9,9 @@ module-level policy constants that describe the transformation.
 | State | Owner | Local pattern |
 |---|---|---|
 | Input/output configuration | Clash Verge Rev | `main(config, profileName)` mutates and returns `config` |
-| Policy switches and domain tables | Root extension module | `ROUTE_*`, `ENABLE_*`, and domain arrays are read during each run |
+| Policy switches and domain tables | Root extension module | Public defaults are read during each run; ignored TOML can render scalar boolean overrides into a private script |
 | Derived rules, DNS, and groups | Builder functions | Recomputed from current input and policy on every invocation |
-| Local credentials | Ignored TOML file | Read only by `scripts/sync-local-config.js` |
+| Local credentials and scalar overrides | Ignored TOML file | Read only by `scripts/sync-local-config.js` |
 | Test state | Individual test process | Fixtures create fresh objects and restore temporary mutations in `finally` |
 
 ## Ownership And Updates
@@ -30,22 +30,31 @@ Nested builders use copies when merging user input. `buildDnsConfig` starts from
 object. `upsertNamedItem` starts with `items.slice()` and guarantees a single
 managed named item.
 
-Treat script-managed and user-managed state differently. Functions such as
-`cleanAndMigrateExistingRules` remove known current/legacy managed rules but
-preserve unknown custom rules. Never replace an ambiguous or unexpected
-same-name object silently; validation must fail instead.
+Treat script-managed and user-managed state differently.
+`cleanExistingManagedRules` removes exact rules the current version can
+generate across enabled and disabled switch states, then preserves unknown
+input unchanged even when its target is `AI-家宽`. Retired rules are not kept in
+a hidden cleanup list: manually persisted older output is user-owned and must be
+removed at its subscription/Merge source. Never replace an ambiguous or
+unexpected same-name object silently; validation must fail instead.
+
+The three v5.4 Cursor strings removed as redundant are concrete ownership
+fixtures: the current cleaner must preserve them, while current catalog output
+such as `DOMAIN-SUFFIX,api2.cursor.sh,AI-家宽` must be replaced when the switch
+is disabled.
 
 ## Idempotence
 
 Running `main` twice on the same object must not add duplicate proxies, groups,
 rules, filters, or DNS entries. `uniqueStrings`, `uniqueScalars`,
-`dedupeRuleEntries`, migration sets, and upsert helpers enforce this contract.
-`tests/regression.test.js` contains the authoritative repeated-execution test.
+`dedupeRuleEntries`, the current managed-rule set, and upsert helpers enforce
+this contract. `tests/regression.test.js` contains the authoritative
+repeated-execution and retired-rule ownership tests.
 
 The renderer is one-way state flow:
 
 ```text
-public template + ignored local TOML -> ignored generated local script
+public defaults + ignored local credentials/switches -> ignored generated local script
 ```
 
 It never writes credentials back to the public template or TOML input.
@@ -55,6 +64,8 @@ It never writes credentials back to the public template or TOML input.
 - Do not add mutable singleton state, caches, or cross-run accumulators.
 - Do not derive configuration once at module load when it depends on the current
   profile or input config.
-- Do not append managed entries without deduplication and migration handling.
+- Do not append managed entries without exact current-version cleanup and
+  deduplication.
+- Do not reintroduce retired rules under a renamed cleanup-only migration list.
 - Do not preserve unknown DNS policy paths when the strict mode deliberately
   removes alternate resolution routes.

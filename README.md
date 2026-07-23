@@ -3,13 +3,13 @@
 [![CI](https://github.com/bahayonghang/clash-verge-ai-residential/actions/workflows/ci.yml/badge.svg)](https://github.com/bahayonghang/clash-verge-ai-residential/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Clash Verge Rev 全局扩展脚本：只把 Claude、ChatGPT、Gemini、Google Antigravity 和 Cursor 的核心 AI 请求送入住宅 SOCKS5 链路，并保留原 Profile 对插件市场、下载、YouTube、共享 Google 服务及其他非 AI 流量的分流。
+Clash Verge Rev 全局扩展脚本：默认只把 Claude、ChatGPT、Gemini 和 Google Antigravity 的核心 AI 请求送入住宅 SOCKS5 链路；Cursor 核心路由可通过本地 TOML 选择开启，默认关闭。插件市场、下载、YouTube、共享 Google 服务及其他非 AI 流量仍使用原 Profile。
 
 ```text
 本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
 ```
 
-当前版本：`v5.4.0`。
+当前版本：`v5.5.0`。
 
 ## 核心边界
 
@@ -19,7 +19,7 @@ Clash Verge Rev 全局扩展脚本：只把 Claude、ChatGPT、Gemini、Google A
 - ChatGPT / OpenAI 产品域、模型 API、上传与生成内容。
 - Gemini Web、Google AI Studio 专用后端、Gemini Developer API、Vertex AI 区域/全局模型端点。
 - Google Antigravity / Gemini Code Assist 的产品域和核心 Agent API。
-- Cursor Chat、Tab、Agent、代码库索引、Cloud Agent/Bugbot 和产品专属认证。
+- 可选的 Cursor Chat、Tab、Agent、代码库索引、Cloud Agent/Bugbot 和产品专属认证；`routing.cursor_core` 默认是 `false`。
 
 家宽链路明确排除：
 
@@ -32,15 +32,9 @@ Clash Verge Rev 全局扩展脚本：只把 Claude、ChatGPT、Gemini、Google A
 
 ## 快速使用
 
-需要 Node.js 18+ 与 [just](https://github.com/casey/just)。公开模板 `clash-verge-ai-residential.js` 始终只保存占位符；真实家宽配置保存在被 Git 忽略的 `clash-verge-ai-residential.local.toml`。
+需要 Node.js 18+；推荐使用 [just](https://github.com/casey/just)，但它不是必需依赖。公开模板 `clash-verge-ai-residential.js` 始终只保存占位符；真实家宽配置与开关保存在被 Git 忽略的 `clash-verge-ai-residential.local.toml`。
 
-首次克隆仓库时，先从示例创建本地配置：
-
-```powershell
-Copy-Item clash-verge-ai-residential.local.toml.example clash-verge-ai-residential.local.toml
-```
-
-编辑 TOML 中的住宅 SOCKS5 信息和本机 Profile 的上游名称：
+首次执行 `just render-local` 时，若本地配置不存在，命令会自动从示例创建 `clash-verge-ai-residential.local.toml`，提示你填写配置并结束执行。编辑 TOML 中的住宅 SOCKS5 信息和本机 Profile 的上游名称：
 
 ```toml
 [home_proxy]
@@ -52,23 +46,48 @@ username = "your-username"
 password = "your-password"
 udp = true
 dialer-proxy = "🚀节点选择"
+
+[routing]
+cursor_core = false
 ```
 
-然后生成本地 Clash Verge 脚本：
+填写后，生成本地 Clash Verge 脚本：
 
 ```bash
 just render-local
 ```
 
-`render-local` 明确表示单向渲染：它会将公开模板与本地 TOML 合成为 `clash-verge-ai-residential.local.js`，不会修改公开模板或反向写入 TOML。这两个本地文件都已被 `.gitignore` 排除。`just sync` 暂保留为兼容别名。完整字段说明、macOS/Linux 创建命令与校验规则见 [`docs/local-configuration.md`](docs/local-configuration.md)。
+没有 `just` 时，先在本地配置不存在的前提下复制示例。Windows PowerShell：
 
-在 Clash Verge Rev 中：
+```powershell
+if (-not (Test-Path clash-verge-ai-residential.local.toml)) {
+  Copy-Item clash-verge-ai-residential.local.toml.example clash-verge-ai-residential.local.toml
+}
+```
 
-1. 打开全局扩展脚本。
-2. 粘贴生成的 `clash-verge-ai-residential.local.js` 内容。
-3. 刷新当前 Profile。
-4. 检查生成配置中 `家宽-SOCKS5.dialer-proxy` 是否指向真实机场组。
-5. 用 Connections 验证 AI 请求命中 `AI-家宽`，插件市场、下载和 YouTube 不命中。
+macOS/Linux：
+
+```bash
+test -e clash-verge-ai-residential.local.toml || \
+  cp clash-verge-ai-residential.local.toml.example clash-verge-ai-residential.local.toml
+```
+
+编辑 `clash-verge-ai-residential.local.toml` 中的代理值和开关，再运行：
+
+```bash
+node scripts/sync-local-config.js
+```
+
+`render-local` 是单向渲染：它会将公开模板与本地 TOML 合成为 `clash-verge-ai-residential.local.js`，不会修改公开模板或反向写入 TOML。不要手动修改生成的 `.local.js`；需要调整时应修改 TOML 后重新生成。这两个本地文件都已被 `.gitignore` 排除。`just sync` 暂保留为兼容别名。完整开关、字段和校验规则见 [`docs/local-configuration.md`](docs/local-configuration.md)。
+
+生成后，在 Clash Verge Rev 中进入 **Profiles -> Global Extend Script**：
+
+![Clash Verge Rev 的 Profiles 页面与 Global Extend Script 入口](assets/clash-verge-rev-global-extend-script.png)
+
+1. 双击 **Global Extend Script**，粘贴生成的 `clash-verge-ai-residential.local.js` 全部内容并保存。
+2. 刷新当前 Profile。
+3. 检查生成配置中 `家宽-SOCKS5.dialer-proxy` 是否指向真实机场组。
+4. 用 Connections 验证目标 AI 请求命中 `AI-家宽`，插件市场、下载、YouTube 以及默认关闭的 Cursor 不命中。
 
 如果 Profile 已预置同名 `家宽-SOCKS5` 节点，可以让 TOML 保留 `xxx` 占位符，脚本会复用该节点的 endpoint 和凭据。无认证 SOCKS5 必须将 `username`、`password` 同时设为 `""`。
 
@@ -112,11 +131,11 @@ just ci
 也可直接使用 `npm run ci`。包含：
 
 - JavaScript 语法检查。
-- 28 项配置级回归测试和 2 项本地 TOML 同步测试。
+- 路由、幂等和本地 TOML 渲染回归测试。
 - 公共模板凭据与常见 token 安全检查。
-- Gemini/Cursor 核心域名正向测试。
+- Gemini 默认路由与 Cursor TOML 选择开启测试。
 - YouTube、Maps、Marketplace、下载、CDN 和静态资源负向测试。
-- 多 Profile 解析、循环检测、DNS 收敛、迁移与幂等测试。
+- 多 Profile 解析、循环检测、DNS 收敛、托管规则替换与幂等测试。
 
 Node.js 测试不替代真实 Clash Verge Rev JavaScript 引擎、Mihomo 内核和订阅 Profile 集成测试。
 
