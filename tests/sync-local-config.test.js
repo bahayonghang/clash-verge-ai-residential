@@ -5,6 +5,7 @@ const childProcess = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { test } = require("node:test");
 
 const {
   SWITCH_CONFIG_FIELDS,
@@ -21,18 +22,6 @@ const switchDocumentPaths = [
   path.join(root, "docs", "configuration.md"),
   path.join(root, "docs", "local-configuration.md")
 ];
-
-let passed = 0;
-function test(name, fn) {
-  try {
-    fn();
-    passed += 1;
-    console.log(`ok ${passed} - ${name}`);
-  } catch (error) {
-    console.error(`not ok - ${name}`);
-    throw error;
-  }
-}
 
 function withTemporaryDirectory(fn) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "clash-verge-ai-residential-"));
@@ -355,5 +344,3 @@ test("生产映射覆盖全部用户布尔开关，并与示例及文档默认�
     }
   }
 });
-
-console.log(`${passed} local configuration sync tests passed.`);

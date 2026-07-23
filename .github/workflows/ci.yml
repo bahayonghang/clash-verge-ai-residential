@@ -9,18 +9,37 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-    name: Node.js ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18, 20, 22]
+        include:
+          - os: ubuntu-latest
+            node-version: "18"
+            label: Ubuntu / Node.js 18
+          - os: ubuntu-latest
+            node-version: "20"
+            label: Ubuntu / Node.js 20
+          - os: ubuntu-latest
+            node-version: "22"
+            label: Ubuntu / Node.js 22
+          - os: windows-latest
+            node-version: "22"
+            label: Windows / Node.js 22
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -29,3 +48,17 @@ jobs:
 
       - name: Run checks and regression tests
         run: npm run ci
+
+  required-checks:
+    name: Required checks
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify all test jobs passed
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "One or more test jobs did not pass."
+            exit 1
+          fi

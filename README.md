@@ -122,22 +122,30 @@ AI 域名 DNS       -> AI-家宽 -> 家宽 SOCKS5
 
 ## 本地验证
 
-需要 Node.js 18 或更高版本，无第三方依赖。安装 just 后推荐执行：
+需要 Node.js 18 或更高版本，无第三方依赖。快速运行全部标准测试：
+
+```bash
+npm test
+```
+
+提交前运行完整门禁：
 
 ```bash
 just ci
 ```
 
-也可直接使用 `npm run ci`。包含：
+也可直接使用 `npm run ci`，两者包含相同检查：
 
 - JavaScript 语法检查。
-- 路由、幂等和本地 TOML 渲染回归测试。
-- 公共模板凭据与常见 token 安全检查。
+- 使用 Node.js 标准测试运行器执行路由、幂等、本地 TOML 渲染和安全扫描回归测试。
+- 扫描公共模板及可提交文本中的凭据与常见 token，包括 TOML。
 - Gemini 默认路由与 Cursor TOML 选择开启测试。
 - YouTube、Maps、Marketplace、下载、CDN 和静态资源负向测试。
 - 多 Profile 解析、循环检测、DNS 收敛、托管规则替换与幂等测试。
 
-Node.js 测试不替代真实 Clash Verge Rev JavaScript 引擎、Mihomo 内核和订阅 Profile 集成测试。
+GitHub Actions 会在 Ubuntu 的 Node.js 18、20、22 和 Windows 的 Node.js 22 上运行同一门禁。分支保护应只依赖稳定命名的 `Required checks`，该检查仅在所有矩阵任务成功时通过。
+
+自动化不能模拟 Clash Verge Rev JavaScript 引擎、Mihomo 内核或真实订阅 Profile。涉及宿主集成、DNS 或路由的变更仍须使用脱敏后的真实 Profile 手工验证；提交日志和截图前必须移除代理地址、凭据、订阅 URL 与未脱敏 Connections 记录。
 
 ## 文档
 

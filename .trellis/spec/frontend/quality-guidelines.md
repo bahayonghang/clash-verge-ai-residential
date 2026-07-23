@@ -14,10 +14,13 @@
 
 ## Test Pattern
 
-Tests are executable Node scripts with a tiny local harness and
-`node:assert/strict`, not a framework:
+Tests use the built-in `node:test` runner with `node:assert/strict`, not a
+third-party framework:
 
 ```js
+const assert = require("node:assert/strict");
+const { test } = require("node:test");
+
 test("description", () => {
   const rules = buildInjectedRules();
   assert.equal(ruleMatchesHost(rules, "host.example"), false);
@@ -39,15 +42,19 @@ a separate Node process when a public default is overridden.
 
 Run `just ci` before completion. `package.json` defines the exact gate:
 
-1. `npm run check`: `node --check` on the extension, tests, and scripts.
-2. `npm test`: the routing regression and local renderer suites.
+1. `npm run check`: `node --check` on the extension, all tests, and scripts.
+2. `npm test`: explicitly listed `node:test` suites for routing, the local
+   renderer, and template safety.
 3. `npm run check:secrets`: `scripts/check-template-safety.js` validates public
-   placeholders and recursively scans `.js`, `.json`, `.md`, `.yml`, and
-   `.yaml` files outside its excluded directories and local artifacts.
+   placeholders and recursively scans `.js`, `.json`, `.jsonl`, `.md`, `.py`,
+   `.toml`, `.yml`, and `.yaml` files outside its excluded directories and local
+   artifacts.
 
-GitHub CI runs the same `npm run ci` on Node 18, 20, and 22. For changes to host
-integration, DNS, or routing, also test a sanitized real Clash profile when
-practical; the Node suite cannot emulate the Clash JavaScript host or Mihomo.
+GitHub CI runs the same `npm run ci` on Ubuntu with Node 18, 20, and 22, plus
+Windows with Node 22. Branch protection depends only on the stable
+`Required checks` aggregate job. For changes to host integration, DNS, or
+routing, also test a sanitized real Clash profile when practical; the Node
+suite cannot emulate the Clash JavaScript host or Mihomo.
 
 ## Security And Generated Files
 
