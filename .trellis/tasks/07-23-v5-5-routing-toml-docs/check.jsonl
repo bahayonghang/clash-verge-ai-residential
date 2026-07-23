@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Audit style, route boundaries, secrets, renderer coverage, and required validation."}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Verify all accepted TOML forms and template anchors are validated at the boundary."}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Verify managed-versus-user rules, one-way generation, and idempotence."}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Verify no host/runtime or CLI side-effect boundary regressed."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-check defaults and mappings across source, example TOML, tests, and docs."}

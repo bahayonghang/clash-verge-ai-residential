@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Preserve the synchronous Clash entry point and guarded, atomic Node renderer boundary."}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Extend the constrained TOML parser with explicit runtime validation and exact template anchors."}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Preserve one-way rendering, managed-rule ownership, and repeated-run idempotence."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Follow repository style, security rules, test patterns, and the full CI gate."}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Use one declarative switch mapping rather than duplicated parser and renderer allowlists."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Keep TOML, generated JavaScript, runtime behavior, tests, and documentation in sync."}
