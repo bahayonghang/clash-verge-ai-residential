@@ -1,0 +1,11 @@
+# 复制为 clash-verge-ai-residential.local.toml 后填写。
+# 真实 endpoint 和凭据只保留在被 .gitignore 排除的本地文件中。
+[home_proxy]
+name = "家宽-SOCKS5"
+type = "socks5"
+server = "xxx"
+port = 443
+username = "xxx"
+password = "xxx"
+udp = true
+dialer-proxy = "🚀节点选择"

@@ -39,6 +39,14 @@ const forbiddenPatterns = [
 
 const scanExtensions = new Set([".js", ".json", ".md", ".yml", ".yaml"]);
 const ignoredDirectories = new Set([".git", "node_modules"]);
+const ignoredLocalFiles = new Set([
+  "clash-verge-ai-residential.local.toml",
+  "clash-verge-ai-residential.local.js"
+]);
+
+function isIgnoredLocalFile(relative) {
+  return ignoredLocalFiles.has(relative) || relative.endsWith(".local.js");
+}
 
 function walk(directory) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
@@ -50,6 +58,7 @@ function walk(directory) {
     }
     if (!scanExtensions.has(path.extname(entry.name))) continue;
     const relative = path.relative(root, absolute);
+    if (isIgnoredLocalFile(relative)) continue;
     const content = fs.readFileSync(absolute, "utf8");
     for (const pattern of forbiddenPatterns) {
       if (pattern.regex.test(content)) {
