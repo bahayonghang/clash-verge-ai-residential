@@ -1,0 +1,74 @@
+name: Bug report
+about: Report a reproducible routing, DNS, compatibility, or migration defect
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Never include residential proxy addresses, credentials, subscription URLs, generated profiles, or unredacted connection logs.
+
+  - type: input
+    id: version
+    attributes:
+      label: Script version or commit
+      placeholder: v5.4.0 or commit SHA
+    validations:
+      required: true
+
+  - type: input
+    id: clash-verge
+    attributes:
+      label: Clash Verge Rev and Mihomo versions
+      placeholder: Clash Verge Rev x.y.z; Mihomo x.y.z
+    validations:
+      required: true
+
+  - type: textarea
+    id: profile-shape
+    attributes:
+      label: Sanitized Profile structure
+      description: List proxy-group names and types only. Remove endpoints, node credentials, subscription links, and provider URLs.
+      placeholder: |
+        🚀节点选择: select
+        自动选择: url-test
+        Final rule: MATCH,🚀节点选择
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized evidence
+      description: Include only relevant rule matches or errors after removing host IPs, credentials, tokens, subscription URLs, and user data.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety checks
+      options:
+        - label: I removed all proxy credentials and subscription URLs.
+          required: true
+        - label: I ran `npm run ci` against the reported revision when possible.
+          required: false

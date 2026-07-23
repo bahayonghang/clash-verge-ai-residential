@@ -1,0 +1,65 @@
+name: AI domain request
+about: Propose a narrowly scoped AI inference, chat, agent, completion, or indexing endpoint
+title: "[Domain] "
+labels: [routing]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project is AI-only. Marketplace, update, download, CDN, media, advertising, analytics, and generic shared-service domains are rejected unless they are technically inseparable from the core AI request path.
+
+  - type: input
+    id: product
+    attributes:
+      label: Product and feature
+      placeholder: Cursor Agent, Gemini generateContent, Claude Messages API
+    validations:
+      required: true
+
+  - type: input
+    id: host
+    attributes:
+      label: Exact host or narrow pattern
+      placeholder: api.example.com or ^[a-z0-9-]+-aiplatform\.googleapis\.com$
+    validations:
+      required: true
+
+  - type: dropdown
+    id: traffic
+    attributes:
+      label: Traffic category
+      options:
+        - Model inference or streaming response
+        - AI chat/session API
+        - Agent/tool execution control plane
+        - Code completion or repository indexing
+        - Product-specific authentication required for AI use
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Provide an official document or a sanitized connection record showing the host is used by the stated feature.
+    validations:
+      required: true
+
+  - type: textarea
+    id: negatives
+    attributes:
+      label: Negative-scope analysis
+      description: Explain what non-AI traffic could also match this host or suffix, and why the proposed pattern is sufficiently narrow.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Request checks
+      options:
+        - label: This is not a plugin marketplace, software update, download, media, advertising, or analytics endpoint.
+          required: true
+        - label: I did not include credentials, subscription URLs, tokens, or unredacted logs.
+          required: true
