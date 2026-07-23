@@ -1,0 +1,21 @@
+# Dependencies and test output
+node_modules/
+coverage/
+.nyc_output/
+
+# Local credentials and generated Clash profiles
+.env
+.env.*
+!.env.example
+*.local.js
+*.local.yaml
+*.local.yml
+private/
+clash-verge-ai-residential.private.js
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

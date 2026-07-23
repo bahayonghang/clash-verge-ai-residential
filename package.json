@@ -1,0 +1,16 @@
+{
+  "name": "clash-verge-ai-residential",
+  "version": "5.4.0",
+  "private": true,
+  "description": "Clash Verge Rev global extension script for AI-only residential SOCKS5 routing, multi-profile chained proxy selection, and DNS leak mitigation.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "check": "node --check clash-verge-ai-residential.js && node --check tests/regression.test.js && node --check scripts/check-template-safety.js",
+    "test": "node tests/regression.test.js",
+    "check:secrets": "node scripts/check-template-safety.js",
+    "ci": "npm run check && npm run test && npm run check:secrets"
+  }
+}
