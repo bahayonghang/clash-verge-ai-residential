@@ -1,0 +1,29 @@
+{
+  "id": "main-branch-protection-test-pipeline",
+  "name": "main-branch-protection-test-pipeline",
+  "title": "完善 main 分支保护与测试流程",
+  "description": "",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-07-23",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "07-23-automated-test-ci-gate",
+    "07-23-main-branch-protection"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
