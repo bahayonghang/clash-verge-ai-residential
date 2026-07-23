@@ -32,32 +32,47 @@ Clash Verge Rev 全局扩展脚本：只把 Claude、ChatGPT、Gemini、Google A
 
 ## 快速使用
 
-打开 `clash-verge-ai-residential.js`，在顶部配置住宅 SOCKS5：
+需要 Node.js 18+ 与 [just](https://github.com/casey/just)。公开模板 `clash-verge-ai-residential.js` 始终只保存占位符；真实家宽配置保存在被 Git 忽略的 `clash-verge-ai-residential.local.toml`。
 
-```javascript
-const HOME_PROXY_TEMPLATE = {
-  name: "家宽-SOCKS5",
-  type: "socks5",
-  server: "xxx",
-  port: 443,
-  username: "xxx",
-  password: "xxx",
-  udp: true,
-  "dialer-proxy": "🚀节点选择"
-};
+首次克隆仓库时，先从示例创建本地配置：
+
+```powershell
+Copy-Item clash-verge-ai-residential.local.toml.example clash-verge-ai-residential.local.toml
 ```
 
-不要把真实 endpoint 或凭据提交到公开仓库。更安全的做法是在 Profile 中预置同名 `家宽-SOCKS5` 节点，让脚本复用其配置；或者编辑被 `.gitignore` 排除的 `*.local.js` 副本。
+编辑 TOML 中的住宅 SOCKS5 信息和本机 Profile 的上游名称：
+
+```toml
+[home_proxy]
+name = "家宽-SOCKS5"
+type = "socks5"
+server = "residential.example.com"
+port = 1080
+username = "your-username"
+password = "your-password"
+udp = true
+dialer-proxy = "🚀节点选择"
+```
+
+然后生成本地 Clash Verge 脚本：
+
+```bash
+just render-local
+```
+
+`render-local` 明确表示单向渲染：它会将公开模板与本地 TOML 合成为 `clash-verge-ai-residential.local.js`，不会修改公开模板或反向写入 TOML。这两个本地文件都已被 `.gitignore` 排除。`just sync` 暂保留为兼容别名。完整字段说明、macOS/Linux 创建命令与校验规则见 [`docs/local-configuration.md`](docs/local-configuration.md)。
 
 在 Clash Verge Rev 中：
 
 1. 打开全局扩展脚本。
-2. 粘贴 `clash-verge-ai-residential.js` 内容。
+2. 粘贴生成的 `clash-verge-ai-residential.local.js` 内容。
 3. 刷新当前 Profile。
 4. 检查生成配置中 `家宽-SOCKS5.dialer-proxy` 是否指向真实机场组。
 5. 用 Connections 验证 AI 请求命中 `AI-家宽`，插件市场、下载和 YouTube 不命中。
 
-稳定 Raw 地址：
+如果 Profile 已预置同名 `家宽-SOCKS5` 节点，可以让 TOML 保留 `xxx` 占位符，脚本会复用该节点的 endpoint 和凭据。无认证 SOCKS5 必须将 `username`、`password` 同时设为 `""`。
+
+稳定 Raw 地址仍然是**不含本地凭据的公开模板**：
 
 ```text
 https://raw.githubusercontent.com/bahayonghang/clash-verge-ai-residential/main/clash-verge-ai-residential.js
@@ -88,16 +103,16 @@ AI 域名 DNS       -> AI-家宽 -> 家宽 SOCKS5
 
 ## 本地验证
 
-需要 Node.js 18 或更高版本，无第三方依赖：
+需要 Node.js 18 或更高版本，无第三方依赖。安装 just 后推荐执行：
 
 ```bash
-npm run ci
+just ci
 ```
 
-包含：
+也可直接使用 `npm run ci`。包含：
 
 - JavaScript 语法检查。
-- 28 项配置级回归测试。
+- 28 项配置级回归测试和 2 项本地 TOML 同步测试。
 - 公共模板凭据与常见 token 安全检查。
 - Gemini/Cursor 核心域名正向测试。
 - YouTube、Maps、Marketplace、下载、CDN 和静态资源负向测试。
@@ -107,7 +122,8 @@ Node.js 测试不替代真实 Clash Verge Rev JavaScript 引擎、Mihomo 内核�
 
 ## 文档
 
-- [`docs/configuration.md`](docs/configuration.md)：凭据、开关和 Clash Verge 设置。
+- [`docs/local-configuration.md`](docs/local-configuration.md)：本地 TOML、`just render-local` 与凭据保护教程。
+- [`docs/configuration.md`](docs/configuration.md)：开关和 Clash Verge 设置。
 - [`docs/routing-scope.md`](docs/routing-scope.md)：AI-only 路由准入与排除标准。
 - [`docs/multi-profile.md`](docs/multi-profile.md)：上游解析和递归保护。
 - [`docs/dns-and-leak-model.md`](docs/dns-and-leak-model.md)：DNS 路径和不能单独解决的泄漏面。

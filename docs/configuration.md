@@ -2,29 +2,28 @@
 
 ## Residential SOCKS5
 
-Edit only the user-configuration section near the top of `clash-verge-ai-residential.js`:
+Use the ignored `clash-verge-ai-residential.local.toml` to store local endpoint and credential values, then run `just render-local` to produce `clash-verge-ai-residential.local.js`. Do not edit the public `clash-verge-ai-residential.js` template with real values.
 
-```javascript
-const HOME_PROXY_TEMPLATE = {
-  name: "家宽-SOCKS5",
-  type: "socks5",
-  server: "xxx",
-  port: 443,
-  username: "xxx",
-  password: "xxx",
-  udp: true,
-  "dialer-proxy": "🚀节点选择"
-};
+```toml
+[home_proxy]
+name = "家宽-SOCKS5"
+type = "socks5"
+server = "xxx"
+port = 443
+username = "xxx"
+password = "xxx"
+udp = true
+dialer-proxy = "🚀节点选择"
 ```
+
+The generated local script and local TOML are both excluded by `.gitignore`; `clash-verge-ai-residential.local.toml.example` is the safe tracked starting point. See [Local TOML configuration and sync](local-configuration.md) for the complete setup, validation rules, and platform-specific copy command.
 
 Two modes are supported:
 
-- Replace the placeholder endpoint and credentials in a private local copy.
-- Define an existing `家宽-SOCKS5` proxy in each Profile and leave the public script placeholders unchanged. The script reuses the existing endpoint and credentials.
+- Enter the actual endpoint and credentials in the ignored local TOML, then paste the generated local script into Clash Verge Rev.
+- Define an existing `家宽-SOCKS5` proxy in each Profile and leave `server`, `username`, and `password` as `xxx`; the script reuses the existing endpoint and credentials.
 
-For an unauthenticated SOCKS5 service, set both `username` and `password` to empty strings. Leaving either value as `xxx` fails closed.
-
-Never commit a customized copy containing a real endpoint or credential. Use a `*.local.js` filename, which is ignored by `.gitignore`.
+For an unauthenticated SOCKS5 service, set both `username` and `password` to empty strings. Leaving either value as `xxx` fails closed unless a same-name Profile node provides the missing values.
 
 ## Profile-specific upstream candidates
 
