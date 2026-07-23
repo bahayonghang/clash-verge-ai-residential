@@ -22,11 +22,11 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1：GitHub API 返回 `main` 已受保护。
-- [ ] AC2：required status checks 包含且仅依赖批准的稳定 CI 聚合检查，并启用 strict/up-to-date。
-- [ ] AC3：force push 与 branch deletion 均被禁止，conversation resolution 已启用。
-- [ ] AC4：管理员、审批数量和线性历史设置与用户批准的策略一致。
-- [ ] AC5：记录执行后的保护配置摘要和可逆的回滚方式。
+- [x] AC1：GitHub API 返回 `main` 已受保护。
+- [x] AC2：required status checks 包含且仅依赖批准的稳定 CI 聚合检查，并启用 strict/up-to-date。
+- [x] AC3：force push 与 branch deletion 均被禁止，conversation resolution 已启用。
+- [x] AC4：管理员、审批数量和线性历史设置与用户批准的策略一致。
+- [x] AC5：记录执行后的保护配置摘要和可逆的回滚方式。
 
 ## Out of Scope
 
