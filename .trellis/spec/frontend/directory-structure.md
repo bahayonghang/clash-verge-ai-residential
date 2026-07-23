@@ -11,6 +11,7 @@ scripts/
 tests/
   regression.test.js                       # extension behavior and routing boundary
   sync-local-config.test.js                # renderer validation and output behavior
+  check-template-safety.test.js            # public-template and secret-scan behavior
 docs/                                      # Chinese user and threat-model documentation
 package.json                               # zero-dependency Node 18+ command surface
 justfile                                   # cross-platform ci and render-local recipes
@@ -29,7 +30,8 @@ build output.
 - Keep Node-only filesystem or CLI behavior in `scripts/`. The root extension
   must not require `node:fs`, `node:path`, or another Node-only module.
 - Put extension regressions in `tests/regression.test.js`. Put renderer/parser
-  regressions in `tests/sync-local-config.test.js`.
+  regressions in `tests/sync-local-config.test.js`. Put repository secret-scan
+  regressions in `tests/check-template-safety.test.js`.
 - Put user-facing explanations in the matching Chinese file under `docs/` and
   keep `README.md` as the overview.
 - Keep public configuration shape in

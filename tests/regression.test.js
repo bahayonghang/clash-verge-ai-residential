@@ -2,6 +2,7 @@
 
 const path = require("node:path");
 const assert = require("node:assert/strict");
+const { test } = require("node:test");
 
 const scriptPath = process.env.CLASH_SCRIPT_PATH ||
   path.join(__dirname, "..", "clash-verge-ai-residential.js");
@@ -35,18 +36,6 @@ const {
   CURSOR_EXACT_DOMAINS,
   CURSOR_DOMAIN_REGEXES
 } = constants;
-
-let passed = 0;
-function test(name, fn) {
-  try {
-    fn();
-    passed += 1;
-    console.log(`ok ${passed} - ${name}`);
-  } catch (error) {
-    console.error(`not ok - ${name}`);
-    throw error;
-  }
-}
 
 function quietMain(config, profileName) {
   const originalInfo = console.info;
@@ -665,5 +654,3 @@ test("最终注入规则不存在重复项", () => {
   const rules = buildInjectedRules();
   assert.equal(new Set(rules).size, rules.length);
 });
-
-console.log(`All ${passed} v5.5 regression tests passed.`);

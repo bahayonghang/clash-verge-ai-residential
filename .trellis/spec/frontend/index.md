@@ -22,7 +22,9 @@ function main(config, profileName) {
 `scripts/sync-local-config.js` is a separate Node.js 18+ CommonJS CLI. It reads
 the public template plus an ignored local TOML file and atomically writes an
 ignored `.local.js` file. `tests/regression.test.js` and
-`tests/sync-local-config.test.js` exercise both surfaces with plain Node.
+`tests/sync-local-config.test.js` exercise both surfaces with Node's built-in
+test runner. `tests/check-template-safety.test.js` protects the public-template
+and repository secret scanner.
 
 ## Guidelines Index
 
@@ -49,11 +51,11 @@ ignored `.local.js` file. `tests/regression.test.js` and
 
 ## Quality Check
 
-Run `just ci` (equivalent to `npm run ci`). It performs `node --check`, the two
-plain-Node regression suites, and `scripts/check-template-safety.js`. Domain
-changes also require narrow positive coverage and explicit negative coverage for
-shared or non-AI traffic. Node tests do not replace a sanitized real-profile
-check in Clash Verge Rev when host behavior changes.
+Run `just ci` (equivalent to `npm run ci`). It performs `node --check`, three
+`node:test` suites, and the direct `scripts/check-template-safety.js` repository
+scan. Domain changes also require narrow positive coverage and explicit negative
+coverage for shared or non-AI traffic. Node tests do not replace a sanitized
+real-profile check in Clash Verge Rev when host behavior changes.
 
 Avoid importing component-framework conventions, adding a build step, or moving
 the host script behind Node-only APIs. Those changes would break the copy/paste

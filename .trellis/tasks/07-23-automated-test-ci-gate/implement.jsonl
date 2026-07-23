@@ -1,0 +1,1 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Preserve Node 18+, zero dependencies, credential safety, and the repository validation gate"}

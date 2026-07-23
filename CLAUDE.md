@@ -7,13 +7,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `clash-verge-ai-residential.js` (repo root, ~1.7k lines, vanilla CommonJS) is a Clash Verge Rev
 **global extension script** — not a built app. Users paste it into Clash Verge to route only core AI
 traffic (Claude, ChatGPT, Gemini, Cursor, …) through a residential SOCKS5 chain while all other traffic
-stays on their airport proxy. Node ≥18, zero dependencies, no bundler/transpiler/test framework.
+stays on their airport proxy. Node ≥18, zero dependencies, no bundler/transpiler or third-party test framework.
 
 ## Commands
 
 - `just ci` (= `npm run ci`) — full gate: `node --check` syntax lint + regression tests + secret scan.
   Run before every commit.
-- `npm test` — runs `tests/*.test.js` directly (plain Node scripts, no framework).
+- `npm test` — runs the explicitly listed suites with Node's built-in `node:test` runner; no third-party framework.
 - `just render-local` — regenerate the local profile from `*.local.toml`. First run copies
   `*.local.toml.example` → `*.local.toml` and exits 1 asking you to fill it in.
 
