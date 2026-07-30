@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Repository runtime model, pre-development checklist, and routing validation gate."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Managed-rule ownership, DNS rebuilding, and idempotence contracts."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"AI-only domain evidence, positive and negative tests, and required CI checks."}
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Builder composition and Clash host portability conventions."}

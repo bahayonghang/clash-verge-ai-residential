@@ -5,6 +5,14 @@ set shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 [unix]
 set shell := ["sh", "-cu"]
 
+[private]
+default: help
+
+# 列出所有可用的命令及说明
+help:
+    @just --list
+
+
 # 公开模板、回归测试与模板安全检查。
 ci:
     npm run ci
