@@ -460,6 +460,7 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
   assertAiRoute(rules, [
     "claude.ai",
     "api.anthropic.com",
+    "a-api.anthropic.com",
     "chatgpt.com",
     "api.openai.com",
     "antigravity.google",
@@ -472,6 +473,11 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "statsigapi.net",
     "js.stripe.com",
     "auth.openai.com",
+    "www.anthropic.com",
+    "docs.anthropic.com",
+    "support.anthropic.com",
+    "status.anthropic.com",
+    "telemetry.anthropic.com",
     "accounts.google.com",
     "serviceusage.googleapis.com",
     "update.googleapis.com",
@@ -485,6 +491,7 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
 
 test("开关关闭后清理当前托管规则，并保留退役或用户自写规则", () => {
   const currentManagedRules = [
+    `DOMAIN,a-api.anthropic.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
     `DOMAIN,api.cursor.com,${AI_GROUP}`,
     `DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`
@@ -506,6 +513,7 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
 
 test("脚本执行两次保持幂等，并保留用户自定义非托管规则", () => {
   const customAiRule = `DOMAIN,custom-ai.example,${AI_GROUP}`;
+  const anthropicFallbackRule = "DOMAIN-SUFFIX,anthropic.com,GPT";
   const normalYoutubeRule = "DOMAIN-SUFFIX,youtube.com,Proxy";
   const normalMarketplaceRule = "DOMAIN,marketplace.cursorapi.com,Proxy";
   const retiredCursorRules = [
@@ -515,10 +523,15 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
   ];
   const config = configFixture({
     proxies: [airportNode("HK")],
-    groups: [group("🚀节点选择", ["HK"]), group("Proxy", ["HK"])],
+    groups: [
+      group("🚀节点选择", ["HK"]),
+      group("GPT", ["HK"]),
+      group("Proxy", ["HK"])
+    ],
     rules: [
       customAiRule,
       customAiRule,
+      anthropicFallbackRule,
       normalYoutubeRule,
       normalMarketplaceRule,
       `DOMAIN,www.youtube.com,${AI_GROUP}`,
@@ -533,10 +546,17 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
   });
 
   quietMain(config, "赔钱机场");
+  const firstNameserverPolicy = structuredClone(config.dns["nameserver-policy"]);
   quietMain(config, "赔钱机场");
 
   assert.equal(countNamed(config.proxies, HOME_PROXY_NAME), 1);
   assert.equal(countNamed(config["proxy-groups"], AI_GROUP), 1);
+  assert.equal(config.rules.includes(anthropicFallbackRule), true);
+  for (const host of ["api.anthropic.com", "a-api.anthropic.com"]) {
+    const exactRule = `DOMAIN,${host},${AI_GROUP}`;
+    assert.equal(config.rules.filter((rule) => rule === exactRule).length, 1);
+    assert.ok(config.rules.indexOf(exactRule) < config.rules.indexOf(anthropicFallbackRule));
+  }
   assert.equal(config.rules.filter((rule) => rule === customAiRule).length, 1);
   assert.equal(config.rules.includes(normalYoutubeRule), true);
   assert.equal(config.rules.includes(normalMarketplaceRule), true);
@@ -550,6 +570,7 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
   assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`), true);
   assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`), true);
   assert.equal(new Set(config.rules).size, config.rules.length);
+  assert.deepEqual(config.dns["nameserver-policy"], firstNameserverPolicy);
 });
 
 // ---------------------------------------------------------------------------
@@ -574,14 +595,22 @@ test("非 AI DoH 拒绝会破坏 Mihomo URL 绑定语义的上游名称", () => 
   );
 });
 
-test("AI DNS policy 仅覆盖 AI 核心域名，排除 YouTube 与插件市场", () => {
+test("AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名", () => {
   const policy = buildNameserverPolicy({});
+  assert.deepEqual(policy["api.anthropic.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["a-api.anthropic.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.gemini.google.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.aistudio.google.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["generativelanguage.googleapis.com"], RESIDENTIAL_DOH);
 
   for (const key of [
     "www.youtube.com",
+    "+.anthropic.com",
+    "www.anthropic.com",
+    "docs.anthropic.com",
+    "support.anthropic.com",
+    "status.anthropic.com",
+    "telemetry.anthropic.com",
     "i.ytimg.com",
     "maps.googleapis.com",
     "marketplace.cursorapi.com",

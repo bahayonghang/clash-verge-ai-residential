@@ -9,6 +9,10 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - Add sanitized real-profile integration fixtures.
 - Add automated domain-source freshness checks where upstream providers publish machine-readable inventories.
 
+### Fixed
+
+- Route the observed Anthropic core API host `a-api.anthropic.com` through the residential connection and DNS paths without broadening the default scope to all `anthropic.com` traffic.
+
 ## [5.5.0] - 2026-07-23
 
 ### Added

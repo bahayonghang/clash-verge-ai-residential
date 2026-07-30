@@ -175,6 +175,7 @@ const CORE_SUFFIX_DOMAINS = [
 const CORE_EXACT_DOMAINS = [
   // 第一方模型 API；避免 anthropic.com / openai.com 宽泛后缀。
   "api.anthropic.com",
+  "a-api.anthropic.com",
   "api.openai.com",
 
   // Antigravity / Gemini Code Assist / Gemini Developer API / Vertex AI
