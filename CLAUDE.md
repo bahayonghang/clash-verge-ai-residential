@@ -34,5 +34,3 @@ stays on their airport proxy. Node ≥18, zero dependencies, no bundler/transpil
 - **Commits:** `<type>: [AI] <gitmoji> <Chinese subject>` (e.g. `feat: [AI] ✨ 添加本地配置渲染`).
 - 2-space indent, double quotes, `"use strict"`, CommonJS. No linter/formatter configured — keep
   syntax clean (`npm run check`).
-
-@AGENTS.md
