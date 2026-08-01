@@ -67,6 +67,7 @@ test -e clash-verge-ai-residential.local.toml || \
 | TOML 键 | JavaScript 常量 | 默认值 | 作用 | 依赖或风险 |
 | --- | --- | --- | --- | --- |
 | `routing.openai_shared_dependencies` | `ROUTE_OPENAI_SHARED_DEPENDENCIES` | `false` | 路由 OpenAI 的 WorkOS、客服、遥测、支付等共享依赖。 | 会扩大到非模型流量。 |
+| `routing.openai_core` | `ROUTE_OPENAI_CORE` | `true` | 路由 ChatGPT 产品、OpenAI 模型 API 和用户上传/生成内容。 | 关闭后 GPT 流量改走机场上游。 |
 | `routing.claude_shared_dependencies` | `ROUTE_CLAUDE_SHARED_DEPENDENCIES` | `false` | 路由 Claude 的统计、客服、风控等共享依赖。 | 会扩大到非模型流量。 |
 | `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `false` | 路由 Antigravity 使用的共享 Google 登录入口。 | 影响其他 Google 产品的认证流量。 |
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | 路由 Service Usage、Resource Manager、IAM、API Hub 等项目 API。 | 属于项目配置而非推理。 |

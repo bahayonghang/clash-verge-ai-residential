@@ -4,6 +4,10 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 
 ## [Unreleased]
 
+### Added
+
+- New `routing.openai_core` switch (default `true`) controlling ChatGPT product, OpenAI model API, and uploaded/generated user-content routing. Setting it to `false` in the local TOML keeps GPT traffic on the airport upstream instead of the residential link.
+
 ### Planned
 
 - Add sanitized real-profile integration fixtures.

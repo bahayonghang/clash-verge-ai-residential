@@ -97,6 +97,9 @@ const ALLOW_HEURISTIC_UPSTREAM_FALLBACK = false;
 // WorkOS / Intercom / Sentry / Datadog / Stripe 等共享依赖不是模型推理，默认不走家宽。
 const ROUTE_OPENAI_SHARED_DEPENDENCIES = false;
 
+// ChatGPT 产品、OpenAI 模型 API 与用户上传/生成内容；默认走家宽，可在本地 TOML 关闭。
+const ROUTE_OPENAI_CORE = true;
+
 // Claude 的统计、客服、风控与共享第三方依赖默认不走家宽。
 const ROUTE_CLAUDE_SHARED_DEPENDENCIES = false;
 
@@ -164,19 +167,21 @@ const CORE_SUFFIX_DOMAINS = [
   "claudemcpcontent.com",
   "claudeusercontent.com",
 
-  // ChatGPT Web / user-uploaded and generated content；通用静态 CDN 不走家宽
-  "chatgpt.com",
-  "oaiusercontent.com",
-
   // Google Antigravity 产品域
   "antigravity.google"
 ];
 
+// ChatGPT 产品域；开关关闭后 GPT 流量改走机场，不再进家宽。
+const OPENAI_CORE_SUFFIX_DOMAINS = [
+  // ChatGPT Web / user-uploaded and generated content；通用静态 CDN 不走家宽
+  "chatgpt.com",
+  "oaiusercontent.com"
+];
+
 const CORE_EXACT_DOMAINS = [
-  // 第一方模型 API；避免 anthropic.com / openai.com 宽泛后缀。
+  // 第一方模型 API；避免 anthropic.com 宽泛后缀。
   "api.anthropic.com",
   "a-api.anthropic.com",
-  "api.openai.com",
 
   // Antigravity / Gemini Code Assist / Gemini Developer API / Vertex AI
   "cloudcode-pa.googleapis.com",
@@ -185,6 +190,11 @@ const CORE_EXACT_DOMAINS = [
   "geminicloudassist.googleapis.com",
   "generativelanguage.googleapis.com",
   "aiplatform.googleapis.com"
+];
+
+// OpenAI 第一方模型 API；避免 openai.com 宽泛后缀。
+const OPENAI_CORE_EXACT_DOMAINS = [
+  "api.openai.com"
 ];
 
 // Gemini Web / AI Studio：只保留产品入口，不纳入共享 Google 服务清单。
@@ -998,6 +1008,7 @@ function validateTopLevelUpstream(config, upstreamName) {
 function activeSuffixDomains() {
   return uniqueStrings([
     ...CORE_SUFFIX_DOMAINS,
+    ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_SUFFIX_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_SUFFIX_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_SUFFIX_DOMAINS : []),
     ...(ROUTE_OPENAI_SHARED_DEPENDENCIES ? OPENAI_SHARED_SUFFIX_DOMAINS : []),
@@ -1011,6 +1022,7 @@ function activeSuffixDomains() {
 function activeExactDomains() {
   return uniqueStrings([
     ...CORE_EXACT_DOMAINS,
+    ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_EXACT_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_EXACT_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_EXACT_DOMAINS : []),
     ...(ROUTE_OPENAI_SHARED_DEPENDENCIES ? OPENAI_SHARED_EXACT_DOMAINS : []),
@@ -1034,6 +1046,7 @@ function activeDomainRegexes() {
 function allPossibleSuffixDomains() {
   return uniqueStrings([
     ...CORE_SUFFIX_DOMAINS,
+    ...OPENAI_CORE_SUFFIX_DOMAINS,
     ...GEMINI_WEB_SUFFIX_DOMAINS,
     ...CURSOR_SUFFIX_DOMAINS,
     ...OPENAI_SHARED_SUFFIX_DOMAINS,
@@ -1046,6 +1059,7 @@ function allPossibleSuffixDomains() {
 function allPossibleExactDomains() {
   return uniqueStrings([
     ...CORE_EXACT_DOMAINS,
+    ...OPENAI_CORE_EXACT_DOMAINS,
     ...GEMINI_WEB_EXACT_DOMAINS,
     ...CURSOR_EXACT_DOMAINS,
     ...OPENAI_SHARED_EXACT_DOMAINS,
@@ -1498,6 +1512,9 @@ if (typeof module !== "undefined" && module.exports) {
       DIRECT_DOH,
       PRIVATE_DNS,
       PRESERVE_UNMANAGED_NAMESERVER_POLICY,
+      ROUTE_OPENAI_CORE,
+      OPENAI_CORE_SUFFIX_DOMAINS,
+      OPENAI_CORE_EXACT_DOMAINS,
       ROUTE_GEMINI_WEB_CORE,
       ROUTE_CURSOR_CORE,
       ROUTE_CURSOR_PROCESS_FALLBACK,

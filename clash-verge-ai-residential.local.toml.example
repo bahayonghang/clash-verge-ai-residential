@@ -13,6 +13,7 @@ dialer-proxy = "🚀节点选择"
 # 住宅链路范围开关。共享依赖、进程兜底和通用基础设施默认关闭。
 [routing]
 openai_shared_dependencies = false
+openai_core = true
 claude_shared_dependencies = false
 antigravity_google_auth = false
 antigravity_project_apis = false

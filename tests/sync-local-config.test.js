@@ -199,6 +199,67 @@ enable_tun_strict_route = true
   });
 });
 
+test("本地 openai_core = false 让 GPT 域名不再走家宽，Claude 等核心域名不受影响", () => {
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    const originalTemplate = fs.readFileSync(templatePath, "utf8");
+    const source = `${validHomeProxyToml}
+[routing]
+openai_core = false
+`;
+    fs.writeFileSync(configPath, source, "utf8");
+
+    syncLocalConfig({ templatePath, configPath, outputPath });
+
+    const output = fs.readFileSync(outputPath, "utf8");
+    assert.match(output, /const ROUTE_OPENAI_CORE = false;/);
+    assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
+
+    const probeSource = [
+      '"use strict";',
+      "const script = require(process.argv[1]);",
+      "process.stdout.write(JSON.stringify({",
+      "  openaiCore: script.constants.ROUTE_OPENAI_CORE,",
+      "  aiGroup: script.constants.AI_GROUP,",
+      "  residentialDoh: script.constants.RESIDENTIAL_DOH,",
+      "  rules: script.buildInjectedRules(),",
+      "  policy: script.buildNameserverPolicy({})",
+      "}));"
+    ].join("\n");
+    const probe = JSON.parse(childProcess.execFileSync(
+      process.execPath,
+      ["-e", probeSource, outputPath],
+      { encoding: "utf8" }
+    ));
+    const publicScript = require(templatePath);
+    assert.equal(publicScript.constants.ROUTE_OPENAI_CORE, true);
+    assert.equal(probe.openaiCore, false);
+
+    for (const host of ["chatgpt.com", "api.openai.com", "oaiusercontent.com"]) {
+      assert.equal(
+        ruleMatchesHost(probe.rules, host, probe.aiGroup),
+        false,
+        `本地开关应让 GPT 域名离开家宽：${host}`
+      );
+      assert.equal(host in probe.policy, false, `DNS policy 不应包含 GPT 域名：${host}`);
+    }
+    for (const host of [
+      "claude.ai",
+      "api.anthropic.com",
+      "a-api.anthropic.com",
+      "antigravity.google"
+    ]) {
+      assert.equal(
+        ruleMatchesHost(probe.rules, host, probe.aiGroup),
+        true,
+        `核心域名仍应走家宽：${host}`
+      );
+    }
+    assert.deepEqual(probe.policy["api.anthropic.com"], probe.residentialDoh);
+  });
+});
+
 test("同步前会拒绝不完整或不安全的代理配置", () => {
   const incompleteToml = validHomeProxyToml.replace("port = 1080\n", "");
   assert.throws(
