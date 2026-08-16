@@ -551,7 +551,48 @@ function syncLocalConfig({
   );
   writeFileAtomically(resolvedOutputPath, output);
 
-  return { configPath: resolvedConfigPath, outputPath: resolvedOutputPath, addedKeys };
+  return {
+    configPath: resolvedConfigPath,
+    outputPath: resolvedOutputPath,
+    addedKeys,
+    addedDefaults: addedKeys.map((key) => {
+      const separator = key.indexOf(".");
+      const table = key.slice(0, separator);
+      const field = key.slice(separator + 1);
+      return { key, value: config[table][field] };
+    })
+  };
+}
+
+// 轻量 ANSI 着色：遵循 NO_COLOR 与 FORCE_COLOR 约定，仅在交互终端启用；
+// Windows 下要求宿主是 Windows Terminal、VS Code 等现代终端，避免传统
+// conhost 打印转义符原文。
+function colorEnabled(stream) {
+  if (process.env.NO_COLOR) return false;
+  if (process.env.FORCE_COLOR === "0") return false;
+  if (process.env.FORCE_COLOR) return true;
+  if (stream.isTTY !== true) return false;
+  if (process.platform === "win32") {
+    return Boolean(
+      process.env.WT_SESSION ||
+        process.env.TERM_PROGRAM ||
+        process.env.ConEmuANSI === "ON" ||
+        process.env.TERM
+    );
+  }
+  return true;
+}
+
+function createPainter(stream) {
+  const enabled = colorEnabled(stream);
+  const wrap = (code) => (text) => (enabled ? `\x1b[${code}m${text}\x1b[0m` : text);
+  return {
+    ok: wrap("32"),
+    warn: wrap("33"),
+    error: wrap("31"),
+    cyan: wrap("36"),
+    dim: wrap("2")
+  };
 }
 
 function main() {
@@ -560,20 +601,29 @@ function main() {
     configPath: configArgument ? path.resolve(process.cwd(), configArgument) : DEFAULT_CONFIG_PATH,
     outputPath: outputArgument ? path.resolve(process.cwd(), outputArgument) : DEFAULT_OUTPUT_PATH
   });
-  if (result.addedKeys.length > 0) {
+  const paint = createPainter(process.stdout);
+  const configName = path.basename(result.configPath);
+  const outputName = path.basename(result.outputPath);
+
+  if (result.addedDefaults.length > 0) {
     console.log(
-      `已按示例默认值补充 ${result.addedKeys.length} 个缺失开关到 ` +
-      `${path.basename(result.configPath)}：${result.addedKeys.join("、")}`
+      `${paint.warn("+")} 已按示例默认值补全 ${result.addedDefaults.length} 个缺失开关到 ${paint.cyan(configName)}：`
     );
+    for (const { key, value } of result.addedDefaults) {
+      console.log(`    ${paint.cyan(key)} ${paint.dim(`= ${value}`)}`);
+    }
   }
-  console.log(`已同步 ${path.basename(result.configPath)} -> ${path.basename(result.outputPath)}`);
+  console.log(
+    `${paint.ok("✓")} 已同步 ${paint.cyan(configName)} ${paint.dim("→")} ${paint.cyan(outputName)}`
+  );
 }
 
 if (require.main === module) {
   try {
     main();
   } catch (error) {
-    console.error(error.message);
+    const paint = createPainter(process.stderr);
+    console.error(`${paint.error("✗")} ${error.message}`);
     process.exitCode = 1;
   }
 }

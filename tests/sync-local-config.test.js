@@ -103,6 +103,14 @@ test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚�
     assert.equal(result.addedKeys.includes("routing.cursor_core"), true);
     assert.equal(result.addedKeys.includes("routing.grok_core"), true);
     assert.equal(result.addedKeys.includes("runtime.enable_domain_sniffer"), true);
+    assert.equal(
+      result.addedDefaults.find((entry) => entry.key === "routing.grok_core").value,
+      true
+    );
+    assert.equal(
+      result.addedDefaults.find((entry) => entry.key === "runtime.enable_domain_sniffer").value,
+      true
+    );
     const completedToml = fs.readFileSync(configPath, "utf8");
     assert.match(completedToml, /\[routing\][\s\S]*cursor_core = true/);
     assert.match(completedToml, /\[routing\][\s\S]*grok_core = true/);
@@ -455,6 +463,10 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
     assert.equal(result.addedKeys.includes("routing.public_encrypted_dns"), true);
     assert.equal(result.addedKeys.includes("runtime.enable_domain_sniffer"), true);
     assert.equal(result.addedKeys.includes("routing.cursor_core"), false);
+    assert.equal(
+      result.addedDefaults.find((entry) => entry.key === "routing.public_encrypted_dns").value,
+      false
+    );
 
     const completed = fs.readFileSync(configPath, "utf8");
     assert.match(completed, /# 自定义注释：只保留部分开关/);

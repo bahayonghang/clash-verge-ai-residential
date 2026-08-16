@@ -21,7 +21,7 @@ ci:
 # 首次执行会创建本地配置，避免带着示例占位值生成脚本。
 # 本地 TOML 缺失的开关键会按示例默认值自动补全（含缺失的整个配置表）。
 render-local:
-    @node -e "const fs = require('node:fs'); const configPath = 'clash-verge-ai-residential.local.toml'; if (!fs.existsSync(configPath)) { fs.copyFileSync('clash-verge-ai-residential.local.toml.example', configPath); console.error('已生成 clash-verge-ai-residential.local.toml。请填写住宅 SOCKS5 信息后重新执行 just render-local。'); process.exit(1); }"
+    @node -e "const fs = require('node:fs'); const configPath = 'clash-verge-ai-residential.local.toml'; if (!fs.existsSync(configPath)) { fs.copyFileSync('clash-verge-ai-residential.local.toml.example', configPath); console.error('✗ 已生成 clash-verge-ai-residential.local.toml。请填写住宅 SOCKS5 信息后重新执行 just render-local。'); process.exit(1); }"
     @node scripts/sync-local-config.js
 
 # 向后兼容旧命令；请使用 render-local，它更准确地表示单向生成行为。
