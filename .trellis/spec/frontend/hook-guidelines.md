@@ -23,6 +23,26 @@ The extension performs no network requests, timers, subscriptions, caching, or
 background work. Clash/Mihomo consumes the returned configuration and owns the
 actual networking lifecycle.
 
+### Host execution contract (verified against clash-verge-rev dev, 2026-08)
+
+- The app re-runs the global script on every config regeneration. When a profile
+  has no dedicated script item, the same global script runs a second time as the
+  profile item with the already-transformed config — keep `main` idempotent.
+- An exception in `main` makes the app discard ALL script changes and continue
+  with the pre-script config (error surfaces in the Script card logs and the
+  config log stream). This is routing fail-open: AI requests may use the
+  original Profile instead of the residential chain. Treat any script error as
+  a routing incident, inspect the logs, and stop AI traffic until validation
+  succeeds; do not rely on throwing as a fail-closed enforcement mechanism.
+- Control-plane keys (`tun`, `ipv6`, `mode`, ports, ...) are snapshotted before
+  and restored after script execution. Never rely on script writes to these
+  fields on current hosts; point users at the app settings page instead. Most
+  rebuilt `dns` fields survive, but `dns.ipv6` is also restored from app
+  settings when the Clash Verge Rev DNS override is enabled.
+- Engine is boa_engine 0.21: no network/file IO, 5s timeout, 10M loop-iteration
+  limit, 1000-line/1MB console cap, 10MB config JSON cap. `profileName` is the
+  profile display name (Chinese passes through verbatim).
+
 ## Node CLI Entry Point
 
 `scripts/sync-local-config.js` separates reusable functions from process side

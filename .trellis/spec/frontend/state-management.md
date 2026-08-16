@@ -51,6 +51,18 @@ rules, filters, or DNS entries. `uniqueStrings`, `uniqueScalars`,
 this contract. `tests/regression.test.js` contains the authoritative
 repeated-execution and retired-rule ownership tests.
 
+Managed-rule cleanup matches exact strings against `buildManagedRuleSet()`. Two
+consequences when evolving rule shapes:
+
+- When a domain changes form (e.g. `api.openai.com` exact -> suffix in v5.7),
+  keep the legacy literal in `allPossibleExactDomains()` so previous output is
+  still cleaned; add a regression test with the legacy rule string.
+- Never inject managed rules that embed a dynamically resolved name (such as the
+  upstream group) — exact-string cleanup cannot enumerate past values and would
+  either leak stale rules or force prefix matching that risks deleting
+  user-owned rules. This is why `downloads.claude.ai` stays under the
+  `claude.ai` suffix instead of being split to the upstream.
+
 The renderer is one-way state flow:
 
 ```text
