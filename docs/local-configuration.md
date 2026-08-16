@@ -25,7 +25,8 @@ udp = true
 dialer-proxy = "🚀节点选择"
 
 [routing]
-cursor_core = false
+cursor_core = true
+grok_core = true
 ```
 
 字段含义：
@@ -60,7 +61,7 @@ test -e clash-verge-ai-residential.local.toml || \
 
 ## 开关配置
 
-`[routing]` 和 `[runtime]` 都是可选表，并且允许只写需要覆盖的键；未写的键沿用公开脚本默认值。因此，旧版只含 `[home_proxy]` 的本地 TOML 仍可直接渲染。以下 TOML 键与 JavaScript 常量是一一映射，不要根据 `ROUTE_*` / `ENABLE_*` 前缀自行猜测键名。
+`[routing]` 和 `[runtime]` 都是可选表，并且允许只写需要覆盖的键。同步时，本地 TOML 缺失的开关键（包括整个缺失的表）会按示例文件的默认值自动补全并写回本地文件；已有键值、注释和行尾风格逐字保留，`[home_proxy]` 的凭据字段缺键仍会报错要求手填。因此，旧版只含 `[home_proxy]` 的本地 TOML 也可以直接渲染，渲染器会顺手补齐缺失开关。以下 TOML 键与 JavaScript 常量是一一映射，不要根据 `ROUTE_*` / `ENABLE_*` 前缀自行猜测键名。
 
 ### 路由范围
 
@@ -73,7 +74,8 @@ test -e clash-verge-ai-residential.local.toml || \
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | 路由 Service Usage、Resource Manager、IAM、API Hub 等项目 API。 | 属于项目配置而非推理。 |
 | `routing.antigravity_update_and_telemetry` | `ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY` | `false` | 路由 Antigravity 更新、扩展市场和遥测。 | 会扩大到更新和统计流量。 |
 | `routing.gemini_web_core` | `ROUTE_GEMINI_WEB_CORE` | `true` | 路由 Gemini Web 和 Google AI Studio 产品入口。 | 无。 |
-| `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `false` | 路由 Cursor AI API、Tab、Agent、索引和产品专属认证。 | Cursor 用户需显式开启。 |
+| `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `true` | 路由 Cursor AI API、Tab、Agent、索引、授权/SSO 门户、Cloud Agent VM 和产品专属认证。 | 不需要 Cursor 走家宽时可显式改为 `false`。 |
+| `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | 路由 Grok Build（xAI grok CLI）推理 API（`cli-chat-proxy.grok.com`）与 Grok 产品域。 | 不需要 Grok 走家宽时可显式改为 `false`；同主机的 Grok 网页与遥测无法在域名层拆分。 |
 | `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | 增加 Cursor 进程级兜底规则。 | 仅在 `routing.ai_process_fallback = true` 时生效，会捕获非 AI 请求。 |
 | `routing.claude_code_auxiliary` | `ROUTE_CLAUDE_CODE_AUXILIARY` | `false` | 路由 Claude Code 安装、更新、文档和包管理端点。 | 属于辅助流量而非推理。 |
 | `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | 为已知 AI 应用增加进程级兜底并启用进程查找。 | 会把进程中的非 AI 请求一并路由。 |
@@ -108,7 +110,7 @@ just render-local
 node scripts/sync-local-config.js
 ```
 
-`render-local` 表示单向渲染，而非双向同步：它读取公开的 `clash-verge-ai-residential.js` 与本地 TOML，生成 `clash-verge-ai-residential.local.js`，不会修改公开模板或反向写入 TOML。不要手动编辑生成的 `.local.js`；修改 TOML 后重新生成即可。
+`render-local` 表示单向渲染，而非双向同步：它读取公开的 `clash-verge-ai-residential.js` 与本地 TOML，生成 `clash-verge-ai-residential.local.js`，不会修改公开模板。唯一的例外是缺失开关的自动补全：本地 TOML 缺少的开关键会按示例默认值写回本地文件，方便你看到并调整所有可用开关；用户已写的键值、注释与行尾风格不会被改写。不要手动编辑生成的 `.local.js`；修改 TOML 后重新生成即可。
 
 在 Clash Verge Rev 中打开 **Profiles -> Global Extend Script**，双击脚本卡片，将**生成的本地脚本**全部粘贴并保存，然后刷新当前 Profile：
 

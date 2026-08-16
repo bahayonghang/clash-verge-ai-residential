@@ -44,6 +44,51 @@ complete local configuration before writing, reject output paths that overwrite
 the template or TOML input, and retain `writeFileAtomically`'s temporary-file
 cleanup. The command reports failures in Chinese and sets a nonzero exit code.
 
+## Local TOML Switch Wiring Checklist
+
+Adding or changing a `[routing]` / `[runtime]` switch is a cross-file contract.
+`tests/sync-local-config.test.js` ("生产映射覆盖全部用户布尔开关…") enforces
+every item, so a missed wire fails CI rather than shipping silently. Complete
+all of them in one change:
+
+1. Boolean constant in the public template's user-config section
+   (`const ROUTE_X = true;` — the exact-anchor regex depends on this format).
+2. `activeSuffixDomains()` / `activeExactDomains()` / `activeDomainRegexes()`
+   gating in the template (switch-on path: rules + DNS policy).
+3. The matching `allPossible*Domains()` / `allPossibleDomainRegexes()` entry
+   (switch-off path: managed-rule cleanup after the switch was ever enabled).
+4. The constant and domain lists in the template's `module.exports.constants`.
+5. `SWITCH_CONFIG_FIELDS` entry in `scripts/sync-local-config.js`
+   (`table` / `key` / `constant` / `type`).
+6. The key + default in `clash-verge-ai-residential.local.toml.example`
+   (single source of the auto-completion defaults).
+7. The table row in both `docs/configuration.md` and
+   `docs/local-configuration.md` (`| \`table.key\` | \`CONSTANT\` | \`default\` | …`).
+
+## Local TOML Auto-Completion Contract
+
+`completeLocalToml(localSource, localConfig, exampleConfig)` in
+`scripts/sync-local-config.js` appends only missing switch keys (a whole missing
+table gets `[table]` rebuilt at EOF). Invariants:
+
+- Never rewrite existing lines: user values, comments, blank lines, BOM,
+  trailing-newline presence, and dominant EOL (CRLF vs LF) are preserved
+  verbatim; insert with line-splice, never parse→re-serialize.
+- Idempotent: with nothing missing it returns `null` and the file is not
+  touched (compare content, not mtime, in tests).
+- Defaults come from the example file only; `validateExampleSwitchDefaults`
+  fails the sync if the example is missing a declared key.
+- `[home_proxy]` keys are never auto-completed (credentials must be hand-filled;
+  `validateHomeProxyConfig` still fails closed).
+- After completion, re-parse and re-validate the completed text before
+  rendering; the completion write is atomic via `writeFileAtomically`.
+
+> **Warning — same-index insertion order**: when an existing table's block tail
+> coincides with EOF, key-append and whole-table-append share one insertion
+> index. Whole-table splices must run first (occupying the tail), then key
+> appends land before the new `[table]` header. Reversing this silently moves
+> the appended keys inside the new table and the re-parse rejects them.
+
 ## Test Loading
 
 `tests/regression.test.js` loads the public extension through CommonJS and allows

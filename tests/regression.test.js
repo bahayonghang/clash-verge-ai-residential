@@ -28,13 +28,15 @@ const {
   PRESERVE_UNMANAGED_NAMESERVER_POLICY,
   ROUTE_GEMINI_WEB_CORE,
   ROUTE_CURSOR_CORE,
+  ROUTE_GROK_CORE,
   ROUTE_CURSOR_PROCESS_FALLBACK,
   GEMINI_WEB_SUFFIX_DOMAINS,
   GEMINI_WEB_EXACT_DOMAINS,
   GEMINI_DOMAIN_REGEXES,
   CURSOR_SUFFIX_DOMAINS,
   CURSOR_EXACT_DOMAINS,
-  CURSOR_DOMAIN_REGEXES
+  CURSOR_DOMAIN_REGEXES,
+  GROK_SUFFIX_DOMAINS
 } = constants;
 
 function quietMain(config, profileName) {
@@ -160,7 +162,7 @@ function assertAiRoute(rules, hosts) {
 // ---------------------------------------------------------------------------
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
-  assert.equal(SCRIPT_VERSION, "5.5.0");
+  assert.equal(SCRIPT_VERSION, "5.6.0");
   assert.equal(template["dialer-proxy"], "🚀节点选择");
 });
 
@@ -381,17 +383,27 @@ test("Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走�
   ]);
 });
 
-test("Cursor 核心路由默认关闭，并保留窄范围目录供本地选择性开启", () => {
-  assert.equal(ROUTE_CURSOR_CORE, false);
+test("Cursor 核心路由默认开启，并保持窄范围目录", () => {
+  assert.equal(ROUTE_CURSOR_CORE, true);
   assert.deepEqual(
     CURSOR_SUFFIX_DOMAINS,
-    ["api2.cursor.sh", "api5.cursor.sh", "gcpp.cursor.sh", "authentication.cursor.sh"]
+    [
+      "api2.cursor.sh",
+      "api5.cursor.sh",
+      "gcpp.cursor.sh",
+      "authenticate.cursor.sh",
+      "authentication.cursor.sh",
+      "cursorvm.com"
+    ]
   );
   assert.deepEqual(
     CURSOR_EXACT_DOMAINS,
     ["api3.cursor.sh", "api4.cursor.sh", "authenticator.cursor.sh", "api.cursor.com"]
   );
-  assert.deepEqual(CURSOR_DOMAIN_REGEXES, ["^repo[0-9]+\\.cursor\\.sh$"]);
+  assert.deepEqual(
+    CURSOR_DOMAIN_REGEXES,
+    ["^repo[0-9]+\\.cursor\\.sh$", "^adminportal[0-9]+\\.cursor\\.sh$"]
+  );
   assert.equal(
     new RegExp(CURSOR_DOMAIN_REGEXES[0]).test("repo42.cursor.sh"),
     true
@@ -400,9 +412,17 @@ test("Cursor 核心路由默认关闭，并保留窄范围目录供本地选择�
     new RegExp(CURSOR_DOMAIN_REGEXES[0]).test("repo99.cursor.sh"),
     true
   );
+  assert.equal(
+    new RegExp(CURSOR_DOMAIN_REGEXES[1]).test("adminportal42.cursor.sh"),
+    true
+  );
+  assert.equal(
+    new RegExp(CURSOR_DOMAIN_REGEXES[1]).test("adminportal.cursor.sh"),
+    false
+  );
 
   const rules = buildInjectedRules();
-  assertNoAiRoute(rules, [
+  assertAiRoute(rules, [
     "api2.cursor.sh",
     "feature.api2.cursor.sh",
     "api3.cursor.sh",
@@ -411,11 +431,36 @@ test("Cursor 核心路由默认关闭，并保留窄范围目录供本地选择�
     "agentn.global.api5.cursor.sh",
     "repo42.cursor.sh",
     "repo99.cursor.sh",
+    "authenticate.cursor.sh",
     "prod.authentication.cursor.sh",
     "authenticator.cursor.sh",
+    "adminportal42.cursor.sh",
     "us-eu.gcpp.cursor.sh",
+    "vm.cursorvm.com",
+    "us-east.vm.cursorvm.com",
     "api.cursor.com"
   ]);
+});
+
+test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走", () => {
+  assert.equal(ROUTE_GROK_CORE, true);
+  assert.deepEqual(GROK_SUFFIX_DOMAINS, ["grok.com"]);
+
+  const rules = buildInjectedRules();
+  assertAiRoute(rules, [
+    "grok.com",
+    "cli-chat-proxy.grok.com"
+  ]);
+  assertNoAiRoute(rules, [
+    "api.mixpanel.com",
+    "x.ai",
+    "storage.googleapis.com"
+  ]);
+
+  const policy = buildNameserverPolicy({});
+  assert.deepEqual(policy["+.grok.com"], RESIDENTIAL_DOH);
+  assert.equal("api.mixpanel.com" in policy, false);
+  assert.equal("x.ai" in policy, false);
 });
 
 test("Cursor 插件市场、下载、CDN、更新与 Remote-SSH 资产不走家宽", () => {
@@ -493,7 +538,11 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
   const currentManagedRules = [
     `DOMAIN,a-api.anthropic.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,authenticate.cursor.sh,${AI_GROUP}`,
+    `DOMAIN-REGEX,^adminportal[0-9]+\\.cursor\\.sh$,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,cursorvm.com,${AI_GROUP}`,
     `DOMAIN,api.cursor.com,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,grok.com,${AI_GROUP}`,
     `DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`
   ];
   const userOwnedRules = [
@@ -563,7 +612,15 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
   assert.equal(config.rules.includes(`DOMAIN,www.youtube.com,${AI_GROUP}`), true);
   assert.equal(config.rules.includes(`DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`), true);
   assert.equal(config.rules.includes(`DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`), true);
-  assert.equal(config.rules.includes(`DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`), false);
+  // cursor_core 默认开启：用户预置的同形托管规则被清理后恰好重新注入一次。
+  assert.equal(
+    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
+    1
+  );
+  assert.equal(
+    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,grok.com,${AI_GROUP}`).length,
+    1
+  );
   for (const rule of retiredCursorRules) assert.equal(config.rules.includes(rule), true);
   assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), true);
   assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`), true);
@@ -602,6 +659,11 @@ test("AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名", ()
   assert.deepEqual(policy["+.gemini.google.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.aistudio.google.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["generativelanguage.googleapis.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["+.api2.cursor.sh"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["+.authenticate.cursor.sh"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["+.cursorvm.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["authenticator.cursor.sh"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["+.grok.com"], RESIDENTIAL_DOH);
 
   for (const key of [
     "www.youtube.com",
@@ -615,11 +677,12 @@ test("AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名", ()
     "maps.googleapis.com",
     "marketplace.cursorapi.com",
     "downloads.cursor.com",
-    "+.api2.cursor.sh",
-    "authenticator.cursor.sh",
     "+.cursor.com",
     "+.cursorapi.com",
-    "+.cursor-cdn.com"
+    "+.cursor-cdn.com",
+    "+.mixpanel.com",
+    "+.x.ai",
+    "+.googleapis.com"
   ]) {
     assert.equal(key in policy, false, `DNS policy 不应包含：${key}`);
   }

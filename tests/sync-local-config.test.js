@@ -82,24 +82,32 @@ udp = true
 dialer-proxy = "🚀节点选择"
 `;
 
-test("旧版仅含 home_proxy 的 TOML 仍可生成本地脚本且不修改公开模板", () => {
+test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚本", () => {
   withTemporaryDirectory((directory) => {
     const configPath = path.join(directory, "proxy.local.toml");
     const outputPath = path.join(directory, "proxy.local.js");
     const originalTemplate = fs.readFileSync(templatePath, "utf8");
     fs.writeFileSync(configPath, validHomeProxyToml, "utf8");
 
-    syncLocalConfig({ templatePath, configPath, outputPath });
+    const result = syncLocalConfig({ templatePath, configPath, outputPath });
 
     const output = fs.readFileSync(outputPath, "utf8");
     assert.match(output, /由 clash-verge-ai-residential\.js 与 proxy\.local\.toml 自动生成/);
     assert.match(output, /server: "home\.example\.test"/);
-    assert.match(output, /port: 1080/);
-    assert.match(output, /username: "home-user"/);
-    assert.match(output, /"dialer-proxy": "🚀节点选择"/);
-    assert.match(output, /const ROUTE_CURSOR_CORE = false;/);
+    assert.match(output, /const ROUTE_CURSOR_CORE = true;/);
+    assert.match(output, /const ROUTE_GROK_CORE = true;/);
     assert.doesNotMatch(output, /server: "xxx"/);
     assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
+
+    // 缺失的开关键按示例默认值补全进本地 TOML，且缺失的整表被追加。
+    assert.equal(result.addedKeys.includes("routing.cursor_core"), true);
+    assert.equal(result.addedKeys.includes("routing.grok_core"), true);
+    assert.equal(result.addedKeys.includes("runtime.enable_domain_sniffer"), true);
+    const completedToml = fs.readFileSync(configPath, "utf8");
+    assert.match(completedToml, /\[routing\][\s\S]*cursor_core = true/);
+    assert.match(completedToml, /\[routing\][\s\S]*grok_core = true/);
+    assert.match(completedToml, /\[runtime\][\s\S]*enable_domain_sniffer = true/);
+    assert.match(completedToml, /# This file intentionally contains test-only values\./);
 
     const parsed = parseLocalToml(validHomeProxyToml);
     assert.deepEqual(parsed.routing, {});
@@ -108,14 +116,15 @@ test("旧版仅含 home_proxy 的 TOML 仍可生成本地脚本且不修改公�
   });
 });
 
-test("部分 TOML 开关会注入生成脚本，并恢复窄范围 Cursor 核心路由", () => {
+test("部分 TOML 开关会注入生成脚本，并可关闭默认开启的 Cursor/Grok 核心路由", () => {
   withTemporaryDirectory((directory) => {
     const configPath = path.join(directory, "proxy.local.toml");
     const outputPath = path.join(directory, "proxy.local.js");
     const originalTemplate = fs.readFileSync(templatePath, "utf8");
     const source = `${validHomeProxyToml}
 [routing]
-cursor_core = true
+cursor_core = false
+grok_core = false
 
 [runtime]
 enable_tun_strict_route = true
@@ -125,7 +134,8 @@ enable_tun_strict_route = true
     syncLocalConfig({ templatePath, configPath, outputPath });
 
     const output = fs.readFileSync(outputPath, "utf8");
-    assert.match(output, /const ROUTE_CURSOR_CORE = true;/);
+    assert.match(output, /const ROUTE_CURSOR_CORE = false;/);
+    assert.match(output, /const ROUTE_GROK_CORE = false;/);
     assert.match(output, /const ENABLE_TUN_STRICT_ROUTE = true;/);
     assert.match(output, /const ROUTE_GEMINI_WEB_CORE = true;/);
     assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
@@ -150,11 +160,11 @@ enable_tun_strict_route = true
       { encoding: "utf8" }
     ));
     const publicScript = require(templatePath);
-    assert.equal(publicScript.constants.ROUTE_CURSOR_CORE, false);
-    assert.equal(probe.cursorCore, true);
+    assert.equal(publicScript.constants.ROUTE_CURSOR_CORE, true);
+    assert.equal(probe.cursorCore, false);
 
     const publicRules = publicScript.buildInjectedRules();
-    const expectedCursorRules = [
+    const expectedDisabledRules = [
       ...probe.suffixes.map(
         (domain) => `DOMAIN-SUFFIX,${domain},${probe.aiGroup}`
       ),
@@ -163,22 +173,30 @@ enable_tun_strict_route = true
       ),
       ...probe.regexes.map(
         (pattern) => `DOMAIN-REGEX,${pattern},${probe.aiGroup}`
-      )
+      ),
+      `DOMAIN-SUFFIX,grok.com,${probe.aiGroup}`
     ];
-    assert.equal(probe.rules.length - publicRules.length, expectedCursorRules.length);
-    for (const rule of expectedCursorRules) assert.equal(probe.rules.includes(rule), true);
+    assert.equal(publicRules.length - probe.rules.length, expectedDisabledRules.length);
+    for (const rule of expectedDisabledRules) {
+      assert.equal(publicRules.includes(rule), true);
+      assert.equal(probe.rules.includes(rule), false);
+    }
 
     for (const host of [
       "api2.cursor.sh",
       "agent.api5.cursor.sh",
+      "authenticate.cursor.sh",
       "repo42.cursor.sh",
+      "adminportal42.cursor.sh",
       "us-eu.gcpp.cursor.sh",
-      "api.cursor.com"
+      "vm.cursorvm.com",
+      "api.cursor.com",
+      "cli-chat-proxy.grok.com"
     ]) {
       assert.equal(
         ruleMatchesHost(probe.rules, host, probe.aiGroup),
-        true,
-        `本地开关应覆盖 Cursor 核心主机：${host}`
+        false,
+        `本地关闭后 Cursor/Grok 核心主机应离开家宽：${host}`
       );
     }
     for (const host of [
@@ -194,7 +212,8 @@ enable_tun_strict_route = true
       );
     }
 
-    assert.deepEqual(probe.policy["+.api2.cursor.sh"], probe.residentialDoh);
+    assert.equal("+.api2.cursor.sh" in probe.policy, false);
+    assert.equal("+.grok.com" in probe.policy, false);
     assert.equal("marketplace.cursorapi.com" in probe.policy, false);
   });
 });
@@ -327,11 +346,11 @@ test("布尔常量锚点缺失或重复时失败且不写入半成品", () => {
     for (const [name, alteredTemplate] of [
       [
         "missing.js",
-        originalTemplate.replace("const ROUTE_CURSOR_CORE = false;", "")
+        originalTemplate.replace("const ROUTE_CURSOR_CORE = true;", "")
       ],
       [
         "duplicate.js",
-        `${originalTemplate}\nconst ROUTE_CURSOR_CORE = false;\n`
+        `${originalTemplate}\nconst ROUTE_CURSOR_CORE = true;\n`
       ]
     ]) {
       const alteredTemplatePath = path.join(directory, name);
@@ -404,4 +423,145 @@ test("生产映射覆盖全部用户布尔开关，并与示例及文档默认�
       );
     }
   }
+});
+
+// ---------------------------------------------------------------------------
+// 本地 TOML 缺失键自动补全
+// ---------------------------------------------------------------------------
+
+const partialSwitchToml = `${validHomeProxyToml}
+# 自定义注释：只保留部分开关
+[routing]
+openai_core = false
+cursor_core = true
+`;
+
+test("缺失开关键按示例默认值补全，用户已有键值与注释逐字保留", () => {
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    fs.writeFileSync(configPath, partialSwitchToml, "utf8");
+
+    const result = syncLocalConfig({ templatePath, configPath, outputPath });
+
+    assert.equal(result.addedKeys.includes("routing.grok_core"), true);
+    assert.equal(result.addedKeys.includes("routing.public_encrypted_dns"), true);
+    assert.equal(result.addedKeys.includes("runtime.enable_domain_sniffer"), true);
+    assert.equal(result.addedKeys.includes("routing.cursor_core"), false);
+
+    const completed = fs.readFileSync(configPath, "utf8");
+    assert.match(completed, /# 自定义注释：只保留部分开关/);
+    assert.match(completed, /# This file intentionally contains test-only values\./);
+
+    const reparsed = parseLocalToml(completed);
+    assert.equal(reparsed.routing.openai_core, false, "用户已有值不应被覆盖");
+    assert.equal(reparsed.routing.cursor_core, true, "用户已有值不应被覆盖");
+    assert.equal(reparsed.routing.grok_core, true);
+    assert.equal(reparsed.routing.public_encrypted_dns, false);
+    assert.equal(reparsed.runtime.enable_domain_sniffer, true);
+    assert.equal(reparsed.runtime.warn_on_reachable_udp_disabled, true);
+
+    // 缺失键插在所属表区块内，而不是落在 home_proxy 或其他表之下。
+    const routingBlock = completed.slice(
+      completed.indexOf("[routing]"),
+      completed.indexOf("[runtime]")
+    );
+    assert.match(routingBlock, /^openai_core = false$/m);
+    assert.match(routingBlock, /^grok_core = true$/m);
+    assert.match(completed, /\[runtime\]\r?\nallow_final_rule_upstream_fallback = true/);
+
+    const output = fs.readFileSync(outputPath, "utf8");
+    assert.match(output, /const ROUTE_GROK_CORE = true;/);
+    assert.match(output, /const ROUTE_OPENAI_CORE = false;/);
+    assert.match(output, /const ENABLE_TUN_STRICT_ROUTE = false;/);
+  });
+});
+
+test("补全幂等：无缺失时不再改写本地 TOML", () => {
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    fs.writeFileSync(configPath, partialSwitchToml, "utf8");
+
+    const first = syncLocalConfig({ templatePath, configPath, outputPath });
+    assert.equal(first.addedKeys.length > 0, true);
+
+    const completedSource = fs.readFileSync(configPath, "utf8");
+    const second = syncLocalConfig({ templatePath, configPath, outputPath });
+    assert.deepEqual(second.addedKeys, []);
+    assert.equal(fs.readFileSync(configPath, "utf8"), completedSource);
+  });
+});
+
+test("与示例一致的完整 TOML 不被补全改写", () => {
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    const exampleSource = fs.readFileSync(examplePath, "utf8");
+    const completeToml = exampleSource.replace(
+      /server = "xxx"\nport = 443\nusername = "xxx"\npassword = "xxx"/,
+      'server = "home.example.test"\nport = 1080\nusername = "home-user"\npassword = "home-pass"'
+    );
+    fs.writeFileSync(configPath, completeToml, "utf8");
+
+    const result = syncLocalConfig({ templatePath, configPath, outputPath });
+    assert.deepEqual(result.addedKeys, []);
+    assert.equal(fs.readFileSync(configPath, "utf8"), completeToml);
+  });
+});
+
+test("CRLF 本地 TOML 补全后保持 CRLF 行尾", () => {
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    fs.writeFileSync(configPath, partialSwitchToml.replace(/\n/g, "\r\n"), "utf8");
+
+    syncLocalConfig({ templatePath, configPath, outputPath });
+
+    const completed = fs.readFileSync(configPath, "utf8");
+    assert.equal(/(?<!\r)\n/.test(completed), false, "不应出现孤立 LF 行尾");
+    assert.match(completed, /\[runtime\]\r\nallow_final_rule_upstream_fallback = true/);
+  });
+});
+
+test("home_proxy 凭据缺键不自动补全，仍要求用户手填", () => {
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    fs.writeFileSync(
+      configPath,
+      validHomeProxyToml.replace("password = \"home-pass\"\n", ""),
+      "utf8"
+    );
+
+    assert.throws(
+      () => syncLocalConfig({ templatePath, configPath, outputPath }),
+      /缺少字段 password/
+    );
+  });
+});
+
+test("示例 TOML 缺少声明的开关键时同步失败并提示补齐", () => {
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    const brokenExamplePath = path.join(directory, "broken.example.toml");
+    const exampleSource = fs.readFileSync(examplePath, "utf8");
+    fs.writeFileSync(
+      brokenExamplePath,
+      exampleSource.replace("grok_core = true\n", ""),
+      "utf8"
+    );
+    fs.writeFileSync(configPath, validHomeProxyToml, "utf8");
+
+    assert.throws(
+      () => syncLocalConfig({
+        templatePath,
+        configPath,
+        outputPath,
+        examplePath: brokenExamplePath
+      }),
+      /示例 TOML 缺少 routing\.grok_core/
+    );
+  });
 });

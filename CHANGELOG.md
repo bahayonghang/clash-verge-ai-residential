@@ -4,14 +4,23 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 
 ## [Unreleased]
 
-### Added
-
-- New `routing.openai_core` switch (default `true`) controlling ChatGPT product, OpenAI model API, and uploaded/generated user-content routing. Setting it to `false` in the local TOML keeps GPT traffic on the airport upstream instead of the residential link.
-
 ### Planned
 
 - Add sanitized real-profile integration fixtures.
 - Add automated domain-source freshness checks where upstream providers publish machine-readable inventories.
+
+## [5.6.0] - 2026-08-16
+
+### Added
+
+- New `routing.openai_core` switch (default `true`) controlling ChatGPT product, OpenAI model API, and uploaded/generated user-content routing. Setting it to `false` in the local TOML keeps GPT traffic on the airport upstream instead of the residential link.
+- New `routing.grok_core` switch (default `true`) routing the Grok Build (xAI grok CLI) inference API `cli-chat-proxy.grok.com` (`/v1/responses` inference and `/v1/storage` codebase/session uploads) plus the Grok product domain through the residential link. Grok third-party analytics (`api.mixpanel.com`), the `x.ai` install host, and shared `storage.googleapis.com` stay on the original Profile.
+- Cursor catalog additions from the official enterprise network configuration document: the `authenticate.cursor.sh` authorize endpoint, the `adminportal<N>.cursor.sh` SSO portal (bounded regex), and the `*.cursorvm.com` Cloud Agent VM hosts. Marketplace, CDN, download, and update hosts remain excluded.
+- Local TOML auto-completion during `just render-local` / `node scripts/sync-local-config.js`: missing switch keys (including a missing `[routing]` / `[runtime]` table) are appended to the local TOML using the example defaults. Existing values, comments, line endings, and the trailing newline are preserved verbatim; completion is idempotent, and missing `[home_proxy]` credential keys still fail closed.
+
+### Changed
+
+- `routing.cursor_core` now defaults to `true`: Cursor rules and DNS policy are injected without opt-in. Set it to `false` in the local TOML to keep Cursor on the airport upstream.
 
 ### Fixed
 

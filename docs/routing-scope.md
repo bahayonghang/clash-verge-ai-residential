@@ -10,19 +10,21 @@ The residential link is reserved for core AI product traffic. A domain is not in
 | ChatGPT / OpenAI | ChatGPT product domain, OpenAI model API, and uploaded/generated user content |
 | Gemini | Gemini Web, Google AI Studio product RPC/streaming hosts, Gemini Developer API, and Vertex AI regional/global model endpoints |
 | Google Antigravity / Gemini Code Assist | Product domain and product-specific Code Assist/agent APIs |
-| Cursor | Optional Chat/API, Tab, Agent, repository indexing, Cloud Agent/Bugbot API, and product-specific authentication; `routing.cursor_core` is `false` by default |
+| Cursor | Chat/API, Tab, Agent, repository indexing, Cloud Agent/Bugbot API, authorize endpoint, SSO admin portal, Cloud Agent VM hosts, and product-specific authentication; `routing.cursor_core` is `true` by default |
+| Grok Build | Grok product domain covering the `cli-chat-proxy.grok.com` inference API and `/v1/storage` codebase/session uploads; `routing.grok_core` is `true` by default |
 
-Cursor support remains available, but v5.5 does not inject Cursor rules or Cursor DNS policy unless `routing.cursor_core = true` is rendered through the local TOML.
+Cursor evidence: the official enterprise network configuration document lists `authenticate.cursor.sh`, `adminportal<N>.cursor.sh`, and the `*.cursorvm.com` VM hosts alongside the previously covered API/Tab/Agent/indexing endpoints. Grok evidence: a wire-level capture of grok 0.2.93 shows `cli-chat-proxy.grok.com` carrying `/v1/responses` inference and `/v1/storage` uploads; the same host also serves Grok web and event telemetry, which cannot be split at the domain layer.
 
 ## Explicit exclusions
 
 The following classes stay on the original Profile route:
 
 - Cursor Marketplace, extension installation, application downloads, CDN, updates, Remote-SSH/WSL server assets, website, documentation, and forum.
+- Grok Build third-party analytics (`api.mixpanel.com`), the `x.ai` install script/privacy endpoints, and the shared `storage.googleapis.com` backend for codebase uploads.
 - YouTube, Maps, Google Search, Google Fonts, Gstatic, advertising, analytics, and other generic Google services.
 - OpenAI/Claude customer support, telemetry, feature flags, fraud prevention, payment, and other shared third-party infrastructure.
 - Public DoH/DoT, generic STUN/TURN, and broad UDP port captures.
-- Process-wide routing for Cursor, Claude, ChatGPT, and Antigravity.
+- Process-wide routing for Cursor, Grok, Claude, ChatGPT, and Antigravity.
 
 ## Acceptance rule for new domains
 

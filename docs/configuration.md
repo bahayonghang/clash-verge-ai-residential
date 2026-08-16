@@ -40,7 +40,7 @@ The final `HOME_PROXY_TEMPLATE["dialer-proxy"]` value remains the preferred cros
 
 ## Scope switches
 
-The optional `[routing]` and `[runtime]` TOML tables accept partial overrides. Omitted keys inherit the public-script defaults. The defaults intentionally minimize residential traffic; enabling permissive or shared-infrastructure switches can change privacy, cost, compatibility, and traffic scope.
+The optional `[routing]` and `[runtime]` TOML tables accept partial overrides. During sync, missing switch keys (including a missing table) are auto-completed into the local TOML from the example defaults; existing values, comments, and line endings are preserved verbatim. The defaults intentionally minimize residential traffic; enabling permissive or shared-infrastructure switches can change privacy, cost, compatibility, and traffic scope.
 
 ### Routing table
 
@@ -53,7 +53,8 @@ The optional `[routing]` and `[runtime]` TOML tables accept partial overrides. O
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | Routes project-management APIs such as Service Usage, Resource Manager, IAM, and API Hub. | These are project configuration rather than inference. |
 | `routing.antigravity_update_and_telemetry` | `ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY` | `false` | Routes Antigravity updates, extension marketplace, and telemetry. | Expands into update and analytics traffic. |
 | `routing.gemini_web_core` | `ROUTE_GEMINI_WEB_CORE` | `true` | Routes Gemini Web and Google AI Studio product endpoints. | None. |
-| `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `false` | Routes Cursor AI APIs, Tab, Agent, indexing, Cloud Agent, and product-specific authentication. | Cursor users must opt in explicitly. |
+| `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `true` | Routes Cursor AI APIs, Tab, Agent, indexing, the authorize/SSO admin portal, Cloud Agent VMs, and product-specific authentication. | Set to `false` when Cursor should stay on the airport upstream. |
+| `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | Routes Grok Build (xAI grok CLI) inference API (`cli-chat-proxy.grok.com`) and the Grok product domain. | Set to `false` when Grok should stay on the airport upstream; Grok web and telemetry share the host and cannot be split at the domain layer. |
 | `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | Adds Cursor process-level fallback rules. | Requires `routing.ai_process_fallback = true` and can capture non-AI requests. |
 | `routing.claude_code_auxiliary` | `ROUTE_CLAUDE_CODE_AUXILIARY` | `false` | Routes Claude Code installation, update, documentation, and package endpoints. | These are auxiliary rather than inference traffic. |
 | `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | Adds process-level fallbacks for known AI applications. | Can capture non-AI requests made by those processes. |

@@ -2,16 +2,16 @@
 
 /**
  * Clash Verge Rev 全局扩展脚本
- * Claude / ChatGPT / Gemini / Google Antigravity 核心家宽链路 · Cursor 可选 · v5.5
+ * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.6
  *
  * 数据路径：
  *   本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
  *
- * v5.5 重点：
+ * v5.6 重点：
+ *   - Cursor 核心路由默认开启；补充授权端点、SSO 管理门户与 Cloud Agent VM 域。
+ *   - 新增 Grok Build（xAI grok CLI）核心域与 routing.grok_core 开关，默认开启。
  *   - 默认只让 AI 产品核心、模型推理、代码补全、Agent、索引与产品专属认证流量走家宽。
- *   - Cursor 核心路由默认关闭；需要时可通过本地 TOML 或脚本开关启用。
- *   - 删除 Cursor 冗余匹配，保留窄范围 API、Tab、Agent 与索引目录。
- *   - 不注入 YouTube、Maps、广告、统计、通用 Google 静态资源等共享域名。
+ *   - 不注入插件市场、CDN、更新下载、广告、统计、通用 Google 静态资源等共享域名。
  *   - 默认关闭进程级兜底、共享遥测、通用 STUN/TURN、公共 DoH/DoT 劫持。
  *   - AI 域名 DNS 经家宽；其他域名 DNS 经当前 Profile 的机场上游，不再默认占用家宽。
  *   - 保留多 Profile 上游解析、递归链防护、严格配置校验与幂等重建。
@@ -27,7 +27,7 @@
 // 0. 脚本标识与保留名称
 // ============================================================
 
-const SCRIPT_VERSION = "5.5.0";
+const SCRIPT_VERSION = "5.6.0";
 const AI_GROUP = "AI-家宽";
 const HOME_PROXY_NAME = "家宽-SOCKS5";
 
@@ -115,8 +115,11 @@ const ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY = false;
 // Gemini Web / Google AI Studio 产品入口。
 const ROUTE_GEMINI_WEB_CORE = true;
 
-// Cursor AI API、Tab、Agent、索引、Cloud Agent 与产品专属认证；默认关闭。
-const ROUTE_CURSOR_CORE = false;
+// Cursor AI API、Tab、Agent、索引、Cloud Agent 与产品专属认证；默认走家宽。
+const ROUTE_CURSOR_CORE = true;
+
+// Grok Build（xAI grok CLI）推理 API 与产品域；默认走家宽，可在本地 TOML 关闭。
+const ROUTE_GROK_CORE = true;
 
 // Cursor 进程会访问插件市场、GitHub、npm、MCP 和用户后端；默认不做进程级全量代理。
 const ROUTE_CURSOR_PROCESS_FALLBACK = false;
@@ -219,12 +222,18 @@ const GEMINI_DOMAIN_REGEXES = [
   "^[a-z0-9-]+-aiplatform\\.googleapis\\.com$"
 ];
 
-// Cursor 仅保留 AI API / Tab / Agent / 索引 / 专属认证的窄范围后缀。
+// Cursor 仅保留 AI API / Tab / Agent / 索引 / 专属认证 / Cloud Agent VM 的窄范围后缀。
 const CURSOR_SUFFIX_DOMAINS = [
   "api2.cursor.sh",
   "api5.cursor.sh",
   "gcpp.cursor.sh",
-  "authentication.cursor.sh"
+
+  // 官方授权端点与 JWT 签发后端。
+  "authenticate.cursor.sh",
+  "authentication.cursor.sh",
+
+  // Cloud Agent 虚拟机服务（官方通配 *.cursorvm.com / *.*.cursorvm.com）。
+  "cursorvm.com"
 ];
 
 const CURSOR_EXACT_DOMAINS = [
@@ -238,7 +247,21 @@ const CURSOR_EXACT_DOMAINS = [
 
 const CURSOR_DOMAIN_REGEXES = [
   // 代码库索引端点可能滚动编号，例如 repo42.cursor.sh。
-  "^repo[0-9]+\\.cursor\\.sh$"
+  "^repo[0-9]+\\.cursor\\.sh$",
+
+  // 企业 SSO 配置与域验证门户，编号与 repo42 同步滚动。
+  "^adminportal[0-9]+\\.cursor\\.sh$"
+];
+
+// Grok Build 核心：cli-chat-proxy.grok.com 承载推理 API（/v1/responses）、
+// 代码库与会话轨迹上传（/v1/storage*）；同主机也是 Grok 网页产品域，
+// 与 chatgpt.com / claude.ai 的产品域处理保持一致。
+// 官方网络文档另列的 marketplace.cursorapi.com、cursor-cdn.com、
+// downloads.cursor.com、anysphere-binaries.s3.us-east-1.amazonaws.com 属于
+// 市场/CDN/更新下载；Grok 的 api.mixpanel.com（分析）、x.ai（安装脚本）
+// 与 storage.googleapis.com（共享 GCS，见 CLAUDE_CODE_AUXILIARY）均不走家宽。
+const GROK_SUFFIX_DOMAINS = [
+  "grok.com"
 ];
 
 const OPENAI_SHARED_SUFFIX_DOMAINS = [
@@ -1011,6 +1034,7 @@ function activeSuffixDomains() {
     ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_SUFFIX_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_SUFFIX_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_SUFFIX_DOMAINS : []),
+    ...(ROUTE_GROK_CORE ? GROK_SUFFIX_DOMAINS : []),
     ...(ROUTE_OPENAI_SHARED_DEPENDENCIES ? OPENAI_SHARED_SUFFIX_DOMAINS : []),
     ...(ROUTE_CLAUDE_SHARED_DEPENDENCIES ? CLAUDE_SHARED_SUFFIX_DOMAINS : []),
     ...(ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY
@@ -1049,6 +1073,7 @@ function allPossibleSuffixDomains() {
     ...OPENAI_CORE_SUFFIX_DOMAINS,
     ...GEMINI_WEB_SUFFIX_DOMAINS,
     ...CURSOR_SUFFIX_DOMAINS,
+    ...GROK_SUFFIX_DOMAINS,
     ...OPENAI_SHARED_SUFFIX_DOMAINS,
     ...CLAUDE_SHARED_SUFFIX_DOMAINS,
     ...ANTIGRAVITY_UPDATE_AND_TELEMETRY_SUFFIX_DOMAINS,
@@ -1517,13 +1542,15 @@ if (typeof module !== "undefined" && module.exports) {
       OPENAI_CORE_EXACT_DOMAINS,
       ROUTE_GEMINI_WEB_CORE,
       ROUTE_CURSOR_CORE,
+      ROUTE_GROK_CORE,
       ROUTE_CURSOR_PROCESS_FALLBACK,
       GEMINI_WEB_SUFFIX_DOMAINS,
       GEMINI_WEB_EXACT_DOMAINS,
       GEMINI_DOMAIN_REGEXES,
       CURSOR_SUFFIX_DOMAINS,
       CURSOR_EXACT_DOMAINS,
-      CURSOR_DOMAIN_REGEXES
+      CURSOR_DOMAIN_REGEXES,
+      GROK_SUFFIX_DOMAINS
     }
   };
 }
