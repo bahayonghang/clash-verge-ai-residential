@@ -36,7 +36,8 @@ const {
   CURSOR_SUFFIX_DOMAINS,
   CURSOR_EXACT_DOMAINS,
   CURSOR_DOMAIN_REGEXES,
-  GROK_SUFFIX_DOMAINS
+  GROK_SUFFIX_DOMAINS,
+  GROK_EXACT_DOMAINS
 } = constants;
 
 function quietMain(config, profileName) {
@@ -162,7 +163,7 @@ function assertAiRoute(rules, hosts) {
 // ---------------------------------------------------------------------------
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
-  assert.equal(SCRIPT_VERSION, "5.6.0");
+  assert.equal(SCRIPT_VERSION, "5.7.0");
   assert.equal(template["dialer-proxy"], "🚀节点选择");
 });
 
@@ -276,6 +277,34 @@ test("上游组清理脚本对象后为空时拒绝生成链路", () => {
     groups: [group("Proxy", [HOME_PROXY_NAME, AI_GROUP])]
   });
   assert.throws(() => quietMain(config, "奈云"), /没有可用节点来源/);
+});
+
+test("移除上游组中的保留名引用时输出 warn 说明原因", () => {
+  const warnings = [];
+  const originalWarn = console.warn;
+  const originalInfo = console.info;
+  console.warn = (message) => warnings.push(String(message));
+  console.info = () => {};
+  try {
+    const config = configFixture({
+      proxies: [airportNode("HK")],
+      groups: [group("🚀节点选择", [HOME_PROXY_NAME, AI_GROUP, "HK"])]
+    });
+    const output = main(config, "赔钱机场");
+    assert.deepEqual(
+      findGroup(output, "🚀节点选择").proxies,
+      ["HK"]
+    );
+  } finally {
+    console.warn = originalWarn;
+    console.info = originalInfo;
+  }
+
+  const removalWarning = warnings.find((line) => line.includes("引用已被移除"));
+  assert.ok(removalWarning, `应输出引用移除 warn，实际：${warnings.join(" | ")}`);
+  assert.match(removalWarning, /🚀节点选择/);
+  assert.match(removalWarning, new RegExp(HOME_PROXY_NAME));
+  assert.match(removalWarning, /递归/);
 });
 
 test("显式禁用 UDP 的上游被拒绝", () => {
@@ -445,20 +474,26 @@ test("Cursor 核心路由默认开启，并保持窄范围目录", () => {
 test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走", () => {
   assert.equal(ROUTE_GROK_CORE, true);
   assert.deepEqual(GROK_SUFFIX_DOMAINS, ["grok.com"]);
+  assert.deepEqual(GROK_EXACT_DOMAINS, ["auth.x.ai", "api.x.ai"]);
 
   const rules = buildInjectedRules();
   assertAiRoute(rules, [
     "grok.com",
-    "cli-chat-proxy.grok.com"
+    "cli-chat-proxy.grok.com",
+    "auth.x.ai",
+    "api.x.ai"
   ]);
   assertNoAiRoute(rules, [
     "api.mixpanel.com",
     "x.ai",
+    "www.x.ai",
     "storage.googleapis.com"
   ]);
 
   const policy = buildNameserverPolicy({});
   assert.deepEqual(policy["+.grok.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["auth.x.ai"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["api.x.ai"], RESIDENTIAL_DOH);
   assert.equal("api.mixpanel.com" in policy, false);
   assert.equal("x.ai" in policy, false);
 });
@@ -506,19 +541,25 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "claude.ai",
     "api.anthropic.com",
     "a-api.anthropic.com",
+    "mcp-proxy.anthropic.com",
+    "assets-proxy.anthropic.com",
     "chatgpt.com",
     "api.openai.com",
+    "us.api.openai.com",
+    "eu.api.openai.com",
     "antigravity.google",
     "daily-cloudcode-pa.googleapis.com"
   ]);
   assertNoAiRoute(rules, [
     "oaistatic.com",
+    "oaistatsig.com",
     "intercom.io",
     "sentry.io",
     "statsigapi.net",
     "js.stripe.com",
     "auth.openai.com",
     "www.anthropic.com",
+    "www.openai.com",
     "docs.anthropic.com",
     "support.anthropic.com",
     "status.anthropic.com",
@@ -537,6 +578,12 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
 test("开关关闭后清理当前托管规则，并保留退役或用户自写规则", () => {
   const currentManagedRules = [
     `DOMAIN,a-api.anthropic.com,${AI_GROUP}`,
+    `DOMAIN,mcp-proxy.anthropic.com,${AI_GROUP}`,
+    `DOMAIN,assets-proxy.anthropic.com,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,api.openai.com,${AI_GROUP}`,
+    `DOMAIN,api.openai.com,${AI_GROUP}`,
+    `DOMAIN,auth.x.ai,${AI_GROUP}`,
+    `DOMAIN,api.x.ai,${AI_GROUP}`,
     `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
     `DOMAIN-SUFFIX,authenticate.cursor.sh,${AI_GROUP}`,
     `DOMAIN-REGEX,^adminportal[0-9]+\\.cursor\\.sh$,${AI_GROUP}`,
@@ -587,6 +634,8 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
       `DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`,
       `DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`,
       `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
+      // v5.6 遗留的 exact 形态规则应被托管清理并按 suffix 重新注入一次。
+      `DOMAIN,api.openai.com,${AI_GROUP}`,
       ...retiredCursorRules,
       `IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`,
       `IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`,
@@ -619,6 +668,14 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
   );
   assert.equal(
     config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,grok.com,${AI_GROUP}`).length,
+    1
+  );
+  assert.equal(
+    config.rules.filter((rule) => rule === `DOMAIN,api.openai.com,${AI_GROUP}`).length,
+    0
+  );
+  assert.equal(
+    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api.openai.com,${AI_GROUP}`).length,
     1
   );
   for (const rule of retiredCursorRules) assert.equal(config.rules.includes(rule), true);

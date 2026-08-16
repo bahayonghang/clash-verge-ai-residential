@@ -150,6 +150,8 @@ enable_tun_strict_route = true
       "  suffixes: script.constants.CURSOR_SUFFIX_DOMAINS,",
       "  exact: script.constants.CURSOR_EXACT_DOMAINS,",
       "  regexes: script.constants.CURSOR_DOMAIN_REGEXES,",
+      "  grokSuffixes: script.constants.GROK_SUFFIX_DOMAINS,",
+      "  grokExact: script.constants.GROK_EXACT_DOMAINS,",
       "  rules: script.buildInjectedRules(),",
       "  policy: script.buildNameserverPolicy({})",
       "}));"
@@ -174,7 +176,12 @@ enable_tun_strict_route = true
       ...probe.regexes.map(
         (pattern) => `DOMAIN-REGEX,${pattern},${probe.aiGroup}`
       ),
-      `DOMAIN-SUFFIX,grok.com,${probe.aiGroup}`
+      ...probe.grokSuffixes.map(
+        (domain) => `DOMAIN-SUFFIX,${domain},${probe.aiGroup}`
+      ),
+      ...probe.grokExact.map(
+        (domain) => `DOMAIN,${domain},${probe.aiGroup}`
+      )
     ];
     assert.equal(publicRules.length - probe.rules.length, expectedDisabledRules.length);
     for (const rule of expectedDisabledRules) {

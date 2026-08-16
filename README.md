@@ -9,18 +9,18 @@ Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Googl
 本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
 ```
 
-当前版本：`v5.6.0`。
+当前版本：`v5.7.0`。
 
 ## 核心边界
 
 家宽链路包含：
 
-- Claude / Anthropic 产品域、模型 API、MCP 和会话内容。
-- ChatGPT / OpenAI 产品域、模型 API、上传与生成内容。
+- Claude / Anthropic 产品域、模型 API、MCP 代理、资产代理、MCP 和会话内容。
+- ChatGPT / OpenAI 产品域、模型 API（含 Codex 的 `us.` / `eu.` 数据驻留前缀）、上传与生成内容。
 - Gemini Web、Google AI Studio 专用后端、Gemini Developer API、Vertex AI 区域/全局模型端点。
 - Google Antigravity / Gemini Code Assist 的产品域和核心 Agent API。
 - Cursor Chat、Tab、Agent、代码库索引、Cloud Agent/Bugbot、授权/SSO 门户、Cloud Agent VM 和产品专属认证；`routing.cursor_core` 默认是 `true`。
-- Grok Build（xAI grok CLI）推理 API 与产品域；`routing.grok_core` 默认是 `true`。
+- Grok Build（xAI grok CLI）推理 API 与产品域，以及 `auth.x.ai` 认证与 `api.x.ai` 直连 API；`routing.grok_core` 默认是 `true`。
 
 家宽链路明确排除：
 

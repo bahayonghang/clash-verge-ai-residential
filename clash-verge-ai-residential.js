@@ -2,10 +2,16 @@
 
 /**
  * Clash Verge Rev 全局扩展脚本
- * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.6
+ * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.7
  *
  * 数据路径：
  *   本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
+ *
+ * v5.7 重点：
+ *   - 域名对齐官方网络文档：补 Claude MCP 代理与资产代理、Grok 认证与 API 域；
+ *     api.openai.com 从 exact 提升为 suffix，覆盖 Codex 的 us./eu. 数据驻留前缀。
+ *   - 上游代理组中的保留名引用被移除时输出 warn，递归链清理不再静默。
+ *   - 记录 Clash Verge Rev 权威字段（tun/ipv6）对脚本改写的覆盖行为并提示。
  *
  * v5.6 重点：
  *   - Cursor 核心路由默认开启；补充授权端点、SSO 管理门户与 Cloud Agent VM 域。
@@ -27,7 +33,7 @@
 // 0. 脚本标识与保留名称
 // ============================================================
 
-const SCRIPT_VERSION = "5.6.0";
+const SCRIPT_VERSION = "5.7.0";
 const AI_GROUP = "AI-家宽";
 const HOME_PROXY_NAME = "家宽-SOCKS5";
 
@@ -178,13 +184,22 @@ const CORE_SUFFIX_DOMAINS = [
 const OPENAI_CORE_SUFFIX_DOMAINS = [
   // ChatGPT Web / user-uploaded and generated content；通用静态 CDN 不走家宽
   "chatgpt.com",
-  "oaiusercontent.com"
+  "oaiusercontent.com",
+
+  // 官方模型 API。v5.7 从 exact 提升为 suffix：Codex API-key 路线使用
+  // us. / eu. 数据驻留前缀（learn.chatgpt.com 配置文档），exact 会漏匹配。
+  "api.openai.com"
 ];
 
 const CORE_EXACT_DOMAINS = [
   // 第一方模型 API；避免 anthropic.com 宽泛后缀。
   "api.anthropic.com",
   "a-api.anthropic.com",
+
+  // 官方网络文档列出的产品功能域（code.claude.com/docs network-config）：
+  // claude.ai MCP connector 代理与桌面/网页资产代理（官方警告缺失会导致白屏）。
+  "mcp-proxy.anthropic.com",
+  "assets-proxy.anthropic.com",
 
   // Antigravity / Gemini Code Assist / Gemini Developer API / Vertex AI
   "cloudcode-pa.googleapis.com",
@@ -195,10 +210,8 @@ const CORE_EXACT_DOMAINS = [
   "aiplatform.googleapis.com"
 ];
 
-// OpenAI 第一方模型 API；避免 openai.com 宽泛后缀。
-const OPENAI_CORE_EXACT_DOMAINS = [
-  "api.openai.com"
-];
+// OpenAI 第一方模型 API；v5.7 起 api.openai.com 以 suffix 形式并入
+// OPENAI_CORE_SUFFIX_DOMAINS，本常量已移除（exact 无法匹配 us./eu. 前缀）。
 
 // Gemini Web / AI Studio：只保留产品入口，不纳入共享 Google 服务清单。
 const GEMINI_WEB_SUFFIX_DOMAINS = [
@@ -262,6 +275,14 @@ const CURSOR_DOMAIN_REGEXES = [
 // 与 storage.googleapis.com（共享 GCS，见 CLAUDE_CODE_AUXILIARY）均不走家宽。
 const GROK_SUFFIX_DOMAINS = [
   "grok.com"
+];
+
+// 官方企业部署文档（docs.x.ai/build/enterprise）列出的主机：
+// auth.x.ai 是 OAuth2/OIDC 认证（must-allow），api.x.ai 是 API-key 直连
+// 推理端点；安装脚本域 x.ai 仍不走家宽。
+const GROK_EXACT_DOMAINS = [
+  "auth.x.ai",
+  "api.x.ai"
 ];
 
 const OPENAI_SHARED_SUFFIX_DOMAINS = [
@@ -890,6 +911,15 @@ function groupHasAlternativeSource(group) {
 function removeInjectedReferencesFromGroup(group) {
   if (!group || !Array.isArray(group.proxies)) return;
   const blocked = injectedNames();
+  const removed = group.proxies.filter((name) => blocked.indexOf(name) !== -1);
+  if (removed.length > 0) {
+    warn(
+      `[${AI_GROUP}] 代理组“${group.name || "<未命名>"}”中的 ` +
+      `${removed.join("、")} 引用已被移除：上游组包含家宽链路会形成 ` +
+      `dialer-proxy 递归。AI 流量请用规则指向 ${AI_GROUP}，` +
+      `不要把 ${AI_GROUP} / ${HOME_PROXY_NAME} 放进上游代理组。`
+    );
+  }
   group.proxies = uniqueStrings(
     group.proxies.filter((name) => blocked.indexOf(name) === -1)
   );
@@ -1046,9 +1076,9 @@ function activeSuffixDomains() {
 function activeExactDomains() {
   return uniqueStrings([
     ...CORE_EXACT_DOMAINS,
-    ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_EXACT_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_EXACT_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_EXACT_DOMAINS : []),
+    ...(ROUTE_GROK_CORE ? GROK_EXACT_DOMAINS : []),
     ...(ROUTE_OPENAI_SHARED_DEPENDENCIES ? OPENAI_SHARED_EXACT_DOMAINS : []),
     ...(ROUTE_CLAUDE_SHARED_DEPENDENCIES ? CLAUDE_SHARED_EXACT_DOMAINS : []),
     ...(ROUTE_ANTIGRAVITY_GOOGLE_AUTH ? ANTIGRAVITY_GOOGLE_AUTH_DOMAINS : []),
@@ -1084,9 +1114,11 @@ function allPossibleSuffixDomains() {
 function allPossibleExactDomains() {
   return uniqueStrings([
     ...CORE_EXACT_DOMAINS,
-    ...OPENAI_CORE_EXACT_DOMAINS,
+    // v5.6 曾以 exact 形式注入 api.openai.com；保留以清理旧版托管规则。
+    "api.openai.com",
     ...GEMINI_WEB_EXACT_DOMAINS,
     ...CURSOR_EXACT_DOMAINS,
+    ...GROK_EXACT_DOMAINS,
     ...OPENAI_SHARED_EXACT_DOMAINS,
     ...CLAUDE_SHARED_EXACT_DOMAINS,
     ...ANTIGRAVITY_GOOGLE_AUTH_DOMAINS,
@@ -1400,6 +1432,9 @@ function buildAiGroup(config) {
 }
 
 function hardenTun(config) {
+  // 新版 Clash Verge Rev 在全局脚本执行后会按“权威字段”把 tun/ipv6 还原为
+  // 应用设置页的值，此函数的改动在这类宿主上无效；TUN 的 dns-hijack 与
+  // IPv6 开关需在 Verge 设置页配置。保留实现以兼容旧版宿主。
   if (!HARDEN_EXISTING_TUN_DNS_HIJACK) return;
   if (!isPlainObject(config.tun) || config.tun.enable !== true) return;
 
@@ -1505,11 +1540,16 @@ function main(config, profileName) {
   ensureProcessLookup(config);
 
   // 9. 统一关闭 Mihomo IPv6；操作系统层仍需由 TUN/系统路由约束。
+  // 新版 Clash Verge Rev 会把 ipv6 还原为应用设置值（见 hardenTun 注释）。
   config.ipv6 = false;
 
   info(
     `[${AI_GROUP} v${SCRIPT_VERSION}] Profile“${profileName || "<未命名>"}”` +
     `：dialer-proxy -> ${upstreamName}`
+  );
+  info(
+    `[${AI_GROUP}] 提示：新版 Clash Verge Rev 会在脚本执行后还原 tun/ipv6 ` +
+    "等权威字段；TUN 的 dns-hijack 与 IPv6 开关请在 Verge 设置页配置。"
   );
 
   return config;
@@ -1539,7 +1579,6 @@ if (typeof module !== "undefined" && module.exports) {
       PRESERVE_UNMANAGED_NAMESERVER_POLICY,
       ROUTE_OPENAI_CORE,
       OPENAI_CORE_SUFFIX_DOMAINS,
-      OPENAI_CORE_EXACT_DOMAINS,
       ROUTE_GEMINI_WEB_CORE,
       ROUTE_CURSOR_CORE,
       ROUTE_GROK_CORE,
@@ -1550,7 +1589,8 @@ if (typeof module !== "undefined" && module.exports) {
       CURSOR_SUFFIX_DOMAINS,
       CURSOR_EXACT_DOMAINS,
       CURSOR_DOMAIN_REGEXES,
-      GROK_SUFFIX_DOMAINS
+      GROK_SUFFIX_DOMAINS,
+      GROK_EXACT_DOMAINS
     }
   };
 }
