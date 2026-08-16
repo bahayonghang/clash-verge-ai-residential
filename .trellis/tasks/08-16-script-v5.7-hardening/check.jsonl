@@ -1,0 +1,4 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/tasks/08-16-script-v5.7-hardening/research/ai-endpoint-domains.md", "reason": "核对每个域名变更是否有官方背书与负向测试"}
+{"file": ".trellis/tasks/08-16-script-v5.7-hardening/research/static-code-analysis.md", "reason": "核对未修复项是否按 PRD 记录取舍"}
+{"file": "docs/routing-scope.md", "reason": "Domain 变更规则与准入标准的权威文档"}
