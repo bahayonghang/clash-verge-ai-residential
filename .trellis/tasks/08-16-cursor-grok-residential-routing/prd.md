@@ -91,23 +91,29 @@
 
 ## Acceptance Criteria
 
-- [ ] `ROUTE_CURSOR_CORE = true`、`ROUTE_GROK_CORE = true` 时：
+- [x] `ROUTE_CURSOR_CORE = true`、`ROUTE_GROK_CORE = true` 时：
   `authenticate.cursor.sh`、`adminportal42.cursor.sh`、`*.cursorvm.com`、
   `grok.com`、`cli-chat-proxy.grok.com` 的 DOMAIN/DOMAIN-SUFFIX/DOMAIN-REGEX
   规则指向 `AI-家宽`，且对应 nameserver-policy 指向 `RESIDENTIAL_DOH`。
-- [ ] 开关关闭时上述域名不产生规则与 DNS policy；重复执行 main() 不产生
+- [x] 开关关闭时上述域名不产生规则与 DNS policy；重复执行 main() 不产生
   重复规则；曾开启后关闭的托管规则仍能被精确清理。
-- [ ] `marketplace.cursorapi.com`、`cursor-cdn.com`、`downloads.cursor.com`、
+- [x] `marketplace.cursorapi.com`、`cursor-cdn.com`、`downloads.cursor.com`、
   `anysphere-binaries.s3.us-east-1.amazonaws.com`、`api.mixpanel.com`、
   `x.ai` 默认不进家宽（负向测试）。
-- [ ] example TOML 包含 `cursor_core = true` 与 `grok_core = true`，且
+- [x] example TOML 包含 `cursor_core = true` 与 `grok_core = true`，且
   与 JS 模板常量默认值一致。
-- [ ] 本地 TOML 缺少 `grok_core` 或整个 `[runtime]` 表时，运行同步后
+- [x] 本地 TOML 缺少 `grok_core` 或整个 `[runtime]` 表时，运行同步后
   本地 TOML 被补全（值来自 example），用户已有键值与注释逐字保留，
   渲染产物正确；再次运行不再改写 TOML 文件。
-- [ ] 本地 TOML 完整时同步不改动该文件（幂等）。
-- [ ] `[home_proxy]` 缺键仍报错并指向用户手填。
-- [ ] `npm run ci` 全绿（check + test + check:secrets）。
+  已用开发者真实本地 TOML 验证：仅追加缺失的 `grok_core = true` 一行，
+  用户显式 `cursor_core = false` 被保留。
+- [x] 本地 TOML 完整时同步不改动该文件（幂等）。
+- [x] `[home_proxy]` 缺键仍报错并指向用户手填。
+- [x] `npm run ci` 全绿（check + test + check:secrets），48 个测试通过。
+- [ ] 在 Clash Verge Rev 中用真实 Profile 从 Connections 验证新增域名
+  （authenticate.cursor.sh / adminportal42.cursor.sh / cursorvm.com /
+  grok.com）实际命中 `AI-家宽`。当前状态：`UNVERIFIED`——需要宿主
+  环境手工验证，Node 测试不能替代。
 
 ## Key Decisions
 
