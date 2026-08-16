@@ -6,14 +6,16 @@ The residential link is reserved for core AI product traffic. A domain is not in
 
 | Product | Included traffic |
 |---|---|
-| Claude / Anthropic | Claude product domains, Messages API, MCP/session content, and official inbound IP fallbacks |
-| ChatGPT / OpenAI | ChatGPT product domain, OpenAI model API, and uploaded/generated user content |
+| Claude / Anthropic | Claude 产品域名、Messages API、`mcp-proxy.anthropic.com` MCP 连接器代理、`assets-proxy.anthropic.com` 资源代理、MCP/会话内容，以及官方入站 IP 回退 |
+| ChatGPT / OpenAI | ChatGPT 产品域名、OpenAI 模型 API 后缀 `api.openai.com`（覆盖 Codex 官方的 `us.` / `eu.` 数据驻留前缀），以及上传或生成的用户内容 |
 | Gemini | Gemini Web, Google AI Studio product RPC/streaming hosts, Gemini Developer API, and Vertex AI regional/global model endpoints |
 | Google Antigravity / Gemini Code Assist | Product domain and product-specific Code Assist/agent APIs |
 | Cursor | Chat/API, Tab, Agent, repository indexing, Cloud Agent/Bugbot API, authorize endpoint, SSO admin portal, Cloud Agent VM hosts, and product-specific authentication; `routing.cursor_core` is `true` by default |
-| Grok Build | Grok product domain covering the `cli-chat-proxy.grok.com` inference API and `/v1/storage` codebase/session uploads; `routing.grok_core` is `true` by default |
+| Grok Build | Grok 产品域名，覆盖 `cli-chat-proxy.grok.com` 推理 API 和 `/v1/storage` 代码库/会话上传；还包括 `auth.x.ai` OAuth 主机和 `api.x.ai` 直连 API 端点；`routing.grok_core` 默认为 `true` |
 
-Cursor evidence: the official enterprise network configuration document lists `authenticate.cursor.sh`, `adminportal<N>.cursor.sh`, and the `*.cursorvm.com` VM hosts alongside the previously covered API/Tab/Agent/indexing endpoints. Grok evidence: a wire-level capture of grok 0.2.93 shows `cli-chat-proxy.grok.com` carrying `/v1/responses` inference and `/v1/storage` uploads; the same host also serves Grok web and event telemetry, which cannot be split at the domain layer.
+Cursor 依据：官方企业网络配置文档列出了 `authenticate.cursor.sh`、`adminportal<N>.cursor.sh` 和 `*.cursorvm.com` 虚拟机主机，以及此前已覆盖的 API、Tab、Agent 和索引端点。Grok 依据：对 grok 0.2.93 的线级抓包表明，`cli-chat-proxy.grok.com` 承载 `/v1/responses` 推理和 `/v1/storage` 上传；同一主机也承载 Grok Web 和事件遥测，无法在域名层拆分。v5.7 依据：Claude Code 官方网络配置文档列出了 `mcp-proxy.anthropic.com` 和 `assets-proxy.anthropic.com`；xAI 官方企业部署文档将 `auth.x.ai` 列为必须放行的主机，并将 `api.x.ai` 列为直连 API 主机；Codex 官方配置参考记录了 `us.api.openai.com` 和 `eu.api.openai.com` 数据驻留前缀，因此 `api.openai.com` 的规则由精确匹配改为后缀匹配。
+
+已知取舍：`downloads.claude.ai`（安装程序和自动更新主机）位于 `claude.ai` 后缀下，因此也会经过住宅链路。若将其拆出，需要注入包含动态解析上游名称的规则，而当前基于精确字符串的托管规则清理模型无法安全清理此类规则。更新下载频率较低，剩余影响仅为占用住宅链路带宽。
 
 ## Explicit exclusions
 

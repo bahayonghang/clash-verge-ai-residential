@@ -83,7 +83,7 @@ Recommended runtime settings:
 
 - Rule mode.
 - TUN enabled when system-wide interception or process rules are required.
-- DNS hijack enabled; the script supplements `any:53` and `tcp://any:53` only when TUN is already enabled.
+- 在 Clash Verge Rev 的 TUN 设置中启用 DNS 劫持。TUN 已启用时，脚本还会补充 `any:53` 和 `tcp://any:53`。但当前版本会在全局脚本运行后，从设置页面恢复 `tun` 和 `ipv6`；这两个字段应以设置页面为准，并在该页面关闭 IPv6。
 - Browser private/secure DNS disabled when it bypasses the system resolver.
 - The selected upstream group must not resolve to `DIRECT`, `REJECT`, or the residential proxy itself.
-- Both the selected airport path and the residential SOCKS5 service must support UDP when the target feature needs UDP.
+- 目标功能需要 UDP 时，选中的机场线路和住宅 SOCKS5 服务都必须支持 UDP。机场订阅节点若省略 `udp` 字段，Mihomo 默认禁用 UDP。
