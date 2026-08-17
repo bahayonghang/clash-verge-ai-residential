@@ -2,10 +2,13 @@
 
 /**
  * Clash Verge Rev 全局扩展脚本
- * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.8
+ * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.8.1
  *
  * 数据路径：
  *   本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
+ *
+ * v5.8.1 重点：
+ *   - 大订阅 outbound 索引，避免按叶子全表扫描；UDP 叶子警告改为一条汇总。
  *
  * v5.8 重点：
  *   - 按官方 help.openai.com/9247338 以 exact 补齐五个 chat.openai.com 家族主机；
@@ -37,7 +40,7 @@
 // 0. 脚本标识与保留名称
 // ============================================================
 
-const SCRIPT_VERSION = "5.8.0";
+const SCRIPT_VERSION = "5.8.1";
 const AI_GROUP = "AI-家宽";
 const HOME_PROXY_NAME = "家宽-SOCKS5";
 
@@ -671,18 +674,54 @@ function validateReservedNameCollisions(config) {
   }
 }
 
-function findOutbound(config, name) {
-  const groups = namedItems(config["proxy-groups"], name);
-  const proxies = namedItems(config.proxies, name);
+function requireOutboundIndex(outboundIndex) {
+  if (
+    !outboundIndex ||
+    typeof outboundIndex !== "object" ||
+    !(outboundIndex.groups instanceof Map) ||
+    !(outboundIndex.proxies instanceof Map)
+  ) {
+    throw new Error(`[${AI_GROUP}] findOutbound 需要 outbound 索引`);
+  }
+}
 
-  if (groups.length > 1 || proxies.length > 1 || (groups.length === 1 && proxies.length === 1)) {
+// 键与 namedItems 一致：收录每个真值 item，用 item.name 原值（含空串）。
+function buildOutboundIndex(config) {
+  function indexItems(items, map) {
+    if (!Array.isArray(items)) return;
+    for (const item of items) {
+      if (!item) continue;
+      const existing = map.get(item.name);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        map.set(item.name, { count: 1, value: item });
+      }
+    }
+  }
+
+  const groups = new Map();
+  const proxies = new Map();
+  indexItems(config && config["proxy-groups"], groups);
+  indexItems(config && config.proxies, proxies);
+  return { groups, proxies };
+}
+
+function findOutbound(outboundIndex, name) {
+  requireOutboundIndex(outboundIndex);
+  const groupEntry = outboundIndex.groups.get(name);
+  const proxyEntry = outboundIndex.proxies.get(name);
+  const groupCount = groupEntry ? groupEntry.count : 0;
+  const proxyCount = proxyEntry ? proxyEntry.count : 0;
+
+  if (groupCount > 1 || proxyCount > 1 || (groupCount === 1 && proxyCount === 1)) {
     throw new Error(
       `[${AI_GROUP}] outbound 名称“${name}”存在歧义（同名组/节点或重复定义），` +
       "无法安全用于 dialer-proxy"
     );
   }
-  if (groups.length === 1) return { kind: "group", value: groups[0] };
-  if (proxies.length === 1) return { kind: "proxy", value: proxies[0] };
+  if (groupCount === 1) return { kind: "group", value: groupEntry.value };
+  if (proxyCount === 1) return { kind: "proxy", value: proxyEntry.value };
   return null;
 }
 
@@ -713,11 +752,12 @@ function profileOverrideCandidates(profileName) {
   return [];
 }
 
-function resolveCandidate(config, candidate) {
+function resolveCandidate(config, candidate, outboundIndex) {
+  requireOutboundIndex(outboundIndex);
   if (typeof candidate !== "string" || candidate.length === 0) return null;
   if (isForbiddenUpstreamName(candidate)) return null;
 
-  const exact = findOutbound(config, candidate);
+  const exact = findOutbound(outboundIndex, candidate);
   if (exact) return candidate;
 
   const normalizedCandidate = normalizeName(candidate);
@@ -728,7 +768,7 @@ function resolveCandidate(config, candidate) {
   );
 
   if (normalizedMatches.length === 1) {
-    findOutbound(config, normalizedMatches[0]); // 触发同名歧义检测
+    findOutbound(outboundIndex, normalizedMatches[0]); // 触发同名歧义检测
     return normalizedMatches[0];
   }
   if (normalizedMatches.length > 1) {
@@ -741,9 +781,10 @@ function resolveCandidate(config, candidate) {
   return null;
 }
 
-function resolveFromCandidates(config, candidates) {
+function resolveFromCandidates(config, candidates, outboundIndex) {
+  requireOutboundIndex(outboundIndex);
   for (const candidate of uniqueStrings(candidates)) {
-    const resolved = resolveCandidate(config, candidate);
+    const resolved = resolveCandidate(config, candidate, outboundIndex);
     if (resolved) return resolved;
   }
   return null;
@@ -782,14 +823,15 @@ function resolveHeuristicUpstream(config) {
   return matches.length === 1 ? matches[0].name : null;
 }
 
-function resolveUpstreamName(config, profileName) {
+function resolveUpstreamName(config, profileName, outboundIndex) {
+  requireOutboundIndex(outboundIndex);
   const overrideCandidates = profileOverrideCandidates(profileName);
   const globalCandidates = uniqueStrings([
     HOME_PROXY_TEMPLATE["dialer-proxy"],
     ...UPSTREAM_CANDIDATES
   ]);
 
-  const resolvedOverride = resolveFromCandidates(config, overrideCandidates);
+  const resolvedOverride = resolveFromCandidates(config, overrideCandidates, outboundIndex);
   if (resolvedOverride) return resolvedOverride;
 
   if (overrideCandidates.length > 0) {
@@ -799,11 +841,11 @@ function resolveUpstreamName(config, profileName) {
     );
   }
 
-  const resolvedGlobal = resolveFromCandidates(config, globalCandidates);
+  const resolvedGlobal = resolveFromCandidates(config, globalCandidates, outboundIndex);
   if (resolvedGlobal) return resolvedGlobal;
 
   const finalTarget = extractFinalRuleTarget(config.rules);
-  const resolvedFinal = resolveCandidate(config, finalTarget);
+  const resolvedFinal = resolveCandidate(config, finalTarget, outboundIndex);
   if (resolvedFinal) return resolvedFinal;
 
   const heuristic = resolveHeuristicUpstream(config);
@@ -973,24 +1015,16 @@ function buildGroupMap(config) {
   return map;
 }
 
-function warnForUdpDisabledLeaf(config, name, path) {
-  if (!WARN_ON_REACHABLE_UDP_DISABLED) return;
-  const outbound = findOutbound(config, name);
-  if (!outbound) return;
-
-  if (outbound.kind === "proxy" && outbound.value.udp === false) {
-    warn(
-      `[${AI_GROUP}] 可达节点“${name}”显式关闭 UDP（路径：${path.join(" -> ")}）。` +
-      "当上游组选择该节点时，WebRTC/STUN 可能失败或改走其他路径。"
-    );
-  }
-}
-
-function hardenReachableUpstreamGraph(config, upstreamName) {
+function hardenReachableUpstreamGraph(config, upstreamName, outboundIndex) {
+  requireOutboundIndex(outboundIndex);
   const groupMap = buildGroupMap(config);
   const visited = new Set();
   const visiting = new Set();
   const stack = [];
+  const collectUdpWarnings = WARN_ON_REACHABLE_UDP_DISABLED === true;
+  const udpDisabledNames = collectUdpWarnings ? new Set() : null;
+  const udpDisabledSamples = collectUdpWarnings ? [] : null;
+  let udpDisabledCount = 0;
 
   function visit(groupName) {
     if (!groupMap.has(groupName)) return;
@@ -1024,8 +1058,19 @@ function hardenReachableUpstreamGraph(config, upstreamName) {
     for (const childName of children) {
       if (groupMap.has(childName)) {
         visit(childName);
-      } else {
-        warnForUdpDisabledLeaf(config, childName, [...stack, childName]);
+      } else if (collectUdpWarnings) {
+        const outbound = findOutbound(outboundIndex, childName);
+        if (outbound && outbound.kind === "proxy" && outbound.value.udp === false) {
+          if (udpDisabledNames.has(childName)) continue;
+          udpDisabledNames.add(childName);
+          udpDisabledCount += 1;
+          if (udpDisabledSamples.length < 8) {
+            udpDisabledSamples.push({
+              name: childName,
+              path: [...stack, childName]
+            });
+          }
+        }
       }
     }
 
@@ -1035,10 +1080,23 @@ function hardenReachableUpstreamGraph(config, upstreamName) {
   }
 
   visit(upstreamName);
+
+  if (udpDisabledCount > 0) {
+    const sampleText = udpDisabledSamples
+      .map((sample) => `“${sample.name}”（路径：${sample.path.join(" -> ")}）`)
+      .join("、");
+    const overflow = udpDisabledCount > 8 ? `……（共 ${udpDisabledCount} 个）` : "";
+    warn(
+      `[${AI_GROUP}] ${udpDisabledCount} 个可达节点显式关闭 UDP：` +
+      `${sampleText}${overflow}。` +
+      "当上游组选择这些节点时，WebRTC/STUN 可能失败或改走其他路径。"
+    );
+  }
 }
 
-function validateTopLevelUpstream(config, upstreamName) {
-  const outbound = findOutbound(config, upstreamName);
+function validateTopLevelUpstream(config, upstreamName, outboundIndex) {
+  requireOutboundIndex(outboundIndex);
+  const outbound = findOutbound(outboundIndex, upstreamName);
   if (!outbound) {
     throw new Error(`[${AI_GROUP}] 上游“${upstreamName}”不存在`);
   }
@@ -1521,12 +1579,13 @@ function main(config, profileName) {
   validateReservedNameCollisions(config);
 
   // 2. 为当前 Profile 动态解析一个真实存在的上游名称。
-  const upstreamName = resolveUpstreamName(config, profileName);
+  const outboundIndex = buildOutboundIndex(config);
+  const upstreamName = resolveUpstreamName(config, profileName, outboundIndex);
 
   // 3. 防止 include-all / 嵌套组把家宽节点重新纳入上游，形成递归链。
   hardenAllIncludeAllGroups(config["proxy-groups"]);
-  hardenReachableUpstreamGraph(config, upstreamName);
-  validateTopLevelUpstream(config, upstreamName);
+  hardenReachableUpstreamGraph(config, upstreamName, outboundIndex);
+  validateTopLevelUpstream(config, upstreamName, outboundIndex);
 
   // 4. 构建家宽 SOCKS5，dialer-proxy 始终是单一、已解析名称。
   const homeProxy = buildHomeProxy(config, upstreamName);
@@ -1575,6 +1634,8 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     main,
     resolveUpstreamName,
+    buildOutboundIndex,
+    findOutbound,
     buildDnsConfig,
     buildUpstreamDoh,
     buildInjectedRules,

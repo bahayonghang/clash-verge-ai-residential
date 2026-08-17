@@ -73,7 +73,7 @@ The optional `[routing]` and `[runtime]` TOML tables accept partial overrides. D
 | `runtime.enable_domain_sniffer` | `ENABLE_DOMAIN_SNIFFER` | `true` | Hardens domain sniffing for IP-only connections and missing DNS mappings. | Does not globally override destinations. |
 | `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | Completes DNS-hijack entries for an already enabled TUN. | Effective only when the Profile has TUN enabled. |
 | `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | Enables `strict-route` on the existing TUN. | Requires enabled TUN and `runtime.harden_existing_tun_dns_hijack = true`; may affect VMs or special routes. |
-| `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | Warns when a reachable child group or node explicitly disables UDP. | A top-level upstream with UDP disabled still fails validation. |
+| `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | Emits one summary warning when reachable leaves explicitly disable UDP (at most 8 samples). | A top-level upstream with UDP disabled still fails validation. |
 
 The detailed Chinese-language setup guide in [Local TOML configuration and sync](local-configuration.md) includes both `just` and direct Node workflows. Keep shared dependencies and process-wide fallbacks disabled unless sanitized connection evidence proves they are required.
 

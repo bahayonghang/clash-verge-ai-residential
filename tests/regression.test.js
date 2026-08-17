@@ -12,8 +12,10 @@ const {
   main,
   buildInjectedRules,
   buildNameserverPolicy,
+  buildOutboundIndex,
   buildUpstreamDoh,
   cleanExistingManagedRules,
+  findOutbound,
   constants
 } = script;
 
@@ -52,6 +54,28 @@ function quietMain(config, profileName) {
     console.info = originalInfo;
     console.warn = originalWarn;
   }
+}
+
+function captureMain(config, profileName) {
+  const warnings = [];
+  const originalInfo = console.info;
+  const originalWarn = console.warn;
+  console.info = () => {};
+  console.warn = (message) => warnings.push(String(message));
+  try {
+    return { output: main(config, profileName), warnings };
+  } finally {
+    console.info = originalInfo;
+    console.warn = originalWarn;
+  }
+}
+
+function extractQuotedNames(message) {
+  return Array.from(String(message).matchAll(/“([^”]+)”/g), (match) => match[1]);
+}
+
+function udpDisabledWarnings(warnings) {
+  return warnings.filter((line) => line.includes("显式关闭 UDP"));
 }
 
 function airportNode(name, extra = {}) {
@@ -164,7 +188,7 @@ function assertAiRoute(rules, hosts) {
 // ---------------------------------------------------------------------------
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
-  assert.equal(SCRIPT_VERSION, "5.8.0");
+  assert.equal(SCRIPT_VERSION, "5.8.1");
   assert.equal(template["dialer-proxy"], "🚀节点选择");
 });
 
@@ -364,6 +388,157 @@ test("只配置 endpoint 而保留 xxx 凭据时明确报错", () => {
     template.username = original.username;
     template.password = original.password;
   }
+});
+
+test("findOutbound 缺索引时抛错，合法索引可解析唯一节点", () => {
+  assert.throws(() => findOutbound(), /需要 outbound 索引/);
+  assert.throws(() => findOutbound({}, "x"), /需要 outbound 索引/);
+  assert.throws(() => findOutbound({ groups: new Map() }, "x"), /需要 outbound 索引/);
+
+  const index = buildOutboundIndex(configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])]
+  }));
+  assert.equal(findOutbound(index, "HK").kind, "proxy");
+  assert.equal(findOutbound(index, "🚀节点选择").kind, "group");
+});
+
+test("普通名两个同名节点被拒绝", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK"), airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])]
+  });
+  assert.throws(() => quietMain(config, "赔钱机场"), /歧义/);
+});
+
+test("普通名两个同名组被拒绝", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [
+      group("🚀节点选择", ["HK"]),
+      group("🚀节点选择", ["HK"])
+    ]
+  });
+  assert.throws(() => quietMain(config, "赔钱机场"), /歧义/);
+});
+
+test("普通名同时被组与节点占用时被拒绝", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("HK", ["HK"])],
+    rules: ["MATCH,HK"]
+  });
+  assert.throws(() => quietMain(config, "未知订阅"), /歧义/);
+});
+
+test("归一化命中唯一字符串后组与节点同名仍拒绝", () => {
+  const config = configFixture({
+    proxies: [airportNode("🚀 节点选择")],
+    groups: [group("🚀 节点选择", ["🚀 节点选择"])]
+  });
+  assert.throws(() => quietMain(config, "未知订阅"), /歧义/);
+});
+
+test("单叶子 udp:false 汇总含名称与路径", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK", { udp: false }), airportNode("JP")],
+    groups: [group("🚀节点选择", ["HK", "JP"])]
+  });
+  const { warnings } = captureMain(config, "赔钱机场");
+  const udpWarnings = udpDisabledWarnings(warnings);
+  assert.equal(udpWarnings.length, 1);
+  assert.match(udpWarnings[0], /HK/);
+  assert.match(udpWarnings[0], /路径：🚀节点选择 -> HK/);
+});
+
+test("同名 udp:false 节点挂两个组时只计一次且保留首次路径", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK", { udp: false })],
+    groups: [
+      group("🚀节点选择", ["A", "B"]),
+      group("A", ["HK"]),
+      group("B", ["HK"])
+    ]
+  });
+  const { warnings } = captureMain(config, "赔钱机场");
+  const udpWarnings = udpDisabledWarnings(warnings);
+  assert.equal(udpWarnings.length, 1);
+  assert.match(udpWarnings[0], /1 个可达节点显式关闭 UDP/);
+  assert.match(udpWarnings[0], /路径：🚀节点选择 -> A -> HK/);
+  assert.equal(udpWarnings[0].includes("路径：🚀节点选择 -> B -> HK"), false);
+});
+
+test("9 个不同名 udp:false 叶子只展示前 8 个样本", () => {
+  const leafNames = [];
+  const proxies = [];
+  for (let index = 1; index <= 9; index += 1) {
+    const name = `L${index}`;
+    leafNames.push(name);
+    proxies.push(airportNode(name, { udp: false }));
+  }
+  const config = configFixture({
+    proxies,
+    groups: [group("🚀节点选择", leafNames)]
+  });
+  const { warnings } = captureMain(config, "赔钱机场");
+  const udpWarnings = udpDisabledWarnings(warnings);
+  assert.equal(udpWarnings.length, 1);
+  const sampleNames = extractQuotedNames(udpWarnings[0]);
+  assert.deepEqual(sampleNames, leafNames.slice(0, 8));
+  assert.equal(udpWarnings[0].includes("L9"), false);
+  assert.match(udpWarnings[0], /9/);
+});
+
+test("2000 叶子中 1000 个不同名 udp:false 只汇总一条警告", () => {
+  const leafNames = [];
+  const proxies = [];
+  for (let index = 0; index < 2000; index += 1) {
+    const name = `N${String(index).padStart(4, "0")}`;
+    leafNames.push(name);
+    proxies.push(airportNode(name, { udp: index < 1000 ? false : true }));
+  }
+  const config = configFixture({
+    proxies,
+    groups: [group("🚀节点选择", leafNames)]
+  });
+  const { output, warnings } = captureMain(config, "赔钱机场");
+  assert.ok(output);
+  const udpWarnings = udpDisabledWarnings(warnings);
+  assert.equal(udpWarnings.length, 1);
+  const sampleNames = extractQuotedNames(udpWarnings[0]);
+  assert.ok(sampleNames.length <= 8);
+  assert.equal(udpWarnings[0].includes("N0008"), false);
+  assert.match(udpWarnings[0], /1000/);
+});
+
+test("2000 叶子同一对象连续两次 main 保持规则、policy 与 dialer-proxy", () => {
+  const leafNames = [];
+  const proxies = [];
+  for (let index = 0; index < 2000; index += 1) {
+    const name = `N${String(index).padStart(4, "0")}`;
+    leafNames.push(name);
+    proxies.push(airportNode(name, { udp: index < 1000 ? false : true }));
+  }
+  const config = configFixture({
+    proxies,
+    groups: [group("🚀节点选择", leafNames)]
+  });
+
+  quietMain(config, "赔钱机场");
+  const firstRules = config.rules.slice();
+  const firstPolicy = structuredClone(config.dns["nameserver-policy"]);
+  const firstHome = findProxy(config, HOME_PROXY_NAME);
+  const firstServer = firstHome.server;
+  const firstPort = firstHome.port;
+  const firstDialer = firstHome["dialer-proxy"];
+  quietMain(config, "赔钱机场");
+
+  const secondHome = findProxy(config, HOME_PROXY_NAME);
+  assert.deepEqual(config.rules, firstRules);
+  assert.deepEqual(config.dns["nameserver-policy"], firstPolicy);
+  assert.equal(secondHome.server, firstServer);
+  assert.equal(secondHome.port, firstPort);
+  assert.equal(secondHome["dialer-proxy"], firstDialer);
 });
 
 // ---------------------------------------------------------------------------

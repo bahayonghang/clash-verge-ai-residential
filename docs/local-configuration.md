@@ -94,7 +94,7 @@ test -e clash-verge-ai-residential.local.toml || \
 | `runtime.enable_domain_sniffer` | `ENABLE_DOMAIN_SNIFFER` | `true` | 加固域名嗅探以补偿纯 IP 连接和 DNS 映射缺失。 | 不会全局改写目标地址。 |
 | `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | 为已经启用的 TUN 补齐 DNS 劫持项。 | 仅在 Profile 已启用 TUN 时生效。 |
 | `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | 为已有 TUN 开启 `strict-route`。 | 依赖 TUN 已启用且 `runtime.harden_existing_tun_dns_hijack = true`，可能影响虚拟机或特殊路由。 |
-| `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | 对可达子组或节点显式禁用 UDP 输出警告。 | 顶层上游禁用 UDP 仍会直接失败。 |
+| `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | 对可达叶子显式关闭 UDP 汇总为一条警告（最多 8 个样本）。 | 顶层上游禁用 UDP 仍会直接失败。 |
 
 ## 生成本地脚本
 

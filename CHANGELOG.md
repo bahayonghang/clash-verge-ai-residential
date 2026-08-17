@@ -9,6 +9,13 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - Add sanitized real-profile integration fixtures.
 - Add automated domain-source freshness checks where upstream providers publish machine-readable inventories.
 
+## [5.8.1] - 2026-08-17
+
+### Changed
+
+- Build one outbound name index during `main` so large airport profiles do not scan every proxy for each reachable leaf.
+- Collapse reachable `udp: false` leaf warnings into one summary (at most 8 samples).
+
 ## [5.8.0] - 2026-08-17
 
 ### Added

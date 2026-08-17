@@ -1,6 +1,6 @@
 {
   "name": "clash-verge-ai-residential",
-  "version": "5.8.0",
+  "version": "5.8.1",
   "private": true,
   "description": "Clash Verge Rev global extension script for AI-only residential SOCKS5 routing, multi-profile chained proxy selection, and DNS leak mitigation.",
   "license": "MIT",

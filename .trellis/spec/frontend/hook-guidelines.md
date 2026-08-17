@@ -42,6 +42,11 @@ actual networking lifecycle.
 - Engine is boa_engine 0.21: no network/file IO, 5s timeout, 10M loop-iteration
   limit, 1000-line/1MB console cap, 10MB config JSON cap. `profileName` is the
   profile display name (Chinese passes through verbatim).
+- Build one outbound name index per `main` and require it in `findOutbound`.
+  Do not scan `proxies` / `proxy-groups` once per reachable leaf. Do not emit
+  one `console.warn` per subscription node: the 1000-line cap throws, `main`
+  aborts, and the host discards every script change. Aggregate or cap host
+  logs. Index keys must match `namedItems` (`item` truthy, `item.name` as-is).
 
 ## Node CLI Entry Point
 
