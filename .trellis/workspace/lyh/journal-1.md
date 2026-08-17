@@ -145,3 +145,24 @@
 ### Next Steps
 
 - 若可做脱敏 ChatGPT 桌面/iOS Connections，再去掉 UNVERIFIED
+
+
+## Session 5: v5.8.1 outbound 索引与 UDP 警告汇总
+
+**Date**: 2026-08-17
+**Task**: v5.8.1 outbound 索引与 UDP 警告汇总
+**Branch**: `dev`
+
+### Summary
+
+为 clash-verge-ai-residential.js 增加一次 main 的 outbound 索引；findOutbound 缺索引即失败。可达叶子 udp:false 改为一条最多 8 样本的汇总警告。版本 5.8.1。npm run ci 59 项通过。boa 5 秒宿主实测仍为 UNVERIFIED。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5bf50d0` | (see git log) |
+
+### Status
+
+[OK] **Completed**
