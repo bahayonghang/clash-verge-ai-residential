@@ -9,6 +9,16 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - Add sanitized real-profile integration fixtures.
 - Add automated domain-source freshness checks where upstream providers publish machine-readable inventories.
 
+## [5.8.0] - 2026-08-17
+
+### Added
+
+- Five official ChatGPT exact hosts from OpenAI help article 9247338: `chat.openai.com`, `android.chat.openai.com`, `desktop.chat.openai.com`, `ios.chat.openai.com`, and `tcr9i.chat.openai.com`. The purpose of `tcr9i.chat.openai.com` is undocumented. Native ChatGPT desktop/iOS Connections results remain UNVERIFIED.
+
+### Changed
+
+- Restored `OPENAI_CORE_EXACT_DOMAINS` under `routing.openai_core`. Generated output uses exact `DOMAIN` rules and bare DNS keys only. A cleanup-only `chat.openai.com` suffix entry removes a mistaken `DOMAIN-SUFFIX,chat.openai.com` rule and `+.chat.openai.com` policy key; that suffix is never re-injected.
+
 ## [5.7.0] - 2026-08-16
 
 ### Added

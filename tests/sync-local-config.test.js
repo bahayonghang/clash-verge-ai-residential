@@ -276,7 +276,19 @@ openai_core = false
         false,
         `本地开关应让 GPT 域名离开家宽：${host}`
       );
-      assert.equal(host in probe.policy, false, `DNS policy 不应包含 GPT 域名：${host}`);
+      assert.equal(
+        `+.${host}` in probe.policy,
+        false,
+        `DNS policy 不应包含 GPT suffix 键：+.${host}`
+      );
+    }
+    for (const host of publicScript.constants.OPENAI_CORE_EXACT_DOMAINS) {
+      assert.equal(
+        ruleMatchesHost(probe.rules, host, probe.aiGroup),
+        false,
+        `本地开关应让 GPT exact 主机离开家宽：${host}`
+      );
+      assert.equal(host in probe.policy, false, `DNS policy 不应包含 GPT exact 裸键：${host}`);
     }
     for (const host of [
       "claude.ai",

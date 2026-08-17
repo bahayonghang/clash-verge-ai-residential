@@ -37,7 +37,8 @@ const {
   CURSOR_EXACT_DOMAINS,
   CURSOR_DOMAIN_REGEXES,
   GROK_SUFFIX_DOMAINS,
-  GROK_EXACT_DOMAINS
+  GROK_EXACT_DOMAINS,
+  OPENAI_CORE_EXACT_DOMAINS
 } = constants;
 
 function quietMain(config, profileName) {
@@ -163,7 +164,7 @@ function assertAiRoute(rules, hosts) {
 // ---------------------------------------------------------------------------
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
-  assert.equal(SCRIPT_VERSION, "5.7.0");
+  assert.equal(SCRIPT_VERSION, "5.8.0");
   assert.equal(template["dialer-proxy"], "🚀节点选择");
 });
 
@@ -536,6 +537,14 @@ test("公共 DoH/DoT 与通用 STUN/TURN/Voice 端口默认不走家宽", () => 
 });
 
 test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方依赖不走", () => {
+  assert.deepEqual(OPENAI_CORE_EXACT_DOMAINS, [
+    "chat.openai.com",
+    "android.chat.openai.com",
+    "desktop.chat.openai.com",
+    "ios.chat.openai.com",
+    "tcr9i.chat.openai.com"
+  ]);
+
   const rules = buildInjectedRules();
   assertAiRoute(rules, [
     "claude.ai",
@@ -547,6 +556,11 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "api.openai.com",
     "us.api.openai.com",
     "eu.api.openai.com",
+    "chat.openai.com",
+    "android.chat.openai.com",
+    "desktop.chat.openai.com",
+    "ios.chat.openai.com",
+    "tcr9i.chat.openai.com",
     "antigravity.google",
     "daily-cloudcode-pa.googleapis.com"
   ]);
@@ -569,6 +583,8 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "update.googleapis.com",
     "open-vsx.org"
   ]);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,chat.openai.com,${AI_GROUP}`), false);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,openai.com,${AI_GROUP}`), false);
 });
 
 // ---------------------------------------------------------------------------
@@ -582,6 +598,8 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
     `DOMAIN,assets-proxy.anthropic.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,api.openai.com,${AI_GROUP}`,
     `DOMAIN,api.openai.com,${AI_GROUP}`,
+    `DOMAIN,chat.openai.com,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,chat.openai.com,${AI_GROUP}`,
     `DOMAIN,auth.x.ai,${AI_GROUP}`,
     `DOMAIN,api.x.ai,${AI_GROUP}`,
     `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
@@ -636,6 +654,8 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
       `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
       // v5.6 遗留的 exact 形态规则应被托管清理并按 suffix 重新注入一次。
       `DOMAIN,api.openai.com,${AI_GROUP}`,
+      `DOMAIN,chat.openai.com,${AI_GROUP}`,
+      `DOMAIN-SUFFIX,chat.openai.com,${AI_GROUP}`,
       ...retiredCursorRules,
       `IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`,
       `IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`,
@@ -678,6 +698,17 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
     config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api.openai.com,${AI_GROUP}`).length,
     1
   );
+  assert.equal(
+    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,chat.openai.com,${AI_GROUP}`).length,
+    0
+  );
+  for (const host of OPENAI_CORE_EXACT_DOMAINS) {
+    assert.equal(
+      config.rules.filter((rule) => rule === `DOMAIN,${host},${AI_GROUP}`).length,
+      1,
+      `exact 主机应重注一次：${host}`
+    );
+  }
   for (const rule of retiredCursorRules) assert.equal(config.rules.includes(rule), true);
   assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), true);
   assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`), true);
@@ -721,6 +752,12 @@ test("AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名", ()
   assert.deepEqual(policy["+.cursorvm.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["authenticator.cursor.sh"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.grok.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["+.chatgpt.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["+.api.openai.com"], RESIDENTIAL_DOH);
+  for (const host of OPENAI_CORE_EXACT_DOMAINS) {
+    assert.deepEqual(policy[host], RESIDENTIAL_DOH);
+  }
+  assert.equal("+.chat.openai.com" in policy, false);
 
   for (const key of [
     "www.youtube.com",

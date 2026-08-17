@@ -31,6 +31,10 @@ Add focused assertions beside the relevant section in
 `tests/regression.test.js`. A new routed domain or regex requires both positive
 coverage for the intended AI endpoint and negative coverage for nearby shared,
 marketplace, update, CDN, media, advertising, telemetry, or public-DNS traffic.
+`buildNameserverPolicy` writes suffix domains as `+.${domain}` and exact
+domains as the bare hostname. DNS on/off assertions must use those keys.
+A bare suffix name such as `chatgpt.com` is absent even when the route is
+on, so `host in policy` cannot prove that GPT DNS routing is disabled.
 Managed-rule ownership changes require current-output cleanup, unknown/retired
 rule preservation, and repeated-execution coverage. Renderer changes require
 successful-output and rejection coverage in `tests/sync-local-config.test.js`,
@@ -178,5 +182,7 @@ no rendered UI.
   name uniqueness, proxy recursion, UDP capability, or upstream selection.
 - Do not write tests that only repeat a constant; assert observable generated
   rules/configuration and explicit exclusions.
+- Do not assert `host in nameserver-policy` for a suffix domain. Check
+  `+.${host}` (suffix) or the bare hostname (exact).
 - Do not add dependencies or build tooling for behavior the standard library
   already supports.

@@ -2,10 +2,14 @@
 
 /**
  * Clash Verge Rev 全局扩展脚本
- * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.7
+ * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.8
  *
  * 数据路径：
  *   本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
+ *
+ * v5.8 重点：
+ *   - 按官方 help.openai.com/9247338 以 exact 补齐五个 chat.openai.com 家族主机；
+ *     不注入 DOMAIN-SUFFIX,chat.openai.com。
  *
  * v5.7 重点：
  *   - 域名对齐官方网络文档：补 Claude MCP 代理与资产代理、Grok 认证与 API 域；
@@ -33,7 +37,7 @@
 // 0. 脚本标识与保留名称
 // ============================================================
 
-const SCRIPT_VERSION = "5.7.0";
+const SCRIPT_VERSION = "5.8.0";
 const AI_GROUP = "AI-家宽";
 const HOME_PROXY_NAME = "家宽-SOCKS5";
 
@@ -210,8 +214,15 @@ const CORE_EXACT_DOMAINS = [
   "aiplatform.googleapis.com"
 ];
 
-// OpenAI 第一方模型 API；v5.7 起 api.openai.com 以 suffix 形式并入
-// OPENAI_CORE_SUFFIX_DOMAINS，本常量已移除（exact 无法匹配 us./eu. 前缀）。
+// 官方 help.openai.com/9247338 明文列出的 ChatGPT 应用主机；tcr9i 用途不明；
+// 不添加 Voice UDP 3478。
+const OPENAI_CORE_EXACT_DOMAINS = [
+  "chat.openai.com",
+  "android.chat.openai.com",
+  "desktop.chat.openai.com",
+  "ios.chat.openai.com",
+  "tcr9i.chat.openai.com"
+];
 
 // Gemini Web / AI Studio：只保留产品入口，不纳入共享 Google 服务清单。
 const GEMINI_WEB_SUFFIX_DOMAINS = [
@@ -1076,6 +1087,7 @@ function activeSuffixDomains() {
 function activeExactDomains() {
   return uniqueStrings([
     ...CORE_EXACT_DOMAINS,
+    ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_EXACT_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_EXACT_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_EXACT_DOMAINS : []),
     ...(ROUTE_GROK_CORE ? GROK_EXACT_DOMAINS : []),
@@ -1101,6 +1113,8 @@ function allPossibleSuffixDomains() {
   return uniqueStrings([
     ...CORE_SUFFIX_DOMAINS,
     ...OPENAI_CORE_SUFFIX_DOMAINS,
+    // 从不注入 DOMAIN-SUFFIX,chat.openai.com；仅清理误注入的 suffix 规则与 +.chat.openai.com。
+    "chat.openai.com",
     ...GEMINI_WEB_SUFFIX_DOMAINS,
     ...CURSOR_SUFFIX_DOMAINS,
     ...GROK_SUFFIX_DOMAINS,
@@ -1114,6 +1128,7 @@ function allPossibleSuffixDomains() {
 function allPossibleExactDomains() {
   return uniqueStrings([
     ...CORE_EXACT_DOMAINS,
+    ...OPENAI_CORE_EXACT_DOMAINS,
     // v5.6 曾以 exact 形式注入 api.openai.com；保留以清理旧版托管规则。
     "api.openai.com",
     ...GEMINI_WEB_EXACT_DOMAINS,
@@ -1579,6 +1594,7 @@ if (typeof module !== "undefined" && module.exports) {
       PRESERVE_UNMANAGED_NAMESERVER_POLICY,
       ROUTE_OPENAI_CORE,
       OPENAI_CORE_SUFFIX_DOMAINS,
+      OPENAI_CORE_EXACT_DOMAINS,
       ROUTE_GEMINI_WEB_CORE,
       ROUTE_CURSOR_CORE,
       ROUTE_GROK_CORE,
