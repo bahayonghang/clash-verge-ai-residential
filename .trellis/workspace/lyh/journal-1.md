@@ -309,3 +309,24 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 11: C5 发布硬化与归档
+
+**Date**: 2026-08-18
+**Task**: C5 发布硬化与归档
+**Branch**: `dev`
+
+### Summary
+
+交付 C5 发布硬化入口、文档与自动门证据；发布结论 no-go。未做安装态、完整 30 天库、24 小时 soak、签名或 GitHub Release。已归档 08-18-monitor-release-hardening。未归档父任务。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `15f960f` | (see git log) |
+
+### Status
+
+[OK] **Completed**
