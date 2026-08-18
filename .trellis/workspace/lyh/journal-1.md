@@ -166,3 +166,45 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 6: 拆出 Cursor 仓库索引家宽路由
+
+**Date**: 2026-08-18
+**Task**: 拆出 Cursor 仓库索引家宽路由
+**Branch**: `dev`
+
+### Summary
+
+将 repo[0-9]+.cursor.sh 从 cursor_core 拆为独立开关 routing.cursor_repository_indexing，默认 false，回落原 Profile。v5.9.0。just ci 通过。Clash Connections 观测 UNVERIFIED。
+
+### Main Changes
+
+- 根脚本新增 ROUTE_CURSOR_REPOSITORY_INDEXING=false，拆分核心与索引正则目录
+- allPossibleDomainRegexes 保留两组正则，关闭后可清理 v5.8.1 托管 repo 规则
+- 渲染器注册 cursor_repository_indexing，缺字段按 false 补全
+- 同步 README、配置文档、路由范围、故障排查与 CHANGELOG
+- spec 补充：拆分目录后仍须进入 allPossible* 清理集
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `cc714f5` | (see git log) |
+
+### Testing
+
+- [OK] node --test tests/regression.test.js 通过
+- [OK] node --test tests/sync-local-config.test.js 通过
+- [OK] just ci 通过（62 项测试 + 密钥扫描）
+- [OK] 真实 Clash Connections 观测 UNVERIFIED
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 对本机执行 just render-local，使 .local.js 升级到 v5.9.0
+- 如需恢复 v5.8.1 repo 家宽路由，设 cursor_repository_indexing=true 后再渲染
+- 08-18-residential-monitor-mvp 仍为 planning，未纳入本次提交
