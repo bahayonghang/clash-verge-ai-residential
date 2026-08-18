@@ -267,3 +267,24 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 9: C3 历史报告与数据管理
+
+**Date**: 2026-08-18
+**Task**: C3 历史报告与数据管理
+**Branch**: `dev`
+
+### Summary
+
+交付 ReportService、快照 token、流式导出、精确保留与 Recovery restore。just monitor-check 与 just ci 退出码 0。完整 30 天 A=50/250/1000 重跑未执行。已归档 08-18-monitor-reporting-data，未启动 C4/C5，未归档父任务。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `171650b` | (see git log) |
+
+### Status
+
+[OK] **Completed**
