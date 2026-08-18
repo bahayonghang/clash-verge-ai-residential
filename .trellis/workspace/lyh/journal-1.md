@@ -288,3 +288,24 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 10: C4 家宽监控告警与诊断
+
+**Date**: 2026-08-18
+**Task**: C4 家宽监控告警与诊断
+**Branch**: `dev`
+
+### Summary
+
+实施 C4：AlertEngine、schema=3、同事务 outbox、告警中心与脱敏诊断。just monitor-check 与 just ci 退出码 0。C4-AC7 安装态通知与完整 30 天三档库未执行。已归档 08-18-monitor-alerting-diagnostics。未启动 C5，未归档父任务。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e83cc5c` | (see git log) |
+
+### Status
+
+[OK] **Completed**

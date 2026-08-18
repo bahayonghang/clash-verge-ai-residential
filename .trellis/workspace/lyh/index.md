@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 9
+- **Total Sessions**: 10
 - **Last Active**: 2026-08-18
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~290 | Active |
+| `journal-1.md` | ~311 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 10 | 2026-08-18 | C4 家宽监控告警与诊断 | `e83cc5c` | `dev` |
 | 9 | 2026-08-18 | C3 历史报告与数据管理 | `171650b` | `dev` |
 | 8 | 2026-08-18 | C2 桌面外壳与实时监控 | `143af87` | `dev` |
 | 7 | 2026-08-18 | 交付家宽监控 C0/C1 并归档 | `2738e6a`, `0edc537` | `dev` |
