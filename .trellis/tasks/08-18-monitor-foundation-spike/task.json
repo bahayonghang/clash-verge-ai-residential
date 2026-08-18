@@ -1,0 +1,28 @@
+{
+  "id": "monitor-foundation-spike",
+  "name": "monitor-foundation-spike",
+  "title": "家宽监控基础与风险验证",
+  "description": "先于业务 schema 验证性能、SQLite binding、控制器传输、凭据与 Windows 安装能力，并冻结 residential-monitor 的工程基线和 C1 可消费决策。",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": "residential-monitor",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-18",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-18-residential-monitor-mvp",
+  "relatedFiles": [],
+  "notes": "前置依赖：无。后置依赖：C1 必须等待本任务的性能预算、binding、协议、CredentialStore 与安装能力 adopt/reject/fallback 结论获批后才能启动。当前只授权完善规划，未授权启动；不得运行 task.py start。",
+  "meta": {
+    "description": "C0：以可复现性能与兼容性证据冻结基础选型，不实现业务产品。"
+  }
+}

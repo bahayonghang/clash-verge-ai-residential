@@ -1,0 +1,5 @@
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "复核报告、保留、备份恢复、C2 Recovery Shell 接入与模块所有权没有越界。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "复核三档真实规模、query plan、token / cancel、WAL、retention 与低空间性能 gate。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "复核 coverage、观测下界、连接维度和 secret 隔离在报告与导出中保持准确。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "检查查询、DTO、UI、导出、维护与恢复的数据流和错误边界一致。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "检查聚合、projection、metadata、脱敏、取消和 operation 状态没有重复实现。"}

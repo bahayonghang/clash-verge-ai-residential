@@ -1,0 +1,5 @@
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "复核桌面生命周期、原子 Channel、Credential Manager、Recovery Shell 与安全验收边界。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "复核 10k 短时峰值、keyset / 虚拟化、内存有界和容量声明未被扩大。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "复核传输错误、secret 隔离、管道兼容和 204 关闭请求文案符合一手证据。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "检查 C1 接口到 Rust / TypeScript / UI 的字段、版本、错误和 resync 数据流一致。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "检查实时 reducer、decoder、状态投影和配置常量没有形成重复实现。"}

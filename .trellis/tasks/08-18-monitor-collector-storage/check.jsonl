@@ -1,0 +1,9 @@
+{"file": ".trellis/spec/guides/index.md", "reason": "核对 C1 检查已加载仓库思考 guides。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "检查原始输入到 durable projection 的每个边界、版本、错误与水位是否一致。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "检查 decoder、状态机、SQL、错误和 reducer 是否由单一 owner 提供，避免重复口径。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "复核 ControllerSession 的受支持边界、pipe 安全、错误分类和 replay fixture。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "复核 core 表所有权、secret 边界、原子 Channel 和恢复后端未越界。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "复核 FULL durability、prepared/bundle 幂等、kill 点、10k/A=250、WAL、busy、磁盘满和静默 gap gate。"}
+{"file": ".trellis/tasks/08-18-monitor-collector-storage/research/c1-input-from-c0.md", "reason": "核对 C1 运行配置只使用已批准 C0 值。"}
+{"file": ".trellis/tasks/08-18-monitor-foundation-spike/research/evidence/sqlite-binding.json", "reason": "核对实际 sqlite_version 与 WAL/FULL 能力。"}
+{"file": ".trellis/tasks/08-18-monitor-foundation-spike/research/evidence/generate-a250-d30.json", "reason": "核对 A=250 设计库不得用小库外推。"}

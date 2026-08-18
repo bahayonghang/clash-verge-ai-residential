@@ -1,0 +1,7 @@
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "mihomo 公开契约、Verge 私有 IPC、管道鉴权 ACL、chains 顺序与兼容矩阵"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "Tauri 2、TypeScript/Vite、SQLite、凭据、托盘通知、迁移恢复与 Windows 发布的精炼执行约束"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "全连接容量模型、稀疏事实、幂等写入、背压、索引查询、保留备份与性能 gate"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/clash-controller-api.md", "reason": "本机 Verge v2.5.2 环境、运行配置与 API payload 样本"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "确保采集、核算、SQLite、查询、IPC 与 UI 契约只有一个 owner"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "避免实时、报告、导出和告警重复解释 payload 与统计口径"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "仅用于仓库级 secret scan、根 CI 和语言约定；桌面子应用需在 C0 建立独立 specs"}

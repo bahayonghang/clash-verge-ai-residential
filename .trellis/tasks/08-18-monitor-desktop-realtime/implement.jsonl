@@ -1,0 +1,5 @@
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "加载桌面生命周期、IPC、凭据、安全与模块所有权的已确认实施约束。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "约束 10k 短时实时峰值、keyset、内存边界，并避免把峰值误作 30 天容量。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "落实 TCP、named pipe、secret、错误分类、chains 与单条连接关闭的兼容边界。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "检查 C1 facade、Rust DTO、Channel reducer、桌面能力与 UI 之间的跨层契约。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "确保 decoder、reducer、health 投影和状态转换由单一所有者实现，避免前端重复业务逻辑。"}

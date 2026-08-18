@@ -1,0 +1,5 @@
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "加载 ReportService 所有权、C1 StorageCoordinator、C2 Recovery Shell、保留与备份恢复的总体约束。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "落实真实规模 SQL corpus、snapshot token、取消、WAL、精确保留、备份与并发性能预算。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "保持观测下界、coverage、连接元数据、secret 与报告口径符合控制器能力边界。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "检查 SQLite 数据层、ReportResult、导出 projection、RecoveryFacade 与 UI 的端到端契约。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "确保 UI 与三种导出复用同一报告投影、metadata、脱敏和状态实现。"}

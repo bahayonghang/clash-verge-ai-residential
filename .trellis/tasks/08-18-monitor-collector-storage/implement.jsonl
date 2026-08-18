@@ -1,0 +1,13 @@
+{"file": ".trellis/spec/guides/index.md", "reason": "确认 C1 实施所需的跨层数据流和复用思考入口。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "约束 controller 输入、AccountingBatch、CommitBundle、SQLite、projection 与 Channel 的端到端契约。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "避免 normalizer、错误 taxonomy、coverage、watermark 和 DTO 在多个模块重复实现。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "提供 ControllerSession 的 TCP/pipe、鉴权、ACL、busy、PID、framing 和 chains 非稳定语义。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "提供模块所有权、Accounting、core SQLite、Channel baseSeq、安全和 RecoveryFacade 约束。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "提供 sparse facts、prepared writer、bundle 幂等、durable watermark、WAL/backpressure 与 C1 性能 gate。"}
+{"file": ".trellis/tasks/08-18-monitor-collector-storage/research/c1-input-from-c0.md", "reason": "C0 已批准决策：binding、FULL、档位、limits、CredentialStore 与传输 profile。"}
+{"file": ".trellis/tasks/08-18-monitor-foundation-spike/research/evidence/sqlite-binding.json", "reason": "rusqlite 0.40 bundled sqlite 3.53.2 adopt 证据。"}
+{"file": ".trellis/tasks/08-18-monitor-foundation-spike/research/evidence/generate-a250-d30.json", "reason": "A=250 设计档完整 30 天库实测行数。"}
+{"file": ".trellis/tasks/08-18-monitor-foundation-spike/research/evidence/generate-a1000-d30.json", "reason": "A=1000 压力档完整 30 天库实测行数。"}
+{"file": ".trellis/tasks/08-18-monitor-foundation-spike/research/evidence/credential-windows.json", "reason": "Windows Credential Manager 真机 CRUD 通过；C1 仍用 Fake。"}
+{"file": ".trellis/tasks/08-18-monitor-foundation-spike/research/evidence/controller-profiles.json", "reason": "TCP supported、pipe best-effort 且不发送 secret。"}
+{"file": ".trellis/tasks/08-18-monitor-foundation-spike/research/evidence/peak-10k-30m.json", "reason": "10k/1Hz/30m FULL 峰值实测；p95 通过，max 约束 C1 backpressure。"}

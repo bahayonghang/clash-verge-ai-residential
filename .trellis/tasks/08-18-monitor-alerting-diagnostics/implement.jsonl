@@ -1,0 +1,5 @@
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "加载 C4 的模块所有权、同事务 CommitBundle、Windows 通知、报告复用和发布前约束。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "约束告警热路径、prepared statements、outbox 有界扫描、WAL、ingestion SLO 和压力测试指标。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "用于健康告警和脱敏诊断正确区分 TCP 鉴权、管道 ACL、busy、协议不兼容与核心重启。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "告警跨核算、存储、报告、Windows 能力和前端，需统一 DTO、状态与数据流边界。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "强制复用 C3 ReportService/rollup 与既有 health 投影，避免第二套聚合和重复状态逻辑。"}

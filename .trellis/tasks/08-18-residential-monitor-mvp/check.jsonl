@@ -1,0 +1,6 @@
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "核对控制器实现没有依赖固定 pipe、管道 secret 或 chains 顺序等危险假设"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "核对 Tauri、SQLite、Credential Manager、Windows 生命周期与发布约束"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "核对读写容量、bundle 幂等、背压 gap、keyset / EQP、维护并发和性能预算"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "检查采集到 UI 和导出的完整数据流、DTO 版本与单一统计 owner"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "检查查询、报告、导出、告警是否复用统一 decoder 与 projection"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "检查仓库 secret scan、根 CI 和语言约定；桌面子应用独立 specs 在 C0 纳入"}

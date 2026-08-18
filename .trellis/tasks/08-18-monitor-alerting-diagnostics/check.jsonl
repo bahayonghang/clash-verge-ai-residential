@@ -1,0 +1,5 @@
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "核对告警原子提交、系统通知尽力送达、诊断脱敏和 C4 依赖边界。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "检查逐帧评估、outbox 索引与扫描、并发压力是否保持 C1 ingestion SLO。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "检查健康状态与诊断没有混淆 TCP 401、管道访问拒绝、busy 超时和协议错误。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "审查数据库、服务、IPC、前端和 Windows 通知之间的契约、错误与版本传播。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "审查是否复用 C3 报告/rollup 和共享状态机，阻止重复聚合与分叉口径。"}

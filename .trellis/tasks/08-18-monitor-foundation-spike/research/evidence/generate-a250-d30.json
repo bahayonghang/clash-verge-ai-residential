@@ -1,0 +1,23 @@
+{
+  "spec_hash": "25621c132a8721eb8f9314e988324f0053edbd31552104fdf1a1b5810d9784fd",
+  "schema_name": "c0-candidate-v1-disposable",
+  "elapsed_ms": 481065,
+  "expected": {
+    "duration_minutes": 43200,
+    "session_rows": 2160000,
+    "chain_rows": 6480000,
+    "minute_rows": 10800000,
+    "hourly_rows": 23040,
+    "daily_rows": 30
+  },
+  "actual": {
+    "duration_minutes": 43200,
+    "session_rows": 2160000,
+    "chain_rows": 6480000,
+    "minute_rows": 10800000,
+    "hourly_rows": 23040,
+    "daily_rows": 30
+  },
+  "db_bytes": 1126117376,
+  "wal_bytes": 0
+}

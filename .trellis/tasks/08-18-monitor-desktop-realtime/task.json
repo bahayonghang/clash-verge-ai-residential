@@ -1,0 +1,28 @@
+{
+  "id": "monitor-desktop-realtime",
+  "name": "monitor-desktop-realtime",
+  "title": "家宽监控桌面外壳与实时监控",
+  "description": "在 C1 采集、核算与存储接口稳定后，交付 Windows 11 桌面生命周期、安全设置向导、原子实时 Channel、可扩展实时界面、连接关闭与独立恢复外壳。",
+  "status": "planning",
+  "dev_type": null,
+  "scope": "residential-monitor",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-18",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-18-residential-monitor-mvp",
+  "relatedFiles": [],
+  "notes": "C2 严格依赖 08-18-monitor-collector-storage（C1）完成并通过独立验收；只消费 C1 冻结的采集、实时投影、存储健康与 RecoveryFacade 接口，不修改报告或告警 schema。当前未获授权执行 task.py start，必须保持 planning。",
+  "meta": {
+    "description": "Windows 11 托盘桌面外壳、凭据与引导、原子实时订阅、10k 短时峰值 UI 和数据库无关 Recovery Shell。"
+  }
+}
