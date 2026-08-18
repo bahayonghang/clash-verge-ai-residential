@@ -9,7 +9,7 @@ Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Googl
 本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
 ```
 
-当前版本：`v5.8.1`。
+当前版本：`v5.9.0`。
 
 ## 核心边界
 
@@ -19,7 +19,8 @@ Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Googl
 - ChatGPT / OpenAI 产品域、官方 9247338 列出的五个 `chat.openai.com` 家族 exact 主机、模型 API（含 Codex 的 `us.` / `eu.` 数据驻留前缀）、上传与生成内容。真实 ChatGPT 桌面/iOS Connections 结果为 UNVERIFIED。
 - Gemini Web、Google AI Studio 专用后端、Gemini Developer API、Vertex AI 区域/全局模型端点。
 - Google Antigravity / Gemini Code Assist 的产品域和核心 Agent API。
-- Cursor Chat、Tab、Agent、代码库索引、Cloud Agent/Bugbot、授权/SSO 门户、Cloud Agent VM 和产品专属认证；`routing.cursor_core` 默认是 `true`。
+- Cursor Chat、Tab、Agent、Cloud Agent/Bugbot、授权/SSO 门户、Cloud Agent VM 和产品专属认证；`routing.cursor_core` 默认是 `true`。
+- Cursor 仓库索引主机 `repo[0-9]+.cursor.sh` 由独立开关 `routing.cursor_repository_indexing` 控制，默认是 `false`，回落原 Profile / 机场上游。本地 TOML 缺该字段时按 `false` 补全；显式设为 `true` 可恢复 v5.8.1 的 repo 家宽路由，无需删除字段。`repo42.cursor.sh` 由官方网络文档与本机 2026-08-17 日志共同确认；`repo[0-9]+.cursor.sh` 是本项目的前向兼容策略，不是 Cursor 官方通配合同。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`；Clash 域名规则无法在该主机上隔离索引，`api2` 仍由 `cursor_core` 控制。因此默认关闭不能宣称已把全部仓库上传排除出家宽。
 - Grok Build（xAI grok CLI）推理 API 与产品域，以及 `auth.x.ai` 认证与 `api.x.ai` 直连 API；`routing.grok_core` 默认是 `true`。
 
 家宽链路明确排除：
@@ -51,6 +52,7 @@ dialer-proxy = "🚀节点选择"
 
 [routing]
 cursor_core = true
+cursor_repository_indexing = false
 grok_core = true
 ```
 

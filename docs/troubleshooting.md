@@ -35,7 +35,11 @@ This can be expected under AI-only routing. Marketplace, update, download, media
 
 ## Cursor Marketplace or YouTube hits AI-家宽
 
-从 v5.6 起，Cursor 核心路由默认启用。即使启用 Cursor 核心路由，Marketplace 和 YouTube 仍不在分流范围内；如需让 Cursor 完全使用机场上游，请在本地 TOML 中设置 `routing.cursor_core = false`。意外命中的常见原因包括：
+从 v5.6 起，Cursor 核心路由默认启用。从 v5.9.0 起，仓库索引主机 `repo[0-9]+.cursor.sh` 改由 `routing.cursor_repository_indexing` 控制，默认是 `false`，回落原 Profile / 机场上游。缺失的本地 TOML 字段会按 `false` 补全；显式设为 `true` 可恢复 v5.8.1 的 repo 家宽路由。即使启用 Cursor 核心路由，Marketplace 和 YouTube 仍不在分流范围内；如需让 Cursor 核心流量也使用机场上游，请在本地 TOML 中设置 `routing.cursor_core = false`。
+
+若 `repo42.cursor.sh` 仍命中 `AI-家宽`，先检查是否把 `routing.cursor_repository_indexing` 设为 `true`，以及订阅或 Merge 层是否残留用户自有的 `DOMAIN,repo42.cursor.sh,AI-家宽`。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`；该主机仍由 `cursor_core` 控制，Clash 域名规则无法在保留多数 Cursor API 的同时隔离这条回退路径。默认关闭索引家宽不能宣称已排除全部仓库上传。
+
+意外命中的常见原因包括：
 
 - stale rules remain in a subscription, another script, or Global Extend Config (Merge);
 - a broad user rule such as `DOMAIN-SUFFIX,cursor.com,AI-家宽` exists outside this script;

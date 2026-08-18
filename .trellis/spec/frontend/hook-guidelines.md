@@ -82,6 +82,9 @@ all of them in one change:
    gating in the template (switch-on path: rules + DNS policy).
 3. The matching `allPossible*Domains()` / `allPossibleDomainRegexes()` entry
    (switch-off path: managed-rule cleanup after the switch was ever enabled).
+   If the new switch receives hosts or regexes previously gated by another
+   switch, keep those entries in `allPossible*()` under the new catalog. Do
+   not delete them from the cleanup set because the new default is `false`.
 4. The constant and domain lists in the template's `module.exports.constants`.
 5. `SWITCH_CONFIG_FIELDS` entry in `scripts/sync-local-config.js`
    (`table` / `key` / `constant` / `type`).

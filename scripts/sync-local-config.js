@@ -30,6 +30,7 @@ const SWITCH_CONFIG_FIELDS = Object.freeze([
   { table: "routing", key: "antigravity_update_and_telemetry", constant: "ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY", type: "boolean" },
   { table: "routing", key: "gemini_web_core", constant: "ROUTE_GEMINI_WEB_CORE", type: "boolean" },
   { table: "routing", key: "cursor_core", constant: "ROUTE_CURSOR_CORE", type: "boolean" },
+  { table: "routing", key: "cursor_repository_indexing", constant: "ROUTE_CURSOR_REPOSITORY_INDEXING", type: "boolean" },
   { table: "routing", key: "grok_core", constant: "ROUTE_GROK_CORE", type: "boolean" },
   { table: "routing", key: "cursor_process_fallback", constant: "ROUTE_CURSOR_PROCESS_FALLBACK", type: "boolean" },
   { table: "routing", key: "claude_code_auxiliary", constant: "ROUTE_CLAUDE_CODE_AUXILIARY", type: "boolean" },

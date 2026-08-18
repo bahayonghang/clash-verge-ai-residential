@@ -9,6 +9,23 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - Add sanitized real-profile integration fixtures.
 - Add automated domain-source freshness checks where upstream providers publish machine-readable inventories.
 
+## [5.9.0] - 2026-08-18
+
+### Added
+
+- New `routing.cursor_repository_indexing` switch (default `false`) for Cursor repository-indexing hosts `repo[0-9]+.cursor.sh`. A missing local TOML field is completed as `false`. Set the field to `true` to restore v5.8.1 residential routing for those hosts without deleting the key.
+
+### Changed
+
+- Repository-indexing regexes are no longer part of `routing.cursor_core`. By default, `repo42.cursor.sh` and other `repo<N>.cursor.sh` hosts fall back to the original Profile/airport upstream. Cursor Chat, Tab, Agent, auth, and Cloud Agent stay on `routing.cursor_core` (still default `true`). `api2.cursor.sh` stays on cursor_core.
+
+### Notes
+
+- Official docs and local 2026-08-17 logs jointly confirm `repo42.cursor.sh` as the indexing host.
+- `repo[0-9]+.cursor.sh` is this project's forward-compat policy, not an official Cursor wildcard contract.
+- Privacy Mode does not stop indexing uploads.
+- `disableHttp2` or a server-forced HTTP/1.1 fallback can put RepositoryService on shared `api2.cursor.sh`. Clash domain rules cannot isolate that path. This release does not claim that all repository uploads leave the residential link.
+
 ## [5.8.1] - 2026-08-17
 
 ### Changed

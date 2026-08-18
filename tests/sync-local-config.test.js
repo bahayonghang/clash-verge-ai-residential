@@ -95,14 +95,20 @@ test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚�
     assert.match(output, /由 clash-verge-ai-residential\.js 与 proxy\.local\.toml 自动生成/);
     assert.match(output, /server: "home\.example\.test"/);
     assert.match(output, /const ROUTE_CURSOR_CORE = true;/);
+    assert.match(output, /const ROUTE_CURSOR_REPOSITORY_INDEXING = false;/);
     assert.match(output, /const ROUTE_GROK_CORE = true;/);
     assert.doesNotMatch(output, /server: "xxx"/);
     assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
 
     // 缺失的开关键按示例默认值补全进本地 TOML，且缺失的整表被追加。
     assert.equal(result.addedKeys.includes("routing.cursor_core"), true);
+    assert.equal(result.addedKeys.includes("routing.cursor_repository_indexing"), true);
     assert.equal(result.addedKeys.includes("routing.grok_core"), true);
     assert.equal(result.addedKeys.includes("runtime.enable_domain_sniffer"), true);
+    assert.equal(
+      result.addedDefaults.find((entry) => entry.key === "routing.cursor_repository_indexing").value,
+      false
+    );
     assert.equal(
       result.addedDefaults.find((entry) => entry.key === "routing.grok_core").value,
       true
@@ -113,6 +119,7 @@ test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚�
     );
     const completedToml = fs.readFileSync(configPath, "utf8");
     assert.match(completedToml, /\[routing\][\s\S]*cursor_core = true/);
+    assert.match(completedToml, /\[routing\][\s\S]*cursor_repository_indexing = false/);
     assert.match(completedToml, /\[routing\][\s\S]*grok_core = true/);
     assert.match(completedToml, /\[runtime\][\s\S]*enable_domain_sniffer = true/);
     assert.match(completedToml, /# This file intentionally contains test-only values\./);
@@ -157,7 +164,9 @@ enable_tun_strict_route = true
       "  residentialDoh: script.constants.RESIDENTIAL_DOH,",
       "  suffixes: script.constants.CURSOR_SUFFIX_DOMAINS,",
       "  exact: script.constants.CURSOR_EXACT_DOMAINS,",
-      "  regexes: script.constants.CURSOR_DOMAIN_REGEXES,",
+      "  regexes: script.constants.CURSOR_CORE_DOMAIN_REGEXES,",
+      "  indexing: script.constants.ROUTE_CURSOR_REPOSITORY_INDEXING,",
+      "  indexingRegexes: script.constants.CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES,",
       "  grokSuffixes: script.constants.GROK_SUFFIX_DOMAINS,",
       "  grokExact: script.constants.GROK_EXACT_DOMAINS,",
       "  rules: script.buildInjectedRules(),",
@@ -171,7 +180,9 @@ enable_tun_strict_route = true
     ));
     const publicScript = require(templatePath);
     assert.equal(publicScript.constants.ROUTE_CURSOR_CORE, true);
+    assert.equal(publicScript.constants.ROUTE_CURSOR_REPOSITORY_INDEXING, false);
     assert.equal(probe.cursorCore, false);
+    assert.equal(probe.indexing, false);
 
     const publicRules = publicScript.buildInjectedRules();
     const expectedDisabledRules = [
@@ -230,6 +241,123 @@ enable_tun_strict_route = true
     assert.equal("+.api2.cursor.sh" in probe.policy, false);
     assert.equal("+.grok.com" in probe.policy, false);
     assert.equal("marketplace.cursorapi.com" in probe.policy, false);
+  });
+});
+
+test("本地 cursor_repository_indexing 缺字段补 false，显式 true 恢复 repo 家宽", () => {
+  function probeGeneratedScript(outputPath) {
+    const probeSource = [
+      '"use strict";',
+      "const script = require(process.argv[1]);",
+      "process.stdout.write(JSON.stringify({",
+      "  indexing: script.constants.ROUTE_CURSOR_REPOSITORY_INDEXING,",
+      "  cursorCore: script.constants.ROUTE_CURSOR_CORE,",
+      "  aiGroup: script.constants.AI_GROUP,",
+      "  rules: script.buildInjectedRules()",
+      "}));"
+    ].join("\n");
+    return JSON.parse(childProcess.execFileSync(
+      process.execPath,
+      ["-e", probeSource, outputPath],
+      { encoding: "utf8" }
+    ));
+  }
+
+  withTemporaryDirectory((directory) => {
+    const originalTemplate = fs.readFileSync(templatePath, "utf8");
+    const publicScript = require(templatePath);
+    assert.equal(publicScript.constants.ROUTE_CURSOR_REPOSITORY_INDEXING, false);
+    assert.equal(
+      ruleMatchesHost(
+        publicScript.buildInjectedRules(),
+        "repo42.cursor.sh",
+        publicScript.constants.AI_GROUP
+      ),
+      false
+    );
+
+    const missingPath = path.join(directory, "missing.toml");
+    const missingOutput = path.join(directory, "missing.local.js");
+    fs.writeFileSync(missingPath, validHomeProxyToml, "utf8");
+    const missingResult = syncLocalConfig({
+      templatePath,
+      configPath: missingPath,
+      outputPath: missingOutput
+    });
+    assert.equal(
+      missingResult.addedKeys.includes("routing.cursor_repository_indexing"),
+      true
+    );
+    assert.equal(
+      missingResult.addedDefaults.find(
+        (entry) => entry.key === "routing.cursor_repository_indexing"
+      ).value,
+      false
+    );
+    assert.match(
+      fs.readFileSync(missingPath, "utf8"),
+      /cursor_repository_indexing = false/
+    );
+    const missingProbe = probeGeneratedScript(missingOutput);
+    assert.equal(missingProbe.indexing, false);
+    assert.equal(missingProbe.cursorCore, true);
+    assert.equal(
+      ruleMatchesHost(missingProbe.rules, "repo42.cursor.sh", missingProbe.aiGroup),
+      false
+    );
+    assert.equal(
+      ruleMatchesHost(missingProbe.rules, "repo99.cursor.sh", missingProbe.aiGroup),
+      false
+    );
+    assert.equal(
+      ruleMatchesHost(missingProbe.rules, "api2.cursor.sh", missingProbe.aiGroup),
+      true
+    );
+
+    for (const [label, enabled] of [["on", true], ["off", false]]) {
+      const configPath = path.join(directory, `${label}.toml`);
+      const outputPath = path.join(directory, `${label}.local.js`);
+      fs.writeFileSync(
+        configPath,
+        `${validHomeProxyToml}\n[routing]\ncursor_repository_indexing = ${enabled}\n`,
+        "utf8"
+      );
+      syncLocalConfig({ templatePath, configPath, outputPath });
+      const output = fs.readFileSync(outputPath, "utf8");
+      assert.match(
+        output,
+        new RegExp(`const ROUTE_CURSOR_REPOSITORY_INDEXING = ${enabled};`)
+      );
+      const probe = probeGeneratedScript(outputPath);
+      assert.equal(probe.indexing, enabled);
+      assert.equal(probe.cursorCore, true);
+      assert.equal(
+        ruleMatchesHost(probe.rules, "repo42.cursor.sh", probe.aiGroup),
+        enabled,
+        `显式 ${enabled} 时应决定 repo42 是否走家宽`
+      );
+      assert.equal(
+        ruleMatchesHost(probe.rules, "repo99.cursor.sh", probe.aiGroup),
+        enabled,
+        `显式 ${enabled} 时应决定 repo99 是否走家宽`
+      );
+      assert.equal(
+        ruleMatchesHost(probe.rules, "api2.cursor.sh", probe.aiGroup),
+        true,
+        "显式开关不得把 api2 移出 cursor_core"
+      );
+      assert.equal(
+        ruleMatchesHost(probe.rules, "adminportal42.cursor.sh", probe.aiGroup),
+        true
+      );
+      assert.equal(
+        ruleMatchesHost(probe.rules, "marketplace.cursorapi.com", probe.aiGroup),
+        false
+      );
+    }
+
+    assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
+    assert.match(originalTemplate, /const ROUTE_CURSOR_REPOSITORY_INDEXING = false;/);
   });
 });
 
@@ -341,6 +469,14 @@ test("解析器拒绝未知表、未知键、重复定义和非布尔开关", ()
     [
       `${validHomeProxyToml}\n[routing]\ncursor_core = true\n[routing]\n`,
       /重复定义 \[routing\]/
+    ],
+    [
+      `${validHomeProxyToml}\n[routing]\ncursor_repository_indexing = "false"\n`,
+      /routing\.cursor_repository_indexing 必须是 true 或 false/
+    ],
+    [
+      `${validHomeProxyToml}\n[routing]\ncursor_repository_indexing = true\ncursor_repository_indexing = false\n`,
+      /重复定义字段 routing\.cursor_repository_indexing/
     ]
   ];
 
@@ -370,14 +506,26 @@ test("布尔常量锚点缺失或重复时失败且不写入半成品", () => {
       "utf8"
     );
 
-    for (const [name, alteredTemplate] of [
+    for (const [name, alteredTemplate, expectedError] of [
       [
         "missing.js",
-        originalTemplate.replace("const ROUTE_CURSOR_CORE = true;", "")
+        originalTemplate.replace("const ROUTE_CURSOR_CORE = true;", ""),
+        /必须且只能包含一个布尔常量 ROUTE_CURSOR_CORE/
       ],
       [
         "duplicate.js",
-        `${originalTemplate}\nconst ROUTE_CURSOR_CORE = true;\n`
+        `${originalTemplate}\nconst ROUTE_CURSOR_CORE = true;\n`,
+        /必须且只能包含一个布尔常量 ROUTE_CURSOR_CORE/
+      ],
+      [
+        "indexing-missing.js",
+        originalTemplate.replace("const ROUTE_CURSOR_REPOSITORY_INDEXING = false;", ""),
+        /必须且只能包含一个布尔常量 ROUTE_CURSOR_REPOSITORY_INDEXING/
+      ],
+      [
+        "indexing-duplicate.js",
+        `${originalTemplate}\nconst ROUTE_CURSOR_REPOSITORY_INDEXING = false;\n`,
+        /必须且只能包含一个布尔常量 ROUTE_CURSOR_REPOSITORY_INDEXING/
       ]
     ]) {
       const alteredTemplatePath = path.join(directory, name);
@@ -389,7 +537,7 @@ test("布尔常量锚点缺失或重复时失败且不写入半成品", () => {
           configPath,
           outputPath
         }),
-        /必须且只能包含一个布尔常量 ROUTE_CURSOR_CORE/
+        expectedError
       );
       assert.equal(fs.existsSync(outputPath), false);
     }
@@ -475,6 +623,7 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
     assert.equal(result.addedKeys.includes("routing.public_encrypted_dns"), true);
     assert.equal(result.addedKeys.includes("runtime.enable_domain_sniffer"), true);
     assert.equal(result.addedKeys.includes("routing.cursor_core"), false);
+    assert.equal(result.addedKeys.includes("routing.cursor_repository_indexing"), true);
     assert.equal(
       result.addedDefaults.find((entry) => entry.key === "routing.public_encrypted_dns").value,
       false
@@ -487,6 +636,7 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
     const reparsed = parseLocalToml(completed);
     assert.equal(reparsed.routing.openai_core, false, "用户已有值不应被覆盖");
     assert.equal(reparsed.routing.cursor_core, true, "用户已有值不应被覆盖");
+    assert.equal(reparsed.routing.cursor_repository_indexing, false);
     assert.equal(reparsed.routing.grok_core, true);
     assert.equal(reparsed.routing.public_encrypted_dns, false);
     assert.equal(reparsed.runtime.enable_domain_sniffer, true);

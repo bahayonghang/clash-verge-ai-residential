@@ -20,6 +20,7 @@ antigravity_project_apis = false
 antigravity_update_and_telemetry = false
 gemini_web_core = true
 cursor_core = true
+cursor_repository_indexing = false
 grok_core = true
 cursor_process_fallback = false
 claude_code_auxiliary = false

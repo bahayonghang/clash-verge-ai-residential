@@ -2,10 +2,15 @@
 
 /**
  * Clash Verge Rev 全局扩展脚本
- * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.8.1
+ * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.9.0
  *
  * 数据路径：
  *   本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
+ *
+ * v5.9.0 重点：
+ *   - 仓库索引主机 repo[0-9]+.cursor.sh 从 Cursor 核心目录拆出；
+ *     routing.cursor_repository_indexing 默认关闭，不再消耗家宽。
+ *   - Cursor Chat/Tab/Agent/认证/Cloud Agent 仍由 routing.cursor_core 控制（默认开启）。
  *
  * v5.8.1 重点：
  *   - 大订阅 outbound 索引，避免按叶子全表扫描；UDP 叶子警告改为一条汇总。
@@ -40,7 +45,7 @@
 // 0. 脚本标识与保留名称
 // ============================================================
 
-const SCRIPT_VERSION = "5.8.1";
+const SCRIPT_VERSION = "5.9.0";
 const AI_GROUP = "AI-家宽";
 const HOME_PROXY_NAME = "家宽-SOCKS5";
 
@@ -128,8 +133,11 @@ const ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY = false;
 // Gemini Web / Google AI Studio 产品入口。
 const ROUTE_GEMINI_WEB_CORE = true;
 
-// Cursor AI API、Tab、Agent、索引、Cloud Agent 与产品专属认证；默认走家宽。
+// Cursor AI API、Tab、Agent、Cloud Agent 与产品专属认证；默认走家宽。
 const ROUTE_CURSOR_CORE = true;
+
+// Cursor 仓库索引主机；与 ROUTE_CURSOR_CORE 独立，默认关闭以免占用家宽。
+const ROUTE_CURSOR_REPOSITORY_INDEXING = false;
 
 // Grok Build（xAI grok CLI）推理 API 与产品域；默认走家宽，可在本地 TOML 关闭。
 const ROUTE_GROK_CORE = true;
@@ -249,7 +257,7 @@ const GEMINI_DOMAIN_REGEXES = [
   "^[a-z0-9-]+-aiplatform\\.googleapis\\.com$"
 ];
 
-// Cursor 仅保留 AI API / Tab / Agent / 索引 / 专属认证 / Cloud Agent VM 的窄范围后缀。
+// Cursor 仅保留 AI API / Tab / Agent / 专属认证 / Cloud Agent VM 的窄范围后缀。
 const CURSOR_SUFFIX_DOMAINS = [
   "api2.cursor.sh",
   "api5.cursor.sh",
@@ -272,12 +280,14 @@ const CURSOR_EXACT_DOMAINS = [
   "api.cursor.com"
 ];
 
-const CURSOR_DOMAIN_REGEXES = [
-  // 代码库索引端点可能滚动编号，例如 repo42.cursor.sh。
-  "^repo[0-9]+\\.cursor\\.sh$",
-
-  // 企业 SSO 配置与域验证门户，编号与 repo42 同步滚动。
+const CURSOR_CORE_DOMAIN_REGEXES = [
+  // 企业 SSO 配置与域验证门户，编号可能滚动，例如 adminportal42.cursor.sh。
   "^adminportal[0-9]+\\.cursor\\.sh$"
+];
+
+const CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES = [
+  // 官方精确主机为 repo42.cursor.sh；数字通配是项目前向兼容策略，不是官方通配合同。
+  "^repo[0-9]+\\.cursor\\.sh$"
 ];
 
 // Grok Build 核心：cli-chat-proxy.grok.com 承载推理 API（/v1/responses）、
@@ -1163,7 +1173,10 @@ function activeExactDomains() {
 function activeDomainRegexes() {
   return uniqueStrings([
     ...GEMINI_DOMAIN_REGEXES,
-    ...(ROUTE_CURSOR_CORE ? CURSOR_DOMAIN_REGEXES : [])
+    ...(ROUTE_CURSOR_CORE ? CURSOR_CORE_DOMAIN_REGEXES : []),
+    ...(ROUTE_CURSOR_REPOSITORY_INDEXING
+      ? CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES
+      : [])
   ]);
 }
 
@@ -1205,7 +1218,8 @@ function allPossibleExactDomains() {
 function allPossibleDomainRegexes() {
   return uniqueStrings([
     ...GEMINI_DOMAIN_REGEXES,
-    ...CURSOR_DOMAIN_REGEXES
+    ...CURSOR_CORE_DOMAIN_REGEXES,
+    ...CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES
   ]);
 }
 
@@ -1658,6 +1672,7 @@ if (typeof module !== "undefined" && module.exports) {
       OPENAI_CORE_EXACT_DOMAINS,
       ROUTE_GEMINI_WEB_CORE,
       ROUTE_CURSOR_CORE,
+      ROUTE_CURSOR_REPOSITORY_INDEXING,
       ROUTE_GROK_CORE,
       ROUTE_CURSOR_PROCESS_FALLBACK,
       GEMINI_WEB_SUFFIX_DOMAINS,
@@ -1665,7 +1680,8 @@ if (typeof module !== "undefined" && module.exports) {
       GEMINI_DOMAIN_REGEXES,
       CURSOR_SUFFIX_DOMAINS,
       CURSOR_EXACT_DOMAINS,
-      CURSOR_DOMAIN_REGEXES,
+      CURSOR_CORE_DOMAIN_REGEXES,
+      CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES,
       GROK_SUFFIX_DOMAINS,
       GROK_EXACT_DOMAINS
     }

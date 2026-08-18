@@ -1,5 +1,7 @@
 "use strict";
 
+const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
@@ -30,6 +32,7 @@ const {
   PRESERVE_UNMANAGED_NAMESERVER_POLICY,
   ROUTE_GEMINI_WEB_CORE,
   ROUTE_CURSOR_CORE,
+  ROUTE_CURSOR_REPOSITORY_INDEXING,
   ROUTE_GROK_CORE,
   ROUTE_CURSOR_PROCESS_FALLBACK,
   GEMINI_WEB_SUFFIX_DOMAINS,
@@ -37,7 +40,8 @@ const {
   GEMINI_DOMAIN_REGEXES,
   CURSOR_SUFFIX_DOMAINS,
   CURSOR_EXACT_DOMAINS,
-  CURSOR_DOMAIN_REGEXES,
+  CURSOR_CORE_DOMAIN_REGEXES,
+  CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES,
   GROK_SUFFIX_DOMAINS,
   GROK_EXACT_DOMAINS,
   OPENAI_CORE_EXACT_DOMAINS
@@ -183,12 +187,65 @@ function assertAiRoute(rules, hosts) {
   }
 }
 
+function withPatchedCursorSwitches(options, fn) {
+  const directory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "clash-verge-cursor-switches-")
+  );
+  try {
+    const patchedPath = path.join(directory, "script.js");
+    let source = fs.readFileSync(scriptPath, "utf8");
+    source = source.replace(
+      /^const ROUTE_CURSOR_CORE = (?:true|false);$/m,
+      `const ROUTE_CURSOR_CORE = ${options.cursorCore};`
+    );
+    source = source.replace(
+      /^const ROUTE_CURSOR_REPOSITORY_INDEXING = (?:true|false);$/m,
+      `const ROUTE_CURSOR_REPOSITORY_INDEXING = ${options.cursorRepositoryIndexing};`
+    );
+    fs.writeFileSync(patchedPath, source, "utf8");
+    fn(require(patchedPath));
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+const CURSOR_CORE_HOSTS = [
+  "api2.cursor.sh",
+  "feature.api2.cursor.sh",
+  "api3.cursor.sh",
+  "api4.cursor.sh",
+  "agent.api5.cursor.sh",
+  "agentn.global.api5.cursor.sh",
+  "authenticate.cursor.sh",
+  "prod.authentication.cursor.sh",
+  "authenticator.cursor.sh",
+  "adminportal42.cursor.sh",
+  "us-eu.gcpp.cursor.sh",
+  "vm.cursorvm.com",
+  "us-east.vm.cursorvm.com",
+  "api.cursor.com"
+];
+const CURSOR_REPOSITORY_INDEXING_HOSTS = [
+  "repo0.cursor.sh",
+  "repo42.cursor.sh",
+  "repo99.cursor.sh"
+];
+const CURSOR_NEGATIVE_HOSTS = [
+  "marketplace.cursorapi.com",
+  "downloads.cursor.com",
+  "cursor-cdn.com",
+  "anysphere-binaries.s3.us-east-1.amazonaws.com",
+  "www.cursor.com",
+  "repo.cursor.sh",
+  "adminportal.cursor.sh"
+];
+
 // ---------------------------------------------------------------------------
 // 基础配置与多 Profile
 // ---------------------------------------------------------------------------
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
-  assert.equal(SCRIPT_VERSION, "5.8.1");
+  assert.equal(SCRIPT_VERSION, "5.9.0");
   assert.equal(template["dialer-proxy"], "🚀节点选择");
 });
 
@@ -588,8 +645,9 @@ test("Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走�
   ]);
 });
 
-test("Cursor 核心路由默认开启，并保持窄范围目录", () => {
+test("Cursor 核心路由默认开启，仓库索引默认不走家宽", () => {
   assert.equal(ROUTE_CURSOR_CORE, true);
+  assert.equal(ROUTE_CURSOR_REPOSITORY_INDEXING, false);
   assert.deepEqual(
     CURSOR_SUFFIX_DOMAINS,
     [
@@ -606,45 +664,103 @@ test("Cursor 核心路由默认开启，并保持窄范围目录", () => {
     ["api3.cursor.sh", "api4.cursor.sh", "authenticator.cursor.sh", "api.cursor.com"]
   );
   assert.deepEqual(
-    CURSOR_DOMAIN_REGEXES,
-    ["^repo[0-9]+\\.cursor\\.sh$", "^adminportal[0-9]+\\.cursor\\.sh$"]
+    CURSOR_CORE_DOMAIN_REGEXES,
+    ["^adminportal[0-9]+\\.cursor\\.sh$"]
   );
-  assert.equal(
-    new RegExp(CURSOR_DOMAIN_REGEXES[0]).test("repo42.cursor.sh"),
-    true
-  );
-  assert.equal(
-    new RegExp(CURSOR_DOMAIN_REGEXES[0]).test("repo99.cursor.sh"),
-    true
-  );
-  assert.equal(
-    new RegExp(CURSOR_DOMAIN_REGEXES[1]).test("adminportal42.cursor.sh"),
-    true
-  );
-  assert.equal(
-    new RegExp(CURSOR_DOMAIN_REGEXES[1]).test("adminportal.cursor.sh"),
-    false
+  assert.deepEqual(
+    CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES,
+    ["^repo[0-9]+\\.cursor\\.sh$"]
   );
 
   const rules = buildInjectedRules();
-  assertAiRoute(rules, [
-    "api2.cursor.sh",
-    "feature.api2.cursor.sh",
-    "api3.cursor.sh",
-    "api4.cursor.sh",
-    "agent.api5.cursor.sh",
-    "agentn.global.api5.cursor.sh",
-    "repo42.cursor.sh",
-    "repo99.cursor.sh",
-    "authenticate.cursor.sh",
-    "prod.authentication.cursor.sh",
-    "authenticator.cursor.sh",
-    "adminportal42.cursor.sh",
-    "us-eu.gcpp.cursor.sh",
-    "vm.cursorvm.com",
-    "us-east.vm.cursorvm.com",
-    "api.cursor.com"
-  ]);
+  assertAiRoute(rules, CURSOR_CORE_HOSTS);
+  assertNoAiRoute(rules, CURSOR_REPOSITORY_INDEXING_HOSTS);
+  assertNoAiRoute(rules, CURSOR_NEGATIVE_HOSTS);
+  assert.equal(
+    rules.includes(`DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`),
+    false
+  );
+  assert.equal(
+    rules.includes(`DOMAIN-REGEX,^adminportal[0-9]+\\.cursor\\.sh$,${AI_GROUP}`),
+    true
+  );
+
+  const firstAiRule = rules.findIndex((rule) => rule.endsWith(`,${AI_GROUP}`));
+  assert.equal(rules[0], "DOMAIN,localhost,DIRECT");
+  assert.ok(firstAiRule > 0, "私有网段 DIRECT 必须排在 AI 规则之前");
+  assert.ok(
+    rules.slice(0, firstAiRule).every((rule) => rule.includes(",DIRECT")),
+    "AI 规则之前只应出现私有直连规则"
+  );
+  assert.deepEqual(
+    rules.filter((rule) => rule.startsWith("PROCESS-")),
+    [],
+    "默认不注入进程兜底"
+  );
+});
+
+test("Cursor 核心与仓库索引开关可独立组合", () => {
+  const cases = [
+    {
+      cursorCore: true,
+      cursorRepositoryIndexing: false,
+      expectCore: true,
+      expectRepo: false
+    },
+    {
+      cursorCore: true,
+      cursorRepositoryIndexing: true,
+      expectCore: true,
+      expectRepo: true
+    },
+    {
+      cursorCore: false,
+      cursorRepositoryIndexing: false,
+      expectCore: false,
+      expectRepo: false
+    },
+    {
+      cursorCore: false,
+      cursorRepositoryIndexing: true,
+      expectCore: false,
+      expectRepo: true
+    }
+  ];
+
+  for (const item of cases) {
+    withPatchedCursorSwitches(item, (patched) => {
+      const rules = patched.buildInjectedRules();
+      const target = patched.constants.AI_GROUP;
+      const label =
+        `core=${item.cursorCore}, indexing=${item.cursorRepositoryIndexing}`;
+      for (const host of CURSOR_CORE_HOSTS) {
+        assert.equal(
+          ruleMatchesHost(rules, host, target),
+          item.expectCore,
+          `${label} 时核心主机应变为 ${item.expectCore}：${host}`
+        );
+      }
+      for (const host of CURSOR_REPOSITORY_INDEXING_HOSTS) {
+        assert.equal(
+          ruleMatchesHost(rules, host, target),
+          item.expectRepo,
+          `${label} 时索引主机应变为 ${item.expectRepo}：${host}`
+        );
+      }
+      for (const host of CURSOR_NEGATIVE_HOSTS) {
+        assert.equal(
+          ruleMatchesHost(rules, host, target),
+          false,
+          `${label} 时负向主机仍不应走家宽：${host}`
+        );
+      }
+      assert.equal(
+        rules.includes(`DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${target}`),
+        item.expectRepo,
+        `${label} 时 repo 正则注入状态错误`
+      );
+    });
+  }
 });
 
 test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走", () => {
@@ -885,12 +1001,53 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
     );
   }
   for (const rule of retiredCursorRules) assert.equal(config.rules.includes(rule), true);
+  assert.equal(
+    config.rules.includes(`DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`),
+    false,
+    "默认关闭仓库索引后不应重新注入托管 repo 正则"
+  );
   assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), true);
   assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`), true);
   assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`), true);
   assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`), true);
   assert.equal(new Set(config.rules).size, config.rules.length);
   assert.deepEqual(config.dns["nameserver-policy"], firstNameserverPolicy);
+});
+
+test("关闭仓库索引后二次运行会移除托管 repo 正则，并保留用户自有规则", () => {
+  const managedRepoRule = `DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`;
+  const unknownAiRule = `DOMAIN,custom-repo-upload.example,${AI_GROUP}`;
+  const retiredExactRule = `DOMAIN,repo42.cursor.sh,${AI_GROUP}`;
+  const retiredRegexRule = `DOMAIN-REGEX,^[a-z0-9-]+\\.api5\\.cursor\\.sh$,${AI_GROUP}`;
+  const config = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])],
+    rules: [
+      managedRepoRule,
+      managedRepoRule,
+      unknownAiRule,
+      retiredExactRule,
+      retiredRegexRule,
+      "MATCH,🚀节点选择"
+    ]
+  });
+
+  quietMain(config, "赔钱机场");
+  assert.equal(config.rules.includes(managedRepoRule), false);
+  assert.equal(config.rules.filter((rule) => rule === unknownAiRule).length, 1);
+  assert.equal(config.rules.includes(retiredExactRule), true);
+  assert.equal(config.rules.includes(retiredRegexRule), true);
+  assert.equal(
+    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
+    1
+  );
+
+  quietMain(config, "赔钱机场");
+  assert.equal(config.rules.includes(managedRepoRule), false);
+  assert.equal(config.rules.filter((rule) => rule === unknownAiRule).length, 1);
+  assert.equal(config.rules.includes(retiredExactRule), true);
+  assert.equal(config.rules.includes(retiredRegexRule), true);
+  assert.equal(new Set(config.rules).size, config.rules.length);
 });
 
 // ---------------------------------------------------------------------------

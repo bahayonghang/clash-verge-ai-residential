@@ -51,12 +51,19 @@ rules, filters, or DNS entries. `uniqueStrings`, `uniqueScalars`,
 this contract. `tests/regression.test.js` contains the authoritative
 repeated-execution and retired-rule ownership tests.
 
-Managed-rule cleanup matches exact strings against `buildManagedRuleSet()`. Two
-consequences when evolving rule shapes:
+Managed-rule cleanup matches exact strings against `buildManagedRuleSet()`.
+Consequences when evolving rule shapes:
 
 - When a domain changes form (e.g. `api.openai.com` exact -> suffix in v5.7),
   keep the legacy literal in `allPossibleExactDomains()` so previous output is
   still cleaned; add a regression test with the legacy rule string.
+- When a catalog is split onto a new switch (e.g. Cursor `repo[0-9]+` regexes
+  leaving `cursor_core` in v5.9), put the new catalog in the matching
+  `allPossible*()` function even if the new switch defaults to `false`. Cleanup
+  enumerates every rule the current version can generate, not the active
+  default. Dropping the split catalog from `allPossible*()` leaves the previous
+  managed rule in the Profile. Retired exact/regex strings that the current
+  version no longer generates stay user-owned.
 - Never inject managed rules that embed a dynamically resolved name (such as the
   upstream group) — exact-string cleanup cannot enumerate past values and would
   either leak stale rules or force prefix matching that risks deleting
@@ -78,6 +85,8 @@ It never writes credentials back to the public template or TOML input.
   profile or input config.
 - Do not append managed entries without exact current-version cleanup and
   deduplication.
+- Do not drop a split catalog from `allPossible*()` because the new switch
+  defaults to off. The cleaner must still see that rule string.
 - Do not reintroduce retired rules under a renamed cleanup-only migration list.
 - Do not preserve unknown DNS policy paths when the strict mode deliberately
   removes alternate resolution routes.
