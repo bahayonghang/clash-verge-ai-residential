@@ -280,6 +280,79 @@ impl StorageCoordinator {
     pub fn prepare_count(&self) -> u64 {
         self.prepare_count
     }
+
+    pub fn health(&self) -> Result<StorageHealth, StorageError> {
+        Ok(StorageHealth {
+            ok: true,
+            watermark: self.watermark()?,
+            reason: None,
+        })
+    }
+
+    pub fn get_setting(&self, key: &str) -> Result<Option<String>, StorageError> {
+        let value = self
+            .connection
+            .query_row(
+                "select value from machine_setting where key = ?1",
+                [key],
+                |row| row.get(0),
+            )
+            .optional()?;
+        Ok(value)
+    }
+
+    pub fn put_setting(&self, key: &str, value: &str) -> Result<(), StorageError> {
+        self.connection.execute(
+            "insert into machine_setting(key, value) values (?1, ?2)
+             on conflict(key) do update set value = excluded.value",
+            params![key, value],
+        )?;
+        Ok(())
+    }
+
+    pub fn save_targets(&self, names: &[String]) -> Result<u32, StorageError> {
+        let current = self.load_targets()?.0;
+        let next = current.saturating_add(1).max(1);
+        self.connection.execute(
+            "insert into target_set(set_id, policy_version) values (1, ?1)
+             on conflict(set_id) do update set policy_version = excluded.policy_version",
+            [next as i64],
+        )?;
+        self.connection
+            .execute("delete from target_item where set_id = 1", [])?;
+        for (position, name) in names.iter().enumerate() {
+            self.connection.execute(
+                "insert into target_item(set_id, position, name) values (1, ?1, ?2)",
+                params![position as i64, name],
+            )?;
+        }
+        Ok(next)
+    }
+
+    pub fn load_targets(&self) -> Result<(u32, Vec<String>), StorageError> {
+        let version: Option<i64> = self
+            .connection
+            .query_row(
+                "select policy_version from target_set where set_id = 1",
+                [],
+                |row| row.get(0),
+            )
+            .optional()?;
+        let mut statement = self
+            .connection
+            .prepare("select name from target_item where set_id = 1 order by position")?;
+        let names = statement
+            .query_map([], |row| row.get(0))?
+            .collect::<Result<Vec<String>, _>>()?;
+        Ok((version.unwrap_or(0) as u32, names))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StorageHealth {
+    pub ok: bool,
+    pub watermark: u64,
+    pub reason: Option<&'static str>,
 }
 
 pub fn hold_uncommitted_bundle(

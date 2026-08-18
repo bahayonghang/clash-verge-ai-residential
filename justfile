@@ -30,9 +30,23 @@ monitor-check:
 monitor-dev:
     npm --prefix residential-monitor run tauri:dev
 
+# 调试家宽监控 Tauri 应用：Vite 热更新 + Rust 开发态。
+tdev: monitor-dev
+
 # 生成 NSIS 安装包。不在本机执行安装。
 monitor-build:
     npm --prefix residential-monitor run tauri:build
+
+# 构建 NSIS 并执行 current-user 安装。会改本机安装态。
+[windows]
+tinstall: monitor-build
+    $nsis = "residential-monitor\src-tauri\target\release\bundle\nsis"; $setup = Get-ChildItem -Path $nsis -Filter "*-setup.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if ($null -eq $setup) { Write-Error "未找到 NSIS 安装包。"; exit 1 }; Write-Host $setup.FullName; Start-Process -FilePath $setup.FullName -Wait
+
+# 家宽监控 v1 只提供 Windows 11 NSIS current-user 安装。
+[unix]
+tinstall:
+    @echo "家宽监控 v1 只提供 Windows 11 NSIS current-user 安装。"
+    @exit 1
 
 # 单向渲染：本地 TOML + 公开模板 -> 被忽略的本地 Clash Verge 脚本。
 # 首次执行会创建本地配置，避免带着示例占位值生成脚本。

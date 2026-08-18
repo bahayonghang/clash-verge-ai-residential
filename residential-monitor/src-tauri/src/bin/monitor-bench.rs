@@ -75,6 +75,17 @@ enum Commands {
         #[arg(long)]
         ready: PathBuf,
     },
+    ReplayUi {
+        #[arg(long, default_value_t = 1800)]
+        frames: u32,
+        #[arg(long, default_value_t = 10_000)]
+        active: u32,
+        #[arg(
+            long,
+            default_value = ".trellis/tasks/08-18-monitor-desktop-realtime/research/c2-peak-ui.json"
+        )]
+        out: PathBuf,
+    },
     Profiles,
 }
 
@@ -139,6 +150,18 @@ fn main() {
             let path = dir.join("sqlite-binding.json");
             bundle.write_json(&path).expect("write");
             println!("{}", serde_json::to_string_pretty(&bundle).expect("json"));
+        }
+        Commands::ReplayUi {
+            frames,
+            active,
+            out,
+        } => {
+            let report = residential_monitor_lib::c2::facade::run_peak_ui_replay(frames, active);
+            if let Some(parent) = out.parent() {
+                let _ = std::fs::create_dir_all(parent);
+            }
+            std::fs::write(&out, serde_json::to_vec_pretty(&report).expect("json")).expect("write");
+            println!("{}", serde_json::to_string_pretty(&report).expect("json"));
         }
         Commands::Profiles => {
             println!(

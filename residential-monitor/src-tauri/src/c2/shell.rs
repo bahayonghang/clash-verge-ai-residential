@@ -1,0 +1,239 @@
+//! 导航 seam、文件选择、操作进度与 Recovery 启动分支。
+
+use crate::c0_contract::SCHEMA_VERSION;
+use crate::storage::{RecoveryFacade, StorageError};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum BootBranch {
+    NormalReady,
+    RecoveryOnly,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RouteDescriptor {
+    pub id: String,
+    pub title_zh: String,
+    pub available: bool,
+    pub unavailable_until: Option<String>,
+}
+
+pub fn default_routes() -> Vec<RouteDescriptor> {
+    vec![
+        RouteDescriptor {
+            id: "overview".into(),
+            title_zh: "概览".into(),
+            available: true,
+            unavailable_until: None,
+        },
+        RouteDescriptor {
+            id: "live".into(),
+            title_zh: "实时连接".into(),
+            available: true,
+            unavailable_until: None,
+        },
+        RouteDescriptor {
+            id: "reports".into(),
+            title_zh: "分析报告".into(),
+            available: false,
+            unavailable_until: Some("C3".into()),
+        },
+        RouteDescriptor {
+            id: "alerts".into(),
+            title_zh: "告警".into(),
+            available: false,
+            unavailable_until: Some("C4".into()),
+        },
+        RouteDescriptor {
+            id: "settings-data".into(),
+            title_zh: "设置 / 数据管理".into(),
+            available: true,
+            unavailable_until: None,
+        },
+    ]
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum FilePurpose {
+    ReportExport,
+    BackupCreate,
+    BackupRestore,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum FileMode {
+    Open,
+    Save,
+}
+
+pub trait FileDialogPort {
+    fn pick(&self, purpose: FilePurpose, mode: FileMode) -> Option<PathBuf>;
+}
+
+#[derive(Default)]
+pub struct FakeFileDialog {
+    pub next: std::sync::Mutex<Option<PathBuf>>,
+}
+
+impl FileDialogPort for FakeFileDialog {
+    fn pick(&self, _purpose: FilePurpose, _mode: FileMode) -> Option<PathBuf> {
+        self.next.lock().expect("dialog").clone()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OperationProgress {
+    pub schema_version: u32,
+    pub operation_id: String,
+    pub kind: String,
+    pub phase: String,
+    pub current: u64,
+    pub total: u64,
+    pub unit: String,
+    pub can_cancel: bool,
+    pub status: String,
+    pub redacted_error: Option<String>,
+}
+
+#[derive(Default)]
+pub struct OperationRegistry {
+    items: HashMap<String, OperationProgress>,
+}
+
+impl OperationRegistry {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn start_fixture(&mut self, operation_id: String, kind: String) -> OperationProgress {
+        let progress = OperationProgress {
+            schema_version: 1,
+            operation_id: operation_id.clone(),
+            kind,
+            phase: "running".into(),
+            current: 0,
+            total: 100,
+            unit: "percent".into(),
+            can_cancel: true,
+            status: "running".into(),
+            redacted_error: None,
+        };
+        self.items.insert(operation_id, progress.clone());
+        progress
+    }
+
+    pub fn cancel(&mut self, operation_id: &str) -> Option<OperationProgress> {
+        if let Some(item) = self.items.get_mut(operation_id) {
+            item.status = "cancelled".into();
+            item.can_cancel = false;
+            item.phase = "cancelled".into();
+            return Some(item.clone());
+        }
+        None
+    }
+
+    pub fn finish(&mut self, operation_id: &str) -> Option<OperationProgress> {
+        if let Some(item) = self.items.get_mut(operation_id) {
+            item.status = "completed".into();
+            item.current = item.total;
+            item.can_cancel = false;
+            item.phase = "done".into();
+            return Some(item.clone());
+        }
+        None
+    }
+
+    pub fn get(&self, operation_id: &str) -> Option<OperationProgress> {
+        self.items.get(operation_id).cloned()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RecoveryStatus {
+    pub schema_version: u32,
+    pub app_version: String,
+    pub user_version: i64,
+    pub supported_max: i32,
+    pub future: bool,
+    pub restore_available: bool,
+    pub restore_note_zh: String,
+    pub backups: Vec<String>,
+}
+
+pub fn recovery_status(facade: &RecoveryFacade) -> Result<RecoveryStatus, StorageError> {
+    let raw = facade.status()?;
+    let user_version = raw
+        .get("user_version")
+        .and_then(|value| value.as_i64())
+        .unwrap_or(-1);
+    let future = raw
+        .get("future")
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false);
+    Ok(RecoveryStatus {
+        schema_version: 1,
+        app_version: env!("CARGO_PKG_VERSION").into(),
+        user_version,
+        supported_max: SCHEMA_VERSION,
+        future,
+        restore_available: false,
+        restore_note_zh: "恢复写入由 C3 交付，当前只能验证候选。".into(),
+        backups: facade.list_backups().unwrap_or_default(),
+    })
+}
+
+pub fn validate_backup(facade: &RecoveryFacade, candidate: &Path) -> Result<bool, StorageError> {
+    facade.validate_candidate(candidate)
+}
+
+#[cfg(test)]
+mod shell_seam_tests {
+    use super::*;
+    use crate::storage::migrate;
+    use tempfile::tempdir;
+
+    #[test]
+    fn reports_and_alerts_are_unavailable_until_child() {
+        let routes = default_routes();
+        assert_eq!(routes.len(), 5);
+        let reports = routes.iter().find(|item| item.id == "reports").unwrap();
+        assert!(!reports.available);
+        assert_eq!(reports.unavailable_until.as_deref(), Some("C3"));
+    }
+
+    #[test]
+    fn file_dialog_returns_only_injected_path() {
+        let dialog = FakeFileDialog::default();
+        *dialog.next.lock().expect("d") = Some(PathBuf::from("C:/tmp/report.csv"));
+        let path = dialog
+            .pick(FilePurpose::ReportExport, FileMode::Save)
+            .expect("path");
+        assert!(path.ends_with("report.csv"));
+    }
+
+    #[test]
+    fn operation_progress_can_cancel_fixture() {
+        let mut ops = OperationRegistry::new();
+        ops.start_fixture("op-1".into(), "export".into());
+        let cancelled = ops.cancel("op-1").expect("cancel");
+        assert_eq!(cancelled.status, "cancelled");
+    }
+
+    #[test]
+    fn recovery_status_marks_restore_unavailable() {
+        let dir = tempdir().expect("dir");
+        let path = dir.path().join("rec.sqlite3");
+        migrate(&path).expect("migrate");
+        let status = recovery_status(&RecoveryFacade::open(&path)).expect("status");
+        assert!(!status.restore_available);
+        assert!(!status.future);
+    }
+}

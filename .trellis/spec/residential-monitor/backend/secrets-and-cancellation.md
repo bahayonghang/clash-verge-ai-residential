@@ -2,5 +2,8 @@
 
 - secret 只存在于 Credential Manager 或当前进程内存。
 - 日志、SQLite、Channel、错误、诊断和导出不得包含 secret。
-- C1 使用 FakeCredentialStore；Windows adapter 属于 C2。
+- C1 使用 FakeCredentialStore。C2 `SettingsWorkflow` 实现补偿：先写 pending、读回验证、probe、再写稳定 target；失败删除 pending 并保留旧引用。
+- Windows Credential Manager adapter 已存在于 `credential::windows_cm`。`credential_windows_generic_crud` 保持 `#[ignore]`，未获本机写入授权不得跑。
+- Credential Manager 不可用时只允许 `ProcessLocalStore` 会话 secret，退出或替换后必须 `clear`。v1 无 DPAPI fallback。
 - 长操作必须可取消。SQLite 使用 interrupt / progress。
+- C2 `FileDialogPort` 只返回预声明用途的用户选择路径。`OperationProgress` 可取消；C3 才提供真实 report / backup / restore operation。

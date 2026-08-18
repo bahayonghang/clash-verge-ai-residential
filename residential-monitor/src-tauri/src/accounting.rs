@@ -62,6 +62,51 @@ impl AccountingEngine {
         self.policy_version = self.policy_version.saturating_add(1);
     }
 
+    pub fn current_epoch(&self) -> u64 {
+        self.epoch
+    }
+
+    pub fn policy_version(&self) -> u32 {
+        self.policy_version
+    }
+
+    pub fn targets(&self) -> &[String] {
+        &self.targets
+    }
+
+    pub fn project_live(
+        &self,
+        connections: &[ConnectionFact],
+    ) -> Vec<crate::c2::hub::LiveConnectionView> {
+        connections
+            .iter()
+            .map(|connection| {
+                let (tags, primary) = classify(&self.targets, &connection.chains);
+                crate::c2::hub::LiveConnectionView {
+                    identity: format!("{}:{}", self.epoch, connection.id),
+                    connection_id: connection.id.clone(),
+                    epoch: self.epoch,
+                    upload: connection.upload,
+                    download: connection.download,
+                    rate_upload: None,
+                    rate_download: None,
+                    duration_ms: None,
+                    primary,
+                    tags,
+                    host: connection.meta.host.clone(),
+                    source_ip: connection.meta.source_ip.clone(),
+                    destination_ip: connection.meta.destination_ip.clone(),
+                    process_name: connection.meta.process_name.clone(),
+                    process_path: connection.meta.process_path.clone(),
+                    network: connection.meta.network.clone(),
+                    rule: connection.meta.rule.clone(),
+                    rule_payload: connection.meta.rule_payload.clone(),
+                    chains: connection.chains.clone(),
+                }
+            })
+            .collect()
+    }
+
     pub fn apply(
         &mut self,
         input: ControllerInput,

@@ -110,6 +110,36 @@ pub async fn fetch_path(
     path: &str,
     secret: Option<&str>,
 ) -> Result<(StatusCode, String), String> {
+    fetch_path_method(addr, Method::GET, path, secret).await
+}
+
+pub async fn delete_connection(
+    addr: SocketAddr,
+    secret: Option<&str>,
+    connection_id: &str,
+) -> Result<StatusCode, String> {
+    if !connection_id_allowed(connection_id) {
+        return Err("invalid connection id".into());
+    }
+    let path = format!("/connections/{connection_id}");
+    let (status, _) = fetch_path_method(addr, Method::DELETE, &path, secret).await?;
+    Ok(status)
+}
+
+pub fn connection_id_allowed(connection_id: &str) -> bool {
+    let len = connection_id.len();
+    (1..=128).contains(&len)
+        && connection_id
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'))
+}
+
+pub async fn fetch_path_method(
+    addr: SocketAddr,
+    method: Method,
+    path: &str,
+    secret: Option<&str>,
+) -> Result<(StatusCode, String), String> {
     let stream = tokio::net::TcpStream::connect(addr)
         .await
         .map_err(|error| error.to_string())?;
@@ -121,7 +151,7 @@ pub async fn fetch_path(
         let _ = conn.await;
     });
     let mut builder = Request::builder()
-        .method(Method::GET)
+        .method(method)
         .uri(path)
         .header("host", "127.0.0.1");
     if let Some(secret) = secret {

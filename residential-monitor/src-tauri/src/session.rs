@@ -110,6 +110,25 @@ impl ControllerSession {
     pub fn probe_missing_pipe() -> SessionStatus {
         Self::classify_pipe_os_error(2)
     }
+
+    pub async fn close_connection(
+        &self,
+        addr: SocketAddr,
+        secret: Option<&str>,
+        connection_id: &str,
+    ) -> Result<crate::c2::close::ControlResult, SessionStatus> {
+        reject_non_loopback_ip(addr.ip())?;
+        let status = crate::transport::delete_connection(addr, secret, connection_id)
+            .await
+            .map_err(|_| SessionStatus::EndpointMissing)?;
+        if status.as_u16() == 204 {
+            Ok(crate::c2::close::ControlResult::Accepted)
+        } else if status.as_u16() == 401 {
+            Err(SessionStatus::AuthFailed)
+        } else {
+            Err(SessionStatus::ProtocolIncompatible)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -144,6 +163,18 @@ mod controller_session_tests {
             session.connect_tcp(addr, Some("wrong")).await.unwrap_err(),
             SessionStatus::AuthFailed
         );
+        let _ = stop.send(());
+    }
+
+    #[tokio::test]
+    async fn controller_session_close_missing_id_is_accepted() {
+        let (addr, stop) = spawn_fixture_server(Some("fixture-secret")).await;
+        let session = ControllerSession::new(addr.to_string());
+        let result = session
+            .close_connection(addr, Some("fixture-secret"), "missing-id")
+            .await
+            .expect("204");
+        assert_eq!(result, crate::c2::close::ControlResult::Accepted);
         let _ = stop.send(());
     }
 }

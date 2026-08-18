@@ -1,4 +1,148 @@
-export type ShellPhase = "c0-skeleton";
+export const SCHEMA_VERSION = 1;
+
+export type RouteId = "overview" | "live" | "reports" | "alerts" | "settings-data";
+
+export interface RouteDescriptor {
+  id: RouteId;
+  titleZh: string;
+  available: boolean;
+  unavailableUntil: string | null;
+}
+
+export interface HealthView {
+  session: string;
+  storageOk: boolean;
+  storageReason: string | null;
+}
+
+export interface LiveOverview {
+  schemaVersion: number;
+  meterUpload: number | null;
+  meterDownload: number | null;
+  attributedUpload: number | null;
+  attributedDownload: number | null;
+  categoryUpload: Record<string, number>;
+  categoryDownload: Record<string, number>;
+  otherUpload: number | null;
+  otherDownload: number | null;
+  gapUpload: number | null;
+  gapDownload: number | null;
+  overUpload: number | null;
+  overDownload: number | null;
+  activeCount: number;
+  lastSampleUtc: number | null;
+  coverageKind: string | null;
+  coverageReason: string | null;
+  health: HealthView;
+}
+
+export interface LiveConnectionView {
+  identity: string;
+  connectionId: string;
+  epoch: number;
+  upload: number;
+  download: number;
+  rateUpload: number | null;
+  rateDownload: number | null;
+  durationMs: number | null;
+  primary: string | null;
+  tags: string[];
+  host: string | null;
+  sourceIp: string | null;
+  destinationIp: string | null;
+  processName: string | null;
+  processPath: string | null;
+  network: string | null;
+  rule: string | null;
+  rulePayload: string | null;
+  chains: string[];
+}
+
+export type MonitorStreamMessage =
+  | {
+      kind: "bootstrap";
+      schemaVersion: number;
+      subscriptionId: number;
+      snapshot: LiveOverview;
+      baseSeq: number;
+      backendTime: number;
+    }
+  | {
+      kind: "connectionDelta";
+      schemaVersion: number;
+      subscriptionId: number;
+      seq: number;
+      upserts: LiveConnectionView[];
+      removes: string[];
+      backendTime: number;
+    }
+  | {
+      kind: "healthChanged";
+      schemaVersion: number;
+      subscriptionId: number;
+      seq: number;
+      health: HealthView;
+      backendTime: number;
+    }
+  | {
+      kind: "summaryChanged";
+      schemaVersion: number;
+      subscriptionId: number;
+      seq: number;
+      snapshot: LiveOverview;
+      backendTime: number;
+    };
+
+export interface ControllerSettings {
+  transport: string;
+  address: string;
+  credentialTarget: string;
+  hasSecret: boolean;
+  secretMode: string;
+}
+
+export interface RecoveryStatus {
+  schemaVersion: number;
+  appVersion: string;
+  userVersion: number;
+  supportedMax: number;
+  future: boolean;
+  restoreAvailable: boolean;
+  restoreNoteZh: string;
+  backups: string[];
+}
+
+export interface BootstrapDto {
+  schemaVersion: number;
+  branch: "normal-ready" | "recovery-only";
+  routes: RouteDescriptor[];
+  overview: LiveOverview;
+  settings: ControllerSettings;
+  wizardComplete: boolean;
+  recovery: RecoveryStatus | null;
+  launchMode: "interactive" | "background";
+}
+
+export interface OperationProgress {
+  schemaVersion: number;
+  operationId: string;
+  kind: string;
+  phase: string;
+  current: number;
+  total: number;
+  unit: string;
+  canCancel: boolean;
+  status: string;
+  redactedError: string | null;
+}
+
+export interface CloseState {
+  requestId: string;
+  identity: string;
+  mark: "accepted" | "closed" | "unconfirmed";
+}
+
+export type ShellPhase = "c0-skeleton" | "c2-shell";
 
 export interface ShellStatus {
   schemaVersion: 1;
@@ -25,7 +169,7 @@ export function decodeShellStatus(value: unknown): ShellStatus {
   if (typeof value.identifier !== "string" || value.identifier.length === 0) {
     throw new Error("identifier 缺失");
   }
-  if (value.phase !== "c0-skeleton") {
+  if (value.phase !== "c0-skeleton" && value.phase !== "c2-shell") {
     throw new Error("phase 不受支持");
   }
   if (typeof value.messageZh !== "string" || value.messageZh.length === 0) {

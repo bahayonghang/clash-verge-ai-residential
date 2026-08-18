@@ -5,6 +5,8 @@
   --text: #e8eef6;
   --muted: #93a0b0;
   --accent: #4f8cff;
+  --danger: #f0b429;
+  --focus: #9ad1ff;
   --mono: "Cascadia Mono", "Sarasa Mono SC", ui-monospace, monospace;
   font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
 }
@@ -21,30 +23,127 @@ body {
   color: var(--text);
 }
 
-main {
-  max-width: 52rem;
+#app {
+  max-width: 72rem;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem;
+  padding: 1.5rem;
 }
 
-h1 {
-  font-size: 1.5rem;
+h1,
+h2,
+h3 {
   margin: 0 0 0.75rem;
 }
 
-p {
+p,
+li,
+label {
   color: var(--muted);
   line-height: 1.6;
 }
 
+button,
+input {
+  font: inherit;
+}
+
+button,
+input,
+.nav-item {
+  border-radius: 8px;
+}
+
+button:focus-visible,
+input:focus-visible,
+.nav-item:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.top {
+  margin-bottom: 1rem;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.nav-item {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid transparent;
+  padding: 0.45rem 0.8rem;
+}
+
+.nav-item[aria-current="page"] {
+  border-color: var(--accent);
+}
+
+.nav-item[data-disabled="true"] {
+  opacity: 0.55;
+}
+
 .panel {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   padding: 1rem 1.25rem;
   background: var(--panel);
   border-radius: 12px;
 }
 
-code {
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+}
+
+.metric {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 0.9rem;
+}
+
+.metric strong {
+  display: block;
   font-family: var(--mono);
-  color: var(--accent);
+  font-size: 1.15rem;
+  margin-top: 0.35rem;
+}
+
+.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.data th,
+.data td {
+  text-align: left;
+  padding: 0.45rem 0.35rem;
+  border-bottom: 1px solid #2a3340;
+}
+
+.status[data-state="connected"] {
+  color: #8be0a4;
+}
+
+.status[data-state="tcp_unauthorized"],
+.status[data-state="storage_failure"],
+.gap {
+  color: var(--danger);
+}
+
+.recovery button[disabled] {
+  cursor: not-allowed;
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --text: #ffffff;
+    --muted: #d7dde6;
+    --bg: #000000;
+    --panel: #111111;
+  }
 }
