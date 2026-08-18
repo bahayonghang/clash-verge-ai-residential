@@ -1,0 +1,39 @@
+{
+  "title": "选定深色侧栏的构图",
+  "question": "视觉世界已定为深色侧栏工作台，质量条对齐 Clash Verge Rev。选一张构图作为建造合同。选中的那张是法，另外两张只作对照。",
+  "options": [
+    {
+      "id": "comp-canon",
+      "label": "侧栏 + 指标卡 + 表",
+      "kicker": "DIRECTION COMP",
+      "thesis": "左侧图标导航，右侧 KPI 卡再接下表。这是方向轮的那张。",
+      "palette": ["#12161c", "#1b222c", "#4f8cff", "#e8eef6"],
+      "materials": ["扁平面板", "细描边", "系统无衬线"],
+      "viewport": "左侧栏放产品名、口号、五条带图标标题。主区上卡下表。",
+      "risk": "卡太多会把连接表推到折页下，密度可能掉档。",
+      "comp": ".impeccable/mocks/comp-canon.webp"
+    },
+    {
+      "id": "comp-dense-sheet",
+      "label": "整页工作单",
+      "thesis": "主区是一张连续工作单。指标用细线定义列表，表占满剩余高度。",
+      "palette": ["#12161c", "#1b222c", "#4f8cff", "#e8eef6"],
+      "materials": ["细分割线", "定义列表", "满幅表"],
+      "viewport": "侧栏不变。主区无堆叠卡片，表立刻接在指标下面。",
+      "risk": "少了卡片节奏，设置页的表单分组要另想办法。",
+      "comp": ".impeccable/mocks/comp-dense-sheet.webp"
+    },
+    {
+      "id": "comp-split",
+      "label": "工具条 + 双栏",
+      "thesis": "主区先一条健康工具条，再左指标右大表。",
+      "palette": ["#12161c", "#1b222c", "#4f8cff", "#e8eef6"],
+      "materials": ["顶工具条", "双栏", "克制面板"],
+      "viewport": "侧栏认页。主区顶栏只放健康和下一步，不重复页面标题。",
+      "risk": "概览合适，报告和设置的双栏可能浪费横向空间。",
+      "comp": ".impeccable/mocks/comp-split-worksurface.webp"
+    }
+  ],
+  "steer": true,
+  "buildPath": { "value": "comp", "toggle": true }
+}

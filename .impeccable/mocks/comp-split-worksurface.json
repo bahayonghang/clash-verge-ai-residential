@@ -1,0 +1,4 @@
+{
+  "prompt": "A designed desktop application UI screenshot, 16:9 landscape, of 家宽流量监控 as a category-standard dark Windows sidebar workbench. Same world: #12161c, #1b222c, #4f8cff selection only. VARIATION B hierarchy: left sidebar as now, but the main pane leads with a short page toolbar (no repeated page title) containing health text 存在采集缺口 and the next action, then a two-column work surface: left column compact metric stack, right column the live table taking two-thirds width. Product name 家宽流量监控 and five routes 概览 实时连接 分析报告 告警 设置 / 数据管理 stay in the sidebar with icons. Gap shows 未知, never zero. Expert density, system sans, photoreal UI mock of the app. No glassmorphism, no neon, no cream editorial.",
+  "role": "comp-variation-b"
+}
