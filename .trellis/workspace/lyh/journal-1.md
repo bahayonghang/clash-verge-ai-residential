@@ -208,3 +208,41 @@
 - 对本机执行 just render-local，使 .local.js 升级到 v5.9.0
 - 如需恢复 v5.8.1 repo 家宽路由，设 cursor_repository_indexing=true 后再渲染
 - 08-18-residential-monitor-mvp 仍为 planning，未纳入本次提交
+
+
+## Session 7: 交付家宽监控 C0/C1 并归档
+
+**Date**: 2026-08-18
+**Task**: 交付家宽监控 C0/C1 并归档
+**Package**: residential-monitor
+**Branch**: `dev`
+
+### Summary
+
+建立 residential-monitor 子项目，完成 C0 基础验证与 C1 采集内核，实测 A=50/250/1000 与 10k 30 分钟峰值。
+
+### Main Changes
+
+- 新增 Tauri 2 子项目与 monitor-check / Windows CI 聚合
+- C0 binding/凭据/三档 30 天库/10k 峰值证据写入任务目录
+- C1 ControllerSession、核算、core schema、幂等 writer、隔离 kill 与 C1 30m replay
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `2738e6a` | (see git log) |
+| `0edc537` | (see git log) |
+
+### Testing
+
+- [OK] just monitor-check 退出码 0
+- [OK] C1 replay 10k/1Hz/30m p95 21ms
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 下一会话启动 08-18-monitor-desktop-realtime（C2）

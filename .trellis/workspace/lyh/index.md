@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 6
+- **Total Sessions**: 7
 - **Last Active**: 2026-08-18
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~210 | Active |
+| `journal-1.md` | ~248 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 7 | 2026-08-18 | 交付家宽监控 C0/C1 并归档 | `2738e6a`, `0edc537` | `dev` |
 | 6 | 2026-08-18 | 拆出 Cursor 仓库索引家宽路由 | `cc714f5` | `dev` |
 | 5 | 2026-08-17 | v5.8.1 outbound 索引与 UDP 警告汇总 | `5bf50d0` | `dev` |
 | 4 | 2026-08-17 | 补齐 ChatGPT 官方 exact 主机并归档审计任务 | `babfb35`, `b1ba18e` | `dev` |
