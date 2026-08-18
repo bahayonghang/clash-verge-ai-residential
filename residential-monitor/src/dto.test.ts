@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { decodeAlertCenter, decodeDiagnostics, decodeReportResult, decodeShellStatus } from "./dto";
+import {
+  decodeAbout,
+  decodeAlertCenter,
+  decodeDeleteReport,
+  decodeDiagnostics,
+  decodeReportResult,
+  decodeShellStatus
+} from "./dto";
 
 describe("decodeShellStatus", () => {
   it("接受完整 DTO", () => {
@@ -44,6 +51,35 @@ describe("decodeShellStatus", () => {
 
   it("拒绝缺少 items 的告警中心", () => {
     expect(() => decodeAlertCenter({ schemaVersion: 1 })).toThrow(/无效/);
+  });
+
+  it("拒绝把未签名 about 标成 signed", () => {
+    expect(() =>
+      decodeAbout({
+        schemaVersion: 1,
+        releasesUrl: "https://github.com/bahayonghang/clash-verge-ai-residential/releases",
+        signed: true
+      })
+    ).toThrow(/signed/);
+  });
+
+  it("接受未签名 about", () => {
+    const decoded = decodeAbout({
+      schemaVersion: 1,
+      releasesUrl: "https://github.com/bahayonghang/clash-verge-ai-residential/releases",
+      signed: false
+    });
+    expect(decoded.signed).toBe(false);
+  });
+
+  it("部分删除不得被解码成全部成功以外的字段缺失", () => {
+    const decoded = decodeDeleteReport({
+      schemaVersion: 1,
+      allDeclaredOk: false,
+      items: [],
+      summaryZh: "部分失败"
+    });
+    expect(decoded.allDeclaredOk).toBe(false);
   });
 
   it("接受告警中心分页", () => {

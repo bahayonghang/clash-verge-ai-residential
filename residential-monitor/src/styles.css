@@ -146,6 +146,48 @@ input:focus-visible,
   min-width: 0.4rem;
 }
 
+.skip {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  background: var(--panel);
+  color: var(--text);
+  padding: 0.4rem 0.7rem;
+  z-index: 2;
+}
+
+.skip:focus {
+  top: 0.75rem;
+}
+
+.status::before {
+  content: "";
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .nav,
+  button,
+  .skip {
+    display: none;
+  }
+
+  .data th,
+  .data td {
+    border-bottom: 1px solid #000;
+  }
+}
+
 @media (prefers-contrast: more) {
   :root {
     --text: #ffffff;

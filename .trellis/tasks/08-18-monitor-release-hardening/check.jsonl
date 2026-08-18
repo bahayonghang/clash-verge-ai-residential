@@ -3,3 +3,8 @@
 {"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "核对控制器故障矩阵、TCP / pipe 支持声明、secret 处理与安装态诊断文案。"}
 {"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "审查端到端数据流、DTO、安装升级、错误恢复、文档和 Release 资产的一致性。"}
 {"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "审查是否复用 C0–C4 的 harness、查询、状态和发布配置，避免候选阶段分叉。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "检查前端质量门与无障碍"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "检查后端 fmt/clippy/test"}
+{"file": ".trellis/spec/residential-monitor/storage/index.md", "reason": "检查存储门与完整库证据要求"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "检查 schema 版本与 fail closed"}
+{"file": ".trellis/tasks/archive/2026-08/08-18-monitor-alerting-diagnostics/research/c4-gate-status.md", "reason": "核对 C4 未完成项，禁止把 fixture 升级为发布容量"}

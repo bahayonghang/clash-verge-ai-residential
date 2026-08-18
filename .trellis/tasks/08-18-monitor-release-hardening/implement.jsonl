@@ -3,3 +3,11 @@
 {"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "构建安装态控制器故障矩阵并保持 TCP 支持路径、私有管道兼容和诊断边界准确。"}
 {"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "最终集成跨采集、存储、报告、告警、IPC、UI、Windows 安装和发布资产，需逐层核对契约。"}
 {"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "防止发布硬化阶段新增重复统计、状态、配置或验证路径，保持单一事实源。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "C5 前端发布硬化与无障碍检查入口"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "最终集成不得在前端另建统计或猜测缺字段"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "视图状态、缺口展示与图表数据表契约"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "C5 后端集成与质量门入口"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "模块边界、identifier 与安装命令约束"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "secret、取消与诊断脱敏"}
+{"file": ".trellis/spec/residential-monitor/storage/index.md", "reason": "存储发布门：完整库不得由 CI 短样本冒充"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "WAL/FULL、user_version、token 与低空间 fail closed"}

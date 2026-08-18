@@ -186,7 +186,11 @@ impl AutostartPort for FakeAutostart {
 }
 
 pub fn autostart_command_line(exe: &std::path::Path) -> String {
-    format!("\"{}\" --background", exe.display())
+    format!(
+        "\"{}\" {}",
+        exe.display(),
+        crate::identity::AUTOSTART_ARGUMENT
+    )
 }
 
 pub struct ProcessSingleInstance {

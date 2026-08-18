@@ -832,6 +832,65 @@ impl AppFacade {
             }),
         }
     }
+
+    pub fn about(&self) -> crate::c5::AboutDto {
+        let _ = self;
+        crate::c5::about()
+    }
+
+    pub fn preview_delete_local_data(&self) -> crate::c5::DeletePreview {
+        crate::c5::preview_delete(&self.data_dir)
+    }
+
+    pub fn confirm_delete_local_data(
+        &mut self,
+        phrase: &str,
+    ) -> Result<crate::c5::DeleteReport, AppErrorDto> {
+        let _ = self.desktop.set_collector_running(false);
+        self.storage = None;
+        let target = self.settings.credential_target.clone();
+        let data_dir = self.data_dir.clone();
+        let report = crate::c5::confirm_delete(&data_dir, phrase, || {
+            self.workflow
+                .delete_stored_target(&target)
+                .map_err(|error| error.message_zh().to_string())
+        })
+        .map_err(|message| AppErrorDto {
+            code: "delete_not_confirmed".into(),
+            message_zh: message,
+            retryable: false,
+            action: "输入完整确认短语".into(),
+            details_redacted: "delete".into(),
+        })?;
+        if report.all_declared_ok {
+            let live = self.data_dir.join("monitor.sqlite3");
+            if let Ok(storage) = StorageCoordinator::open(&live) {
+                self.storage = Some(storage);
+                self.branch = BootBranch::NormalReady;
+            } else {
+                self.branch = BootBranch::RecoveryOnly;
+            }
+        } else {
+            self.branch = BootBranch::RecoveryOnly;
+        }
+        Ok(report)
+    }
+
+    pub fn run_user_vacuum(&mut self) -> Result<(), AppErrorDto> {
+        let live = self.data_dir.join("monitor.sqlite3");
+        self.storage = None;
+        let result = crate::c5::run_user_vacuum(&live, &self.space);
+        match StorageCoordinator::open(&live) {
+            Ok(storage) => {
+                self.storage = Some(storage);
+                self.branch = BootBranch::NormalReady;
+            }
+            Err(_) => {
+                self.branch = BootBranch::RecoveryOnly;
+            }
+        }
+        result.map_err(map_report)
+    }
 }
 
 fn recovery_only() -> AppErrorDto {

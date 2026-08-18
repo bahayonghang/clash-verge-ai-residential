@@ -130,6 +130,14 @@ impl<S: CredentialStore> SettingsWorkflow<S> {
         self.session.clear();
     }
 
+    pub fn delete_stored_target(&self, target: &str) -> Result<(), SettingsError> {
+        self.session.clear();
+        match self.store.delete(target) {
+            Ok(()) | Err(CredentialError::NotFound) => Ok(()),
+            Err(error) => Err(SettingsError::Credential(error)),
+        }
+    }
+
     pub fn resolve(&self, target: &str, mode: &str) -> Result<Secret, SettingsError> {
         if mode == "session" {
             self.session.get(target).map_err(SettingsError::Credential)

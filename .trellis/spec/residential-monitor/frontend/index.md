@@ -14,3 +14,4 @@ Vanilla TypeScript + Vite 桌面壳。不引入 UI 框架。根仓库 frontend s
 - `npm --prefix residential-monitor run lint`
 - `npm --prefix residential-monitor test`
 - `npm --prefix residential-monitor run build`
+- 关于页不得把未签名候选标成 `signed`。删除部分失败不得显示「已全部删除」。

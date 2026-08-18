@@ -114,3 +114,42 @@
 - C3 能力不支持或 coverage 不足 → 实例 `not-evaluable`，观测值不得写成零
 - 通知不可用 → 应用内记录仍完整
 
+## Scenario: C5 Release Commands
+
+### 1. Scope / Trigger
+- Trigger: 关于页、GitHub Releases 地址、应用内显式删除本地数据、用户主动 VACUUM。
+
+### 2. Signatures
+- `get_about() -> AboutDto`
+- `open_releases() -> releasesUrl`
+- `preview_delete_local_data() -> DeletePreview`
+- `confirm_delete_local_data(phrase) -> DeleteReport`
+- `run_user_vacuum()`
+
+### 3. Contracts
+- `AboutDto.schemaVersion` 必须为 `1`。`signed` 为 `false` 时不得写成已签名。
+- `open_releases` 只返回固定 GitHub Releases URL，不注册 updater plugin。
+- 删除确认短语必须是 `删除全部本地数据`。部分失败时 `allDeclaredOk=false`，文案不得写成「已全部删除」。
+- 删除只清理数据目录声明对象和当前进程凭据引用。未再确认前不写本机 Credential Manager。
+- 用户主动 VACUUM 前检查约两倍数据库空间；失败保留当前库。不自动 VACUUM。
+
+### 4. Validation & Error Matrix
+- 确认短语不匹配 → `delete_not_confirmed`，不删除任何文件
+- 磁盘不足 → `insufficient_space`，不启动 VACUUM
+- 未签名 about 被标成 `signed=true` → 前端解码拒绝
+
+### 5. Good/Base/Bad Cases
+- Good: 预览后短语匹配，分项结果全部 `ok`
+- Base: 对象本不存在仍记 `ok`，不是失败
+- Bad: 用当前 NSIS 包冒充 C0 升级基线；把 fixture 并发写成 30 天容量
+
+### 6. Tests Required
+- Rust `c5::purge` / `c5::vacuum` / `c5::about` / `c5::baseline`
+- TS `decodeAbout` 拒绝 `signed=true`
+
+### 7. Wrong vs Correct
+#### Wrong
+删除部分失败仍显示「已全部删除」，或 `c5-baseline` 缺失时用当前 installer 充当旧版本。
+#### Correct
+部分失败可见。C0 基线缺失则 `usableForUpgrade=false`，对应 AC 记未通过。
+

@@ -37,6 +37,12 @@ tdev: monitor-dev
 monitor-build:
     npm --prefix residential-monitor run tauri:build
 
+# C5 自动硬化门：故障矩阵、并发 fixture、soak smoke、供应链。不含 30 天库、24 小时 soak、本机安装。
+monitor-c5-auto:
+    cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --lib c5::
+    cargo run --quiet --manifest-path residential-monitor/src-tauri/Cargo.toml --bin monitor-bench -- c5-fault
+    cargo run --quiet --manifest-path residential-monitor/src-tauri/Cargo.toml --bin monitor-bench -- c5-supply
+
 # 构建 NSIS 并执行 current-user 安装。会改本机安装态。
 [windows]
 tinstall: monitor-build

@@ -87,6 +87,27 @@ enum Commands {
         out: PathBuf,
     },
     Profiles,
+    C5Fault,
+    C5Concurrent {
+        #[arg(long, default_value = "bench-data")]
+        dir: PathBuf,
+    },
+    C5SoakSmoke {
+        #[arg(long, default_value = "bench-data")]
+        dir: PathBuf,
+    },
+    C5Supply {
+        #[arg(long, default_value = "residential-monitor/src-tauri/Cargo.lock")]
+        cargo_lock: PathBuf,
+        #[arg(long, default_value = "residential-monitor/package-lock.json")]
+        package_lock: PathBuf,
+        #[arg(long)]
+        installer: Option<PathBuf>,
+    },
+    C5Baseline {
+        #[arg(long, default_value = ".")]
+        repo: PathBuf,
+    },
 }
 
 fn main() {
@@ -168,6 +189,40 @@ fn main() {
                 "{}",
                 serde_json::to_string_pretty(&profiles()).expect("json")
             );
+        }
+        Commands::C5Fault => {
+            let report = residential_monitor_lib::c5::run_fault_matrix().expect("fault");
+            println!("{}", serde_json::to_string_pretty(&report).expect("json"));
+        }
+        Commands::C5Concurrent { dir } => {
+            std::fs::create_dir_all(&dir).expect("mkdir");
+            let report = residential_monitor_lib::c5::run_overlap(&dir).expect("overlap");
+            println!("{}", serde_json::to_string_pretty(&report).expect("json"));
+        }
+        Commands::C5SoakSmoke { dir } => {
+            std::fs::create_dir_all(&dir).expect("mkdir");
+            let report = residential_monitor_lib::c5::soak_smoke(&dir).expect("soak");
+            println!("{}", serde_json::to_string_pretty(&report).expect("json"));
+        }
+        Commands::C5Supply {
+            cargo_lock,
+            package_lock,
+            installer,
+        } => {
+            let report = residential_monitor_lib::c5::inventory_from_locks(
+                &cargo_lock,
+                &package_lock,
+                installer.as_deref(),
+            )
+            .expect("supply");
+            println!("{}", serde_json::to_string_pretty(&report).expect("json"));
+        }
+        Commands::C5Baseline { repo } => {
+            let report = residential_monitor_lib::c5::verify_c0_baseline(&repo);
+            println!("{}", serde_json::to_string_pretty(&report).expect("json"));
+            if !report.usable_for_upgrade {
+                std::process::exit(2);
+            }
         }
     }
 }

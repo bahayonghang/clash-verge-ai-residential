@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "schedule": {
+    "schemaVersion": 1,
+    "designAverageActive": 250,
+    "warmupHours": 1,
+    "durationHours": 24,
+    "reportEverySecs": 300,
+    "exportEverySecs": 3600,
+    "retentionEverySecs": 3600,
+    "checkpointEverySecs": 3600,
+    "backupMinCount": 2,
+    "alertInjectEverySecs": 3600
+  },
+  "elapsedMs": 256,
+  "overlapOk": true,
+  "full24h": false,
+  "noteZh": "仅 soak 入口 smoke。24 小时 soak 未执行，C5-AC11 未通过。"
+}

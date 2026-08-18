@@ -326,6 +326,66 @@ export interface RetentionPreview {
   noteZh: string;
 }
 
+export interface AboutDto {
+  schemaVersion: number;
+  productName: string;
+  binaryName: string;
+  identifier: string;
+  aumid: string;
+  version: string;
+  releasesUrl: string;
+  signed: boolean;
+  updaterPlugin: boolean;
+  windowsService: boolean;
+  signatureNoteZh: string;
+}
+
+export interface DeleteItem {
+  id: string;
+  kind: string;
+  path: string;
+  exists: boolean;
+  noteZh: string;
+}
+
+export interface DeletePreview {
+  schemaVersion: number;
+  confirmPhrase: string;
+  items: DeleteItem[];
+  noteZh: string;
+}
+
+export interface DeleteReport {
+  schemaVersion: number;
+  allDeclaredOk: boolean;
+  items: Array<{ id: string; ok: boolean; existed: boolean; messageZh: string }>;
+  summaryZh: string;
+}
+
+export function decodeAbout(value: unknown): AboutDto {
+  if (!isRecord(value) || value.schemaVersion !== 1 || typeof value.releasesUrl !== "string") {
+    throw new Error("AboutDto 无效");
+  }
+  if (typeof value.signed !== "boolean" || value.signed) {
+    throw new Error("未签名候选不得标记为 signed");
+  }
+  return value as unknown as AboutDto;
+}
+
+export function decodeDeletePreview(value: unknown): DeletePreview {
+  if (!isRecord(value) || value.schemaVersion !== 1 || !Array.isArray(value.items)) {
+    throw new Error("DeletePreview 无效");
+  }
+  return value as unknown as DeletePreview;
+}
+
+export function decodeDeleteReport(value: unknown): DeleteReport {
+  if (!isRecord(value) || value.schemaVersion !== 1 || typeof value.allDeclaredOk !== "boolean") {
+    throw new Error("DeleteReport 无效");
+  }
+  return value as unknown as DeleteReport;
+}
+
 export function decodeAlertCenter(value: unknown): AlertCenterPage {
   if (!isRecord(value) || value.schemaVersion !== 1 || !Array.isArray(value.items)) {
     throw new Error("AlertCenterPage 无效");

@@ -3,7 +3,7 @@
   "name": "monitor-release-hardening",
   "title": "家宽监控发布硬化与集成",
   "description": "在 C4 完成后执行完整集成、视觉与无障碍、故障矩阵、数据库最终性能门、NSIS 升级和发布供应链验收",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": "residential-monitor",
   "package": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "08-18-residential-monitor-mvp",
   "relatedFiles": [],
-  "notes": "C5 严格依赖 C4（08-18-monitor-alerting-diagnostics）及 C0–C3 全部独立验收证据；必须使用 C0 冻结基线验证首次 v1 手动升级。当前仅完善规划，未获授权运行 task.py start、构建发布资产或进入实施。",
+  "notes": "C5 已 start（会话指针降级）。自动硬化与文档已落地。go/no-go=no-go：C0 基线缺失、完整 30 天库/24h soak/安装态/签名未完成。未执行 tinstall、未签名、未发布 Release。",
   "meta": {
     "description": "C5：最终集成、视觉无障碍、故障与 24 小时 soak、数据库性能、NSIS current-user、升级卸载、签名和发布供应链"
   }

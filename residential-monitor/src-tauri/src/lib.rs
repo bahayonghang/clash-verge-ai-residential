@@ -4,6 +4,7 @@ pub mod c0_contract;
 pub mod c2;
 pub mod c3;
 pub mod c4;
+pub mod c5;
 pub mod candidate_schema;
 pub mod controller;
 pub mod credential;
@@ -463,6 +464,39 @@ fn scan_outbox(state: State<Mutex<AppFacade>>) -> Result<u32, AppErrorDto> {
 }
 
 #[tauri::command]
+fn get_about(state: State<Mutex<AppFacade>>) -> Result<c5::AboutDto, AppErrorDto> {
+    Ok(state.lock().expect("state").about())
+}
+
+#[tauri::command]
+fn open_releases() -> Result<String, AppErrorDto> {
+    Ok(crate::identity::RELEASES_URL.to_string())
+}
+
+#[tauri::command]
+fn preview_delete_local_data(
+    state: State<Mutex<AppFacade>>,
+) -> Result<c5::DeletePreview, AppErrorDto> {
+    Ok(state.lock().expect("state").preview_delete_local_data())
+}
+
+#[tauri::command]
+fn confirm_delete_local_data(
+    state: State<Mutex<AppFacade>>,
+    phrase: String,
+) -> Result<c5::DeleteReport, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .confirm_delete_local_data(&phrase)
+}
+
+#[tauri::command]
+fn run_user_vacuum(state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
+    state.lock().expect("state").run_user_vacuum()
+}
+
+#[tauri::command]
 fn tray_summary(state: State<Mutex<AppFacade>>) -> Result<c2::desktop::TraySummary, AppErrorDto> {
     let guard = state.lock().expect("state");
     Ok(guard
@@ -613,7 +647,12 @@ pub fn run() {
             test_notification,
             get_diagnostics,
             export_diagnostics,
-            scan_outbox
+            scan_outbox,
+            get_about,
+            open_releases,
+            preview_delete_local_data,
+            confirm_delete_local_data,
+            run_user_vacuum
         ])
         .run(tauri::generate_context!())
         .expect("启动家宽流量监控失败");

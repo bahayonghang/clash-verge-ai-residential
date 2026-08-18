@@ -244,7 +244,8 @@ fn write_html<W: Write>(
         writer,
         "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><title>家宽流量报告</title>\
 <style>body{{font-family:sans-serif;background:#12161c;color:#e8eef6}}table{{border-collapse:collapse}}\
-td,th{{border-bottom:1px solid #2a3340;padding:6px;font-variant-numeric:tabular-nums}}</style></head><body>"
+td,th{{border-bottom:1px solid #2a3340;padding:6px;font-variant-numeric:tabular-nums}}\
+@media print{{body{{background:#fff;color:#000}}td,th{{border-bottom:1px solid #000}}}}</style></head><body>"
     )
     .map_err(|_| ReportError::Failed("html"))?;
     writeln!(
@@ -415,6 +416,7 @@ mod export_tests {
         assert!(csv_text.contains(",10,20,"));
         assert!(json_text.contains("\"download\":20"));
         assert!(html_text.contains("下行 20"));
+        assert!(html_text.contains("@media print"));
         assert!(!html_text.contains("http://"));
         let error = ExportService::export_to_path(
             &result,

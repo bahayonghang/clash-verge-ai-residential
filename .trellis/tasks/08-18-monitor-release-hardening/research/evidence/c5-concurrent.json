@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "elapsedMs": 111,
+  "writerCommits": 8,
+  "reportOk": true,
+  "exportOk": true,
+  "backupOk": true,
+  "retentionOk": true,
+  "checkpointOk": true,
+  "walAfter": 78312,
+  "overlap": true,
+  "scale": "fixture",
+  "noteZh": "fixture 级重叠通过。不是 30 天 A=50/250/1000 容量声明。"
+}

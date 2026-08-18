@@ -1,12 +1,18 @@
 import {
+  decodeAbout,
   decodeAlertCenter,
+  decodeDeletePreview,
+  decodeDeleteReport,
   decodeDiagnostics,
   decodeReportResult,
   decodeShellStatus,
+  type AboutDto,
   type AlertCenterPage,
   type AlertRule,
   type BootstrapDto,
   type CloseState,
+  type DeletePreview,
+  type DeleteReport,
   type DiagnosticsSnapshot,
   type LiveOverview,
   type NotifyCapability,
@@ -28,6 +34,7 @@ import { formatBytes, formatUtc, unknownOr } from "./format/units";
 const HEALTH_ZH: Record<string, { title: string; action: string }> = {
   connecting: { title: "正在连接控制器", action: "等待连接完成" },
   connected: { title: "已连接", action: "无需操作" },
+  disconnected: { title: "控制器已断开", action: "检查 Verge / mihomo 后立即重连" },
   tcp_unauthorized: { title: "TCP 鉴权失败", action: "检查 secret 后重试" },
   pipe_access_denied: { title: "管道访问被拒绝", action: "改用 TCP External Controller" },
   pipe_busy_timeout: { title: "管道忙超时", action: "稍后重试或改用 TCP" },
@@ -38,6 +45,14 @@ const HEALTH_ZH: Record<string, { title: string; action: string }> = {
   cancelled: { title: "操作已取消", action: "可立即重连" },
   non_loopback: { title: "拒绝非回环地址", action: "改为 127.0.0.1" },
   storage_failure: { title: "存储故障", action: "打开恢复界面检查磁盘" },
+  storage_backpressure: { title: "存储背压", action: "等待写入恢复；缺口不是零" },
+  sleeping_or_clock_gap: { title: "睡眠或时钟缺口", action: "恢复后核对覆盖区间" },
+  paused: { title: "采集已暂停", action: "在托盘选择继续采集" },
+  coverage_gap: { title: "存在采集缺口", action: "查看覆盖原因，勿把缺口当零" },
+  capability_expired: { title: "数据能力已过期", action: "缩小范围或改用支持的维度" },
+  notification_unavailable: { title: "系统通知不可用", action: "应用内告警仍完整" },
+  migration_failed: { title: "迁移失败", action: "使用 Recovery Shell 恢复备份" },
+  restore_failed: { title: "恢复失败", action: "当前可用库未覆盖" },
   no_data: { title: "暂无采样", action: "确认采集已启动" }
 };
 
@@ -197,7 +212,24 @@ function renderReports(report: ReportResult | null, statusZh: string): string {
   `;
 }
 
-function renderSettings(boot: BootstrapDto): string {
+function renderSettings(
+  boot: BootstrapDto,
+  about: AboutDto | null,
+  deletePreview: DeletePreview | null,
+  deleteReport: DeleteReport | null
+): string {
+  const aboutBlock = about
+    ? `<p>版本 ${about.version}。identifier ${about.identifier}。AUMID ${about.aumid}。</p>
+       <p>签名：${about.signed ? "已签名" : "未签名"}。${about.signatureNoteZh}</p>
+       <p>无应用内自动更新，无 Windows Service。发布页 ${about.releasesUrl}</p>`
+    : "<p>尚未加载关于信息。</p>";
+  const deleteItems =
+    deletePreview?.items
+      .map((item) => `<li><strong>${item.id}</strong>：${item.noteZh} ${item.exists ? "存在" : "不存在"}</li>`)
+      .join("") ?? "<li>尚未预览。</li>";
+  const deleteResult = deleteReport
+    ? `<p class="status" data-state="${deleteReport.allDeclaredOk ? "connected" : "storage_failure"}">${deleteReport.summaryZh}</p>`
+    : "";
   return `
     <section class="panel">
       <h2>设置向导</h2>
@@ -228,6 +260,24 @@ function renderSettings(boot: BootstrapDto): string {
       <button type="button" id="retention-preview">保留预览</button>
       <button type="button" id="run-retention">物化汇总（不自动删除）</button>
       <p id="data-note">自动 DELETE 在守恒门通过前保持关闭。不自动 VACUUM。</p>
+      <button type="button" id="run-vacuum">用户主动 VACUUM</button>
+    </section>
+    <section class="panel" id="about">
+      <h2>关于与发布</h2>
+      ${aboutBlock}
+      <button type="button" id="load-about">刷新关于</button>
+      <button type="button" id="open-releases">显示 GitHub Releases 地址</button>
+    </section>
+    <section class="panel">
+      <h2>删除全部本地数据</h2>
+      <p>${deletePreview?.noteZh ?? "先预览声明对象，再输入确认短语。普通卸载不会走此路径。"}</p>
+      <ul>${deleteItems}</ul>
+      <label>确认短语
+        <input id="delete-phrase" autocomplete="off" />
+      </label>
+      <button type="button" id="preview-delete">预览删除范围</button>
+      <button type="button" id="confirm-delete">二次确认删除</button>
+      ${deleteResult}
     </section>
   `;
 }
@@ -428,8 +478,12 @@ function renderApp(
   alerts: AlertCenterPage | null,
   alertStatus: string,
   diagnostics: DiagnosticsSnapshot | null,
-  notify: NotifyCapability | null
+  notify: NotifyCapability | null,
+  about: AboutDto | null,
+  deletePreview: DeletePreview | null,
+  deleteReport: DeleteReport | null
 ): void {
+  const focusedId = document.activeElement instanceof HTMLElement ? document.activeElement.id : "";
   const body =
     boot.branch === "recovery-only"
       ? renderRecovery(boot)
@@ -438,7 +492,7 @@ function renderApp(
         : route === "live"
           ? renderLive(state)
           : route === "settings-data"
-            ? renderSettings(boot)
+            ? renderSettings(boot, about, deletePreview, deleteReport)
             : route === "reports"
               ? renderReports(report, reportStatus)
               : route === "alerts"
@@ -453,6 +507,9 @@ function renderApp(
     <div id="view">${body}</div>
     ${state.errorZh ? `<p class="gap" role="alert">${state.errorZh}</p>` : ""}
   `;
+  if (focusedId) {
+    document.getElementById(focusedId)?.focus();
+  }
 }
 
 async function main(): Promise<void> {
@@ -483,19 +540,39 @@ async function main(): Promise<void> {
   let alertStatus = "尚未加载告警。";
   let diagnostics: DiagnosticsSnapshot | null = null;
   let notify: NotifyCapability | null = null;
+  let about: AboutDto | null = null;
+  let deletePreview: DeletePreview | null = null;
+  let deleteReport: DeleteReport | null = null;
   state.snapshot = boot.overview;
-  renderApp(app, boot, state, route, report, reportStatus, alerts, alertStatus, diagnostics, notify);
+  const paint = (): void => {
+    renderApp(
+      app,
+      boot,
+      state,
+      route,
+      report,
+      reportStatus,
+      alerts,
+      alertStatus,
+      diagnostics,
+      notify,
+      about,
+      deletePreview,
+      deleteReport
+    );
+  };
+  paint();
 
   const apply = (next: MonitorState, nextRoute = route): void => {
     state = next;
     route = nextRoute;
-    renderApp(app, boot, state, route, report, reportStatus, alerts, alertStatus, diagnostics, notify);
+    paint();
   };
 
   const applyReport = (next: ReportResult | null, status: string): void => {
     report = next;
     reportStatus = status;
-    renderApp(app, boot, state, route, report, reportStatus, alerts, alertStatus, diagnostics, notify);
+    paint();
   };
 
   const applyAlerts = (
@@ -508,7 +585,7 @@ async function main(): Promise<void> {
     alertStatus = status;
     diagnostics = nextDiag;
     notify = nextNotify;
-    renderApp(app, boot, state, route, report, reportStatus, alerts, alertStatus, diagnostics, notify);
+    paint();
   };
 
   const buildQuery = (): ReportQuery => {
@@ -687,6 +764,49 @@ async function main(): Promise<void> {
         }
       } catch {
         applyAlerts(alerts, "诊断导出失败。采集与告警未中断。");
+      }
+    }
+    if (target.id === "load-about") {
+      try {
+        about = decodeAbout(await invokeCommand("get_about"));
+        apply(state, "settings-data");
+      } catch {
+        apply({ ...state, errorZh: "无法读取关于信息。" });
+      }
+    }
+    if (target.id === "open-releases") {
+      try {
+        const url = await invokeCommand<string>("open_releases");
+        apply({ ...state, errorZh: `发布地址：${url}` });
+      } catch {
+        apply({ ...state, errorZh: "无法读取发布地址。" });
+      }
+    }
+    if (target.id === "preview-delete") {
+      try {
+        deletePreview = decodeDeletePreview(await invokeCommand("preview_delete_local_data"));
+        apply(state, "settings-data");
+      } catch {
+        apply({ ...state, errorZh: "无法预览删除范围。" });
+      }
+    }
+    if (target.id === "confirm-delete") {
+      const phrase = (document.querySelector("#delete-phrase") as HTMLInputElement | null)?.value ?? "";
+      try {
+        deleteReport = decodeDeleteReport(
+          await invokeCommand("confirm_delete_local_data", { phrase })
+        );
+        apply(state, "settings-data");
+      } catch {
+        apply({ ...state, errorZh: "删除未执行。确认短语必须完全匹配。" });
+      }
+    }
+    if (target.id === "run-vacuum") {
+      try {
+        await invokeCommand("run_user_vacuum");
+        apply({ ...state, errorZh: "VACUUM 已完成。freelist 不是已释放文件空间。" });
+      } catch {
+        apply({ ...state, errorZh: "VACUUM 未执行或空间不足。当前库未删除。" });
       }
     }
     if (target.id === "save-alert-rule") {
