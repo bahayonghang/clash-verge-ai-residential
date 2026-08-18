@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "前端壳层约束：Vanilla TS、禁止远程资源、质量门命令。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "导航与视图状态边界：只存 route 和 DTO 缓存，五条 route 固定。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "边界解码契约：本次不得改 Channel/Command 形状。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "防止把图标或标题写进 DTO，避免跨层扩 scope。"}
