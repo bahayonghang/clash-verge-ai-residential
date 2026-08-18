@@ -1,6 +1,6 @@
 # residential-monitor backend
 
-Rust 拥有采集、存储、凭据、托盘和查询。C0 只交付骨架与 spike。
+Rust 拥有采集、存储、凭据、托盘、查询、报告与恢复。C3 代码在 `src-tauri/src/c3/`。
 
 ## Pre-Development Checklist
 

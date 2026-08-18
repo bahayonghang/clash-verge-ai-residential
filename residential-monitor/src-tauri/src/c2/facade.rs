@@ -1,7 +1,7 @@
 //! C2 AppFacade：只经 C1 接口访问采集、存储、投影与恢复。
 
 use crate::accounting::AccountingEngine;
-use crate::c0_contract::{core_table_allowlist, forbidden_table_fragments};
+use crate::c0_contract::{all_table_allowlist, forbidden_table_fragments};
 use crate::c2::close::{CloseRegistry, CloseState, ControlResult};
 use crate::c2::contract::SCHEMA_VERSION;
 use crate::c2::desktop::{DesktopRuntime, FakeAutostart, InstanceClaim, LaunchMode, ShutdownPhase};
@@ -14,6 +14,12 @@ use crate::c2::shell::{
     default_routes, recovery_status, validate_backup, BootBranch, FakeFileDialog, FileMode,
     FilePurpose, OperationProgress, OperationRegistry, RecoveryStatus, RouteDescriptor,
 };
+use crate::c3::backup::BackupRestoreService;
+use crate::c3::export::{ExportPreview, ExportService, ExportSpec};
+use crate::c3::query::{ReportError, ReportQuery, ReportResult, RAW_RETAIN_DAYS_DEFAULT};
+use crate::c3::retention::{RetentionMode, RetentionPreview, RetentionService};
+use crate::c3::snapshot::ReportSnapshotStore;
+use crate::c3::space::SpaceBudget;
 use crate::controller::{ControllerInput, SessionStatus};
 use crate::credential::FakeCredentialStore;
 use crate::session::ControllerSession;
@@ -120,6 +126,9 @@ pub struct AppFacade {
     pub session: ControllerSession,
     pub data_dir: PathBuf,
     pub session_status: SessionStatus,
+    pub snapshots: ReportSnapshotStore,
+    pub space: SpaceBudget,
+    pub raw_retain_days: i64,
 }
 
 impl AppFacade {
@@ -163,8 +172,11 @@ impl AppFacade {
                     dialog: FakeFileDialog::default(),
                     autostart: FakeAutostart::new(),
                     session: ControllerSession::new(String::new()),
-                    data_dir,
+                    data_dir: data_dir.clone(),
                     session_status: SessionStatus::Connecting,
+                    snapshots: ReportSnapshotStore::open(&data_dir),
+                    space: SpaceBudget::unlimited(),
+                    raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
                 }
             }
             Err(_) => Self {
@@ -183,8 +195,11 @@ impl AppFacade {
                 dialog: FakeFileDialog::default(),
                 autostart: FakeAutostart::new(),
                 session: ControllerSession::new(String::new()),
-                data_dir,
+                data_dir: data_dir.clone(),
                 session_status: SessionStatus::EndpointMissing,
+                snapshots: ReportSnapshotStore::open(&data_dir),
+                space: SpaceBudget::unlimited(),
+                raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
             },
         }
     }
@@ -262,6 +277,9 @@ impl AppFacade {
                     .as_ref(),
             );
             self.session_status = SessionStatus::Connected;
+            if let Some(storage) = self.storage.as_mut() {
+                let _ = storage.persist_live_facts(&batch.facts, &live, &batch.coverage, utc);
+            }
             let _ = self.hub.publish(&batch, live, health, utc);
         } else {
             self.apply_lifecycle(input);
@@ -409,6 +427,138 @@ impl AppFacade {
         self.apply_lifecycle(ControllerInput::Shutdown);
         self.desktop.begin_shutdown()
     }
+
+    pub fn run_report(&mut self, query: ReportQuery) -> Result<ReportResult, AppErrorDto> {
+        let path = self
+            .storage
+            .as_ref()
+            .ok_or_else(recovery_only)?
+            .path()
+            .to_path_buf();
+        let now = chrono::Utc::now().timestamp();
+        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        crate::c3::ReportService::run(
+            &path,
+            &mut self.snapshots,
+            query,
+            now,
+            self.raw_retain_days,
+            &cancel,
+            None,
+        )
+        .map_err(map_report)
+    }
+
+    pub fn get_report(&self, token: &str) -> Result<ReportResult, AppErrorDto> {
+        let now = chrono::Utc::now().timestamp();
+        self.snapshots.get(token, now).cloned().map_err(map_report)
+    }
+
+    pub fn release_report(&mut self, token: &str) -> bool {
+        self.snapshots.release(token)
+    }
+
+    pub fn preview_export(
+        &self,
+        token: &str,
+        spec: &ExportSpec,
+    ) -> Result<ExportPreview, AppErrorDto> {
+        let result = self.get_report(token)?;
+        ExportService::preview(&result, spec).map_err(map_report)
+    }
+
+    pub fn export_report(
+        &self,
+        token: &str,
+        spec: &ExportSpec,
+        dest: &Path,
+    ) -> Result<String, AppErrorDto> {
+        let result = self.get_report(token)?;
+        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        ExportService::export_to_path(&result, spec, dest, &self.space, &cancel)
+            .map(|path| path.to_string_lossy().into_owned())
+            .map_err(map_report)
+    }
+
+    pub fn retention_preview(&self) -> Result<RetentionPreview, AppErrorDto> {
+        let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
+        RetentionService::preview(storage, self.raw_retain_days).map_err(map_report)
+    }
+
+    pub fn run_retention(&mut self, delete: bool) -> Result<RetentionPreview, AppErrorDto> {
+        let storage = self.storage.as_mut().ok_or_else(recovery_only)?;
+        let now = chrono::Utc::now().timestamp();
+        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let mode = if delete {
+            RetentionMode::DeleteEnabled
+        } else {
+            RetentionMode::MaterializeOnly
+        };
+        RetentionService::run(
+            storage,
+            now,
+            self.raw_retain_days,
+            mode,
+            &self.space,
+            &cancel,
+        )
+        .map_err(map_report)
+    }
+
+    pub fn create_backup(&self, dest: &Path) -> Result<String, AppErrorDto> {
+        let live = self.data_dir.join("monitor.sqlite3");
+        let now = chrono::Utc::now().timestamp();
+        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        BackupRestoreService::create_backup(&live, dest, &self.space, &cancel, now)
+            .map(|manifest| manifest.checksum)
+            .map_err(map_report)
+    }
+
+    pub fn restore_backup(&mut self, candidate: &Path) -> Result<(), AppErrorDto> {
+        self.storage = None;
+        self.branch = BootBranch::RecoveryOnly;
+        let live = self.data_dir.join("monitor.sqlite3");
+        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        BackupRestoreService::restore(&live, candidate, &self.space, &cancel)
+            .map_err(map_report)?;
+        match StorageCoordinator::open(&live) {
+            Ok(storage) => {
+                self.storage = Some(storage);
+                self.branch = BootBranch::NormalReady;
+                Ok(())
+            }
+            Err(_) => Err(AppErrorDto {
+                code: "restore_reopen".into(),
+                message_zh: "恢复后无法打开数据库，仍停留在 Recovery Shell。".into(),
+                retryable: true,
+                action: "检查备份后重试".into(),
+                details_redacted: "restore".into(),
+            }),
+        }
+    }
+}
+
+fn recovery_only() -> AppErrorDto {
+    AppErrorDto {
+        code: "recovery_only".into(),
+        message_zh: "恢复模式不能运行普通报告。".into(),
+        retryable: false,
+        action: "先恢复数据库".into(),
+        details_redacted: "recovery".into(),
+    }
+}
+
+fn map_report(error: ReportError) -> AppErrorDto {
+    AppErrorDto {
+        code: error.code().into(),
+        message_zh: error.message_zh().into(),
+        retryable: matches!(
+            error,
+            ReportError::StorageBusy(_) | ReportError::DeadlineExceeded(_)
+        ),
+        action: error.action_zh().into(),
+        details_redacted: error.code().into(),
+    }
 }
 
 pub fn parse_socket(address: &str) -> Result<SocketAddr, AppErrorDto> {
@@ -422,10 +572,11 @@ pub fn parse_socket(address: &str) -> Result<SocketAddr, AppErrorDto> {
 }
 
 pub fn assert_no_forbidden_tables(names: &[String]) {
+    let allow = all_table_allowlist();
     for name in names {
         assert!(
-            core_table_allowlist().contains(&name.as_str()),
-            "{name} 不在 C1 allowlist"
+            allow.contains(&name.as_str()),
+            "{name} 不在 C1+C3 allowlist"
         );
         for fragment in forbidden_table_fragments() {
             assert!(!name.contains(fragment), "{name} 不得包含 {fragment}");
@@ -464,6 +615,10 @@ mod c2_facade_contract_tests {
         let connection = migrate(&dir.path().join("monitor.sqlite3")).expect("reopen");
         let tables = list_user_tables(&connection).expect("tables");
         assert_no_forbidden_tables(&tables);
+        assert!(tables.iter().any(|item| item == "traffic_hourly_dimension"));
+        assert!(!tables
+            .iter()
+            .any(|item| item.contains("alert") || item.contains("outbox")));
     }
 
     #[test]
@@ -481,7 +636,8 @@ mod c2_facade_contract_tests {
         assert!(facade.storage.is_none());
         let status = facade.recovery().expect("status");
         assert!(status.future);
-        assert!(!status.restore_available);
+        assert!(status.restore_available);
+        assert!(facade.storage.is_none());
     }
 }
 

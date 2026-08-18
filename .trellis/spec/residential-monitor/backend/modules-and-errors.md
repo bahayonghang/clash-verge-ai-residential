@@ -7,6 +7,8 @@
 - C0 候选 schema 不得复制为 C1 正式 migration。
 - C2 只消费 C1：`ControllerSession`、`AccountingEngine`、`StorageCoordinator`、`LiveProjection`、`RecoveryFacade`。C2 模块不得 `use rusqlite`，不得 `create table`。
 - C2 代码位于 `residential-monitor/src-tauri/src/c2/`。
-- Recovery Shell：`restoreAvailable` 保持 `false`，直到 C3 接入实际 restore。
+- C3 代码位于 `residential-monitor/src-tauri/src/c3/`。C3 只通过 `StorageCoordinator` / `RecoveryFacade` 访问 SQLite，不得另建 writer 或通用 Repository。
+- Recovery Shell：`restoreAvailable` 为 `true`。restore 不初始化 `ReportService`；失败必须保留当前可用库。
+- C4 未启动前不得创建 `alert` / `notification` / `outbox` 表。
 - 调试：`just tdev`（`tauri dev`）。出包：`just monitor-build`（只生成 NSIS，不安装）。安装：`just tinstall`（会改本机 current-user 安装态）。未再确认前不要执行 `tinstall`、本机 Credential Manager 真机测试或登录自启动写入。
 

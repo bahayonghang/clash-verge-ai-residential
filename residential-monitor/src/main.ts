@@ -1,4 +1,14 @@
-import { decodeShellStatus, type BootstrapDto, type CloseState, type LiveOverview, type RouteId } from "./dto";
+import {
+  decodeReportResult,
+  decodeShellStatus,
+  type BootstrapDto,
+  type CloseState,
+  type LiveOverview,
+  type ReportQuery,
+  type ReportResult,
+  type RetentionPreview,
+  type RouteId
+} from "./dto";
 import { decodeMonitorMessage } from "./ipc/decoder";
 import {
   emptyMonitorState,
@@ -89,6 +99,98 @@ function renderLive(state: MonitorState): string {
   `;
 }
 
+function defaultReportQuery(): ReportQuery {
+  const end = Math.floor(Date.now() / 1000);
+  return {
+    rangeStartUtc: end - 3600,
+    rangeEndUtc: end,
+    displayTimezone: "local",
+    granularity: "hour",
+    filters: { category: null, host: null, process: null, rule: null, chain: null, network: null },
+    grouping: "host",
+    targetPolicy: "historical",
+    comparison: { previousEqualWindow: true },
+    sort: { field: "download", descending: true },
+    page: { limit: 200, after: null },
+    topN: 20,
+    includeSessions: false
+  };
+}
+
+function renderReports(report: ReportResult | null, statusZh: string): string {
+  const seriesRows =
+    report?.series
+      .map(
+        (point) =>
+          `<tr><td>${formatUtc(point.bucketUtc)}</td><td>${formatBytes(point.upload)}</td><td>${formatBytes(point.download)}</td></tr>`
+      )
+      .join("") ?? "";
+  const rankRows =
+    report?.rankings
+      .map((row) => {
+        const max = report.rankings[0]?.download || 1;
+        const width = Math.max(4, Math.round((row.download / max) * 100));
+        return `<tr><td>${row.label}</td><td>${formatBytes(row.upload)}</td><td>${formatBytes(row.download)}</td><td><span class="bar" style="width:${width}%"></span></td></tr>`;
+      })
+      .join("") ?? "";
+  const capability = report
+    ? `<p>${report.drilldownCapability.noteZh} 数据层 ${report.dataTier}。${report.policyMetadata.noteZh}</p>
+       <p>覆盖 ${report.coverage.status}，缺口 ${report.coverage.gapSec} 秒。单位 ${report.unit}。</p>`
+    : "";
+  return `
+    <section class="panel">
+      <h2>分析报告</h2>
+      <p>图表与数据表使用同一 ReportResult。观测下界，不是账单。</p>
+      <label>预设
+        <select id="report-preset">
+          <option value="hour">最近一小时</option>
+          <option value="day">指定日（近 24 小时）</option>
+          <option value="7">近 7 日</option>
+          <option value="30">近 30 日</option>
+          <option value="month">自然月（近 30 日）</option>
+        </select>
+      </label>
+      <label>粒度
+        <select id="report-granularity">
+          <option value="hour">小时</option>
+          <option value="day">日</option>
+          <option value="month">月</option>
+        </select>
+      </label>
+      <label>排名维度
+        <select id="report-grouping">
+          <option value="host">域名</option>
+          <option value="process">进程</option>
+          <option value="rule">规则</option>
+          <option value="chain">链路</option>
+          <option value="network">网络类型</option>
+          <option value="category">分类</option>
+        </select>
+      </label>
+      <button type="button" id="run-report">运行报告</button>
+      <button type="button" id="export-csv">导出 CSV</button>
+      <button type="button" id="export-json">导出 JSON</button>
+      <button type="button" id="export-html">导出 HTML</button>
+      <p class="status" data-state="${report ? "connected" : "no_data"}">${statusZh}</p>
+      ${capability}
+    </section>
+    <section class="panel" aria-label="报告数字">
+      <h2>总量（与导出同一 token）</h2>
+      ${report ? `<p>上行 ${formatBytes(report.totals.upload)} / 下行 ${formatBytes(report.totals.download)} / 连接 ${report.totals.connectionCount}</p>` : "<p>尚未运行报告。</p>"}
+    </section>
+    <section class="panel">
+      <h2>趋势图对应数据表</h2>
+      <table class="data"><thead><tr><th>时间</th><th>上行</th><th>下行</th></tr></thead>
+      <tbody>${seriesRows || `<tr><td colspan="3">无数据</td></tr>`}</tbody></table>
+    </section>
+    <section class="panel">
+      <h2>精确 Top N</h2>
+      <table class="data"><thead><tr><th>名称</th><th>上行</th><th>下行</th><th>占比条</th></tr></thead>
+      <tbody>${rankRows || `<tr><td colspan="4">无数据或能力不支持</td></tr>`}</tbody></table>
+    </section>
+  `;
+}
+
 function renderSettings(boot: BootstrapDto): string {
   return `
     <section class="panel">
@@ -112,6 +214,15 @@ function renderSettings(boot: BootstrapDto): string {
       <p>凭据状态：${boot.settings.hasSecret ? "已配置" : "未配置"}，模式 ${boot.settings.secretMode}</p>
       <button type="button" id="save-settings">保存设置</button>
     </section>
+    <section class="panel">
+      <h2>数据管理</h2>
+      <p>备份使用 Online Backup，不复制热库。恢复失败保留当前库。secret 不随备份迁移。</p>
+      <button type="button" id="create-backup">创建备份</button>
+      <button type="button" id="restore-backup">恢复备份</button>
+      <button type="button" id="retention-preview">保留预览</button>
+      <button type="button" id="run-retention">物化汇总（不自动删除）</button>
+      <p id="data-note">自动 DELETE 在守恒门通过前保持关闭。不自动 VACUUM。</p>
+    </section>
   `;
 }
 
@@ -127,8 +238,7 @@ function renderRecovery(boot: BootstrapDto): string {
       <p>应用版本 ${recovery.appVersion}，数据库版本 ${recovery.userVersion}，支持上限 ${recovery.supportedMax}。</p>
       <p>${recovery.future ? "数据库版本高于应用，已 fail closed。" : "数据库无法按普通 schema 打开。"}</p>
       <p>${recovery.restoreNoteZh}</p>
-      <p>restore 按钮不可用：C3 尚未接入。</p>
-      <button type="button" disabled>执行恢复（C3）</button>
+      <button type="button" id="restore-backup" ${recovery.restoreAvailable ? "" : "disabled"}>执行恢复</button>
       <h3>migration backup</h3>
       <ul>${backups || "<li>无</li>"}</ul>
     </section>
@@ -156,7 +266,7 @@ function previewBootstrap(): BootstrapDto {
     routes: [
       { id: "overview", titleZh: "概览", available: true, unavailableUntil: null },
       { id: "live", titleZh: "实时连接", available: true, unavailableUntil: null },
-      { id: "reports", titleZh: "分析报告", available: false, unavailableUntil: "C3" },
+      { id: "reports", titleZh: "分析报告", available: true, unavailableUntil: null },
       { id: "alerts", titleZh: "告警", available: false, unavailableUntil: "C4" },
       { id: "settings-data", titleZh: "设置 / 数据管理", available: true, unavailableUntil: null }
     ],
@@ -205,7 +315,14 @@ async function invokeCommand<T>(name: string, args?: Record<string, unknown>): P
   return api.invoke(name, args);
 }
 
-function renderApp(root: HTMLElement, boot: BootstrapDto, state: MonitorState, route: RouteId): void {
+function renderApp(
+  root: HTMLElement,
+  boot: BootstrapDto,
+  state: MonitorState,
+  route: RouteId,
+  report: ReportResult | null,
+  reportStatus: string
+): void {
   const body =
     boot.branch === "recovery-only"
       ? renderRecovery(boot)
@@ -216,7 +333,7 @@ function renderApp(root: HTMLElement, boot: BootstrapDto, state: MonitorState, r
           : route === "settings-data"
             ? renderSettings(boot)
             : route === "reports"
-              ? renderUnavailable("分析报告", "C3")
+              ? renderReports(report, reportStatus)
               : renderUnavailable("告警", "C4");
   root.innerHTML = `
     <header class="top">
@@ -251,13 +368,35 @@ async function main(): Promise<void> {
 
   let route: RouteId = boot.branch === "recovery-only" ? "settings-data" : "overview";
   let state = emptyMonitorState();
+  let report: ReportResult | null = null;
+  let reportStatus = "尚未运行报告。";
   state.snapshot = boot.overview;
-  renderApp(app, boot, state, route);
+  renderApp(app, boot, state, route, report, reportStatus);
 
   const apply = (next: MonitorState, nextRoute = route): void => {
     state = next;
     route = nextRoute;
-    renderApp(app, boot, state, route);
+    renderApp(app, boot, state, route, report, reportStatus);
+  };
+
+  const applyReport = (next: ReportResult | null, status: string): void => {
+    report = next;
+    reportStatus = status;
+    renderApp(app, boot, state, route, report, reportStatus);
+  };
+
+  const buildQuery = (): ReportQuery => {
+    const query = defaultReportQuery();
+    const preset = (document.querySelector("#report-preset") as HTMLSelectElement | null)?.value ?? "hour";
+    const now = Math.floor(Date.now() / 1000);
+    const spans: Record<string, number> = { hour: 3600, day: 86400, "7": 7 * 86400, "30": 30 * 86400, month: 30 * 86400 };
+    query.rangeStartUtc = now - (spans[preset] ?? 3600);
+    query.rangeEndUtc = now;
+    query.granularity = ((document.querySelector("#report-granularity") as HTMLSelectElement | null)?.value ??
+      "hour") as ReportQuery["granularity"];
+    query.grouping = ((document.querySelector("#report-grouping") as HTMLSelectElement | null)?.value ??
+      "host") as ReportQuery["grouping"];
+    return query;
   };
 
   app.addEventListener("click", async (event) => {
@@ -303,6 +442,81 @@ async function main(): Promise<void> {
         apply(state, "overview");
       } catch {
         apply({ ...state, errorZh: "设置保存失败。请检查回环地址。" });
+      }
+    }
+    if (target.id === "run-report") {
+      applyReport(report, "正在查询…");
+      try {
+        const raw = await invokeCommand<unknown>("run_report", { query: buildQuery() });
+        const decoded = decodeReportResult(raw);
+        applyReport(decoded, `已生成快照 ${decoded.reportSnapshotToken.slice(0, 8)}。`);
+      } catch (error) {
+        applyReport(null, error instanceof Error ? error.message : "报告失败。");
+      }
+    }
+    if (target.id === "export-csv" || target.id === "export-json" || target.id === "export-html") {
+      if (!report) {
+        applyReport(null, "请先运行报告。");
+        return;
+      }
+      const format = target.id === "export-csv" ? "csv" : target.id === "export-json" ? "json" : "html";
+      try {
+        const picked = await invokeCommand<string | null>("pick_file", {
+          purpose: "report-export",
+          mode: "save"
+        });
+        if (!picked) {
+          applyReport(report, "已取消导出。");
+          return;
+        }
+        await invokeCommand("export_report", {
+          token: report.reportSnapshotToken,
+          spec: {
+            format,
+            includeSeries: true,
+            includeRankings: true,
+            includeSessions: false,
+            redactHost: "none",
+            redactProcess: "none"
+          },
+          path: picked
+        });
+        applyReport(report, `已导出 ${format.toUpperCase()}。`);
+      } catch {
+        applyReport(report, "导出失败。未覆盖已有文件。");
+      }
+    }
+    if (target.id === "create-backup" || target.id === "restore-backup") {
+      try {
+        const picked = await invokeCommand<string | null>("pick_file", {
+          purpose: target.id === "create-backup" ? "backup-create" : "backup-restore",
+          mode: target.id === "create-backup" ? "save" : "open"
+        });
+        if (!picked) {
+          return;
+        }
+        if (target.id === "create-backup") {
+          await invokeCommand("create_backup", { path: picked });
+          apply({ ...state, errorZh: null });
+        } else {
+          await invokeCommand("restore_backup", { path: picked });
+        }
+      } catch {
+        apply({ ...state, errorZh: "备份或恢复失败。当前可用库未覆盖。" });
+      }
+    }
+    if (target.id === "retention-preview" || target.id === "run-retention") {
+      try {
+        const preview = await invokeCommand<RetentionPreview>(
+          target.id === "retention-preview" ? "retention_preview" : "run_retention",
+          target.id === "run-retention" ? { delete: false } : undefined
+        );
+        const note = document.querySelector("#data-note");
+        if (note) {
+          note.textContent = `${preview.noteZh} raw ${preview.rawRows} 行，hourly ${preview.hourlyRows} 行。自动删除=${preview.autoDeleteEnabled}`;
+        }
+      } catch {
+        apply({ ...state, errorZh: "保留预览失败。" });
       }
     }
   });

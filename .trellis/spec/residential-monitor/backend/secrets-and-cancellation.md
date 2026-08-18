@@ -6,4 +6,7 @@
 - Windows Credential Manager adapter 已存在于 `credential::windows_cm`。`credential_windows_generic_crud` 保持 `#[ignore]`，未获本机写入授权不得跑。
 - Credential Manager 不可用时只允许 `ProcessLocalStore` 会话 secret，退出或替换后必须 `clear`。v1 无 DPAPI fallback。
 - 长操作必须可取消。SQLite 使用 interrupt / progress。
-- C2 `FileDialogPort` 只返回预声明用途的用户选择路径。`OperationProgress` 可取消；C3 才提供真实 report / backup / restore operation。
+- C2 `FileDialogPort` 只返回预声明用途的用户选择路径。
+- C3 真实 operation：`run_report`、`export_report`、`create_backup`、`restore_backup`、`run_retention`。取消必须 interrupt 实际 SQLite / 备份 step，不只丢弃前端结果。
+- rusqlite `progress_handler` 返回 `true` 表示中断，`false` 表示继续。
+- secret 不得进入 URL、日志、SQLite、Channel、预览或导出。导出前扫描 `bearer ` / `password=` / `secret=`。

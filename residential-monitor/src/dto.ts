@@ -142,6 +142,98 @@ export interface CloseState {
   mark: "accepted" | "closed" | "unconfirmed";
 }
 
+export interface ReportFilters {
+  category: string | null;
+  host: string | null;
+  process: string | null;
+  rule: string | null;
+  chain: string | null;
+  network: string | null;
+}
+
+export interface ReportQuery {
+  rangeStartUtc: number;
+  rangeEndUtc: number;
+  displayTimezone: string;
+  granularity: "hour" | "day" | "month";
+  filters: ReportFilters;
+  grouping: "category" | "host" | "process" | "rule" | "chain" | "network";
+  targetPolicy: "current" | "historical";
+  comparison: { previousEqualWindow: boolean } | null;
+  sort: { field: "upload" | "download" | "name" | "identity"; descending: boolean };
+  page: { limit: number; after: string | null };
+  topN: number;
+  includeSessions: boolean;
+}
+
+export interface ReportResult {
+  schemaVersion: number;
+  dataVersion: number;
+  reportSnapshotToken: string;
+  queryEcho: ReportQuery;
+  totals: {
+    upload: number;
+    download: number;
+    connectionCount: number;
+    activeDurationSec: number;
+    previousUpload: number | null;
+    previousDownload: number | null;
+  };
+  series: Array<{
+    bucketUtc: number;
+    upload: number;
+    download: number;
+    connectionCount: number;
+    activeDurationSec: number;
+  }>;
+  rankings: Array<{
+    identity: string;
+    label: string;
+    upload: number;
+    download: number;
+    connectionCount: number;
+    activeDurationSec: number;
+  }>;
+  coverage: {
+    status: string;
+    coveredSec: number;
+    gapSec: number;
+    slices: Array<{ kind: string; reason: string; startedUtc: number; endedUtc: number | null }>;
+  };
+  drilldownCapability: {
+    sessions: boolean;
+    currentPolicy: boolean;
+    crossDimension: boolean;
+    exactTopN: boolean;
+    noteZh: string;
+  };
+  policyMetadata: { targetPolicy: string; policyVersion: number | null; noteZh: string };
+  dataTier: string;
+  namedSql: string[];
+  unit: string;
+  generatedUtc: number;
+}
+
+export interface RetentionPreview {
+  rawRetainDays: number;
+  rawRows: number;
+  hourlyRows: number;
+  dailyDimRows: number;
+  dailyCoreRows: number;
+  autoDeleteEnabled: boolean;
+  noteZh: string;
+}
+
+export function decodeReportResult(value: unknown): ReportResult {
+  if (!isRecord(value) || value.schemaVersion !== 1) {
+    throw new Error("ReportResult 无效");
+  }
+  if (typeof value.reportSnapshotToken !== "string" || !isRecord(value.totals) || !isRecord(value.coverage)) {
+    throw new Error("ReportResult 字段缺失");
+  }
+  return value as unknown as ReportResult;
+}
+
 export type ShellPhase = "c0-skeleton" | "c2-shell";
 
 export interface ShellStatus {

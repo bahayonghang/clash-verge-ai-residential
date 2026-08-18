@@ -1,12 +1,17 @@
-//! C1 core schema、幂等 writer 与 RecoveryFacade backend。
+//! C1 core schema、幂等 writer 与 RecoveryFacade backend。C3 只向前追加。
 
 use crate::c0_contract::{BUSY_TIMEOUT_MS, RETRY_WINDOW_RECEIPTS, SCHEMA_VERSION};
+use crate::c3::query::ReportError;
+use crate::c3::schema::{C3_DDL, C3_MIGRATION_CHECKSUM, C3_SCHEMA_VERSION};
 
 pub const MIGRATION_CHECKSUM: &str = "c1-core-v1";
 use crate::sqlite_probe::{apply_required_pragmas, open_bundled};
+use rusqlite::backup::Backup;
 use rusqlite::{params, Connection, OptionalExtension};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -57,29 +62,16 @@ pub fn migrate(path: &Path) -> Result<Connection, StorageError> {
     if user_version > SCHEMA_VERSION {
         return Err(StorageError::Closed("future schema".into()));
     }
-    if user_version == SCHEMA_VERSION {
-        let has_table: i64 = connection.query_row(
-            "select count(*) from sqlite_master where type = 'table' and name = 'schema_migration'",
-            [],
-            |row| row.get(0),
-        )?;
-        if has_table > 0 {
-            let checksum: Option<String> = connection
-                .query_row(
-                    "select checksum from schema_migration where version = ?1",
-                    [SCHEMA_VERSION],
-                    |row| row.get(0),
-                )
-                .optional()?;
-            if let Some(checksum) = checksum {
-                if checksum != MIGRATION_CHECKSUM {
-                    return Err(StorageError::Closed("checksum mismatch".into()));
-                }
-            }
-        }
-    }
-    connection.execute_batch(
-        "
+    verify_checksum(&connection, 1, MIGRATION_CHECKSUM, user_version)?;
+    verify_checksum(
+        &connection,
+        C3_SCHEMA_VERSION,
+        C3_MIGRATION_CHECKSUM,
+        user_version,
+    )?;
+    if user_version == 0 {
+        connection.execute_batch(
+            "
         create table if not exists schema_migration (
             version integer primary key,
             checksum text not null,
@@ -155,12 +147,54 @@ pub fn migrate(path: &Path) -> Result<Connection, StorageError> {
         insert or ignore into data_version(id, watermark) values (1, 0);
         pragma user_version = 1;
         ",
-    )?;
-    connection.execute(
-        "insert or ignore into schema_migration(version, checksum, applied_utc) values (?1, ?2, 0)",
-        params![SCHEMA_VERSION, MIGRATION_CHECKSUM],
-    )?;
+        )?;
+        connection.execute(
+            "insert or ignore into schema_migration(version, checksum, applied_utc) values (?1, ?2, 0)",
+            params![1, MIGRATION_CHECKSUM],
+        )?;
+    }
+    let current: i32 = connection.query_row("pragma user_version", [], |row| row.get(0))?;
+    if current < C3_SCHEMA_VERSION {
+        connection.execute_batch(C3_DDL)?;
+        connection.execute_batch("pragma user_version = 2")?;
+        connection.execute(
+            "insert or ignore into schema_migration(version, checksum, applied_utc) values (?1, ?2, 0)",
+            params![C3_SCHEMA_VERSION, C3_MIGRATION_CHECKSUM],
+        )?;
+    }
     Ok(connection)
+}
+
+fn verify_checksum(
+    connection: &Connection,
+    version: i32,
+    expected: &str,
+    user_version: i32,
+) -> Result<(), StorageError> {
+    if user_version < version {
+        return Ok(());
+    }
+    let has_table: i64 = connection.query_row(
+        "select count(*) from sqlite_master where type = 'table' and name = 'schema_migration'",
+        [],
+        |row| row.get(0),
+    )?;
+    if has_table == 0 {
+        return Ok(());
+    }
+    let checksum: Option<String> = connection
+        .query_row(
+            "select checksum from schema_migration where version = ?1",
+            [version],
+            |row| row.get(0),
+        )
+        .optional()?;
+    if let Some(checksum) = checksum {
+        if checksum != expected {
+            return Err(StorageError::Closed("checksum mismatch".into()));
+        }
+    }
+    Ok(())
 }
 
 pub fn list_user_tables(connection: &Connection) -> Result<Vec<String>, StorageError> {
@@ -173,6 +207,7 @@ pub fn list_user_tables(connection: &Connection) -> Result<Vec<String>, StorageE
 }
 
 pub struct StorageCoordinator {
+    path: PathBuf,
     connection: Connection,
     prepare_count: u64,
 }
@@ -188,9 +223,28 @@ impl StorageCoordinator {
             .optional()?;
         drop(lookup);
         Ok(Self {
+            path: path.to_path_buf(),
             connection,
             prepare_count: 1,
         })
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn connection(&self) -> &Connection {
+        &self.connection
+    }
+
+    pub fn connection_mut(&mut self) -> &mut Connection {
+        &mut self.connection
+    }
+
+    pub fn checkpoint_passive(&self) -> Result<(), StorageError> {
+        self.connection
+            .execute_batch("pragma wal_checkpoint(PASSIVE)")?;
+        Ok(())
     }
 
     pub fn commit(&mut self, bundle: &CommitBundle) -> Result<CommitOutcome, StorageError> {
@@ -346,6 +400,216 @@ impl StorageCoordinator {
             .collect::<Result<Vec<String>, _>>()?;
         Ok((version.unwrap_or(0) as u32, names))
     }
+
+    pub fn persist_live_facts(
+        &mut self,
+        facts: &[crate::accounting::MinuteFact],
+        rows: &[crate::c2::hub::LiveConnectionView],
+        coverage: &[crate::accounting::CoverageChange],
+        utc: i64,
+    ) -> Result<(), StorageError> {
+        for row in rows {
+            let (epoch, id) = split_identity(&row.identity);
+            let session_pk = self.ensure_session(epoch, id, utc, row.host.as_deref())?;
+            intern_and_attr(&self.connection, session_pk, row, utc)?;
+            for (position, node) in row.chains.iter().enumerate() {
+                self.connection.execute(
+                    "insert or ignore into connection_chain(session_pk, position, node) values (?1, ?2, ?3)",
+                    params![session_pk, position as i64, node],
+                )?;
+            }
+        }
+        for fact in facts {
+            let (epoch, id) = split_identity(&fact.session_key);
+            let session_pk = self.ensure_session(epoch, id, utc, None)?;
+            self.connection.execute(
+                "insert into connection_minute(utc_minute, session_pk, upload, download) values (?1, ?2, ?3, ?4)
+                 on conflict(utc_minute, session_pk) do update set
+                    upload = upload + excluded.upload,
+                    download = download + excluded.download",
+                params![fact.utc_minute, session_pk, fact.upload as i64, fact.download as i64],
+            )?;
+        }
+        for item in coverage {
+            self.connection.execute(
+                "insert into coverage_interval(kind, reason, started_utc, ended_utc) values (?1, ?2, ?3, ?4)",
+                params![item.kind, item.reason, utc, Option::<i64>::None],
+            )?;
+        }
+        Ok(())
+    }
+
+    fn ensure_session(
+        &self,
+        epoch: i64,
+        connection_id: &str,
+        utc: i64,
+        host: Option<&str>,
+    ) -> Result<i64, StorageError> {
+        if let Some(existing) = self
+            .connection
+            .query_row(
+                "select session_pk from connection_session where epoch_id = ?1 and connection_id = ?2",
+                params![epoch, connection_id],
+                |row| row.get(0),
+            )
+            .optional()?
+        {
+            return Ok(existing);
+        }
+        self.connection.execute(
+            "insert into connection_session(epoch_id, connection_id, started_utc, host) values (?1, ?2, ?3, ?4)",
+            params![epoch, connection_id, utc, host],
+        )?;
+        Ok(self.connection.last_insert_rowid())
+    }
+
+    pub fn seed_report_fixture(&self) -> Result<(), StorageError> {
+        self.connection.execute_batch(
+            "
+            insert or ignore into connection_session(session_pk, epoch_id, connection_id, started_utc, host)
+            values (1, 1, 'alpha', 1200, 'a.example'), (2, 1, 'beta', 1800, 'b.example');
+            insert or ignore into dimension_dict(dimension_kind, dimension_id, value) values
+                ('host', 1, 'a.example'), ('host', 2, 'b.example'),
+                ('process', 1, 'app.exe'), ('network', 1, 'tcp'), ('category', 1, '家宽');
+            insert or ignore into connection_session_attr(
+                session_pk, host_id, process_id, rule_id, network_id, chain_key,
+                policy_version, primary_category_id, started_utc, ended_utc
+            ) values
+                (1, 1, 1, null, 1, '家宽', 1, 1, 1200, null),
+                (2, 2, 1, null, 1, '家宽', 1, 1, 1800, null);
+            insert or ignore into connection_minute(utc_minute, session_pk, upload, download)
+            values (20, 1, 10, 30), (40, 2, 20, 60);
+            insert or ignore into coverage_interval(interval_id, kind, reason, started_utc, ended_utc)
+            values (1, 'gap', 'disconnect_or_sleep', 2500, 2800),
+                   (2, 'covered', 'running', 1000, 2500);
+            insert or ignore into traffic_hourly_dimension(
+                utc_hour, category_id, dimension_kind, dimension_id,
+                upload, download, connection_count, active_duration_sec
+            ) values (0, 1, 'host', 1, 10, 30, 1, 60);
+            insert or ignore into target_set(set_id, policy_version) values (1, 1);
+            ",
+        )?;
+        Ok(())
+    }
+}
+
+fn split_identity(identity: &str) -> (i64, &str) {
+    identity
+        .split_once(':')
+        .and_then(|(left, right)| left.parse().ok().map(|epoch| (epoch, right)))
+        .unwrap_or((0, identity))
+}
+
+fn intern_and_attr(
+    connection: &Connection,
+    session_pk: i64,
+    row: &crate::c2::hub::LiveConnectionView,
+    utc: i64,
+) -> Result<(), StorageError> {
+    let host_id = intern_dim(connection, "host", row.host.as_deref())?;
+    let process_id = intern_dim(connection, "process", row.process_name.as_deref())?;
+    let rule_id = intern_dim(connection, "rule", row.rule.as_deref())?;
+    let network_id = intern_dim(connection, "network", row.network.as_deref())?;
+    let category_id = intern_dim(connection, "category", row.primary.as_deref())?;
+    let chain_key = if row.chains.is_empty() {
+        None
+    } else {
+        Some(row.chains.join(">"))
+    };
+    connection.execute(
+        "insert into connection_session_attr(
+            session_pk, host_id, process_id, rule_id, network_id, chain_key,
+            policy_version, primary_category_id, started_utc, ended_utc
+         ) values (?1, ?2, ?3, ?4, ?5, ?6, 0, ?7, ?8, null)
+         on conflict(session_pk) do update set
+            host_id = excluded.host_id,
+            process_id = excluded.process_id,
+            rule_id = excluded.rule_id,
+            network_id = excluded.network_id,
+            chain_key = excluded.chain_key,
+            primary_category_id = excluded.primary_category_id",
+        params![
+            session_pk,
+            host_id,
+            process_id,
+            rule_id,
+            network_id,
+            chain_key,
+            category_id,
+            utc
+        ],
+    )?;
+    Ok(())
+}
+
+fn intern_dim(
+    connection: &Connection,
+    kind: &str,
+    value: Option<&str>,
+) -> Result<Option<i64>, StorageError> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    if let Some(existing) = connection
+        .query_row(
+            "select dimension_id from dimension_dict where dimension_kind = ?1 and value = ?2",
+            params![kind, value],
+            |row| row.get(0),
+        )
+        .optional()?
+    {
+        return Ok(Some(existing));
+    }
+    let next: i64 = connection.query_row(
+        "select coalesce(max(dimension_id), 0) + 1 from dimension_dict where dimension_kind = ?1",
+        [kind],
+        |row| row.get(0),
+    )?;
+    connection.execute(
+        "insert or ignore into dimension_dict(dimension_kind, dimension_id, value) values (?1, ?2, ?3)",
+        params![kind, next, value],
+    )?;
+    Ok(Some(next))
+}
+
+pub fn open_interruptible_reader(path: &Path) -> Result<Connection, StorageError> {
+    let connection = Connection::open_with_flags(
+        path,
+        rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_FULL_MUTEX,
+    )?;
+    apply_required_pragmas(&connection, BUSY_TIMEOUT_MS)
+        .map_err(|error| StorageError::Closed(error.to_string()))?;
+    Ok(connection)
+}
+
+pub fn backup_pages(src: &Path, dest: &Path, cancel: &Arc<AtomicBool>) -> Result<(), ReportError> {
+    if cancel.load(Ordering::SeqCst) {
+        return Err(ReportError::Cancelled("backup"));
+    }
+    let source = Connection::open(src).map_err(|_| ReportError::Failed("open source"))?;
+    let mut target = Connection::open(dest).map_err(|_| ReportError::Failed("open dest"))?;
+    {
+        let backup =
+            Backup::new(&source, &mut target).map_err(|_| ReportError::Failed("backup api"))?;
+        loop {
+            if cancel.load(Ordering::SeqCst) {
+                return Err(ReportError::Cancelled("backup"));
+            }
+            match backup
+                .step(64)
+                .map_err(|_| ReportError::Failed("backup step"))?
+            {
+                rusqlite::backup::StepResult::Done => break,
+                rusqlite::backup::StepResult::More => {}
+                rusqlite::backup::StepResult::Busy | rusqlite::backup::StepResult::Locked => {
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                }
+                _ => std::thread::sleep(std::time::Duration::from_millis(10)),
+            }
+        }
+    }
+    Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -445,19 +709,30 @@ mod storage_schema_tests {
 
     #[test]
     fn storage_schema_creates_only_core_tables() {
-        use crate::c0_contract::{core_table_allowlist, forbidden_table_fragments};
+        use crate::c0_contract::{
+            all_table_allowlist, core_table_allowlist, forbidden_table_fragments,
+        };
         let dir = tempdir().expect("tempdir");
         let connection = migrate(&dir.path().join("core.sqlite3")).expect("migrate");
         let tables = list_user_tables(&connection).expect("tables");
+        let allow = all_table_allowlist();
         for table in &tables {
             assert!(
-                core_table_allowlist().contains(&table.as_str()),
-                "{table} 不在 allowlist"
+                allow.contains(&table.as_str()),
+                "{table} 不在 C1+C3 allowlist"
             );
             for fragment in forbidden_table_fragments() {
-                assert!(!table.contains(fragment));
+                assert!(!table.contains(fragment), "{table} 不得包含 {fragment}");
             }
         }
+        for required in core_table_allowlist() {
+            assert!(
+                tables.iter().any(|item| item == required),
+                "缺少 C1 表 {required}"
+            );
+        }
+        assert!(tables.iter().any(|item| item == "traffic_hourly_dimension"));
+        assert!(!tables.iter().any(|item| item.contains("alert")));
     }
 }
 

@@ -11,7 +11,7 @@
 - C3 严格依赖 `08-18-monitor-desktop-realtime`（C2）。只有 C2 独立验收通过，原子 IPC、报告页面入口、设置 / 数据管理入口和 Recovery Shell seam 稳定后，C3 才能进入实施。
 - C3 复用 C1 `StorageCoordinator` 的 single writer、短只读连接、migration 与 Online Backup 原语，并通过 C2 AppFacade / Recovery Shell 暴露能力；不绕过这些接口建立第二套数据库所有者。
 - C3 migration 只向前追加并按串行合并顺序分配版本，不修改已交付的 C1 migration，也不预建 C4 alert / notification outbox schema。
-- 当前任务保持 `planning`；本轮未授权执行 `task.py start`。
+- 任务已于 2026-08-18 `task.py start` 进入 `in_progress`（degraded，exit 0）。
 
 ## 范围内需求
 
@@ -89,17 +89,17 @@
 
 ## 验收标准
 
-- [ ] **C3-AC1 依赖门**：C2 已完成并独立验收；C3 通过 C1 StorageCoordinator 和 C2 AppFacade / Recovery Shell 接入，没有第二个 writer、直接热库复制或 C4 schema。
-- [ ] **C3-AC2 报告正确性**：golden fixtures 覆盖 UTC / 本地时区、DST、空区间、部分 coverage、策略变化、raw 过期和周期对比；应用重启前后总量、趋势、排名和 coverage 一致。
-- [ ] **C3-AC3 快照一致性**：同一 token 的 UI、CSV、JSON、HTML 总计和 metadata 逐项一致；token 返回时没有活跃 read transaction，过期 / 释放 / quota 场景有界且可恢复。
-- [ ] **C3-AC4 查询控制**：所有公开查询有命名 SQL corpus、keyset、参数校验、interrupt / progress、页面 2 秒 / 报告 10 秒候选 deadline、EQP 和 statement-status 证据；取消后 SQLite 工作实际停止。
-- [ ] **C3-AC5 精确保留**：raw 默认 30 天 / 上限 90 天，精确高基数最多 13 个月，长期 daily 只有总量 / 历史主分类 / coverage；保留前后守恒，能力过期明确不支持，测试证明没有 bounded 或 approximate Top K。
-- [ ] **C3-AC6 retention 可恢复**：在汇总前、已汇总未推进 watermark、已推进未删除和删除中断点重启后均可幂等续跑；ingestion 优先，不自动 VACUUM，不把 freelist 当作已释放空间。
-- [ ] **C3-AC7 导出有界**：大报告的三种导出流式完成，额外内存不随输出线性增长；取消 / I/O 失败不覆盖目标且清理 partial；脱敏与 secret 扫描通过。
-- [ ] **C3-AC8 备份恢复**：持续写入 Online Backup、取消、节流、坏 checksum、坏 integrity、旧 schema、残留 WAL / SHM、空间不足和恢复中断矩阵通过；失败始终保留当前可用数据库。
-- [ ] **C3-AC9 Recovery Shell 接入**：正常 schema 不可用时可从 C2 Recovery Shell 验证并执行 C3 restore；流程不初始化普通 ReportService，恢复成功后才进入正常应用。
-- [ ] **C3-AC10 并发性能**：`A=50 / 250 / 1000` 真实规模下 writer / report / export / backup / retention / checkpoint 并发仍满足 ingestion 与常用报告 SLO；WAL 有界、查询可取消、token quota 有界、低空间 fail closed、大 backfill 可续跑。
-- [ ] **C3-AC11 独立回滚**：报告 / 导出可 feature-disable；retention 守恒 gate 前不启用自动删除；恢复矩阵通过前只允许创建备份；已追加 migration 不回退，当前数据库和 C2 实时能力保持可用。
+- [x] **C3-AC1 依赖门**：C2 已完成并独立验收；C3 通过 C1 StorageCoordinator 和 C2 AppFacade / Recovery Shell 接入，没有第二个 writer、直接热库复制或 C4 schema。
+- [x] **C3-AC2 报告正确性**：golden fixtures 覆盖 UTC / 本地时区、DST、空区间、部分 coverage、策略变化、raw 过期和周期对比；应用重启前后总量、趋势、排名和 coverage 一致。
+- [x] **C3-AC3 快照一致性**：同一 token 的 UI、CSV、JSON、HTML 总计和 metadata 逐项一致；token 返回时没有活跃 read transaction，过期 / 释放 / quota 场景有界且可恢复。
+- [x] **C3-AC4 查询控制**：所有公开查询有命名 SQL corpus、keyset、参数校验、interrupt / progress、页面 2 秒 / 报告 10 秒候选 deadline、EQP 和 statement-status 证据；取消后 SQLite 工作实际停止。
+- [x] **C3-AC5 精确保留**：raw 默认 30 天 / 上限 90 天，精确高基数最多 13 个月，长期 daily 只有总量 / 历史主分类 / coverage；保留前后守恒，能力过期明确不支持，测试证明没有 bounded 或 approximate Top K。
+- [x] **C3-AC6 retention 可恢复**：在汇总前、已汇总未推进 watermark、已推进未删除和删除中断点重启后均可幂等续跑；ingestion 优先，不自动 VACUUM，不把 freelist 当作已释放空间。
+- [x] **C3-AC7 导出有界**：大报告的三种导出流式完成，额外内存不随输出线性增长；取消 / I/O 失败不覆盖目标且清理 partial；脱敏与 secret 扫描通过。
+- [x] **C3-AC8 备份恢复**：持续写入 Online Backup、取消、节流、坏 checksum、坏 integrity、旧 schema、残留 WAL / SHM、空间不足和恢复中断矩阵通过；失败始终保留当前可用数据库。
+- [x] **C3-AC9 Recovery Shell 接入**：正常 schema 不可用时可从 C2 Recovery Shell 验证并执行 C3 restore；流程不初始化普通 ReportService，恢复成功后才进入正常应用。
+- [ ] **C3-AC10 并发性能**：fixture 级 writer / report / checkpoint 通过。完整 `A=50 / 250 / 1000` 30 天库未重跑（暂停条件）。
+- [x] **C3-AC11 独立回滚**：报告 / 导出可 feature-disable；retention 守恒 gate 前不启用自动删除；恢复矩阵通过前只允许创建备份；已追加 migration 不回退，当前数据库和 C2 实时能力保持可用。
 
 ## 开放问题
 

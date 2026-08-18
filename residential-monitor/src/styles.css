@@ -139,6 +139,13 @@ input:focus-visible,
   cursor: not-allowed;
 }
 
+.bar {
+  display: inline-block;
+  height: 0.65rem;
+  background: var(--accent);
+  min-width: 0.4rem;
+}
+
 @media (prefers-contrast: more) {
   :root {
     --text: #ffffff;

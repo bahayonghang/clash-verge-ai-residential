@@ -44,3 +44,48 @@
 #### Correct
 分字段展示；`null` 显示「未知」。
 
+## Scenario: C3 Report Commands
+
+### 1. Scope / Trigger
+- Trigger: 历史报告、导出、保留预览、用户备份与 Recovery restore。
+
+### 2. Signatures
+- `run_report(query: ReportQuery) -> ReportResult`
+- `get_report(token) -> ReportResult`
+- `release_report(token) -> bool`
+- `preview_export(token, spec) -> ExportPreview`
+- `export_report(token, spec, path) -> path`
+- `create_backup(path) -> checksum`
+- `restore_backup(path)`
+- `retention_preview() -> RetentionPreview`
+- `run_retention(delete: bool) -> RetentionPreview`
+
+### 3. Contracts
+- `ReportResult.schemaVersion` 必须为 `1`。
+- UI、CSV、JSON、HTML 只消费同一 `reportSnapshotToken`，不得为导出重新查询。
+- 大结果不经实时 Channel。
+- `restore` 可在 `recovery-only` 分支执行，不初始化 `ReportService`。
+
+### 4. Validation & Error Matrix
+- 非法 range / timezone / page / cursor → `invalid_query`
+- raw / 精确 Top N 过期 → `capability_unsupported`
+- 用户取消 / deadline → `cancelled` / `deadline_exceeded`
+- token TTL / 缺失 → `token_expired`
+- 活动 token 或 spool 超限 → `quota_exceeded`
+- 磁盘不足 → `insufficient_space`
+
+### 5. Good/Base/Bad Cases
+- Good: 同一 token 的 UI 与三种导出 totals 一致
+- Base: 空区间 totals 为 0，coverage=`empty`
+- Bad: 过期 raw 仍返回截断 Top N；token 仍持有 read transaction
+
+### 6. Tests Required
+- Rust `c3::query` / `c3::service` / `c3::export` / `c3::backup` / `c3::retention`
+- TS `decodeReportResult` 拒绝缺 token
+
+### 7. Wrong vs Correct
+#### Wrong
+前端自己按表格重算 Top N，或导出时再跑一遍 SQL。
+#### Correct
+图表、数据表和导出都读当前 `ReportResult`。
+

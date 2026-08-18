@@ -3,7 +3,7 @@
   "name": "monitor-reporting-data",
   "title": "家宽监控历史报告与数据管理",
   "description": "在 C2 桌面与实时能力验收后，交付统一历史报告、不可变快照导出、精确分层保留、Online Backup / 恢复和受控 SQLite 性能门。",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": "residential-monitor",
   "package": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "08-18-residential-monitor-mvp",
   "relatedFiles": [],
-  "notes": "C3 严格依赖 08-18-monitor-desktop-realtime（C2）完成并通过独立验收，同时复用 C1 StorageCoordinator 与 C2 Recovery Shell；只追加 C3 migration，不修改 C1 migration 或预建 C4 告警 schema。当前未获授权执行 task.py start，必须保持 planning。",
+  "notes": "C3 已 task.py start：planning → in_progress（degraded，exit 0）。复用 C1 StorageCoordinator 与 C2 AppFacade / Recovery Shell；只追加 C3 migration，不修改 C1 migration，不预建 C4 告警 schema。不启动 C4/C5，不归档父任务。",
   "meta": {
     "description": "统一 ReportQuery / Result、snapshot token、流式导出、精确保留层、备份恢复与真实规模并发性能 gate。"
   }

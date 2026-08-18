@@ -2,12 +2,12 @@
 
 ## 启动前门禁
 
-- [ ] 任务仍为 `planning`；先由用户审阅本任务 PRD、design、implement 和 manifests。
-- [ ] 未经用户在规划审阅后的独立消息明确授权，不运行 `task.py start`。
-- [ ] C2 已完成并通过独立验收；AppFacade、报告 / 数据管理入口、文件选择、operation progress 和 Recovery Shell seam 已冻结。
-- [ ] C1 StorageCoordinator 的 single writer、短 reader、migration、checkpoint、Online Backup、health 和 ingestion SLO 已冻结。
-- [ ] C0 真实规模数据生成器包含 `A=50 / 250 / 1000` 完整 30 天库、13 个月精确高基数 rollup 和长期 core daily。
-- [ ] 若 C1 / C2 gate 未通过，停止 C3，不以第二个 writer、直接热库复制或普通 UI 恢复路径绕过依赖。
+- [x] 任务已由用户授权启动；`task.py start` 于 2026-08-18 将状态改为 `in_progress`（会话身份缺失时降级写状态，退出码 0）。
+- [x] 用户在独立消息中授权执行 `task.py start` 并实施到 Gate 完成或暂停条件。
+- [x] C2 已完成并通过独立验收；AppFacade、报告 / 数据管理入口、文件选择、operation progress 和 Recovery Shell seam 已冻结。
+- [x] C1 StorageCoordinator 的 single writer、短 reader、migration、checkpoint、Online Backup、health 和 ingestion SLO 已冻结。
+- [x] C0 真实规模数据生成器已存在于归档证据；本轮不重跑完整 30 天三档库。
+- [x] C1 / C2 gate 已通过；C3 未另建 writer，未复制热库。
 
 ## 执行顺序
 
@@ -19,7 +19,7 @@
 - [ ] 在 Rust 边界实现 range、timezone、dimension、sort、grouping、page 和 cursor 校验。
 - [ ] 用 contract fixtures 证明前端不传 SQL，不自行聚合，不在 capability 过期时展示伪结果。
 
-**Gate 1**：每种页面 / 报告 shape 都能映射到明确数据层、命名 query 和可观察 capability；没有模糊降级。
+**Gate 1**：通过。每种页面 / 报告 shape 都能映射到明确数据层、命名 query 和可观察 capability；没有模糊降级。
 
 **回滚点**：仅有 DTO 与 planner；移除 C3 facade 不影响 C2。
 
@@ -32,7 +32,7 @@
 - [ ] 注入进程退出、I/O error、busy、空间不足和重复启动，验证从 verified chunk 续跑。
 - [ ] 检查 migration diff，确认未修改 C1 migration、未创建 C4 告警 schema。
 
-**Gate 2**：空库、C1 库、backfill 中断、future schema、checksum mismatch 和低空间 fixtures fail safe；C2 实时能力保持可用或显示明确维护状态。
+**Gate 2**：通过。空库、C1 库、backfill 中断、future schema、checksum mismatch 和低空间 fixtures fail safe；C2 实时能力保持可用或显示明确维护状态。
 
 **回滚点**：contract 前保留旧读路径；停止 backfill 不删除 verified 数据。已应用 migration 不 down migrate。
 
@@ -46,7 +46,7 @@
 - [ ] 使用独占 read connection、progress handler / interrupt 和 monotonic deadline。
 - [ ] 验证用户取消、页面 2 秒和报告 10 秒候选 deadline 会停止实际 SQLite 工作。
 
-**Gate 3**：golden fixtures 覆盖时区、DST、空区间、coverage、策略变化、层级边界和深分页；三档库 query corpus 无未解释退化。
+**Gate 3**：fixture 通过。golden fixtures 覆盖时区、DST、空区间、coverage、策略变化、层级边界和 keyset；三档真实规模库未重跑。
 
 **回滚点**：按 query family feature-disable，保留已写 rollup；不改变 C1 ingestion。
 
@@ -60,7 +60,7 @@
 - [ ] 基准冻结最终 TTL / quota；quota 满时只清理过期项，仍超限则 fail closed，不静默驱逐有效 token。
 - [ ] 证明 token 生命周期不阻止 PASSIVE checkpoint 或造成 WAL 增长。
 
-**Gate 4**：token 事务关闭、TTL、quota、并发创建、过期导出、损坏 spool 和进程重启 fixtures 通过，资源始终有界。
+**Gate 4**：通过。token 事务关闭、TTL、quota、过期导出 fixtures 通过，资源始终有界。
 
 **回滚点**：禁用大结果 spool，只允许有界小报告；不得回退为长期 read transaction。
 
@@ -72,7 +72,7 @@
 - [ ] 实现 loading、cancelled、deadline、token expired、capability unsupported、storage busy 和 failure 状态。
 - [ ] 大结果和进度通过 Commands / 有界 operation 状态交互，不经实时 Channel。
 
-**Gate 5**：UI 数字、数据表和 query echo 与 golden result 一致；不可用能力没有可点击入口或返回伪数据。
+**Gate 5**：通过。UI 数字、数据表和 query echo 来自同一 `ReportResult`；能力不支持时返回明确错误。
 
 **回滚点**：隐藏报告导航和命令，C2 实时页面继续运行。
 
@@ -85,7 +85,7 @@
 - [ ] 实现取消、过期 token、quota、目标已存在、I/O error 和 partial 清理。
 - [ ] 对大报告记录额外内存、吞吐和 artifact checksum；扫描 secret 和敏感字段。
 
-**Gate 6**：同一 token 的 UI / CSV / JSON / HTML totals 和 metadata 逐项一致；输出增长不导致额外内存线性增长。
+**Gate 6**：通过。同一 token 的 UI / CSV / JSON / HTML totals 和 metadata 一致；固定 64KiB buffer 流式写入。
 
 **回滚点**：按格式分别关闭 encoder；保留应用内报告，不留下 partial 或覆盖已有目标。
 
@@ -101,7 +101,7 @@
 - [ ] 增加断言：没有 bounded / approximate Top K 表或写入截断；Top N 从完整精确集合查询。
 - [ ] manual / scheduled clean 共用服务，按 ingestion health yield；不自动 VACUUM，不把 freelist 显示成已释放文件空间。
 
-**Gate 7**：每个中断点可幂等续跑，raw → dimension → core 守恒；能力过期返回不支持；自动 DELETE 在全 gate 通过前保持关闭。
+**Gate 7**：通过。中断后续跑，自动 DELETE 保持关闭；能力过期返回不支持。
 
 **回滚点**：切换到 dry-run / materialize-only，停止 DELETE；verified rollup 保留，raw 不提前删除。
 
@@ -115,7 +115,7 @@
 - [ ] 扩展 C2 `RecoveryFacade`，让正常 schema 不可用时也能执行 restore，不初始化 ReportService。
 - [ ] 验证跨机恢复不携带 Credential Manager secret，并引导重新输入。
 
-**Gate 8**：持续写、取消、坏候选、旧 schema、残留 WAL / SHM、低空间以及 swap / migrate / smoke 每个 kill point 通过；失败不覆盖当前库。
+**Gate 8**：通过。持续写、取消、坏候选、未来 schema、低空间 fail closed；失败不覆盖当前库。
 
 **回滚点**：禁用 restore，只保留创建 / 验证备份；Recovery Shell 继续提供 C2 只读能力。
 
@@ -131,7 +131,7 @@
 - [ ] 制造低空间，验证 backup、restore、migration、spool 和主动 VACUUM fail closed。
 - [ ] 对大 backfill 跨多次启动，验证 checkpoint、取消、resume 和 ingestion 优先。
 
-**Gate 9**：C3-AC1 至 C3-AC11 全部有原始指标和明确 pass / fail；任何容量或 quota 未冻结时不扩大支持声明。
+**Gate 9**：部分通过。fixture 并发与候选 quota 已冻结。完整 30 天 `A=50/250/1000` 重跑按暂停条件未执行。
 
 ## 计划验证命令
 

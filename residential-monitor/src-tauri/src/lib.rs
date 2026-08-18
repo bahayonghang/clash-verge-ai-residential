@@ -2,6 +2,7 @@ pub mod accounting;
 pub mod bench;
 pub mod c0_contract;
 pub mod c2;
+pub mod c3;
 pub mod candidate_schema;
 pub mod controller;
 pub mod credential;
@@ -23,6 +24,9 @@ use c2::hub::{LiveConnectionView, MonitorStreamMessage};
 use c2::query::{ConnectionPage, ConnectionQuery};
 use c2::settings::ControllerSettings;
 use c2::shell::{FileMode, FilePurpose, OperationProgress, RecoveryStatus, RouteDescriptor};
+use c3::export::{ExportPreview, ExportSpec};
+use c3::query::{ReportQuery, ReportResult};
+use c3::retention::RetentionPreview;
 use std::sync::Mutex;
 use tauri::ipc::Channel;
 use tauri::{Emitter, Manager, State};
@@ -267,6 +271,75 @@ fn get_recovery_status(state: State<Mutex<AppFacade>>) -> Result<RecoveryStatus,
 }
 
 #[tauri::command]
+fn run_report(
+    state: State<Mutex<AppFacade>>,
+    query: ReportQuery,
+) -> Result<ReportResult, AppErrorDto> {
+    state.lock().expect("state").run_report(query)
+}
+
+#[tauri::command]
+fn get_report(state: State<Mutex<AppFacade>>, token: String) -> Result<ReportResult, AppErrorDto> {
+    state.lock().expect("state").get_report(&token)
+}
+
+#[tauri::command]
+fn release_report(state: State<Mutex<AppFacade>>, token: String) -> Result<bool, AppErrorDto> {
+    Ok(state.lock().expect("state").release_report(&token))
+}
+
+#[tauri::command]
+fn preview_export(
+    state: State<Mutex<AppFacade>>,
+    token: String,
+    spec: ExportSpec,
+) -> Result<ExportPreview, AppErrorDto> {
+    state.lock().expect("state").preview_export(&token, &spec)
+}
+
+#[tauri::command]
+fn export_report(
+    state: State<Mutex<AppFacade>>,
+    token: String,
+    spec: ExportSpec,
+    path: String,
+) -> Result<String, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .export_report(&token, &spec, std::path::Path::new(&path))
+}
+
+#[tauri::command]
+fn retention_preview(state: State<Mutex<AppFacade>>) -> Result<RetentionPreview, AppErrorDto> {
+    state.lock().expect("state").retention_preview()
+}
+
+#[tauri::command]
+fn run_retention(
+    state: State<Mutex<AppFacade>>,
+    delete: bool,
+) -> Result<RetentionPreview, AppErrorDto> {
+    state.lock().expect("state").run_retention(delete)
+}
+
+#[tauri::command]
+fn create_backup(state: State<Mutex<AppFacade>>, path: String) -> Result<String, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .create_backup(std::path::Path::new(&path))
+}
+
+#[tauri::command]
+fn restore_backup(state: State<Mutex<AppFacade>>, path: String) -> Result<(), AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .restore_backup(std::path::Path::new(&path))
+}
+
+#[tauri::command]
 fn validate_backup(state: State<Mutex<AppFacade>>, path: String) -> Result<bool, AppErrorDto> {
     state
         .lock()
@@ -458,6 +531,15 @@ pub fn run() {
             start_operation,
             cancel_operation,
             get_recovery_status,
+            run_report,
+            get_report,
+            release_report,
+            preview_export,
+            export_report,
+            retention_preview,
+            run_retention,
+            create_backup,
+            restore_backup,
             validate_backup,
             data_directory,
             pause_collector,

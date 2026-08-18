@@ -3,3 +3,11 @@
 {"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "复核 coverage、观测下界、连接维度和 secret 隔离在报告与导出中保持准确。"}
 {"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "检查查询、DTO、UI、导出、维护与恢复的数据流和错误边界一致。"}
 {"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "检查聚合、projection、metadata、脱敏、取消和 operation 状态没有重复实现。"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "复核 C3 模块边界与错误码。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "复核未另建 writer、未预建 C4 表。"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "复核 secret 不进导出/日志，查询可取消。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "复核报告 UI 质量门。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "复核 ReportResult 边界解码。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "复核未改实时 reducer，缺口不画零。"}
+{"file": ".trellis/spec/residential-monitor/storage/index.md", "reason": "复核 schema / backup / retention 质量门。"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "复核未改 C1 migration、未复制热库。"}

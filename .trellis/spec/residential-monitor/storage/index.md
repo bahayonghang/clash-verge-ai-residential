@@ -11,4 +11,6 @@
 
 - `cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml sqlite_probe`
 - `cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml sqlite_fault`
+- `cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --lib c3::`
 - 完整 30 天库与 30 分钟峰值属于手工证据 gate，不得由 CI 短样本冒充。
+- C3 自动 DELETE 与完整 `A=50/250/1000` 重跑不得由 CI 短样本冒充完成。

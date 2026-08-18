@@ -39,8 +39,8 @@ pub fn default_routes() -> Vec<RouteDescriptor> {
         RouteDescriptor {
             id: "reports".into(),
             title_zh: "分析报告".into(),
-            available: false,
-            unavailable_until: Some("C3".into()),
+            available: true,
+            unavailable_until: None,
         },
         RouteDescriptor {
             id: "alerts".into(),
@@ -184,8 +184,9 @@ pub fn recovery_status(facade: &RecoveryFacade) -> Result<RecoveryStatus, Storag
         user_version,
         supported_max: SCHEMA_VERSION,
         future,
-        restore_available: false,
-        restore_note_zh: "恢复写入由 C3 交付，当前只能验证候选。".into(),
+        restore_available: true,
+        restore_note_zh:
+            "可验证候选并执行恢复。恢复失败会保留当前可用数据库。跨机恢复需重新输入 secret。".into(),
         backups: facade.list_backups().unwrap_or_default(),
     })
 }
@@ -205,8 +206,11 @@ mod shell_seam_tests {
         let routes = default_routes();
         assert_eq!(routes.len(), 5);
         let reports = routes.iter().find(|item| item.id == "reports").unwrap();
-        assert!(!reports.available);
-        assert_eq!(reports.unavailable_until.as_deref(), Some("C3"));
+        assert!(reports.available);
+        assert_eq!(reports.unavailable_until, None);
+        let alerts = routes.iter().find(|item| item.id == "alerts").unwrap();
+        assert!(!alerts.available);
+        assert_eq!(alerts.unavailable_until.as_deref(), Some("C4"));
     }
 
     #[test]
@@ -233,7 +237,7 @@ mod shell_seam_tests {
         let path = dir.path().join("rec.sqlite3");
         migrate(&path).expect("migrate");
         let status = recovery_status(&RecoveryFacade::open(&path)).expect("status");
-        assert!(!status.restore_available);
+        assert!(status.restore_available);
         assert!(!status.future);
     }
 }
