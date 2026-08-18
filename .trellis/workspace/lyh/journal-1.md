@@ -246,3 +246,24 @@
 ### Next Steps
 
 - 下一会话启动 08-18-monitor-desktop-realtime（C2）
+
+
+## Session 8: C2 桌面外壳与实时监控
+
+**Date**: 2026-08-18
+**Task**: C2 桌面外壳与实时监控
+**Branch**: `dev`
+
+### Summary
+
+交付家宽监控 C2：托盘生命周期、原子订阅、设置向导、Recovery Shell 与 just tdev/tinstall。just monitor-check 与 just ci 退出码 0。未写本机 NSIS/自启动/Credential Manager。已归档 08-18-monitor-desktop-realtime。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `143af87` | (see git log) |
+
+### Status
+
+[OK] **Completed**
