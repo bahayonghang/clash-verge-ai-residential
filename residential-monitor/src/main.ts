@@ -30,6 +30,7 @@ import {
   type MonitorState
 } from "./ipc/reducer";
 import { formatBytes, formatUtc, unknownOr } from "./format/units";
+import { BRAND_MARK, ROUTE_ICONS } from "./nav-icons";
 
 const HEALTH_ZH: Record<string, { title: string; action: string }> = {
   connecting: { title: "正在连接控制器", action: "等待连接完成" },
@@ -110,7 +111,6 @@ function renderLive(state: MonitorState): string {
     .join("");
   return `
     <section class="panel">
-      <h2>实时连接</h2>
       <p>列表按稳定 identity 排序。关闭全部连接入口不存在。</p>
       <table class="data">
         <thead><tr><th>域名</th><th>进程</th><th>主分类</th><th>上行</th><th>下行</th><th>网络</th><th>操作</th></tr></thead>
@@ -160,7 +160,6 @@ function renderReports(report: ReportResult | null, statusZh: string): string {
     : "";
   return `
     <section class="panel">
-      <h2>分析报告</h2>
       <p>图表与数据表使用同一 ReportResult。观测下界，不是账单。</p>
       <label>预设
         <select id="report-preset">
@@ -216,7 +215,9 @@ function renderSettings(
   boot: BootstrapDto,
   about: AboutDto | null,
   deletePreview: DeletePreview | null,
-  deleteReport: DeleteReport | null
+  deleteReport: DeleteReport | null,
+  probeStatus: string,
+  probeState: string
 ): string {
   const aboutBlock = about
     ? `<p>版本 ${about.version}。identifier ${about.identifier}。AUMID ${about.aumid}。</p>
@@ -241,7 +242,7 @@ function renderSettings(
         <li>通知能力预检：本阶段不发送系统通知</li>
       </ol>
       <label>控制器地址
-        <input id="controller-address" value="${boot.settings.address || "127.0.0.1:9090"}" />
+        <input id="controller-address" value="${boot.settings.address || "127.0.0.1:9097"}" />
       </label>
       <label>TCP secret（不会回显到日志或 Channel）
         <input id="controller-secret" type="password" autocomplete="off" />
@@ -250,7 +251,13 @@ function renderSettings(
         <input id="targets" value="家宽" />
       </label>
       <p>凭据状态：${boot.settings.hasSecret ? "已配置" : "未配置"}，模式 ${boot.settings.secretMode}</p>
-      <button type="button" id="save-settings">保存设置</button>
+      <p>Clash Verge Rev 本机模板端口是 9097，不是 9090。</p>
+      <div class="actions">
+        <button type="button" id="save-settings">保存设置</button>
+        <button type="button" id="test-controller">测试连接</button>
+        <button type="button" id="disconnect-controller">断开连接</button>
+      </div>
+      <p id="controller-probe" class="status" data-state="${probeState}">${probeStatus}</p>
     </section>
     <section class="panel">
       <h2>数据管理</h2>
@@ -338,7 +345,6 @@ function renderAlerts(
     : "<p>尚未生成诊断。</p>";
   return `
     <section class="panel">
-      <h2>告警中心</h2>
       <p>应用内记录是权威来源。系统通知是尽力送达。静默只抑制通知，不删除事件。</p>
       <p class="status">${statusZh}</p>
       <p>${notifyZh}</p>
@@ -407,7 +413,8 @@ function navHtml(active: RouteId, routes: BootstrapDto["routes"]): string {
     .map((route) => {
       const current = route.id === active ? "aria-current=\"page\"" : "";
       const disabled = route.available ? "" : "data-disabled=\"true\"";
-      return `<button type="button" class="nav-item" data-route="${route.id}" ${current} ${disabled}>${route.titleZh}</button>`;
+      const icon = ROUTE_ICONS[route.id];
+      return `<button type="button" class="nav-item" data-route="${route.id}" ${current} ${disabled}><img src="${icon}" alt="" width="22" height="22" />${route.titleZh}</button>`;
     })
     .join("");
 }
@@ -468,6 +475,35 @@ async function invokeCommand<T>(name: string, args?: Record<string, unknown>): P
   return api.invoke(name, args);
 }
 
+function probeErrorText(error: unknown): { messageZh: string; action: string; code: string } {
+  if (!error || typeof error !== "object") {
+    return { messageZh: "连接失败。", action: "", code: "" };
+  }
+  const rec = error as Record<string, unknown>;
+  if (typeof rec.messageZh === "string") {
+    return {
+      messageZh: rec.messageZh,
+      action: typeof rec.action === "string" ? rec.action : "",
+      code: typeof rec.code === "string" ? rec.code : ""
+    };
+  }
+  if (typeof rec.message === "string") {
+    try {
+      const parsed = JSON.parse(rec.message) as Record<string, unknown>;
+      if (typeof parsed.messageZh === "string") {
+        return {
+          messageZh: parsed.messageZh,
+          action: typeof parsed.action === "string" ? parsed.action : "",
+          code: typeof parsed.code === "string" ? parsed.code : ""
+        };
+      }
+    } catch {
+      /* 非 JSON */
+    }
+  }
+  return { messageZh: "连接失败。", action: "", code: "" };
+}
+
 function renderApp(
   root: HTMLElement,
   boot: BootstrapDto,
@@ -481,7 +517,9 @@ function renderApp(
   notify: NotifyCapability | null,
   about: AboutDto | null,
   deletePreview: DeletePreview | null,
-  deleteReport: DeleteReport | null
+  deleteReport: DeleteReport | null,
+  probeStatus: string,
+  probeState: string
 ): void {
   const focusedId = document.activeElement instanceof HTMLElement ? document.activeElement.id : "";
   const body =
@@ -492,20 +530,30 @@ function renderApp(
         : route === "live"
           ? renderLive(state)
           : route === "settings-data"
-            ? renderSettings(boot, about, deletePreview, deleteReport)
+            ? renderSettings(boot, about, deletePreview, deleteReport, probeStatus, probeState)
             : route === "reports"
               ? renderReports(report, reportStatus)
               : route === "alerts"
                 ? renderAlerts(alerts, alertStatus, diagnostics, notify)
                 : renderUnavailable("告警", "C4");
+  const recovery = boot.branch === "recovery-only";
   root.innerHTML = `
-    <header class="top">
-      <h1>家宽流量监控</h1>
-      <p>观测下界，不是账单。secret 不会出现在此页面。</p>
-    </header>
-    <nav class="nav" aria-label="主导航">${navHtml(route, boot.routes)}</nav>
-    <div id="view">${body}</div>
-    ${state.errorZh ? `<p class="gap" role="alert">${state.errorZh}</p>` : ""}
+    <aside class="shell">
+      <div class="brand">
+        <img class="brand-mark" src="${BRAND_MARK}" alt="" width="56" height="56" />
+        <h1 class="brand-name">家宽流量监控</h1>
+        <p class="brand-slogan">观测下界，不是账单。secret 不会出现在此页面。</p>
+      </div>
+      ${
+        recovery
+          ? `<p class="shell-recovery">Recovery Shell</p>`
+          : `<nav class="nav" aria-label="主导航">${navHtml(route, boot.routes)}</nav>`
+      }
+    </aside>
+    <main class="workspace" id="workspace" tabindex="-1">
+      <div id="view">${body}</div>
+      ${state.errorZh ? `<p class="gap" role="alert">${state.errorZh}</p>` : ""}
+    </main>
   `;
   if (focusedId) {
     document.getElementById(focusedId)?.focus();
@@ -543,6 +591,8 @@ async function main(): Promise<void> {
   let about: AboutDto | null = null;
   let deletePreview: DeletePreview | null = null;
   let deleteReport: DeleteReport | null = null;
+  let probeStatus = "";
+  let probeState = "";
   state.snapshot = boot.overview;
   const paint = (): void => {
     renderApp(
@@ -558,7 +608,9 @@ async function main(): Promise<void> {
       notify,
       about,
       deletePreview,
-      deleteReport
+      deleteReport,
+      probeStatus,
+      probeState
     );
   };
   paint();
@@ -603,11 +655,18 @@ async function main(): Promise<void> {
   };
 
   app.addEventListener("click", async (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) {
+    const raw = event.target;
+    if (!(raw instanceof Element)) {
       return;
     }
-    const nextRoute = target.dataset.route as RouteId | undefined;
+    const routeEl = raw.closest("[data-route]");
+    const target = raw instanceof HTMLElement ? raw : raw.parentElement;
+    if (!target) {
+      return;
+    }
+    const nextRoute = (routeEl instanceof HTMLElement ? routeEl.dataset.route : undefined) as
+      | RouteId
+      | undefined;
     if (nextRoute) {
       apply(state, nextRoute);
       if (nextRoute === "alerts") {
@@ -653,9 +712,59 @@ async function main(): Promise<void> {
             .map((item) => item.trim())
             .filter(Boolean)
         });
-        apply(state, "overview");
+        probeStatus = "设置已保存。下一步：测试连接。";
+        probeState = "connected";
+        apply(state, "settings-data");
       } catch {
-        apply({ ...state, errorZh: "设置保存失败。请检查回环地址。" });
+        probeStatus = "设置保存失败。请检查回环地址。";
+        probeState = "storage_failure";
+        apply({ ...state, errorZh: "设置保存失败。请检查回环地址。" }, "settings-data");
+      }
+    }
+    if (target.id === "test-controller") {
+      const address = (document.querySelector("#controller-address") as HTMLInputElement | null)?.value ?? "";
+      const secret = (document.querySelector("#controller-secret") as HTMLInputElement | null)?.value;
+      probeStatus = "正在探测控制器。";
+      probeState = "connecting";
+      apply(state, "settings-data");
+      try {
+        const result = await invokeCommand<{ messageZh: string; status: string; action: string }>(
+          "test_controller",
+          {
+            address,
+            secret: secret && secret.length > 0 ? secret : null
+          }
+        );
+        const next = await invokeCommand<BootstrapDto>("get_bootstrap");
+        boot.settings = next.settings;
+        boot.overview = next.overview;
+        state.snapshot = next.overview;
+        probeStatus = `${result.messageZh}下一步：${result.action}`;
+        probeState = result.status;
+        apply(state, "settings-data");
+      } catch (error) {
+        const dto = probeErrorText(error);
+        const extra = dto.code === "endpoint_missing" ? " 本机 Verge 常用 127.0.0.1:9097。" : "";
+        probeStatus = `${dto.messageZh}${dto.action ? `下一步：${dto.action}。` : ""}${extra}`;
+        probeState = dto.code || "storage_failure";
+        apply(state, "settings-data");
+      }
+    }
+    if (target.id === "disconnect-controller") {
+      try {
+        const result = await invokeCommand<{ messageZh: string; status: string; action: string }>(
+          "disconnect_controller"
+        );
+        const next = await invokeCommand<BootstrapDto>("get_bootstrap");
+        boot.overview = next.overview;
+        state.snapshot = next.overview;
+        probeStatus = `${result.messageZh}下一步：${result.action}`;
+        probeState = result.status;
+        apply(state, "settings-data");
+      } catch {
+        probeStatus = "断开失败。";
+        probeState = "storage_failure";
+        apply(state, "settings-data");
       }
     }
     if (target.id === "run-report") {

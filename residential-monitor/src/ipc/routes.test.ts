@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BRAND_MARK, ROUTE_ICONS } from "../nav-icons";
 
 const routes = [
   { id: "overview", available: true, unavailableUntil: null },
@@ -20,6 +21,12 @@ describe("应用壳导航", () => {
     expect(routes.find((item) => item.id === "reports")?.available).toBe(true);
     expect(routes.find((item) => item.id === "alerts")?.available).toBe(true);
     expect(routes.find((item) => item.id === "alerts")?.unavailableUntil).toBe(null);
+  });
+
+  it("五条 route 与产品标记都有本地图标", () => {
+    expect(Object.keys(ROUTE_ICONS).sort()).toEqual(routes.map((item) => item.id).sort());
+    expect(Object.values(ROUTE_ICONS).every((src) => src.length > 0)).toBe(true);
+    expect(BRAND_MARK.length).toBeGreaterThan(0);
   });
 });
 

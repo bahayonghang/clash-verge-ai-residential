@@ -21,7 +21,7 @@ use crate::session::ControllerSession;
 use c2::desktop::InstanceClaim;
 #[cfg(not(windows))]
 use c2::desktop::ProcessSingleInstance;
-use c2::facade::{parse_socket, AppErrorDto, AppFacade, BootstrapDto};
+use c2::facade::{parse_socket, AppErrorDto, AppFacade, BootstrapDto, ProbeResult};
 use c2::hub::{LiveConnectionView, MonitorStreamMessage};
 use c2::query::{ConnectionPage, ConnectionQuery};
 use c2::settings::ControllerSettings;
@@ -225,6 +225,70 @@ fn save_settings(
 #[tauri::command]
 fn save_targets(state: State<Mutex<AppFacade>>, targets: Vec<String>) -> Result<u32, AppErrorDto> {
     state.lock().expect("state").save_targets(targets)
+}
+
+#[tauri::command]
+async fn test_controller(
+    state: State<'_, Mutex<AppFacade>>,
+    address: String,
+    secret: Option<String>,
+) -> Result<ProbeResult, AppErrorDto> {
+    {
+        let mut guard = state.lock().expect("state");
+        if guard.branch != c2::shell::BootBranch::NormalReady {
+            return Err(AppErrorDto {
+                code: "recovery_only".into(),
+                message_zh: "恢复模式不能测试控制器。".into(),
+                retryable: false,
+                action: "先修复数据库".into(),
+                details_redacted: "recovery".into(),
+            });
+        }
+        guard.save_controller(address.clone(), secret, true)?;
+    }
+    let (addr, secret) = {
+        let guard = state.lock().expect("state");
+        let addr = parse_socket(&guard.settings.address)?;
+        let secret = if guard.settings.has_secret {
+            guard
+                .workflow
+                .resolve(
+                    &guard.settings.credential_target,
+                    &guard.settings.secret_mode,
+                )
+                .ok()
+                .map(|value| String::from_utf8_lossy(value.as_header_bytes()).into_owned())
+        } else {
+            None
+        };
+        (addr, secret)
+    };
+    let mut session = ControllerSession::new(addr.to_string());
+    match session.connect_tcp(addr, secret.as_deref()).await {
+        Ok(inputs) => {
+            let mut guard = state.lock().expect("state");
+            guard.session.endpoint = addr.to_string();
+            guard.session.core_identity = session.core_identity;
+            guard.apply_probe_ok(inputs);
+            Ok(AppFacade::probe_result(
+                crate::controller::SessionStatus::Connected,
+            ))
+        }
+        Err(status) => {
+            let mut guard = state.lock().expect("state");
+            guard.apply_probe_err(status);
+            Err(AppErrorDto::from_status(status))
+        }
+    }
+}
+
+#[tauri::command]
+fn disconnect_controller(state: State<Mutex<AppFacade>>) -> Result<ProbeResult, AppErrorDto> {
+    let mut guard = state.lock().expect("state");
+    guard.disconnect_now();
+    Ok(AppFacade::probe_result(
+        crate::controller::SessionStatus::Cancelled,
+    ))
 }
 
 #[tauri::command]
@@ -604,6 +668,10 @@ pub fn run() {
                     let _ = window.hide();
                 }
             }
+            if let Some(window) = app.get_webview_window("main") {
+                let icon = tauri::include_image!("icons/icon.png");
+                let _ = window.set_icon(icon);
+            }
             let _ = app.emit("desktop-ready", true);
             Ok(())
         })
@@ -617,6 +685,8 @@ pub fn run() {
             get_settings,
             save_settings,
             save_targets,
+            test_controller,
+            disconnect_controller,
             list_routes,
             pick_file,
             start_operation,

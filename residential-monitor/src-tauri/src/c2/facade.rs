@@ -44,6 +44,14 @@ pub struct AppErrorDto {
     pub details_redacted: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProbeResult {
+    pub status: String,
+    pub message_zh: String,
+    pub action: String,
+}
+
 impl AppErrorDto {
     pub fn from_settings(error: SettingsError) -> Self {
         Self {
@@ -490,6 +498,38 @@ impl AppFacade {
         self.session.endpoint = address;
         self.persist_settings()?;
         Ok(next)
+    }
+
+    pub fn apply_probe_ok(&mut self, inputs: Vec<ControllerInput>) {
+        let utc = chrono::Utc::now().timestamp();
+        for input in inputs {
+            if matches!(input, ControllerInput::Snapshot { .. }) {
+                self.ingest_snapshot(input, utc, utc as u64);
+            } else {
+                self.apply_lifecycle(input);
+            }
+        }
+        self.session_status = SessionStatus::Connected;
+    }
+
+    pub fn apply_probe_err(&mut self, status: SessionStatus) {
+        self.session_status = status;
+        self.apply_lifecycle(ControllerInput::Disconnected { reason: status });
+    }
+
+    pub fn disconnect_now(&mut self) {
+        self.session_status = SessionStatus::Cancelled;
+        self.apply_lifecycle(ControllerInput::Disconnected {
+            reason: SessionStatus::Cancelled,
+        });
+    }
+
+    pub fn probe_result(status: SessionStatus) -> ProbeResult {
+        ProbeResult {
+            status: crate::c2::hub::session_status_name(status),
+            message_zh: status_message_zh(status).into(),
+            action: status_action_zh(status).into(),
+        }
     }
 
     pub fn save_targets(&mut self, targets: Vec<String>) -> Result<u32, AppErrorDto> {
@@ -973,6 +1013,16 @@ mod c2_facade_contract_tests {
         assert!(tables.iter().any(|item| item == "traffic_hourly_dimension"));
         assert!(tables.iter().any(|item| item == "alert_rule"));
         assert!(tables.iter().any(|item| item == "notification_outbox"));
+    }
+
+    #[test]
+    fn disconnect_now_leaves_cancelled_health() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.session_status = SessionStatus::Connected;
+        facade.disconnect_now();
+        assert_eq!(facade.session_status, SessionStatus::Cancelled);
+        assert_eq!(facade.hub.overview().health.session, "cancelled");
     }
 
     #[test]
