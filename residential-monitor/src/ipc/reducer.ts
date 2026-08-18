@@ -1,4 +1,4 @@
-import type { LiveConnectionView, LiveOverview, MonitorStreamMessage } from "../dto";
+import type { AlertSummary, LiveConnectionView, LiveOverview, MonitorStreamMessage } from "../dto";
 
 export interface MonitorState {
   subscriptionId: number | null;
@@ -10,6 +10,7 @@ export interface MonitorState {
   errorZh: string | null;
   connections: Map<string, LiveConnectionView>;
   closeMarks: Map<string, "accepted" | "closed" | "unconfirmed">;
+  alertSummary: AlertSummary | null;
 }
 
 export function emptyMonitorState(): MonitorState {
@@ -22,7 +23,8 @@ export function emptyMonitorState(): MonitorState {
     needResync: false,
     errorZh: null,
     connections: new Map(),
-    closeMarks: new Map()
+    closeMarks: new Map(),
+    alertSummary: null
   };
 }
 
@@ -37,7 +39,8 @@ export function reduceMonitor(state: MonitorState, message: MonitorStreamMessage
       needResync: false,
       errorZh: null,
       connections: new Map(),
-      closeMarks: new Map(state.closeMarks)
+      closeMarks: new Map(state.closeMarks),
+      alertSummary: state.alertSummary
     };
   }
   if (state.subscriptionId === null || message.subscriptionId !== state.subscriptionId) {
@@ -76,6 +79,9 @@ export function reduceMonitor(state: MonitorState, message: MonitorStreamMessage
       lastSeq: seq,
       snapshot: { ...state.snapshot, health: message.health }
     };
+  }
+  if (message.kind === "alertChanged") {
+    return { ...state, lastSeq: seq, alertSummary: message.summary };
   }
   if (message.kind === "summaryChanged") {
     return { ...state, lastSeq: seq, snapshot: message.snapshot };

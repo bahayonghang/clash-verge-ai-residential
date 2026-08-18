@@ -3,7 +3,7 @@
   "name": "monitor-alerting-diagnostics",
   "title": "家宽监控告警与诊断",
   "description": "在 C3 报告与汇总能力之上交付健康和流量告警、可靠通知 outbox、告警中心与脱敏诊断",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": "residential-monitor",
   "package": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "08-18-residential-monitor-mvp",
   "relatedFiles": [],
-  "notes": "C4 严格依赖 C3（08-18-monitor-reporting-data）完成并通过独立验收；周期用量必须复用 C3 ReportService/rollup，不得建设第二套聚合。当前仅完善规划，未获授权运行 task.py start 或进入实施。",
+  "notes": "C4 已实施。task.py start 以 degraded 会话身份成功。NSIS 安装态通知 / Focus Assist 真机与完整 30 天库重跑未执行。",
   "meta": {
     "description": "C4：健康告警、60 秒滚动速率与周期用量规则、同事务告警/outbox、Windows 通知、告警中心和脱敏诊断"
   }

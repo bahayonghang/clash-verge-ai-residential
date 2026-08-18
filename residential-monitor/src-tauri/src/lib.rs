@@ -3,6 +3,7 @@ pub mod bench;
 pub mod c0_contract;
 pub mod c2;
 pub mod c3;
+pub mod c4;
 pub mod candidate_schema;
 pub mod controller;
 pub mod credential;
@@ -27,6 +28,9 @@ use c2::shell::{FileMode, FilePurpose, OperationProgress, RecoveryStatus, RouteD
 use c3::export::{ExportPreview, ExportSpec};
 use c3::query::{ReportQuery, ReportResult};
 use c3::retention::RetentionPreview;
+use c4::diagnose::DiagnosticsSnapshot;
+use c4::notify::NotifyCapability;
+use c4::types::{AlertCenterPage, AlertRule, AlertSummary};
 use std::sync::Mutex;
 use tauri::ipc::Channel;
 use tauri::{Emitter, Manager, State};
@@ -406,6 +410,59 @@ fn shutdown_app(app: tauri::AppHandle, state: State<Mutex<AppFacade>>) -> Result
 }
 
 #[tauri::command]
+fn list_alert_rules(state: State<Mutex<AppFacade>>) -> Result<Vec<AlertRule>, AppErrorDto> {
+    state.lock().expect("state").list_alert_rules()
+}
+
+#[tauri::command]
+fn upsert_alert_rule(
+    state: State<Mutex<AppFacade>>,
+    rule: AlertRule,
+) -> Result<AlertRule, AppErrorDto> {
+    state.lock().expect("state").upsert_alert_rule(rule)
+}
+
+#[tauri::command]
+fn list_alert_center(
+    state: State<Mutex<AppFacade>>,
+    status: Option<String>,
+    after: Option<String>,
+) -> Result<AlertCenterPage, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .list_alert_center(status, after)
+}
+
+#[tauri::command]
+fn alert_summary(state: State<Mutex<AppFacade>>) -> Result<AlertSummary, AppErrorDto> {
+    state.lock().expect("state").alert_summary()
+}
+
+#[tauri::command]
+fn test_notification(state: State<Mutex<AppFacade>>) -> Result<NotifyCapability, AppErrorDto> {
+    state.lock().expect("state").test_notification()
+}
+
+#[tauri::command]
+fn get_diagnostics(state: State<Mutex<AppFacade>>) -> Result<DiagnosticsSnapshot, AppErrorDto> {
+    state.lock().expect("state").get_diagnostics()
+}
+
+#[tauri::command]
+fn export_diagnostics(state: State<Mutex<AppFacade>>, path: String) -> Result<String, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .export_diagnostics(std::path::Path::new(&path))
+}
+
+#[tauri::command]
+fn scan_outbox(state: State<Mutex<AppFacade>>) -> Result<u32, AppErrorDto> {
+    state.lock().expect("state").scan_outbox()
+}
+
+#[tauri::command]
 fn tray_summary(state: State<Mutex<AppFacade>>) -> Result<c2::desktop::TraySummary, AppErrorDto> {
     let guard = state.lock().expect("state");
     Ok(guard
@@ -548,7 +605,15 @@ pub fn run() {
             notify_power_event,
             complete_wizard,
             shutdown_app,
-            tray_summary
+            tray_summary,
+            list_alert_rules,
+            upsert_alert_rule,
+            list_alert_center,
+            alert_summary,
+            test_notification,
+            get_diagnostics,
+            export_diagnostics,
+            scan_outbox
         ])
         .run(tauri::generate_context!())
         .expect("启动家宽流量监控失败");

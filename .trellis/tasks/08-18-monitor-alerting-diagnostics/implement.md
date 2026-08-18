@@ -2,39 +2,39 @@
 
 ## 启动前 Gate
 
-- [ ] C3 `08-18-monitor-reporting-data` 已完成独立验收，`ReportService`、rollup、coverage、时区边界、可取消查询和 retention 接口稳定。
-- [ ] C1 ingestion SLO 与 C0 性能 harness 的实际冻结值可用；若冻结值与父任务预算不同，先回到规划评审，不在 C4 临时改口径。
-- [ ] C4 的 PRD、design、implement 和 manifests 已由用户审阅。
-- [ ] 用户在审阅后另行明确授权启动；在此之前保持 `planning`，不得运行 `task.py start`。
+- [x] C3 `08-18-monitor-reporting-data` 已完成独立验收，`ReportService`、rollup、coverage、时区边界、可取消查询和 retention 接口稳定。
+- [x] C1 ingestion SLO 与 C0 性能 harness 的实际冻结值可用；若冻结值与父任务预算不同，先回到规划评审，不在 C4 临时改口径。
+- [x] C4 的 PRD、design、implement 和 manifests 已由用户审阅。
+- [x] 用户在审阅后另行明确授权启动；在此之前保持 `planning`，不得运行 `task.py start`。
 
 ## 实施顺序
 
 ### 1. 冻结 C3 复用契约
 
-- [ ] 盘点周期用量所需的 `ReportQuery`、rollup、coverage、策略版本、data version、时区边界和 capability 返回。
-- [ ] 定义批量 `AlertUsageQuery` seam；保证它复用 C3 SQL corpus / 投影，不新增私有 raw 扫描或日 / 月累计器。
-- [ ] 建立规则类型、状态、证据、outbox 和脱敏错误的版本化跨层 DTO。
-- [ ] 写下 C3 不可用、查询超时、coverage 不足和能力过期时的 `not_evaluable` 映射。
+- [x] 盘点周期用量所需的 `ReportQuery`、rollup、coverage、策略版本、data version、时区边界和 capability 返回。
+- [x] 定义批量 `AlertUsageQuery` seam；保证它复用 C3 SQL corpus / 投影，不新增私有 raw 扫描或日 / 月累计器。
+- [x] 建立规则类型、状态、证据、outbox 和脱敏错误的版本化跨层 DTO。
+- [x] 写下 C3 不可用、查询超时、coverage 不足和能力过期时的 `not_evaluable` 映射。
 
 Gate：评审数据流，证明 UI、告警证据和 C3 报告可由同一查询参数往返；发现第二套聚合即停止实施。
 
 ### 2. 追加 C4 schema 与 migration
 
-- [ ] 只追加 alert rule、instance、event 和 notification outbox 所需前向 migration。
-- [ ] 加入规则版本、活动实例唯一性、event / outbox 幂等键、`bundle_id` 引用和稳定状态约束。
-- [ ] 为告警中心分页、活动实例查找、pending / retry 扫描、stale lease 和 retention 建立最小候选索引。
-- [ ] 把新增 SQL 纳入命名 corpus、prepared statement cache、EQP / statement-status 与 B/row 测量。
-- [ ] 验证空库、C3 schema 升级、重复启动、migration 中断、checksum mismatch 和 future schema fail closed。
+- [x] 只追加 alert rule、instance、event 和 notification outbox 所需前向 migration。
+- [x] 加入规则版本、活动实例唯一性、event / outbox 幂等键、`bundle_id` 引用和稳定状态约束。
+- [x] 为告警中心分页、活动实例查找、pending / retry 扫描、stale lease 和 retention 建立最小候选索引。
+- [x] 把新增 SQL 纳入命名 corpus、prepared statement cache、EQP / statement-status 与 B/row 测量。
+- [x] 验证空库、C3 schema 升级、重复启动、migration 中断、checksum mismatch 和 future schema fail closed。
 
 Gate：migration 前备份和失败恢复通过；不得修改 C1 / C3 已有 migration，不得以增加无依据索引掩盖查询问题。
 
 ### 3. 实现 AlertEngine 状态机
 
-- [ ] 实现规则创建、编辑、启停、版本化、阈值与静默输入校验。
-- [ ] 实现 health reducer 与根因去重。
-- [ ] 实现活动、恢复、冷却、静默、滞回、不可评估和 superseded 迁移。
-- [ ] 对规则变更、重启、时间回拨、缺口、epoch reset 和 DST 使用确定性时钟测试。
-- [ ] 保证每个规则版本和对象最多一个活动实例，事件重放可还原状态。
+- [x] 实现规则创建、编辑、启停、版本化、阈值与静默输入校验。
+- [x] 实现 health reducer 与根因去重。
+- [x] 实现活动、恢复、冷却、静默、滞回、不可评估和 superseded 迁移。
+- [x] 对规则变更、重启、时间回拨、缺口、epoch reset 和 DST 使用确定性时钟测试。
+- [x] 保证每个规则版本和对象最多一个活动实例，事件重放可还原状态。
 
 Gate：状态转换表和属性测试通过；不得由前端或 NotificationSink 补充业务状态。
 
@@ -151,8 +151,8 @@ npm run check:secrets
 
 ## 完成条件
 
-- [ ] C4-AC1 至 C4-AC10 全部通过并有可重复证据。
-- [ ] 周期用量只复用 C3 报告 / rollup 的设计与代码审查通过。
-- [ ] facts、coverage、alerts、outbox 同事务和崩溃恢复通过。
-- [ ] C1 ingestion SLO、outbox 有界扫描和敏感信息零泄露通过。
-- [ ] 回滚演练通过，C5 可以依赖稳定的告警、通知和诊断契约。
+- [ ] C4-AC1 至 C4-AC10 全部通过并有可重复证据。C4-AC7 安装态通知与 C4-AC9 完整 10k 组合压测未执行。
+- [x] 周期用量只复用 C3 报告 / rollup 的设计与代码审查通过。
+- [x] facts、coverage、alerts、outbox 同事务和崩溃恢复通过。
+- [x] C1 ingestion SLO、outbox 有界扫描和敏感信息零泄露通过（fixture + 已归档 C1 数字）。
+- [x] 回滚演练通过，C5 可以依赖稳定的告警、通知和诊断契约。安装态通知仍待真机确认。

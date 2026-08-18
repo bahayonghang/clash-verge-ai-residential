@@ -20,10 +20,15 @@ use crate::c3::query::{ReportError, ReportQuery, ReportResult, RAW_RETAIN_DAYS_D
 use crate::c3::retention::{RetentionMode, RetentionPreview, RetentionService};
 use crate::c3::snapshot::ReportSnapshotStore;
 use crate::c3::space::SpaceBudget;
+use crate::c4::engine::{AlertEngine, HealthSnapshot};
+use crate::c4::notify::{FakeNotificationSink, NotificationSink, NotifyPayload};
+use crate::c4::types::{
+    validate_rule, AlertCenterPage, AlertRule, AlertSummary, ALERT_DTO_VERSION,
+};
 use crate::controller::{ControllerInput, SessionStatus};
 use crate::credential::FakeCredentialStore;
 use crate::session::ControllerSession;
-use crate::storage::{RecoveryFacade, StorageCoordinator};
+use crate::storage::{AlertCommitSlice, CommitBundle, RecoveryFacade, StorageCoordinator};
 use serde::Serialize;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
@@ -129,6 +134,12 @@ pub struct AppFacade {
     pub snapshots: ReportSnapshotStore,
     pub space: SpaceBudget,
     pub raw_retain_days: i64,
+    pub alerts: AlertEngine,
+    pub notify: FakeNotificationSink,
+    pub writer_epoch: u64,
+    pub bundle_seq: u64,
+    pub last_frame_utc: Option<i64>,
+    pub last_period_eval_utc: i64,
 }
 
 impl AppFacade {
@@ -156,6 +167,15 @@ impl AppFacade {
                         engine.set_targets(targets);
                     }
                 }
+                let mut alerts = AlertEngine::new();
+                if let Ok(rules) = crate::c4::store::load_rules(storage.connection()) {
+                    let _ = alerts.load_rules(rules);
+                }
+                if let Ok(instances) = crate::c4::store::load_instances(storage.connection()) {
+                    for instance in instances {
+                        alerts.restore_instance(instance);
+                    }
+                }
                 Self {
                     branch: BootBranch::NormalReady,
                     desktop,
@@ -177,6 +197,12 @@ impl AppFacade {
                     snapshots: ReportSnapshotStore::open(&data_dir),
                     space: SpaceBudget::unlimited(),
                     raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
+                    alerts,
+                    notify: FakeNotificationSink::default(),
+                    writer_epoch: 1,
+                    bundle_seq: 1,
+                    last_frame_utc: None,
+                    last_period_eval_utc: 0,
                 }
             }
             Err(_) => Self {
@@ -200,6 +226,12 @@ impl AppFacade {
                 snapshots: ReportSnapshotStore::open(&data_dir),
                 space: SpaceBudget::unlimited(),
                 raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
+                alerts: AlertEngine::new(),
+                notify: FakeNotificationSink::default(),
+                writer_epoch: 1,
+                bundle_seq: 1,
+                last_frame_utc: None,
+                last_period_eval_utc: 0,
             },
         }
     }
@@ -246,6 +278,7 @@ impl AppFacade {
                 .and_then(|item| item.health().ok())
                 .as_ref(),
         );
+        self.commit_eval(&batch, &[], utc, 0);
         let _ = self.hub.publish(&batch, Vec::new(), health, utc);
     }
 
@@ -277,12 +310,103 @@ impl AppFacade {
                     .as_ref(),
             );
             self.session_status = SessionStatus::Connected;
-            if let Some(storage) = self.storage.as_mut() {
-                let _ = storage.persist_live_facts(&batch.facts, &live, &batch.coverage, utc);
-            }
+            self.commit_eval(&batch, &live, utc, utc as u64);
             let _ = self.hub.publish(&batch, live, health, utc);
         } else {
             self.apply_lifecycle(input);
+        }
+    }
+
+    fn commit_eval(
+        &mut self,
+        batch: &crate::accounting::AccountingBatch,
+        live: &[crate::c2::hub::LiveConnectionView],
+        utc: i64,
+        mono: u64,
+    ) {
+        if self.storage.is_none() {
+            return;
+        }
+        let data_version = self
+            .storage
+            .as_ref()
+            .and_then(|item| item.watermark().ok())
+            .unwrap_or(0);
+        let storage_health = self.storage.as_ref().and_then(|item| item.health().ok());
+        let path = self
+            .storage
+            .as_ref()
+            .map(|item| item.path().to_path_buf())
+            .unwrap_or_default();
+        let rules = self
+            .storage
+            .as_ref()
+            .and_then(|item| crate::c4::store::load_rules(item.connection()).ok())
+            .unwrap_or_default();
+        let health = HealthSnapshot {
+            session: Some(self.session_status),
+            storage: storage_health,
+            coverage_kinds: batch
+                .coverage
+                .iter()
+                .map(|item| item.kind.to_string())
+                .collect(),
+            migration_failed: false,
+            backup_failed: false,
+        };
+        let mut usages = Vec::new();
+        if utc.saturating_sub(self.last_period_eval_utc) >= 60 {
+            let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            usages = crate::c4::period::evaluate_period_rules(
+                &path,
+                &mut self.snapshots,
+                &rules,
+                utc,
+                self.raw_retain_days,
+                &cancel,
+            );
+            self.last_period_eval_utc = utc;
+        }
+        let bundle_id = format!("{}:{}", self.writer_epoch, self.bundle_seq);
+        let writes = self.alerts.evaluate_frame(crate::c4::engine::FrameInput {
+            batch,
+            live,
+            health: &health,
+            usages: &usages,
+            now_utc: utc,
+            now_mono: mono,
+            data_version,
+            bundle_id: &bundle_id,
+        });
+        let bundle = CommitBundle {
+            writer_epoch: self.writer_epoch,
+            bundle_seq: self.bundle_seq,
+            payload: String::new(),
+        };
+        let slice = AlertCommitSlice {
+            facts: batch.facts.clone(),
+            coverage: batch.coverage.clone(),
+            live_rows: live.to_vec(),
+            utc,
+            writes,
+        };
+        let outcome = self
+            .storage
+            .as_mut()
+            .and_then(|storage| storage.commit_alert_bundle(&bundle, &slice).ok());
+        if matches!(
+            outcome,
+            Some(
+                crate::storage::CommitOutcome::Applied(_)
+                    | crate::storage::CommitOutcome::Duplicate(_)
+            )
+        ) {
+            self.bundle_seq = self.bundle_seq.saturating_add(1);
+            self.last_frame_utc = Some(utc);
+            let token = format!("lease-{}", self.bundle_seq);
+            if let Some(storage) = self.storage.as_mut() {
+                let _ = crate::c4::outbox::scan_once(storage, &mut self.notify, utc, &token);
+            }
         }
     }
 
@@ -494,7 +618,7 @@ impl AppFacade {
         } else {
             RetentionMode::MaterializeOnly
         };
-        RetentionService::run(
+        let preview = RetentionService::run(
             storage,
             now,
             self.raw_retain_days,
@@ -502,7 +626,179 @@ impl AppFacade {
             &self.space,
             &cancel,
         )
-        .map_err(map_report)
+        .map_err(map_report)?;
+        if let Some(storage) = self.storage.as_ref() {
+            let _ = crate::c4::store::retain_alerts(storage.connection(), now);
+        }
+        Ok(preview)
+    }
+
+    pub fn list_alert_rules(&self) -> Result<Vec<AlertRule>, AppErrorDto> {
+        let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
+        crate::c4::store::load_rules(storage.connection()).map_err(|_| AppErrorDto {
+            code: "storage".into(),
+            message_zh: "无法读取告警规则。".into(),
+            retryable: true,
+            action: "检查磁盘后重试".into(),
+            details_redacted: "alert".into(),
+        })
+    }
+
+    pub fn upsert_alert_rule(&mut self, rule: AlertRule) -> Result<AlertRule, AppErrorDto> {
+        validate_rule(&rule).map_err(|error| AppErrorDto {
+            code: error.code().into(),
+            message_zh: error.message_zh().into(),
+            retryable: false,
+            action: error.action_zh().into(),
+            details_redacted: error.code().into(),
+        })?;
+        let now = chrono::Utc::now().timestamp();
+        let writes = self
+            .alerts
+            .upsert_rule(rule.clone(), now)
+            .map_err(|error| AppErrorDto {
+                code: error.code().into(),
+                message_zh: error.message_zh().into(),
+                retryable: false,
+                action: error.action_zh().into(),
+                details_redacted: error.code().into(),
+            })?;
+        let storage = self.storage.as_mut().ok_or_else(recovery_only)?;
+        crate::c4::store::upsert_rule(storage.connection(), &rule).map_err(|_| AppErrorDto {
+            code: "storage".into(),
+            message_zh: "规则写入失败。".into(),
+            retryable: true,
+            action: "检查磁盘后重试".into(),
+            details_redacted: "alert".into(),
+        })?;
+        if !writes.instances.is_empty() || !writes.events.is_empty() {
+            let bundle = CommitBundle {
+                writer_epoch: self.writer_epoch,
+                bundle_seq: self.bundle_seq,
+                payload: String::new(),
+            };
+            let slice = AlertCommitSlice {
+                utc: now,
+                writes,
+                ..AlertCommitSlice::default()
+            };
+            if storage.commit_alert_bundle(&bundle, &slice).is_ok() {
+                self.bundle_seq = self.bundle_seq.saturating_add(1);
+            }
+        }
+        Ok(rule)
+    }
+
+    pub fn list_alert_center(
+        &self,
+        status: Option<String>,
+        after: Option<String>,
+    ) -> Result<AlertCenterPage, AppErrorDto> {
+        let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
+        let (after_utc, after_id) = after
+            .as_deref()
+            .and_then(|item| item.split_once('|'))
+            .and_then(|(utc, id)| utc.parse().ok().map(|value| (value, id)))
+            .map(|(utc, id)| (Some(utc), Some(id)))
+            .unwrap_or((None, None));
+        let items = crate::c4::store::list_instances(
+            storage.connection(),
+            status.as_deref(),
+            after_utc,
+            after_id,
+            50,
+        )
+        .map_err(|_| AppErrorDto {
+            code: "storage".into(),
+            message_zh: "无法读取告警中心。".into(),
+            retryable: true,
+            action: "刷新后重试".into(),
+            details_redacted: "alert".into(),
+        })?;
+        let next_cursor = items
+            .last()
+            .map(|item| format!("{}|{}", item.last_eval_utc, item.instance_id));
+        Ok(AlertCenterPage {
+            schema_version: ALERT_DTO_VERSION,
+            items,
+            next_cursor,
+        })
+    }
+
+    pub fn alert_summary(&self) -> Result<AlertSummary, AppErrorDto> {
+        let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
+        let active = crate::c4::store::count_status(storage.connection(), "active").unwrap_or(0);
+        let not_eval =
+            crate::c4::store::count_status(storage.connection(), "not_evaluable").unwrap_or(0);
+        Ok(AlertSummary {
+            schema_version: ALERT_DTO_VERSION,
+            active_count: active,
+            not_evaluable_count: not_eval,
+            outbox_backlog: crate::c4::outbox::backlog(storage).unwrap_or(0),
+            last_event_utc: crate::c4::store::last_event_utc(storage.connection())
+                .ok()
+                .flatten(),
+        })
+    }
+
+    pub fn test_notification(
+        &mut self,
+    ) -> Result<crate::c4::notify::NotifyCapability, AppErrorDto> {
+        let cap = self.notify.capability();
+        let payload = NotifyPayload {
+            title_zh: "测试通知".into(),
+            body_zh: "这是测试通知，不会写入告警历史。".into(),
+            event_id: "test-notify".into(),
+            instance_id: None,
+            test_only: true,
+        };
+        match self.notify.send(&payload) {
+            Ok(()) => Ok(cap),
+            Err(_) => Ok(self.notify.capability()),
+        }
+    }
+
+    pub fn get_diagnostics(&self) -> Result<crate::c4::diagnose::DiagnosticsSnapshot, AppErrorDto> {
+        let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
+        let coverage = self
+            .hub
+            .overview()
+            .coverage_kind
+            .unwrap_or_else(|| "unknown".into());
+        crate::c4::diagnose::collect(storage, self.session_status, self.last_frame_utc, &coverage)
+            .map_err(|_| AppErrorDto {
+                code: "diagnostics".into(),
+                message_zh: "诊断生成失败。采集未中断。".into(),
+                retryable: true,
+                action: "稍后重试".into(),
+                details_redacted: "diagnostics".into(),
+            })
+    }
+
+    pub fn export_diagnostics(&self, dest: &std::path::Path) -> Result<String, AppErrorDto> {
+        let snap = self.get_diagnostics()?;
+        crate::c4::diagnose::export_atomic(&snap, dest).map_err(|_| AppErrorDto {
+            code: "diagnostics_export".into(),
+            message_zh: "诊断导出失败。采集与告警未回滚。".into(),
+            retryable: true,
+            action: "更换路径后重试".into(),
+            details_redacted: "diagnostics".into(),
+        })
+    }
+
+    pub fn scan_outbox(&mut self) -> Result<u32, AppErrorDto> {
+        let now = chrono::Utc::now().timestamp();
+        let token = format!("scan-{}", self.bundle_seq);
+        let storage = self.storage.as_mut().ok_or_else(recovery_only)?;
+        crate::c4::outbox::scan_once(storage, &mut self.notify, now, &token).map_err(|_| {
+            AppErrorDto {
+                code: "outbox".into(),
+                message_zh: "通知扫描失败。".into(),
+                retryable: true,
+                action: "稍后重试".into(),
+                details_redacted: "outbox".into(),
+            }
+        })
     }
 
     pub fn create_backup(&self, dest: &Path) -> Result<String, AppErrorDto> {
@@ -616,9 +912,8 @@ mod c2_facade_contract_tests {
         let tables = list_user_tables(&connection).expect("tables");
         assert_no_forbidden_tables(&tables);
         assert!(tables.iter().any(|item| item == "traffic_hourly_dimension"));
-        assert!(!tables
-            .iter()
-            .any(|item| item.contains("alert") || item.contains("outbox")));
+        assert!(tables.iter().any(|item| item == "alert_rule"));
+        assert!(tables.iter().any(|item| item == "notification_outbox"));
     }
 
     #[test]

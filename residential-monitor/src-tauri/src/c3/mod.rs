@@ -15,8 +15,9 @@ pub mod sql;
 pub use backup::BackupRestoreService;
 pub use export::{ExportService, ExportSpec};
 pub use query::{
-    plan_capability, validate_query, CapabilityPlan, DrilldownCapability, ReportError, ReportQuery,
-    ReportResult, AUTO_DELETE_ENABLED, DIMENSION_RETAIN_DAYS, MAX_ACTIVE_TOKENS, MAX_SPOOL_BYTES,
+    local_day_bounds, local_month_bounds, plan_capability, timezone_offset_secs, validate_query,
+    CapabilityPlan, DrilldownCapability, ReportError, ReportQuery, ReportResult,
+    AUTO_DELETE_ENABLED, DIMENSION_RETAIN_DAYS, MAX_ACTIVE_TOKENS, MAX_SPOOL_BYTES,
     MAX_TOKEN_BYTES, PAGE_DEADLINE_MS, RAW_RETAIN_DAYS_DEFAULT, RAW_RETAIN_DAYS_MAX,
     REPORT_DEADLINE_MS, TOKEN_TTL_SECS,
 };

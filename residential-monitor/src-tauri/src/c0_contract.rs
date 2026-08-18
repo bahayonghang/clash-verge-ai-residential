@@ -21,7 +21,8 @@ pub const PEAK_ACTIVE: u32 = 10_000;
 pub const PEAK_HZ: u32 = 1;
 pub const PEAK_MINUTES: u32 = 30;
 pub const C1_SCHEMA_VERSION: i32 = 1;
-pub const SCHEMA_VERSION: i32 = 2;
+pub const C3_COMPAT_SCHEMA_VERSION: i32 = 2;
+pub const SCHEMA_VERSION: i32 = 3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContractError {
@@ -62,14 +63,19 @@ pub fn c3_table_allowlist() -> &'static [&'static str] {
     crate::c3::schema::c3_table_allowlist()
 }
 
+pub fn c4_table_allowlist() -> &'static [&'static str] {
+    crate::c4::schema::c4_table_allowlist()
+}
+
 pub fn all_table_allowlist() -> Vec<&'static str> {
     let mut names = core_table_allowlist().to_vec();
     names.extend_from_slice(c3_table_allowlist());
+    names.extend_from_slice(c4_table_allowlist());
     names
 }
 
 pub fn forbidden_table_fragments() -> &'static [&'static str] {
-    &["alert", "notification", "outbox"]
+    &["billing", "invoice"]
 }
 
 #[cfg(test)]
@@ -84,7 +90,8 @@ mod c0_contract_tests {
         assert_eq!(DESIGN_AVERAGE_ACTIVE, 250);
         assert_eq!(PEAK_ACTIVE, 10_000);
         assert_eq!(C1_SCHEMA_VERSION, 1);
-        assert_eq!(SCHEMA_VERSION, 2);
+        assert_eq!(C3_COMPAT_SCHEMA_VERSION, 2);
+        assert_eq!(SCHEMA_VERSION, 3);
     }
 }
 

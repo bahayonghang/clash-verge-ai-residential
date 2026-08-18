@@ -3,6 +3,8 @@
 use crate::c0_contract::{BUSY_TIMEOUT_MS, RETRY_WINDOW_RECEIPTS, SCHEMA_VERSION};
 use crate::c3::query::ReportError;
 use crate::c3::schema::{C3_DDL, C3_MIGRATION_CHECKSUM, C3_SCHEMA_VERSION};
+use crate::c4::schema::{C4_DDL, C4_MIGRATION_CHECKSUM, C4_SCHEMA_VERSION};
+use crate::c4::types::AlertWriteSet;
 
 pub const MIGRATION_CHECKSUM: &str = "c1-core-v1";
 use crate::sqlite_probe::{apply_required_pragmas, open_bundled};
@@ -36,6 +38,23 @@ pub struct CommitBundle {
     pub payload: String,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct AlertCommitSlice {
+    pub facts: Vec<crate::accounting::MinuteFact>,
+    pub coverage: Vec<crate::accounting::CoverageChange>,
+    pub live_rows: Vec<crate::c2::hub::LiveConnectionView>,
+    pub utc: i64,
+    pub writes: AlertWriteSet,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommitKillPoint {
+    AfterFacts,
+    AfterAlerts,
+    AfterOutbox,
+    BeforeCommit,
+}
+
 impl CommitBundle {
     pub fn payload_hash(&self) -> String {
         hex::encode(Sha256::digest(self.payload.as_bytes()))
@@ -67,6 +86,12 @@ pub fn migrate(path: &Path) -> Result<Connection, StorageError> {
         &connection,
         C3_SCHEMA_VERSION,
         C3_MIGRATION_CHECKSUM,
+        user_version,
+    )?;
+    verify_checksum(
+        &connection,
+        C4_SCHEMA_VERSION,
+        C4_MIGRATION_CHECKSUM,
         user_version,
     )?;
     if user_version == 0 {
@@ -162,6 +187,15 @@ pub fn migrate(path: &Path) -> Result<Connection, StorageError> {
             params![C3_SCHEMA_VERSION, C3_MIGRATION_CHECKSUM],
         )?;
     }
+    let current: i32 = connection.query_row("pragma user_version", [], |row| row.get(0))?;
+    if current < C4_SCHEMA_VERSION {
+        connection.execute_batch(C4_DDL)?;
+        connection.execute_batch("pragma user_version = 3")?;
+        connection.execute(
+            "insert or ignore into schema_migration(version, checksum, applied_utc) values (?1, ?2, 0)",
+            params![C4_SCHEMA_VERSION, C4_MIGRATION_CHECKSUM],
+        )?;
+    }
     Ok(connection)
 }
 
@@ -210,6 +244,8 @@ pub struct StorageCoordinator {
     path: PathBuf,
     connection: Connection,
     prepare_count: u64,
+    #[cfg(test)]
+    pub test_kill: Option<CommitKillPoint>,
 }
 
 impl StorageCoordinator {
@@ -226,6 +262,8 @@ impl StorageCoordinator {
             path: path.to_path_buf(),
             connection,
             prepare_count: 1,
+            #[cfg(test)]
+            test_kill: None,
         })
     }
 
@@ -247,7 +285,23 @@ impl StorageCoordinator {
         Ok(())
     }
 
+    pub fn commit_alert_bundle(
+        &mut self,
+        bundle: &CommitBundle,
+        slice: &AlertCommitSlice,
+    ) -> Result<CommitOutcome, StorageError> {
+        self.commit_inner(bundle, Some(slice))
+    }
+
     pub fn commit(&mut self, bundle: &CommitBundle) -> Result<CommitOutcome, StorageError> {
+        self.commit_inner(bundle, None)
+    }
+
+    fn commit_inner(
+        &mut self,
+        bundle: &CommitBundle,
+        slice: Option<&AlertCommitSlice>,
+    ) -> Result<CommitOutcome, StorageError> {
         let hash = bundle.payload_hash();
         let existing: Option<(String, i64)> = self
             .connection
@@ -304,6 +358,45 @@ impl StorageCoordinator {
                  on conflict(utc_minute, session_pk) do update set upload = excluded.upload, download = excluded.download",
                 params![minute, session, up, down],
             )?;
+        }
+        if let Some(slice) = slice {
+            if let Err(error) = persist_slice(&self.connection, slice) {
+                let _ = self.connection.execute_batch("rollback");
+                return Err(error);
+            }
+            #[cfg(test)]
+            if self.test_kill == Some(CommitKillPoint::AfterFacts) {
+                let _ = self.connection.execute_batch("rollback");
+                return Err(StorageError::Closed("kill after facts".into()));
+            }
+            if let Err(error) =
+                crate::c4::store::persist_instances(&self.connection, &slice.writes.instances)
+            {
+                let _ = self.connection.execute_batch("rollback");
+                return Err(error);
+            }
+            if let Err(error) =
+                crate::c4::store::persist_events(&self.connection, &slice.writes.events)
+            {
+                let _ = self.connection.execute_batch("rollback");
+                return Err(error);
+            }
+            #[cfg(test)]
+            if self.test_kill == Some(CommitKillPoint::AfterAlerts) {
+                let _ = self.connection.execute_batch("rollback");
+                return Err(StorageError::Closed("kill after alerts".into()));
+            }
+            if let Err(error) = crate::c4::outbox::persist_intents(self, &slice.writes.outbox) {
+                let _ = self.connection.execute_batch("rollback");
+                return Err(error);
+            }
+            #[cfg(test)]
+            if self.test_kill == Some(CommitKillPoint::AfterOutbox)
+                || self.test_kill == Some(CommitKillPoint::BeforeCommit)
+            {
+                let _ = self.connection.execute_batch("rollback");
+                return Err(StorageError::Closed("kill before commit".into()));
+            }
         }
         self.connection.execute_batch("commit")?;
         Ok(CommitOutcome::Applied(CommitReceipt {
@@ -408,62 +501,76 @@ impl StorageCoordinator {
         coverage: &[crate::accounting::CoverageChange],
         utc: i64,
     ) -> Result<(), StorageError> {
-        for row in rows {
-            let (epoch, id) = split_identity(&row.identity);
-            let session_pk = self.ensure_session(epoch, id, utc, row.host.as_deref())?;
-            intern_and_attr(&self.connection, session_pk, row, utc)?;
-            for (position, node) in row.chains.iter().enumerate() {
-                self.connection.execute(
-                    "insert or ignore into connection_chain(session_pk, position, node) values (?1, ?2, ?3)",
-                    params![session_pk, position as i64, node],
-                )?;
-            }
-        }
-        for fact in facts {
-            let (epoch, id) = split_identity(&fact.session_key);
-            let session_pk = self.ensure_session(epoch, id, utc, None)?;
-            self.connection.execute(
-                "insert into connection_minute(utc_minute, session_pk, upload, download) values (?1, ?2, ?3, ?4)
-                 on conflict(utc_minute, session_pk) do update set
-                    upload = upload + excluded.upload,
-                    download = download + excluded.download",
-                params![fact.utc_minute, session_pk, fact.upload as i64, fact.download as i64],
-            )?;
-        }
-        for item in coverage {
-            self.connection.execute(
-                "insert into coverage_interval(kind, reason, started_utc, ended_utc) values (?1, ?2, ?3, ?4)",
-                params![item.kind, item.reason, utc, Option::<i64>::None],
-            )?;
-        }
-        Ok(())
+        persist_slice(
+            &self.connection,
+            &AlertCommitSlice {
+                facts: facts.to_vec(),
+                coverage: coverage.to_vec(),
+                live_rows: rows.to_vec(),
+                utc,
+                writes: AlertWriteSet::default(),
+            },
+        )
     }
+}
 
-    fn ensure_session(
-        &self,
-        epoch: i64,
-        connection_id: &str,
-        utc: i64,
-        host: Option<&str>,
-    ) -> Result<i64, StorageError> {
-        if let Some(existing) = self
-            .connection
-            .query_row(
-                "select session_pk from connection_session where epoch_id = ?1 and connection_id = ?2",
-                params![epoch, connection_id],
-                |row| row.get(0),
-            )
-            .optional()?
-        {
-            return Ok(existing);
+fn persist_slice(connection: &Connection, slice: &AlertCommitSlice) -> Result<(), StorageError> {
+    for row in &slice.live_rows {
+        let (epoch, id) = split_identity(&row.identity);
+        let session_pk = ensure_session_on(connection, epoch, id, slice.utc, row.host.as_deref())?;
+        intern_and_attr(connection, session_pk, row, slice.utc)?;
+        for (position, node) in row.chains.iter().enumerate() {
+            connection.execute(
+                "insert or ignore into connection_chain(session_pk, position, node) values (?1, ?2, ?3)",
+                params![session_pk, position as i64, node],
+            )?;
         }
-        self.connection.execute(
-            "insert into connection_session(epoch_id, connection_id, started_utc, host) values (?1, ?2, ?3, ?4)",
-            params![epoch, connection_id, utc, host],
+    }
+    for fact in &slice.facts {
+        let (epoch, id) = split_identity(&fact.session_key);
+        let session_pk = ensure_session_on(connection, epoch, id, slice.utc, None)?;
+        connection.execute(
+            "insert into connection_minute(utc_minute, session_pk, upload, download) values (?1, ?2, ?3, ?4)
+             on conflict(utc_minute, session_pk) do update set
+                upload = upload + excluded.upload,
+                download = download + excluded.download",
+            params![fact.utc_minute, session_pk, fact.upload as i64, fact.download as i64],
         )?;
-        Ok(self.connection.last_insert_rowid())
     }
+    for item in &slice.coverage {
+        connection.execute(
+            "insert into coverage_interval(kind, reason, started_utc, ended_utc) values (?1, ?2, ?3, ?4)",
+            params![item.kind, item.reason, slice.utc, Option::<i64>::None],
+        )?;
+    }
+    Ok(())
+}
 
+fn ensure_session_on(
+    connection: &Connection,
+    epoch: i64,
+    connection_id: &str,
+    utc: i64,
+    host: Option<&str>,
+) -> Result<i64, StorageError> {
+    if let Some(existing) = connection
+        .query_row(
+            "select session_pk from connection_session where epoch_id = ?1 and connection_id = ?2",
+            params![epoch, connection_id],
+            |row| row.get(0),
+        )
+        .optional()?
+    {
+        return Ok(existing);
+    }
+    connection.execute(
+        "insert into connection_session(epoch_id, connection_id, started_utc, host) values (?1, ?2, ?3, ?4)",
+        params![epoch, connection_id, utc, host],
+    )?;
+    Ok(connection.last_insert_rowid())
+}
+
+impl StorageCoordinator {
     pub fn seed_report_fixture(&self) -> Result<(), StorageError> {
         self.connection.execute_batch(
             "
@@ -732,7 +839,28 @@ mod storage_schema_tests {
             );
         }
         assert!(tables.iter().any(|item| item == "traffic_hourly_dimension"));
-        assert!(!tables.iter().any(|item| item.contains("alert")));
+        assert!(tables.iter().any(|item| item == "alert_rule"));
+        assert!(tables.iter().any(|item| item == "notification_outbox"));
+        let version: i32 = connection
+            .query_row("pragma user_version", [], |row| row.get(0))
+            .expect("ver");
+        assert_eq!(version, crate::c4::schema::C4_SCHEMA_VERSION);
+        let c1: String = connection
+            .query_row(
+                "select checksum from schema_migration where version = 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("c1");
+        let c3: String = connection
+            .query_row(
+                "select checksum from schema_migration where version = 2",
+                [],
+                |row| row.get(0),
+            )
+            .expect("c3");
+        assert_eq!(c1, MIGRATION_CHECKSUM);
+        assert_eq!(c3, C3_MIGRATION_CHECKSUM);
     }
 }
 
@@ -1055,6 +1183,150 @@ mod recovery_future_schema_tests {
         }
         let status = RecoveryFacade::open(&path).status().expect("status");
         assert_eq!(status["future"], true);
+    }
+}
+
+#[cfg(test)]
+mod c4_alert_commit_atomic_tests {
+    use super::*;
+    use crate::c4::types::{
+        AlertEvent, AlertEvidence, AlertInstance, AlertWriteSet, EventKind, InstanceStatus,
+        OutboxIntent, OutboxStatus,
+    };
+    use tempfile::tempdir;
+
+    fn slice() -> AlertCommitSlice {
+        let evidence = AlertEvidence {
+            rule_id: "r1".into(),
+            rule_version: 1,
+            data_version: Some(1),
+            evaluated_at_utc: 10,
+            window_start_utc: None,
+            window_end_utc: None,
+            display_timezone: "UTC".into(),
+            selector: "health_kind:tcp_auth".into(),
+            direction: None,
+            observed_value: Some(1),
+            trigger_threshold: 1,
+            recovery_threshold: None,
+            coverage_summary: "unhealthy".into(),
+            policy_metadata: None,
+            report_query: None,
+            not_evaluable_reason: None,
+        };
+        AlertCommitSlice {
+            facts: Vec::new(),
+            coverage: Vec::new(),
+            live_rows: Vec::new(),
+            utc: 10,
+            writes: AlertWriteSet {
+                instances: vec![AlertInstance {
+                    instance_id: "i1".into(),
+                    rule_id: "r1".into(),
+                    rule_version: 1,
+                    selector_identity: "health_kind:tcp_auth".into(),
+                    status: InstanceStatus::Active,
+                    started_utc: Some(10),
+                    resolved_utc: None,
+                    last_eval_utc: 10,
+                    last_observed: Some(1),
+                    evidence: evidence.clone(),
+                }],
+                events: vec![AlertEvent {
+                    event_id: "e1".into(),
+                    instance_id: "i1".into(),
+                    bundle_id: "1:1".into(),
+                    kind: EventKind::Activated,
+                    at_utc: 10,
+                    evidence,
+                    idempotency_key: "e1-key".into(),
+                }],
+                outbox: vec![OutboxIntent {
+                    outbox_id: "o1".into(),
+                    event_id: "e1".into(),
+                    bundle_id: "1:1".into(),
+                    status: OutboxStatus::Pending,
+                    attempt: 0,
+                    next_attempt_at: 10,
+                    lease_until: None,
+                    lease_token: None,
+                    error_class: None,
+                    error_summary: None,
+                    idempotency_key: "o1-key".into(),
+                    created_utc: 10,
+                }],
+            },
+        }
+    }
+
+    #[test]
+    fn kill_after_alerts_rolls_back_facts_and_outbox() {
+        let dir = tempdir().expect("dir");
+        let path = dir.path().join("a.sqlite3");
+        let bundle = CommitBundle {
+            writer_epoch: 1,
+            bundle_seq: 1,
+            payload: "1,1,1,1".into(),
+        };
+        {
+            let mut coordinator = StorageCoordinator::open(&path).expect("open");
+            coordinator.test_kill = Some(CommitKillPoint::AfterAlerts);
+            let error = coordinator
+                .commit_alert_bundle(&bundle, &slice())
+                .expect_err("kill");
+            assert!(error.to_string().contains("kill"));
+        }
+        let coordinator = StorageCoordinator::open(&path).expect("reopen");
+        assert_eq!(coordinator.receipt_count().expect("c"), 0);
+        let events: i64 = coordinator
+            .connection()
+            .query_row("select count(*) from alert_event", [], |row| row.get(0))
+            .expect("ev");
+        let outbox: i64 = coordinator
+            .connection()
+            .query_row("select count(*) from notification_outbox", [], |row| {
+                row.get(0)
+            })
+            .expect("ob");
+        assert_eq!(events, 0);
+        assert_eq!(outbox, 0);
+    }
+
+    #[test]
+    fn retry_same_bundle_does_not_duplicate_event() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("b.sqlite3")).expect("open");
+        let bundle = CommitBundle {
+            writer_epoch: 1,
+            bundle_seq: 1,
+            payload: "1,1,1,1".into(),
+        };
+        let extras = slice();
+        assert!(matches!(
+            coordinator
+                .commit_alert_bundle(&bundle, &extras)
+                .expect("first"),
+            CommitOutcome::Applied(_)
+        ));
+        assert!(matches!(
+            coordinator
+                .commit_alert_bundle(&bundle, &extras)
+                .expect("dup"),
+            CommitOutcome::Duplicate(_)
+        ));
+        let events: i64 = coordinator
+            .connection()
+            .query_row("select count(*) from alert_event", [], |row| row.get(0))
+            .expect("ev");
+        let outbox: i64 = coordinator
+            .connection()
+            .query_row("select count(*) from notification_outbox", [], |row| {
+                row.get(0)
+            })
+            .expect("ob");
+        assert_eq!(events, 1);
+        assert_eq!(outbox, 1);
     }
 }
 

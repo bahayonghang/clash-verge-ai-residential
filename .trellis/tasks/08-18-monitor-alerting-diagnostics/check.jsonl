@@ -3,3 +3,8 @@
 {"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "检查健康状态与诊断没有混淆 TCP 401、管道访问拒绝、busy 超时和协议错误。"}
 {"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "审查数据库、服务、IPC、前端和 Windows 通知之间的契约、错误与版本传播。"}
 {"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "审查是否复用 C3 报告/rollup 和共享状态机，阻止重复聚合与分叉口径。"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "backend quality check commands"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "frontend quality check commands"}
+{"file": ".trellis/spec/residential-monitor/storage/index.md", "reason": "storage quality check commands"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "C4 must only append schema, keep C1/C3 checksums"}
+{"file": ".trellis/tasks/archive/2026-08/08-18-monitor-reporting-data/research/c3-ac-evidence.md", "reason": "C3 AC evidence and C3-AC10 limit"}

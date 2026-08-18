@@ -344,6 +344,62 @@ pub fn timezone_offset_secs(name: &str, at_utc: i64) -> Result<i32, ReportError>
     }
 }
 
+/// 本地自然日的 UTC 半开区间 `[start, end)`。DST 长短日由偏移重算，不固定 86400。
+pub fn local_day_bounds(timezone: &str, at_utc: i64) -> Result<(i64, i64), ReportError> {
+    let (year, month, day) = local_ymd(timezone, at_utc)?;
+    let start = utc_from_local_naive(timezone, year, month, day, 0, 0, 0)?;
+    let (ny, nm, nd) = next_local_day(year, month, day);
+    let end = utc_from_local_naive(timezone, ny, nm, nd, 0, 0, 0)?;
+    Ok((start, end))
+}
+
+/// 本地自然月的 UTC 半开区间 `[start, end)`。月份长度按本地历法。
+pub fn local_month_bounds(timezone: &str, at_utc: i64) -> Result<(i64, i64), ReportError> {
+    let (year, month, _) = local_ymd(timezone, at_utc)?;
+    let start = utc_from_local_naive(timezone, year, month, 1, 0, 0, 0)?;
+    let (ny, nm) = if month == 12 {
+        (year + 1, 1)
+    } else {
+        (year, month + 1)
+    };
+    let end = utc_from_local_naive(timezone, ny, nm, 1, 0, 0, 0)?;
+    Ok((start, end))
+}
+
+fn local_ymd(timezone: &str, at_utc: i64) -> Result<(i32, u32, u32), ReportError> {
+    use chrono::Datelike;
+    let offset = i64::from(timezone_offset_secs(timezone, at_utc)?);
+    let local = chrono::DateTime::from_timestamp(at_utc + offset, 0)
+        .ok_or(ReportError::InvalidQuery("timestamp"))?;
+    let date = local.date_naive();
+    Ok((date.year(), date.month(), date.day()))
+}
+
+fn utc_from_local_naive(
+    timezone: &str,
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+    second: u32,
+) -> Result<i64, ReportError> {
+    let naive = chrono::NaiveDate::from_ymd_opt(year, month, day)
+        .and_then(|date| date.and_hms_opt(hour, minute, second))
+        .ok_or(ReportError::InvalidQuery("civil time"))?;
+    let as_utc = naive.and_utc().timestamp();
+    let mut utc = as_utc - i64::from(timezone_offset_secs(timezone, as_utc)?);
+    utc = as_utc - i64::from(timezone_offset_secs(timezone, utc)?);
+    Ok(utc)
+}
+
+fn next_local_day(year: i32, month: u32, day: u32) -> (i32, u32, u32) {
+    use chrono::Datelike;
+    let date = chrono::NaiveDate::from_ymd_opt(year, month, day).unwrap_or(chrono::NaiveDate::MIN);
+    let next = date.succ_opt().unwrap_or(date);
+    (next.year(), next.month(), next.day())
+}
+
 fn local_offset_secs() -> i32 {
     let local = chrono::Local::now();
     local.offset().local_minus_utc()
@@ -664,6 +720,40 @@ mod query_contract_tests {
             timezone_offset_secs("America/New_York", summer).unwrap(),
             -4 * 3600
         );
+    }
+
+    #[test]
+    fn local_day_bounds_handle_dst_spring_forward() {
+        let during = chrono::NaiveDate::from_ymd_opt(2026, 3, 8)
+            .unwrap()
+            .and_hms_opt(18, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp();
+        let (start, end) = local_day_bounds("America/New_York", during).expect("day");
+        assert_eq!(end - start, 23 * 3600);
+        let (again_s, again_e) = local_day_bounds("America/New_York", start).expect("start");
+        assert_eq!((again_s, again_e), (start, end));
+    }
+
+    #[test]
+    fn local_month_bounds_follow_calendar_length() {
+        let feb = chrono::NaiveDate::from_ymd_opt(2026, 2, 10)
+            .unwrap()
+            .and_hms_opt(12, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp();
+        let (start, end) = local_month_bounds("Asia/Shanghai", feb).expect("month");
+        assert_eq!(end - start, 28 * 86_400);
+        let mar = chrono::NaiveDate::from_ymd_opt(2026, 3, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp();
+        let expected_end = mar - 8 * 3600;
+        assert_eq!(end, expected_end);
     }
 
     #[test]

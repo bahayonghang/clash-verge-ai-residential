@@ -45,8 +45,8 @@ pub fn default_routes() -> Vec<RouteDescriptor> {
         RouteDescriptor {
             id: "alerts".into(),
             title_zh: "告警".into(),
-            available: false,
-            unavailable_until: Some("C4".into()),
+            available: true,
+            unavailable_until: None,
         },
         RouteDescriptor {
             id: "settings-data".into(),
@@ -63,6 +63,7 @@ pub enum FilePurpose {
     ReportExport,
     BackupCreate,
     BackupRestore,
+    DiagnosticsExport,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -202,15 +203,15 @@ mod shell_seam_tests {
     use tempfile::tempdir;
 
     #[test]
-    fn reports_and_alerts_are_unavailable_until_child() {
+    fn reports_and_alerts_are_available_after_c4() {
         let routes = default_routes();
         assert_eq!(routes.len(), 5);
         let reports = routes.iter().find(|item| item.id == "reports").unwrap();
         assert!(reports.available);
         assert_eq!(reports.unavailable_until, None);
         let alerts = routes.iter().find(|item| item.id == "alerts").unwrap();
-        assert!(!alerts.available);
-        assert_eq!(alerts.unavailable_until.as_deref(), Some("C4"));
+        assert!(alerts.available);
+        assert_eq!(alerts.unavailable_until, None);
     }
 
     #[test]

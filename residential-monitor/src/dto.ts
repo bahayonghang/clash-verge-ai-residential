@@ -91,7 +91,109 @@ export type MonitorStreamMessage =
       seq: number;
       snapshot: LiveOverview;
       backendTime: number;
+    }
+  | {
+      kind: "alertChanged";
+      schemaVersion: number;
+      subscriptionId: number;
+      seq: number;
+      summary: AlertSummary;
+      backendTime: number;
     };
+
+export interface AlertSummary {
+  schemaVersion: number;
+  activeCount: number;
+  notEvaluableCount: number;
+  outboxBacklog: number;
+  lastEventUtc: number | null;
+}
+
+export interface AlertRule {
+  ruleId: string;
+  version: number;
+  enabled: boolean;
+  kind: "health" | "rate" | "period-usage";
+  selectorKind: "health-kind" | "primary-category" | "domain" | "process";
+  selectorValue: string | null;
+  direction: "upload" | "download" | "combined" | null;
+  thresholdValue: number;
+  recoveryThreshold: number | null;
+  period: "rolling-1h" | "local-day" | "local-month" | null;
+  timezone: string;
+  cooldownSec: number;
+  quietStartMin: number | null;
+  quietEndMin: number | null;
+  createdUtc: number;
+  updatedUtc: number;
+}
+
+export interface AlertEvidence {
+  ruleId: string;
+  ruleVersion: number;
+  dataVersion: number | null;
+  evaluatedAtUtc: number;
+  windowStartUtc: number | null;
+  windowEndUtc: number | null;
+  displayTimezone: string;
+  selector: string;
+  direction: "upload" | "download" | "combined" | null;
+  observedValue: number | null;
+  triggerThreshold: number;
+  recoveryThreshold: number | null;
+  coverageSummary: string;
+  policyMetadata: string | null;
+  reportQuery: ReportQuery | null;
+  notEvaluableReason: string | null;
+}
+
+export interface AlertInstance {
+  instanceId: string;
+  ruleId: string;
+  ruleVersion: number;
+  selectorIdentity: string;
+  status: "inactive" | "active" | "not-evaluable" | "resolved" | "superseded";
+  startedUtc: number | null;
+  resolvedUtc: number | null;
+  lastEvalUtc: number;
+  lastObserved: number | null;
+  evidence: AlertEvidence;
+}
+
+export interface AlertCenterPage {
+  schemaVersion: number;
+  items: AlertInstance[];
+  nextCursor: string | null;
+}
+
+export interface DiagnosticsSnapshot {
+  schemaVersion: number;
+  appVersion: string;
+  sqliteUserVersion: number;
+  supportedSchema: number;
+  c4Checksum: string;
+  journalMode: string;
+  synchronous: string;
+  controllerTransportStatus: string;
+  coverageSummary: string;
+  writerWatermark: number;
+  writerReceipts: number;
+  lastFrameUtc: number | null;
+  reconnectHintZh: string;
+  databaseOk: boolean;
+  walCheckpointOk: boolean;
+  backupRetentionNoteZh: string;
+  alertActive: number;
+  outboxBacklog: number;
+  recentRedactedErrorClasses: string[];
+}
+
+export interface NotifyCapability {
+  available: boolean;
+  reasonZh: string;
+  canFocusApp: boolean;
+  focusAssistUnknown: boolean;
+}
 
 export interface ControllerSettings {
   transport: string;
@@ -222,6 +324,20 @@ export interface RetentionPreview {
   dailyCoreRows: number;
   autoDeleteEnabled: boolean;
   noteZh: string;
+}
+
+export function decodeAlertCenter(value: unknown): AlertCenterPage {
+  if (!isRecord(value) || value.schemaVersion !== 1 || !Array.isArray(value.items)) {
+    throw new Error("AlertCenterPage 无效");
+  }
+  return value as unknown as AlertCenterPage;
+}
+
+export function decodeDiagnostics(value: unknown): DiagnosticsSnapshot {
+  if (!isRecord(value) || value.schemaVersion !== 1 || typeof value.c4Checksum !== "string") {
+    throw new Error("DiagnosticsSnapshot 无效");
+  }
+  return value as unknown as DiagnosticsSnapshot;
 }
 
 export function decodeReportResult(value: unknown): ReportResult {

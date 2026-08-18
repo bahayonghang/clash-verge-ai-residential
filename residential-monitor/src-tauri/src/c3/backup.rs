@@ -1,7 +1,6 @@
 //! 用户 Online Backup 与安全 restore。不复制热库文件。
 
 use crate::c3::query::ReportError;
-use crate::c3::schema::C3_SCHEMA_VERSION;
 use crate::c3::space::SpaceBudget;
 use crate::storage::{backup_pages, migrate, RecoveryFacade};
 use rusqlite::Connection;
@@ -60,7 +59,7 @@ impl BackupRestoreService {
             return Err(ReportError::Failed("integrity"));
         }
         let manifest = BackupManifest {
-            schema_version: C3_SCHEMA_VERSION,
+            schema_version: user_version,
             user_version,
             checksum: checksum.clone(),
             created_utc,
@@ -130,7 +129,7 @@ impl BackupRestoreService {
             return Ok(false);
         }
         let user_version = read_user_version(candidate)?;
-        if user_version > C3_SCHEMA_VERSION {
+        if user_version > crate::c0_contract::SCHEMA_VERSION {
             return Ok(false);
         }
         let manifest = candidate.with_extension("manifest.json");

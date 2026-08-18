@@ -1,9 +1,15 @@
 import {
+  decodeAlertCenter,
+  decodeDiagnostics,
   decodeReportResult,
   decodeShellStatus,
+  type AlertCenterPage,
+  type AlertRule,
   type BootstrapDto,
   type CloseState,
+  type DiagnosticsSnapshot,
   type LiveOverview,
+  type NotifyCapability,
   type ReportQuery,
   type ReportResult,
   type RetentionPreview,
@@ -249,6 +255,103 @@ function renderUnavailable(name: string, until: string): string {
   return `<section class="panel"><h2>${name}</h2><p>此页面尚未交付，由 ${until} 接入。不显示伪数据。</p></section>`;
 }
 
+function renderAlerts(
+  page: AlertCenterPage | null,
+  statusZh: string,
+  diagnostics: DiagnosticsSnapshot | null,
+  notify: NotifyCapability | null
+): string {
+  const rows =
+    page?.items
+      .map((item) => {
+        const observed =
+          item.evidence.observedValue === null ? "未知" : String(item.evidence.observedValue);
+        const recovered = item.resolvedUtc === null ? "—" : formatUtc(item.resolvedUtc);
+        return `<tr>
+          <td>${item.ruleId} v${item.ruleVersion}</td>
+          <td>${item.status}</td>
+          <td>${item.selectorIdentity}</td>
+          <td>${observed}</td>
+          <td>${item.evidence.coverageSummary}</td>
+          <td>${recovered}</td>
+          <td>${item.evidence.notEvaluableReason ?? "—"}</td>
+        </tr>`;
+      })
+      .join("") ?? "";
+  const notifyZh = notify
+    ? `${notify.available ? "通知 seam 可用" : "通知不可用"}。${notify.reasonZh}`
+    : "尚未检测通知能力。";
+  const diag = diagnostics
+    ? `<p>应用 ${diagnostics.appVersion}，schema ${diagnostics.sqliteUserVersion} / ${diagnostics.supportedSchema}，WAL ${diagnostics.journalMode} / ${diagnostics.synchronous}。</p>
+       <p>传输 ${diagnostics.controllerTransportStatus}，覆盖 ${diagnostics.coverageSummary}，watermark ${diagnostics.writerWatermark}，活动告警 ${diagnostics.alertActive}，outbox ${diagnostics.outboxBacklog}。</p>
+       <p>${diagnostics.backupRetentionNoteZh} ${diagnostics.reconnectHintZh}</p>`
+    : "<p>尚未生成诊断。</p>";
+  return `
+    <section class="panel">
+      <h2>告警中心</h2>
+      <p>应用内记录是权威来源。系统通知是尽力送达。静默只抑制通知，不删除事件。</p>
+      <p class="status">${statusZh}</p>
+      <p>${notifyZh}</p>
+      <button type="button" id="refresh-alerts">刷新告警</button>
+      <button type="button" id="test-notification">测试通知</button>
+      <button type="button" id="export-diagnostics">导出诊断</button>
+    </section>
+    <section class="panel">
+      <h2>规则</h2>
+      <p>速率单位 bps，周期用量单位 byte。恢复阈值必须小于触发阈值。时区用于自然日 / 月。</p>
+      <label>规则 ID <input id="alert-rule-id" value="rate-home" /></label>
+      <label>类型
+        <select id="alert-kind">
+          <option value="rate">速率</option>
+          <option value="period-usage">周期用量</option>
+          <option value="health">健康</option>
+        </select>
+      </label>
+      <label>对象
+        <select id="alert-selector-kind">
+          <option value="primary-category">主分类</option>
+          <option value="domain">域名</option>
+          <option value="process">进程</option>
+          <option value="health-kind">健康根因</option>
+        </select>
+      </label>
+      <label>选择值 <input id="alert-selector-value" value="家宽" /></label>
+      <label>方向
+        <select id="alert-direction">
+          <option value="download">下行</option>
+          <option value="upload">上行</option>
+          <option value="combined">合计</option>
+        </select>
+      </label>
+      <label>触发阈值 <input id="alert-threshold" type="number" value="1000000" /></label>
+      <label>恢复阈值 <input id="alert-recovery" type="number" value="400000" /></label>
+      <label>周期
+        <select id="alert-period">
+          <option value="">无</option>
+          <option value="rolling-1h">滚动 1 小时</option>
+          <option value="local-day">本地自然日</option>
+          <option value="local-month">本地自然月</option>
+        </select>
+      </label>
+      <label>时区 <input id="alert-timezone" value="Asia/Shanghai" /></label>
+      <button type="button" id="save-alert-rule">保存规则</button>
+    </section>
+    <section class="panel">
+      <h2>活动与历史</h2>
+      <table class="data">
+        <thead><tr><th>规则</th><th>状态</th><th>对象</th><th>观测值</th><th>覆盖</th><th>恢复时间</th><th>不可评估</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="7">无告警</td></tr>`}</tbody>
+      </table>
+    </section>
+    <section class="panel">
+      <h2>脱敏诊断</h2>
+      ${diag}
+    </section>
+  `;
+}
+
+
+
 function navHtml(active: RouteId, routes: BootstrapDto["routes"]): string {
   return routes
     .map((route) => {
@@ -267,7 +370,7 @@ function previewBootstrap(): BootstrapDto {
       { id: "overview", titleZh: "概览", available: true, unavailableUntil: null },
       { id: "live", titleZh: "实时连接", available: true, unavailableUntil: null },
       { id: "reports", titleZh: "分析报告", available: true, unavailableUntil: null },
-      { id: "alerts", titleZh: "告警", available: false, unavailableUntil: "C4" },
+      { id: "alerts", titleZh: "告警", available: true, unavailableUntil: null },
       { id: "settings-data", titleZh: "设置 / 数据管理", available: true, unavailableUntil: null }
     ],
     overview: {
@@ -321,7 +424,11 @@ function renderApp(
   state: MonitorState,
   route: RouteId,
   report: ReportResult | null,
-  reportStatus: string
+  reportStatus: string,
+  alerts: AlertCenterPage | null,
+  alertStatus: string,
+  diagnostics: DiagnosticsSnapshot | null,
+  notify: NotifyCapability | null
 ): void {
   const body =
     boot.branch === "recovery-only"
@@ -334,7 +441,9 @@ function renderApp(
             ? renderSettings(boot)
             : route === "reports"
               ? renderReports(report, reportStatus)
-              : renderUnavailable("告警", "C4");
+              : route === "alerts"
+                ? renderAlerts(alerts, alertStatus, diagnostics, notify)
+                : renderUnavailable("告警", "C4");
   root.innerHTML = `
     <header class="top">
       <h1>家宽流量监控</h1>
@@ -370,19 +479,36 @@ async function main(): Promise<void> {
   let state = emptyMonitorState();
   let report: ReportResult | null = null;
   let reportStatus = "尚未运行报告。";
+  let alerts: AlertCenterPage | null = null;
+  let alertStatus = "尚未加载告警。";
+  let diagnostics: DiagnosticsSnapshot | null = null;
+  let notify: NotifyCapability | null = null;
   state.snapshot = boot.overview;
-  renderApp(app, boot, state, route, report, reportStatus);
+  renderApp(app, boot, state, route, report, reportStatus, alerts, alertStatus, diagnostics, notify);
 
   const apply = (next: MonitorState, nextRoute = route): void => {
     state = next;
     route = nextRoute;
-    renderApp(app, boot, state, route, report, reportStatus);
+    renderApp(app, boot, state, route, report, reportStatus, alerts, alertStatus, diagnostics, notify);
   };
 
   const applyReport = (next: ReportResult | null, status: string): void => {
     report = next;
     reportStatus = status;
-    renderApp(app, boot, state, route, report, reportStatus);
+    renderApp(app, boot, state, route, report, reportStatus, alerts, alertStatus, diagnostics, notify);
+  };
+
+  const applyAlerts = (
+    next: AlertCenterPage | null,
+    status: string,
+    nextDiag = diagnostics,
+    nextNotify = notify
+  ): void => {
+    alerts = next;
+    alertStatus = status;
+    diagnostics = nextDiag;
+    notify = nextNotify;
+    renderApp(app, boot, state, route, report, reportStatus, alerts, alertStatus, diagnostics, notify);
   };
 
   const buildQuery = (): ReportQuery => {
@@ -407,6 +533,17 @@ async function main(): Promise<void> {
     const nextRoute = target.dataset.route as RouteId | undefined;
     if (nextRoute) {
       apply(state, nextRoute);
+      if (nextRoute === "alerts") {
+        try {
+          const page = decodeAlertCenter(
+            await invokeCommand("list_alert_center", { status: null, after: null })
+          );
+          const diag = decodeDiagnostics(await invokeCommand("get_diagnostics"));
+          applyAlerts(page, `已加载 ${page.items.length} 条。`, diag, notify);
+        } catch {
+          applyAlerts(alerts, "告警中心暂不可用。");
+        }
+      }
       return;
     }
     const closeId = target.dataset.close;
@@ -517,6 +654,68 @@ async function main(): Promise<void> {
         }
       } catch {
         apply({ ...state, errorZh: "保留预览失败。" });
+      }
+    }
+    if (target.id === "refresh-alerts") {
+      try {
+        const page = decodeAlertCenter(
+          await invokeCommand("list_alert_center", { status: null, after: null })
+        );
+        const diag = decodeDiagnostics(await invokeCommand("get_diagnostics"));
+        applyAlerts(page, `已刷新 ${page.items.length} 条。`, diag, notify);
+      } catch {
+        applyAlerts(alerts, "刷新失败。");
+      }
+    }
+    if (target.id === "test-notification") {
+      try {
+        const cap = await invokeCommand<NotifyCapability>("test_notification");
+        applyAlerts(alerts, cap.available ? "已提交测试通知。" : cap.reasonZh, diagnostics, cap);
+      } catch {
+        applyAlerts(alerts, "测试通知失败。应用内记录仍可用。");
+      }
+    }
+    if (target.id === "export-diagnostics") {
+      try {
+        const path = await invokeCommand<string | null>("pick_file", {
+          purpose: "diagnostics-export",
+          mode: "save"
+        });
+        if (path) {
+          await invokeCommand("export_diagnostics", { path });
+          applyAlerts(alerts, "诊断已导出。");
+        }
+      } catch {
+        applyAlerts(alerts, "诊断导出失败。采集与告警未中断。");
+      }
+    }
+    if (target.id === "save-alert-rule") {
+      const period = (document.querySelector("#alert-period") as HTMLSelectElement | null)?.value ?? "";
+      const rule: AlertRule = {
+        ruleId: (document.querySelector("#alert-rule-id") as HTMLInputElement | null)?.value ?? "rate-home",
+        version: 1,
+        enabled: true,
+        kind: ((document.querySelector("#alert-kind") as HTMLSelectElement | null)?.value ?? "rate") as AlertRule["kind"],
+        selectorKind: ((document.querySelector("#alert-selector-kind") as HTMLSelectElement | null)?.value ??
+          "primary-category") as AlertRule["selectorKind"],
+        selectorValue: (document.querySelector("#alert-selector-value") as HTMLInputElement | null)?.value || null,
+        direction: ((document.querySelector("#alert-direction") as HTMLSelectElement | null)?.value ??
+          "download") as AlertRule["direction"],
+        thresholdValue: Number((document.querySelector("#alert-threshold") as HTMLInputElement | null)?.value ?? "1"),
+        recoveryThreshold: Number((document.querySelector("#alert-recovery") as HTMLInputElement | null)?.value ?? "0"),
+        period: period === "" ? null : (period as AlertRule["period"]),
+        timezone: (document.querySelector("#alert-timezone") as HTMLInputElement | null)?.value ?? "UTC",
+        cooldownSec: 300,
+        quietStartMin: null,
+        quietEndMin: null,
+        createdUtc: 0,
+        updatedUtc: 0
+      };
+      try {
+        await invokeCommand("upsert_alert_rule", { rule });
+        applyAlerts(alerts, "规则已保存。新版本不会继承旧连续命中。");
+      } catch {
+        applyAlerts(alerts, "规则无效。请检查滞回、时区和周期。");
       }
     }
   });

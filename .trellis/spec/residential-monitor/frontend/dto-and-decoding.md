@@ -14,7 +14,7 @@
 - `subscribe_monitor(on_event) -> subscriptionId`
 - `resync_monitor(subscriptionId, on_event) -> newSubscriptionId`
 - 首帧：`bootstrap { schemaVersion, subscriptionId, snapshot, baseSeq, backendTime }`
-- 后续：`connectionDelta | healthChanged | summaryChanged`，均带 `seq`
+- 后续：`connectionDelta | healthChanged | summaryChanged | alertChanged`，均带 `seq`
 
 ### 3. Contracts
 - `schemaVersion` 必须为 `1`。
@@ -88,4 +88,29 @@
 前端自己按表格重算 Top N，或导出时再跑一遍 SQL。
 #### Correct
 图表、数据表和导出都读当前 `ReportResult`。
+
+## Scenario: C4 Alert Commands
+
+### 1. Scope / Trigger
+- Trigger: 告警中心、规则编辑、测试通知、诊断预览与导出。
+
+### 2. Signatures
+- `list_alert_rules() -> AlertRule[]`
+- `upsert_alert_rule(rule) -> AlertRule`
+- `list_alert_center(status, after) -> AlertCenterPage`
+- `alert_summary() -> AlertSummary`
+- `test_notification() -> NotifyCapability`
+- `get_diagnostics() -> DiagnosticsSnapshot`
+- `export_diagnostics(path) -> path`
+- `scan_outbox() -> count`
+
+### 3. Contracts
+- `AlertCenterPage.schemaVersion` 与 `DiagnosticsSnapshot.schemaVersion` 必须为 `1`。
+- 测试通知不得写入真实告警历史。
+- 诊断失败不影响采集或告警提交。
+
+### 4. Validation & Error Matrix
+- 无效滞回 / 周期 / 时区 → `invalid_rule`
+- C3 能力不支持或 coverage 不足 → 实例 `not-evaluable`，观测值不得写成零
+- 通知不可用 → 应用内记录仍完整
 

@@ -113,6 +113,17 @@ pub enum MonitorStreamMessage {
         #[serde(rename = "backendTime")]
         backend_time: i64,
     },
+    #[serde(rename = "alertChanged")]
+    AlertChanged {
+        #[serde(rename = "schemaVersion")]
+        schema_version: u32,
+        #[serde(rename = "subscriptionId")]
+        subscription_id: u64,
+        seq: u64,
+        summary: crate::c4::types::AlertSummary,
+        #[serde(rename = "backendTime")]
+        backend_time: i64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -301,6 +312,23 @@ impl MonitorHub {
             removes,
             backend_time: utc,
         }))
+    }
+
+    pub fn publish_alert(
+        &self,
+        summary: crate::c4::types::AlertSummary,
+        utc: i64,
+    ) -> MonitorStreamMessage {
+        let seq = self.live.apply_receipt(utc as u64);
+        let guard = self.inner.lock().expect("hub");
+        let subscription_id = *guard.active.keys().next().unwrap_or(&0);
+        MonitorStreamMessage::AlertChanged {
+            schema_version: SCHEMA_VERSION,
+            subscription_id,
+            seq,
+            summary,
+            backend_time: utc,
+        }
     }
 
     pub fn publish_health(&self, health: HealthView, utc: i64) -> MonitorStreamMessage {

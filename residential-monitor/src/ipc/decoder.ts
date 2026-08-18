@@ -1,4 +1,9 @@
-import { SCHEMA_VERSION, type LiveOverview, type MonitorStreamMessage } from "../dto";
+import {
+  SCHEMA_VERSION,
+  type AlertSummary,
+  type LiveOverview,
+  type MonitorStreamMessage
+} from "../dto";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -150,6 +155,20 @@ export function decodeMonitorMessage(value: unknown): MonitorStreamMessage {
       subscriptionId,
       seq: requiredNumber(value.seq, "seq"),
       snapshot: decodeOverview(value.snapshot),
+      backendTime: requiredNumber(value.backendTime, "backendTime")
+    };
+  }
+  if (kind === "alertChanged") {
+    if (!isRecord(value.summary)) {
+      throw new Error("alertChanged.summary 缺失");
+    }
+    const summary = value.summary as unknown as AlertSummary;
+    return {
+      kind,
+      schemaVersion: SCHEMA_VERSION,
+      subscriptionId,
+      seq: requiredNumber(value.seq, "seq"),
+      summary,
       backendTime: requiredNumber(value.backendTime, "backendTime")
     };
   }

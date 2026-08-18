@@ -9,4 +9,5 @@
 - C2 `FileDialogPort` 只返回预声明用途的用户选择路径。
 - C3 真实 operation：`run_report`、`export_report`、`create_backup`、`restore_backup`、`run_retention`。取消必须 interrupt 实际 SQLite / 备份 step，不只丢弃前端结果。
 - rusqlite `progress_handler` 返回 `true` 表示中断，`false` 表示继续。
-- secret 不得进入 URL、日志、SQLite、Channel、预览或导出。导出前扫描 `bearer ` / `password=` / `secret=`。
+- secret 不得进入 URL、日志、SQLite、Channel、预览、导出或诊断。导出与诊断前扫描 `bearer ` / `password=` / `secret=`。
+- C4 诊断只含白名单字段；完整域名、IP、进程路径和 Credential Manager 内容不得进入诊断包。

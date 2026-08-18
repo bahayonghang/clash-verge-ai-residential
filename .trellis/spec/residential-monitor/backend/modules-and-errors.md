@@ -8,7 +8,8 @@
 - C2 只消费 C1：`ControllerSession`、`AccountingEngine`、`StorageCoordinator`、`LiveProjection`、`RecoveryFacade`。C2 模块不得 `use rusqlite`，不得 `create table`。
 - C2 代码位于 `residential-monitor/src-tauri/src/c2/`。
 - C3 代码位于 `residential-monitor/src-tauri/src/c3/`。C3 只通过 `StorageCoordinator` / `RecoveryFacade` 访问 SQLite，不得另建 writer 或通用 Repository。
+- C4 代码位于 `residential-monitor/src-tauri/src/c4/`。`AlertEngine` 拥有告警状态机；周期用量只调用 `ReportService`；通知只经 `NotificationSink`。C4 不得另建 writer 或第二套小时 / 日 / 月聚合。
 - Recovery Shell：`restoreAvailable` 为 `true`。restore 不初始化 `ReportService`；失败必须保留当前可用库。
-- C4 未启动前不得创建 `alert` / `notification` / `outbox` 表。
+- C4 前向表：`alert_rule`、`alert_instance`、`alert_event`、`notification_outbox`。不得改写 C1 / C3 已发布 migration。
 - 调试：`just tdev`（`tauri dev`）。出包：`just monitor-build`（只生成 NSIS，不安装）。安装：`just tinstall`（会改本机 current-user 安装态）。未再确认前不要执行 `tinstall`、本机 Credential Manager 真机测试或登录自启动写入。
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeReportResult, decodeShellStatus } from "./dto";
+import { decodeAlertCenter, decodeDiagnostics, decodeReportResult, decodeShellStatus } from "./dto";
 
 describe("decodeShellStatus", () => {
   it("接受完整 DTO", () => {
@@ -36,5 +36,18 @@ describe("decodeShellStatus", () => {
       coverage: { status: "empty" }
     });
     expect(decoded.reportSnapshotToken).toBe("abc");
+  });
+
+  it("拒绝缺少 checksum 的诊断", () => {
+    expect(() => decodeDiagnostics({ schemaVersion: 1 })).toThrow(/无效/);
+  });
+
+  it("拒绝缺少 items 的告警中心", () => {
+    expect(() => decodeAlertCenter({ schemaVersion: 1 })).toThrow(/无效/);
+  });
+
+  it("接受告警中心分页", () => {
+    const decoded = decodeAlertCenter({ schemaVersion: 1, items: [], nextCursor: null });
+    expect(decoded.items).toEqual([]);
   });
 });
