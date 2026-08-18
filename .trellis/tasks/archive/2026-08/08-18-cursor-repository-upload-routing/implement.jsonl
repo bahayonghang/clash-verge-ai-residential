@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Defines the extension runtime, renderer boundaries, pre-development checklist, and full quality gate."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Defines domain evidence, negative coverage, managed-rule cleanup, renderer failure, and real-profile evidence requirements."}
+{"file":".trellis/tasks/08-18-cursor-repository-upload-routing/research/cursor-repository-upload-routing.md","reason":"Primary-source contract for Cursor indexing uploads, endpoint responsibilities, HTTP/2 fallback, Privacy Mode, and isolation limits."}
+{"file":".trellis/tasks/08-18-cursor-repository-upload-routing/research/local-cursor-traffic-evidence.md","reason":"Local evidence linking repo42 HTTP/2 indexing activity to the current AI-home rule and documenting traffic-attribution limits."}

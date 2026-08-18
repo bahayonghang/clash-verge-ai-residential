@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Check runtime compatibility, renderer consistency, idempotence, and the repository full-gate contract."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Check positive and negative routing tests, managed-rule ownership, fail-closed rendering, secrets, and evidence boundaries."}
+{"file":".trellis/tasks/08-18-cursor-repository-upload-routing/research/cursor-repository-upload-routing.md","reason":"Check that endpoint claims, repo42 scope, api2 fallback, and Privacy Mode language do not exceed first-party evidence."}
+{"file":".trellis/tasks/08-18-cursor-repository-upload-routing/research/local-cursor-traffic-evidence.md","reason":"Check that local traffic conclusions remain correlated evidence rather than unsupported process-level attribution."}
