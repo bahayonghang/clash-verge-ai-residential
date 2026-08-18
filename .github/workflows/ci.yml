@@ -49,16 +49,46 @@ jobs:
       - name: Run checks and regression tests
         run: npm run ci
 
+  monitor:
+    name: Windows / residential-monitor
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: residential-monitor fast gate
+        shell: pwsh
+        run: |
+          npm --prefix residential-monitor ci
+          npm --prefix residential-monitor run check
+          cargo fmt --manifest-path residential-monitor/src-tauri/Cargo.toml --check
+          cargo clippy --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace --all-targets -- -D warnings
+          cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace
+          npm run check:secrets
+
   required-checks:
     name: Required checks
-    needs: test
+    needs: [test, monitor]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Verify all test jobs passed
         run: |
-          if [ "${{ needs.test.result }}" != "success" ]; then
-            echo "One or more test jobs did not pass."
+          if [ "${{ needs.test.result }}" != "success" ] || [ "${{ needs.monitor.result }}" != "success" ]; then
+            echo "One or more required jobs did not pass."
             exit 1
           fi

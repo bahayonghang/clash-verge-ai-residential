@@ -14,8 +14,25 @@ help:
 
 
 # 公开模板、回归测试与模板安全检查。
-ci:
+ci: monitor-check
     npm run ci
+
+# 子项目快速质量门：安装锁文件、前端检查、Rust 检查。不含 30 天库与 30 分钟峰值。
+monitor-check:
+    npm --prefix residential-monitor ci
+    npm --prefix residential-monitor run check
+    cargo fmt --manifest-path residential-monitor/src-tauri/Cargo.toml --check
+    cargo clippy --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace --all-targets -- -D warnings
+    cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace
+    npm run check:secrets
+
+# 开发态桌面壳。
+monitor-dev:
+    npm --prefix residential-monitor run tauri:dev
+
+# 生成 NSIS 安装包。不在本机执行安装。
+monitor-build:
+    npm --prefix residential-monitor run tauri:build
 
 # 单向渲染：本地 TOML + 公开模板 -> 被忽略的本地 Clash Verge 脚本。
 # 首次执行会创建本地配置，避免带着示例占位值生成脚本。

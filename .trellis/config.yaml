@@ -58,9 +58,9 @@ max_journal_lines: 2000
 # Trellis auto-detects workspaces during `trellis init`, but you can also
 # configure them manually here.
 #
-# packages:
-#   frontend:
-#     path: packages/frontend
+packages:
+  residential-monitor:
+    path: residential-monitor
 #   backend:
 #     path: packages/backend
 #   docs:

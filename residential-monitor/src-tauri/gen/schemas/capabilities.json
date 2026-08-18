@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"C0 最小 Windows 主窗口能力，不授予文件系统、打开器或远程 URL。","local":true,"windows":["main"],"permissions":["core:default"]}}

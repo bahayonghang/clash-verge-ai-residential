@@ -1,0 +1,30 @@
+{
+  "name": "residential-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Windows 11 家宽流量监控桌面应用",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "build": "vite build",
+    "check": "npm run typecheck && npm run lint && npm test && npm run build",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.8.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@tauri-apps/cli": "^2.8.0",
+    "eslint": "^9.33.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.40.0",
+    "vite": "^7.1.3",
+    "vitest": "^3.2.4"
+  }
+}

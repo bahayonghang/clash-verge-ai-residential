@@ -26,3 +26,10 @@ Thumbs.db
 .codex/
 .claude/
 .cursor/
+
+# residential-monitor generated artifacts
+residential-monitor/node_modules/
+residential-monitor/dist/
+residential-monitor/src-tauri/target/
+residential-monitor/bench-data/
+bench-data/
