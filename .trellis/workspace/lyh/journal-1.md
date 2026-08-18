@@ -330,3 +330,36 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 12: 家宽监控壳层侧栏与控制器探测
+
+**Date**: 2026-08-18
+**Task**: 家宽监控壳层侧栏与控制器探测
+**Package**: residential-monitor
+**Branch**: `dev`
+
+### Summary
+
+把桌面壳改成左侧栏，补本地图标与测试/断开连接，并记录 Impeccable 视觉合同。已归档 08-18-monitor-shell-sidebar。
+
+### Main Changes
+
+- 侧栏壳、导航/窗口图标、test_controller/disconnect_controller
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `df0f1d9` | (see git log) |
+| `a437fde` | (see git log) |
+| `b42f528` | (see git log) |
+| `582f9f5` | (see git log) |
+
+### Testing
+
+- [OK] npm --prefix residential-monitor run typecheck/lint/test；cargo test c2_facade_contract_tests；cargo clippy --lib -D warnings
+
+### Status
+
+[OK] **Completed**
