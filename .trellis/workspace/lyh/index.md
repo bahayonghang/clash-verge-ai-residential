@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 19
-- **Last Active**: 2026-08-19
+- **Total Sessions**: 20
+- **Last Active**: 2026-08-20
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~590 | Active |
+| `journal-1.md` | ~611 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 20 | 2026-08-20 | 自动连接与设置界面现代化 | `51d869f` | `dev` |
 | 19 | 2026-08-19 | 家宽监控本机日志与 tinstall 停进程 | `0b0295e`, `c325be1` | `dev` |
 | 18 | 2026-08-19 | 分析报告页档案后置与结果可视化 | `b51d84d` | `dev` |
 | 17 | 2026-08-19 | 分析报告自动小时与日档案 | `4953502` | `dev` |

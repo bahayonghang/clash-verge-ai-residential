@@ -588,3 +588,24 @@
 ### Next Steps
 
 - just tdev 走查打开日志目录；未跑 tinstall
+
+
+## Session 20: 自动连接与设置界面现代化
+
+**Date**: 2026-08-20
+**Task**: 自动连接与设置界面现代化
+**Branch**: `dev`
+
+### Summary
+
+完成 residential-monitor 启动自动连接与监控恢复、SkillPort 信息架构参考的现代化设置界面、前后端验证与 code-spec 更新；已归档 auto-connect、settings-redesign 及父任务。真实 Tauri WebView 截图和安装态控制器验证仍按任务记录为 UNVERIFIED。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `51d869f` | (see git log) |
+
+### Status
+
+[OK] **Completed**
