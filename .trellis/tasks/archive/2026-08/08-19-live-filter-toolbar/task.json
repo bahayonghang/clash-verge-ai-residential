@@ -1,0 +1,28 @@
+{
+  "id": "live-filter-toolbar",
+  "name": "live-filter-toolbar",
+  "title": "实时筛选工具条",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-19",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-19-ui-catppuccin-layout",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "实时连接筛选工具条，不改查询语义"
+  }
+}
