@@ -401,3 +401,39 @@
 ### Next Steps
 
 - 用 just tdev 对本机 Clash Verge 9097 测实时连接与密钥回填
+
+
+## Session 14: 实时连接 Clash 列、家宽筛选与中英界面
+
+**Date**: 2026-08-19
+**Task**: 实时连接 Clash 列、家宽筛选与中英界面
+**Package**: residential-monitor
+**Branch**: `dev`
+
+### Summary
+
+设置可切换中英；实时表对齐 Clash 十二列并默认筛选家宽。
+
+### Main Changes
+
+- 设置页保存 ui_locale，切换 WebView、托盘、通知与后端错误文案。
+- 实时表按 Clash 列展示，补齐端口/入站/速率，默认只看家宽，支持字段精确/包含 AND 筛选。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `251f680` | (see git log) |
+
+### Testing
+
+- [OK] npm --prefix residential-monitor test（41 项通过）
+- [OK] cargo check --offline 通过
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 用 just tdev 对照 Clash Verge 9097 点选语言切换与只看家宽
