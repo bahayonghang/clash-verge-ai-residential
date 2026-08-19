@@ -1,0 +1,28 @@
+{
+  "id": "reports-page-layout",
+  "name": "reports-page-layout",
+  "title": "分析报告页档案后置与结果可视化",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-19",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "分析报告页：自动档案后置缩短，结果区加趋势图与 Top N 扇形图"
+  }
+}
