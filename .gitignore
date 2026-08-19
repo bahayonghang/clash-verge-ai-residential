@@ -11,6 +11,7 @@ coverage/
 *.local.yaml
 *.local.yml
 clash-verge-ai-residential.local.toml
+clash-verge-ai-residential.local copy.toml
 clash-verge-ai-residential.local.js
 private/
 clash-verge-ai-residential.private.js
