@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "uiTheme 缺字段回落。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "无库 Recovery 不阻塞。"}
+{"file": ".trellis/tasks/08-19-ui-catppuccin-theme/prd.md", "reason": "四口味与持久化验收。"}
+{"file": ".trellis/tasks/08-19-ui-catppuccin-layout/prd.md", "reason": "父任务 AC1 AC2。"}
