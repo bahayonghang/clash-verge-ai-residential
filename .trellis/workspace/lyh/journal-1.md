@@ -516,3 +516,35 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 18: 分析报告页档案后置与结果可视化
+
+**Date**: 2026-08-19
+**Task**: 分析报告页档案后置与结果可视化
+**Package**: residential-monitor
+**Branch**: `dev`
+
+### Summary
+
+分析报告页将自动档案移到页尾并缩短，总量/趋势/Top N 先行；添加本地 SVG 趋势图与按下行之和对齐的扇形图。typecheck/lint/test/build 通过。
+
+### Main Changes
+
+- 档案后置、约 8 行滚动、类型筛选
+- 趋势折线+表，Top N 扇形图分母 totals.download，正差额显示其余
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b51d84d` | (see git log) |
+
+### Testing
+
+- [OK] npm --prefix residential-monitor run typecheck lint test build
+- [OK] Vite 空态与构图预览
+
+### Status
+
+[OK] **Completed**
