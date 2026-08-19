@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Vanilla TS，禁止远程资源与 UI 框架。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "前端只保存视图选择；筛选仍只留当前会话。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "bootstrap 可选字段缺省解码；不改连接查询形状。"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "主题设置键走 backend checklist。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "新 Command 错误码与暴露边界。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "主题键不要塞进控制器 JSON 或 Channel。"}
+{"file": ".trellis/tasks/08-19-ui-catppuccin-layout/prd.md", "reason": "父任务需求源。"}
+{"file": ".trellis/tasks/08-19-ui-catppuccin-layout/design.md", "reason": "token 映射与三块边界。"}

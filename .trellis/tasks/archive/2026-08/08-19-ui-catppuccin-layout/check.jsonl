@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "筛选会话级；删除确认短语不因换肤改。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "uiTheme 缺省；概览字段不丢。"}
+{"file": ".trellis/tasks/08-19-ui-catppuccin-layout/prd.md", "reason": "跨子任务 AC1–AC5。"}

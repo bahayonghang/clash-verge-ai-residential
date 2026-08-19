@@ -1,0 +1,32 @@
+{
+  "id": "ui-catppuccin-layout",
+  "name": "ui-catppuccin-layout",
+  "title": "概览布局、Catppuccin 主题与实时筛选 UI",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-19",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-19-ui-catppuccin-theme",
+    "08-19-overview-caliber-layout",
+    "08-19-live-filter-toolbar"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "Catppuccin 四口味主题、概览口径布局、实时筛选工具条"
+  }
+}
