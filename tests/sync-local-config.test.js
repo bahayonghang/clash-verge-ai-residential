@@ -104,6 +104,8 @@ test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚�
     assert.equal(result.addedKeys.includes("routing.cursor_core"), true);
     assert.equal(result.addedKeys.includes("routing.cursor_repository_indexing"), true);
     assert.equal(result.addedKeys.includes("routing.grok_core"), true);
+    assert.equal(result.addedKeys.includes("routing.grok_web_assets"), true);
+    assert.equal(result.addedKeys.includes("routing.vertex_ai_endpoints"), true);
     assert.equal(result.addedKeys.includes("runtime.enable_domain_sniffer"), true);
     assert.equal(
       result.addedDefaults.find((entry) => entry.key === "routing.cursor_repository_indexing").value,
@@ -164,7 +166,6 @@ enable_tun_strict_route = true
       "  residentialDoh: script.constants.RESIDENTIAL_DOH,",
       "  suffixes: script.constants.CURSOR_SUFFIX_DOMAINS,",
       "  exact: script.constants.CURSOR_EXACT_DOMAINS,",
-      "  regexes: script.constants.CURSOR_CORE_DOMAIN_REGEXES,",
       "  indexing: script.constants.ROUTE_CURSOR_REPOSITORY_INDEXING,",
       "  indexingRegexes: script.constants.CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES,",
       "  grokSuffixes: script.constants.GROK_SUFFIX_DOMAINS,",
@@ -191,9 +192,6 @@ enable_tun_strict_route = true
       ),
       ...probe.exact.map(
         (domain) => `DOMAIN,${domain},${probe.aiGroup}`
-      ),
-      ...probe.regexes.map(
-        (pattern) => `DOMAIN-REGEX,${pattern},${probe.aiGroup}`
       ),
       ...probe.grokSuffixes.map(
         (domain) => `DOMAIN-SUFFIX,${domain},${probe.aiGroup}`
@@ -421,7 +419,7 @@ openai_core = false
     for (const host of [
       "claude.ai",
       "api.anthropic.com",
-      "a-api.anthropic.com",
+      "mcp-proxy.anthropic.com",
       "antigravity.google"
     ]) {
       assert.equal(
@@ -620,6 +618,8 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
     const result = syncLocalConfig({ templatePath, configPath, outputPath });
 
     assert.equal(result.addedKeys.includes("routing.grok_core"), true);
+    assert.equal(result.addedKeys.includes("routing.grok_web_assets"), true);
+    assert.equal(result.addedKeys.includes("routing.vertex_ai_endpoints"), true);
     assert.equal(result.addedKeys.includes("routing.public_encrypted_dns"), true);
     assert.equal(result.addedKeys.includes("runtime.enable_domain_sniffer"), true);
     assert.equal(result.addedKeys.includes("routing.cursor_core"), false);

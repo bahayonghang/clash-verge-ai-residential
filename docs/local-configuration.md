@@ -75,9 +75,11 @@ test -e clash-verge-ai-residential.local.toml || \
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | 路由 Service Usage、Resource Manager、IAM、API Hub 等项目 API。 | 属于项目配置而非推理。 |
 | `routing.antigravity_update_and_telemetry` | `ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY` | `false` | 路由 Antigravity 更新、扩展市场和遥测。 | 会扩大到更新和统计流量。 |
 | `routing.gemini_web_core` | `ROUTE_GEMINI_WEB_CORE` | `true` | 路由 Gemini Web 和 Google AI Studio 产品入口。 | 无。 |
+| `routing.vertex_ai_endpoints` | `ROUTE_VERTEX_AI_ENDPOINTS` | `true` | 路由四条 Vertex AI / Agent Platform 规则：`aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com`，以及区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$`。 | 不使用 Antigravity 企业推理或其他 Vertex AI 流量时可改为 `false`，这些主机改走机场上游。 |
 | `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `true` | 路由 Cursor AI API、Tab、Agent、授权/SSO 门户、Cloud Agent VM 和产品专属认证。 | 不需要 Cursor 核心流量走家宽时可显式改为 `false`。`api2.cursor.sh` 始终由本开关控制。 |
 | `routing.cursor_repository_indexing` | `ROUTE_CURSOR_REPOSITORY_INDEXING` | `false` | 路由 Cursor 仓库索引主机 `repo[0-9]+.cursor.sh`。 | 与 `routing.cursor_core` 独立。默认回落原 Profile / 机场上游；缺字段按 `false` 补全；显式 `true` 恢复 v5.8.1 的 repo 家宽路由。官方与本机 2026-08-17 日志共同确认的精确主机是 `repo42.cursor.sh`；数字通配是项目前向兼容策略，不是 Cursor 官方通配合同。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`，域名规则无法在保留多数 API 的同时隔离该路径，因此不能宣称已排除全部仓库上传。 |
-| `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | 路由 Grok Build（xAI grok CLI）推理 API（`cli-chat-proxy.grok.com`）与 Grok 产品域。 | 不需要 Grok 走家宽时可显式改为 `false`；同主机的 Grok 网页与遥测无法在域名层拆分。 |
+| `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | 路由 Grok Build（xAI grok CLI）推理 API（`cli-chat-proxy.grok.com`）、Grok 产品域、`auth.x.ai` 与 `api.x.ai`。 | 不需要 Grok 走家宽时可显式改为 `false`。 |
+| `routing.grok_web_assets` | `ROUTE_GROK_WEB_ASSETS` | `true` | 为 `true` 时注入 `DOMAIN-SUFFIX,grok.com`；为 `false` 时把该后缀换成精确主机 `grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`。`DOMAIN-SUFFIX,api.x.ai` 仍由 `routing.grok_core` 控制。 | 依赖 `routing.grok_core = true`。`false` 时 `assets.grok.com` 改走机场上游。 |
 | `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | 增加 Cursor 进程级兜底规则。 | 仅在 `routing.ai_process_fallback = true` 时生效，会捕获非 AI 请求。 |
 | `routing.claude_code_auxiliary` | `ROUTE_CLAUDE_CODE_AUXILIARY` | `false` | 路由 Claude Code 安装、更新、文档和包管理端点。 | 属于辅助流量而非推理。 |
 | `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | 为已知 AI 应用增加进程级兜底并启用进程查找。 | 会把进程中的非 AI 请求一并路由。 |

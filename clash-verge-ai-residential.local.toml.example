@@ -34,6 +34,8 @@ antigravity_update_and_telemetry = false
 
 # Gemini 网页版与 Google AI Studio 的核心产品入口。
 gemini_web_core = true
+# Vertex AI / Agent Platform 全局、多区域与区域端点。Antigravity 企业推理走这些主机。
+vertex_ai_endpoints = true
 
 # Cursor 的核心 AI 产品流量：AI API、Tab、Agent、Cloud Agent、产品专属认证等。
 cursor_core = true
@@ -43,6 +45,9 @@ cursor_repository_indexing = false
 
 # Grok Build（xAI grok CLI）的推理 API、产品域、认证及直连 API。
 grok_core = true
+# Grok 网页静态资源。关闭后 grok.com 改为 grok.com、cli-chat-proxy.grok.com、
+# code.grok.com 精确主机；api.x.ai 后缀不受影响。
+grok_web_assets = true
 
 # 进程级兜底：按 Cursor 进程名代理其插件市场、GitHub、npm、MCP 和用户后端等
 # 全部连接。只有同时开启 ai_process_fallback 时此项才生效，通常不建议开启。

@@ -31,18 +31,21 @@ const {
   NON_AI_DOH_ENDPOINTS,
   PRESERVE_UNMANAGED_NAMESERVER_POLICY,
   ROUTE_GEMINI_WEB_CORE,
+  ROUTE_VERTEX_AI_ENDPOINTS,
   ROUTE_CURSOR_CORE,
   ROUTE_CURSOR_REPOSITORY_INDEXING,
   ROUTE_GROK_CORE,
+  ROUTE_GROK_WEB_ASSETS,
   ROUTE_CURSOR_PROCESS_FALLBACK,
   GEMINI_WEB_SUFFIX_DOMAINS,
   GEMINI_WEB_EXACT_DOMAINS,
-  GEMINI_DOMAIN_REGEXES,
+  VERTEX_AI_EXACT_DOMAINS,
+  VERTEX_AI_DOMAIN_REGEXES,
   CURSOR_SUFFIX_DOMAINS,
   CURSOR_EXACT_DOMAINS,
-  CURSOR_CORE_DOMAIN_REGEXES,
   CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES,
   GROK_SUFFIX_DOMAINS,
+  GROK_STRICT_EXACT_DOMAINS,
   GROK_EXACT_DOMAINS,
   OPENAI_CORE_EXACT_DOMAINS
 } = constants;
@@ -187,21 +190,21 @@ function assertAiRoute(rules, hosts) {
   }
 }
 
-function withPatchedCursorSwitches(options, fn) {
+function withPatchedSwitches(replacements, fn) {
   const directory = fs.mkdtempSync(
-    path.join(os.tmpdir(), "clash-verge-cursor-switches-")
+    path.join(os.tmpdir(), "clash-verge-patched-switches-")
   );
   try {
     const patchedPath = path.join(directory, "script.js");
     let source = fs.readFileSync(scriptPath, "utf8");
-    source = source.replace(
-      /^const ROUTE_CURSOR_CORE = (?:true|false);$/m,
-      `const ROUTE_CURSOR_CORE = ${options.cursorCore};`
-    );
-    source = source.replace(
-      /^const ROUTE_CURSOR_REPOSITORY_INDEXING = (?:true|false);$/m,
-      `const ROUTE_CURSOR_REPOSITORY_INDEXING = ${options.cursorRepositoryIndexing};`
-    );
+    for (const [name, value] of Object.entries(replacements)) {
+      const pattern = new RegExp(
+        `^const ${name} = (?:true|false);$`,
+        "m"
+      );
+      assert.match(source, pattern, `应找到布尔常量 ${name}`);
+      source = source.replace(pattern, `const ${name} = ${value};`);
+    }
     fs.writeFileSync(patchedPath, source, "utf8");
     fn(require(patchedPath));
   } finally {
@@ -209,9 +212,23 @@ function withPatchedCursorSwitches(options, fn) {
   }
 }
 
+function withPatchedCursorSwitches(options, fn) {
+  withPatchedSwitches({
+    ROUTE_CURSOR_CORE: options.cursorCore,
+    ROUTE_CURSOR_REPOSITORY_INDEXING: options.cursorRepositoryIndexing
+  }, fn);
+}
+
+function withPatchedGrokWebAssets(enabled, fn) {
+  withPatchedSwitches({ ROUTE_GROK_WEB_ASSETS: enabled }, fn);
+}
+
+function withPatchedVertexAiEndpoints(enabled, fn) {
+  withPatchedSwitches({ ROUTE_VERTEX_AI_ENDPOINTS: enabled }, fn);
+}
+
 const CURSOR_CORE_HOSTS = [
   "api2.cursor.sh",
-  "feature.api2.cursor.sh",
   "api3.cursor.sh",
   "api4.cursor.sh",
   "agent.api5.cursor.sh",
@@ -237,7 +254,11 @@ const CURSOR_NEGATIVE_HOSTS = [
   "anysphere-binaries.s3.us-east-1.amazonaws.com",
   "www.cursor.com",
   "repo.cursor.sh",
-  "adminportal.cursor.sh"
+  "adminportal.cursor.sh",
+  "adminportal0.cursor.sh",
+  "adminportal999.cursor.sh",
+  "feature.api2.cursor.sh",
+  "www.api2.cursor.sh"
 ];
 
 // ---------------------------------------------------------------------------
@@ -245,7 +266,7 @@ const CURSOR_NEGATIVE_HOSTS = [
 // ---------------------------------------------------------------------------
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
-  assert.equal(SCRIPT_VERSION, "5.9.0");
+  assert.equal(SCRIPT_VERSION, "5.10.0");
   assert.equal(template["dialer-proxy"], "🚀节点选择");
 });
 
@@ -604,11 +625,20 @@ test("2000 叶子同一对象连续两次 main 保持规则、policy 与 dialer-
 
 test("Gemini 核心产品、Developer API 与 Vertex AI 端点走家宽", () => {
   assert.equal(ROUTE_GEMINI_WEB_CORE, true);
+  assert.equal(ROUTE_VERTEX_AI_ENDPOINTS, true);
   assert.deepEqual(GEMINI_WEB_SUFFIX_DOMAINS, ["gemini.google.com", "aistudio.google.com"]);
   assert.ok(GEMINI_WEB_EXACT_DOMAINS.includes("alkalicore-pa.clients6.google.com"));
   assert.ok(GEMINI_WEB_EXACT_DOMAINS.includes("alkalimakersuite-pa.clients6.google.com"));
   assert.ok(GEMINI_WEB_EXACT_DOMAINS.includes("webchannel-alkalimakersuite-pa.clients6.google.com"));
-  assert.ok(GEMINI_DOMAIN_REGEXES.includes("^[a-z0-9-]+-aiplatform\\.googleapis\\.com$"));
+  assert.deepEqual(VERTEX_AI_EXACT_DOMAINS, [
+    "aiplatform.googleapis.com",
+    "aiplatform.us.rep.googleapis.com",
+    "aiplatform.eu.rep.googleapis.com"
+  ]);
+  assert.deepEqual(
+    VERTEX_AI_DOMAIN_REGEXES,
+    ["^[a-z0-9-]+-aiplatform\\.googleapis\\.com$"]
+  );
 
   const rules = buildInjectedRules();
   assertAiRoute(rules, [
@@ -621,6 +651,7 @@ test("Gemini 核心产品、Developer API 与 Vertex AI 端点走家宽", () => 
     "aiplatform.googleapis.com",
     "us-central1-aiplatform.googleapis.com",
     "aiplatform.us.rep.googleapis.com",
+    "aiplatform.eu.rep.googleapis.com",
     "cloudaicompanion.googleapis.com",
     "cloudcode-pa.googleapis.com"
   ]);
@@ -651,21 +682,23 @@ test("Cursor 核心路由默认开启，仓库索引默认不走家宽", () => {
   assert.deepEqual(
     CURSOR_SUFFIX_DOMAINS,
     [
-      "api2.cursor.sh",
       "api5.cursor.sh",
       "gcpp.cursor.sh",
-      "authenticate.cursor.sh",
       "authentication.cursor.sh",
       "cursorvm.com"
     ]
   );
   assert.deepEqual(
     CURSOR_EXACT_DOMAINS,
-    ["api3.cursor.sh", "api4.cursor.sh", "authenticator.cursor.sh", "api.cursor.com"]
-  );
-  assert.deepEqual(
-    CURSOR_CORE_DOMAIN_REGEXES,
-    ["^adminportal[0-9]+\\.cursor\\.sh$"]
+    [
+      "api2.cursor.sh",
+      "api3.cursor.sh",
+      "api4.cursor.sh",
+      "authenticate.cursor.sh",
+      "authenticator.cursor.sh",
+      "adminportal42.cursor.sh",
+      "api.cursor.com"
+    ]
   );
   assert.deepEqual(
     CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES,
@@ -682,7 +715,27 @@ test("Cursor 核心路由默认开启，仓库索引默认不走家宽", () => {
   );
   assert.equal(
     rules.includes(`DOMAIN-REGEX,^adminportal[0-9]+\\.cursor\\.sh$,${AI_GROUP}`),
+    false
+  );
+  assert.equal(
+    rules.includes(`DOMAIN,adminportal42.cursor.sh,${AI_GROUP}`),
     true
+  );
+  assert.equal(
+    rules.includes(`DOMAIN,api2.cursor.sh,${AI_GROUP}`),
+    true
+  );
+  assert.equal(
+    rules.includes(`DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`),
+    false
+  );
+  assert.equal(
+    rules.includes(`DOMAIN,authenticate.cursor.sh,${AI_GROUP}`),
+    true
+  );
+  assert.equal(
+    rules.includes(`DOMAIN-SUFFIX,authenticate.cursor.sh,${AI_GROUP}`),
+    false
   );
 
   const firstAiRule = rules.findIndex((rule) => rule.endsWith(`,${AI_GROUP}`));
@@ -765,15 +818,24 @@ test("Cursor 核心与仓库索引开关可独立组合", () => {
 
 test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走", () => {
   assert.equal(ROUTE_GROK_CORE, true);
-  assert.deepEqual(GROK_SUFFIX_DOMAINS, ["grok.com"]);
-  assert.deepEqual(GROK_EXACT_DOMAINS, ["auth.x.ai", "api.x.ai"]);
+  assert.equal(ROUTE_GROK_WEB_ASSETS, true);
+  assert.deepEqual(GROK_SUFFIX_DOMAINS, ["grok.com", "api.x.ai"]);
+  assert.deepEqual(GROK_EXACT_DOMAINS, ["auth.x.ai"]);
+  assert.deepEqual(
+    GROK_STRICT_EXACT_DOMAINS,
+    ["grok.com", "cli-chat-proxy.grok.com", "code.grok.com"]
+  );
 
   const rules = buildInjectedRules();
   assertAiRoute(rules, [
     "grok.com",
     "cli-chat-proxy.grok.com",
+    "code.grok.com",
+    "assets.grok.com",
     "auth.x.ai",
-    "api.x.ai"
+    "api.x.ai",
+    "eu-west-1.api.x.ai",
+    "mtls.api.x.ai"
   ]);
   assertNoAiRoute(rules, [
     "api.mixpanel.com",
@@ -781,11 +843,15 @@ test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走
     "www.x.ai",
     "storage.googleapis.com"
   ]);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,grok.com,${AI_GROUP}`), true);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,api.x.ai,${AI_GROUP}`), true);
+  assert.equal(rules.includes(`DOMAIN,api.x.ai,${AI_GROUP}`), false);
 
   const policy = buildNameserverPolicy({});
   assert.deepEqual(policy["+.grok.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["auth.x.ai"], RESIDENTIAL_DOH);
-  assert.deepEqual(policy["api.x.ai"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["+.api.x.ai"], RESIDENTIAL_DOH);
+  assert.equal("api.x.ai" in policy, false);
   assert.equal("api.mixpanel.com" in policy, false);
   assert.equal("x.ai" in policy, false);
 });
@@ -840,7 +906,6 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
   assertAiRoute(rules, [
     "claude.ai",
     "api.anthropic.com",
-    "a-api.anthropic.com",
     "mcp-proxy.anthropic.com",
     "assets-proxy.anthropic.com",
     "chatgpt.com",
@@ -852,9 +917,10 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "desktop.chat.openai.com",
     "ios.chat.openai.com",
     "tcr9i.chat.openai.com",
-    "antigravity.google",
-    "daily-cloudcode-pa.googleapis.com"
+    "antigravity.google"
   ]);
+  assert.equal(rules.includes(`DOMAIN,antigravity.google,${AI_GROUP}`), true);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,antigravity.google,${AI_GROUP}`), false);
   assertNoAiRoute(rules, [
     "oaistatic.com",
     "oaistatsig.com",
@@ -899,7 +965,12 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
     `DOMAIN-SUFFIX,cursorvm.com,${AI_GROUP}`,
     `DOMAIN,api.cursor.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,grok.com,${AI_GROUP}`,
-    `DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`
+    `DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,clau.de,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,claudemcpclient.com,${AI_GROUP}`,
+    `DOMAIN,daily-cloudcode-pa.googleapis.com,${AI_GROUP}`,
+    `DOMAIN,geminicloudassist.googleapis.com,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,antigravity.google,${AI_GROUP}`
   ];
   const userOwnedRules = [
     `DOMAIN,repo42.cursor.sh,${AI_GROUP}`,
@@ -907,6 +978,7 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
     `DOMAIN-REGEX,^(?:us-asia|us-eu|us-only)\\.gcpp\\.cursor\\.sh$,${AI_GROUP}`,
     `DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`,
     `DOMAIN,www.youtube.com,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,example-user-rule.com,${AI_GROUP}`,
     "MATCH,🚀节点选择"
   ];
   const cleaned = cleanExistingManagedRules([
@@ -961,20 +1033,28 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
   assert.equal(countNamed(config.proxies, HOME_PROXY_NAME), 1);
   assert.equal(countNamed(config["proxy-groups"], AI_GROUP), 1);
   assert.equal(config.rules.includes(anthropicFallbackRule), true);
-  for (const host of ["api.anthropic.com", "a-api.anthropic.com"]) {
-    const exactRule = `DOMAIN,${host},${AI_GROUP}`;
+  {
+    const exactRule = `DOMAIN,api.anthropic.com,${AI_GROUP}`;
     assert.equal(config.rules.filter((rule) => rule === exactRule).length, 1);
     assert.ok(config.rules.indexOf(exactRule) < config.rules.indexOf(anthropicFallbackRule));
   }
+  assert.equal(
+    config.rules.filter((rule) => rule === `DOMAIN,a-api.anthropic.com,${AI_GROUP}`).length,
+    0
+  );
   assert.equal(config.rules.filter((rule) => rule === customAiRule).length, 1);
   assert.equal(config.rules.includes(normalYoutubeRule), true);
   assert.equal(config.rules.includes(normalMarketplaceRule), true);
   assert.equal(config.rules.includes(`DOMAIN,www.youtube.com,${AI_GROUP}`), true);
   assert.equal(config.rules.includes(`DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`), true);
   assert.equal(config.rules.includes(`DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`), true);
-  // cursor_core 默认开启：用户预置的同形托管规则被清理后恰好重新注入一次。
+  // cursor_core 默认开启：旧 suffix 被清理，改注入 exact 一次。
   assert.equal(
     config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
+    0
+  );
+  assert.equal(
+    config.rules.filter((rule) => rule === `DOMAIN,api2.cursor.sh,${AI_GROUP}`).length,
     1
   );
   assert.equal(
@@ -1039,6 +1119,10 @@ test("关闭仓库索引后二次运行会移除托管 repo 正则，并保留�
   assert.equal(config.rules.includes(retiredRegexRule), true);
   assert.equal(
     config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
+    0
+  );
+  assert.equal(
+    config.rules.filter((rule) => rule === `DOMAIN,api2.cursor.sh,${AI_GROUP}`).length,
     1
   );
 
@@ -1075,14 +1159,19 @@ test("非 AI DoH 拒绝会破坏 Mihomo URL 绑定语义的上游名称", () => 
 test("AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名", () => {
   const policy = buildNameserverPolicy({});
   assert.deepEqual(policy["api.anthropic.com"], RESIDENTIAL_DOH);
-  assert.deepEqual(policy["a-api.anthropic.com"], RESIDENTIAL_DOH);
+  assert.equal("a-api.anthropic.com" in policy, false);
   assert.deepEqual(policy["+.gemini.google.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.aistudio.google.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["generativelanguage.googleapis.com"], RESIDENTIAL_DOH);
-  assert.deepEqual(policy["+.api2.cursor.sh"], RESIDENTIAL_DOH);
-  assert.deepEqual(policy["+.authenticate.cursor.sh"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["api2.cursor.sh"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["authenticate.cursor.sh"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["adminportal42.cursor.sh"], RESIDENTIAL_DOH);
+  assert.equal("+.api2.cursor.sh" in policy, false);
+  assert.equal("+.authenticate.cursor.sh" in policy, false);
   assert.deepEqual(policy["+.cursorvm.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["authenticator.cursor.sh"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["antigravity.google"], RESIDENTIAL_DOH);
+  assert.equal("+.antigravity.google" in policy, false);
   assert.deepEqual(policy["+.grok.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.chatgpt.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.api.openai.com"], RESIDENTIAL_DOH);
@@ -1171,4 +1260,163 @@ test("已开启 TUN 时只补齐 DNS 劫持；AI-only 模式不强制进程匹�
 test("最终注入规则不存在重复项", () => {
   const rules = buildInjectedRules();
   assert.equal(new Set(rules).size, rules.length);
+});
+
+test("默认注入 44 条 AI-家宽 规则", () => {
+  const rules = buildInjectedRules().filter((rule) => rule.includes(AI_GROUP));
+  assert.equal(rules.length, 44);
+});
+
+test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", () => {
+  const rules = buildInjectedRules();
+  assertAiRoute(rules, [
+    "platform.claude.com",
+    "bridge.claudeusercontent.com",
+    "x.frame.claudeusercontent.com",
+    "assets-proxy.anthropic.com",
+    "eu-west-1.api.x.ai",
+    "mtls.api.x.ai",
+    "api.x.ai",
+    "api2.cursor.sh",
+    "authenticate.cursor.sh",
+    "prod.authentication.cursor.sh",
+    "agent.api5.cursor.sh",
+    "us-eu.gcpp.cursor.sh",
+    "adminportal42.cursor.sh",
+    "api.cursor.com",
+    "antigravity.google",
+    "aiplatform.us.rep.googleapis.com",
+    "aiplatform.eu.rep.googleapis.com",
+    "cloudaicompanion.googleapis.com",
+    "us-central1-aiplatform.googleapis.com",
+    "widget.claudemcpcontent.com",
+    "alkalicore-pa.clients6.google.com",
+    "alkalimakersuite-pa.clients6.google.com",
+    "webchannel-alkalimakersuite-pa.clients6.google.com",
+    "chatgpt.com",
+    "ws.chatgpt.com",
+    "api.openai.com",
+    "us.api.openai.com"
+  ]);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,chatgpt.com,${AI_GROUP}`), true);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,claudemcpcontent.com,${AI_GROUP}`), true);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,claude.ai,${AI_GROUP}`), true);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,claude.com,${AI_GROUP}`), true);
+  assertNoAiRoute(rules, [
+    "clau.de",
+    "claudemcpclient.com",
+    "a-api.anthropic.com",
+    "daily-cloudcode-pa.googleapis.com",
+    "geminicloudassist.googleapis.com",
+    "adminportal0.cursor.sh",
+    "adminportal999.cursor.sh",
+    "www.api2.cursor.sh",
+    "feature.api2.cursor.sh",
+    "docs.antigravity.google",
+    "download.antigravity.google",
+    "www.antigravity.google"
+  ]);
+});
+
+test("grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话主机", () => {
+  withPatchedGrokWebAssets(false, (patched) => {
+    const rules = patched.buildInjectedRules();
+    const target = patched.constants.AI_GROUP;
+    for (const host of ["grok.com", "cli-chat-proxy.grok.com", "code.grok.com"]) {
+      assert.equal(
+        ruleMatchesHost(rules, host, target),
+        true,
+        `grok_web_assets=false 时应走家宽：${host}`
+      );
+    }
+    assert.equal(
+      ruleMatchesHost(rules, "assets.grok.com", target),
+      false,
+      "grok_web_assets=false 时 assets.grok.com 不应走家宽"
+    );
+    assert.equal(
+      ruleMatchesHost(rules, "eu-west-1.api.x.ai", target),
+      true,
+      "关闭网页资源开关不得拿掉 api.x.ai 后缀"
+    );
+    assert.equal(rules.includes(`DOMAIN-SUFFIX,api.x.ai,${target}`), true);
+    assert.equal(rules.includes(`DOMAIN-SUFFIX,grok.com,${target}`), false);
+    assert.equal(rules.includes(`DOMAIN,grok.com,${target}`), true);
+    assert.equal(rules.includes(`DOMAIN,cli-chat-proxy.grok.com,${target}`), true);
+    assert.equal(rules.includes(`DOMAIN,code.grok.com,${target}`), true);
+  });
+
+  withPatchedGrokWebAssets(true, (patched) => {
+    const rules = patched.buildInjectedRules();
+    const target = patched.constants.AI_GROUP;
+    assert.equal(ruleMatchesHost(rules, "assets.grok.com", target), true);
+    assert.equal(rules.includes(`DOMAIN-SUFFIX,grok.com,${target}`), true);
+  });
+});
+
+test("vertex_ai_endpoints 一次控制全部四条 Vertex 规则", () => {
+  const vertexHosts = [
+    "aiplatform.googleapis.com",
+    "aiplatform.us.rep.googleapis.com",
+    "aiplatform.eu.rep.googleapis.com",
+    "us-central1-aiplatform.googleapis.com"
+  ];
+
+  const vertexRules = (target) => [
+    `DOMAIN,aiplatform.googleapis.com,${target}`,
+    `DOMAIN,aiplatform.us.rep.googleapis.com,${target}`,
+    `DOMAIN,aiplatform.eu.rep.googleapis.com,${target}`,
+    `DOMAIN-REGEX,^[a-z0-9-]+-aiplatform\\.googleapis\\.com$,${target}`
+  ];
+
+  withPatchedVertexAiEndpoints(false, (patched) => {
+    const rules = patched.buildInjectedRules();
+    const target = patched.constants.AI_GROUP;
+    for (const host of vertexHosts) {
+      assert.equal(
+        ruleMatchesHost(rules, host, target),
+        false,
+        `vertex_ai_endpoints=false 时不应走家宽：${host}`
+      );
+    }
+    for (const rule of vertexRules(target)) {
+      assert.equal(rules.includes(rule), false, `关闭 Vertex 后不应注入：${rule}`);
+    }
+    assert.equal(
+      ruleMatchesHost(rules, "alkalicore-pa.clients6.google.com", target),
+      true,
+      "关闭 Vertex 开关不得拿掉 alkali* AI Studio 主机"
+    );
+  });
+
+  withPatchedVertexAiEndpoints(true, (patched) => {
+    const rules = patched.buildInjectedRules();
+    const target = patched.constants.AI_GROUP;
+    for (const host of vertexHosts) {
+      assert.equal(
+        ruleMatchesHost(rules, host, target),
+        true,
+        `vertex_ai_endpoints=true 时应走家宽：${host}`
+      );
+    }
+    for (const rule of vertexRules(target)) {
+      assert.equal(rules.includes(rule), true, `开启 Vertex 后应注入：${rule}`);
+    }
+  });
+});
+
+test("退出激活主机不再出现 nameserver-policy 键", () => {
+  const policy = buildNameserverPolicy({});
+  for (const key of [
+    "+.clau.de",
+    "clau.de",
+    "+.claudemcpclient.com",
+    "claudemcpclient.com",
+    "a-api.anthropic.com",
+    "+.a-api.anthropic.com",
+    "daily-cloudcode-pa.googleapis.com",
+    "geminicloudassist.googleapis.com"
+  ]) {
+    assert.equal(key in policy, false, `DNS policy 不应包含退出激活键：${key}`);
+  }
 });

@@ -39,6 +39,14 @@ These guides help you **ask the right questions before coding**.
 
 → Read [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md)
 
+### When Changing AI Residential Domains
+
+- [ ] Official firewall/allowlist pages say "do not block". They are not a contract to inject every listed host into `AI-家宽`.
+- [ ] Clash `DOMAIN` / `DOMAIN-SUFFIX` match host/SNI only. A path such as `/backend-api/codex/responses` cannot be split from other paths on the same host.
+- [ ] Values removed from activation must stay in `allPossible*` so old rules and DNS keys are cleaned.
+
+→ Product contract: [docs/routing-scope.md](../../../docs/routing-scope.md)
+
 ### When to Think About Code Reuse
 
 - [ ] You're writing similar code to something that exists

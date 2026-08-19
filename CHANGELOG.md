@@ -9,6 +9,26 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - Add sanitized real-profile integration fixtures.
 - Add automated domain-source freshness checks where upstream providers publish machine-readable inventories.
 
+## [5.10.0] - 2026-08-19
+
+### Added
+
+- New `routing.grok_web_assets` switch (default `true`). When the switch is `true`, the script injects `DOMAIN-SUFFIX,grok.com`. When the switch is `false`, the script injects exact hosts `grok.com`, `cli-chat-proxy.grok.com`, and `code.grok.com`.
+- New `routing.vertex_ai_endpoints` switch (default `true`). The switch controls four Vertex AI / Agent Platform rules: `aiplatform.googleapis.com`, `aiplatform.us.rep.googleapis.com`, `aiplatform.eu.rep.googleapis.com`, and the regional regex `^[a-z0-9-]+-aiplatform\.googleapis\.com$`.
+
+### Changed
+
+- Retired five hosts from the active residential catalog. The hosts stay in `allPossible*` so upgrades can clean old rules: `clau.de`, `claudemcpclient.com`, `a-api.anthropic.com`, `daily-cloudcode-pa.googleapis.com`, and `geminicloudassist.googleapis.com`.
+- Narrowed four rules: `api2.cursor.sh` and `authenticate.cursor.sh` from suffix to exact; the `adminportal` regex to `DOMAIN,adminportal42.cursor.sh`; `antigravity.google` from suffix to exact.
+- Changed `api.x.ai` from exact to suffix so regional hosts and `mtls.api.x.ai` match.
+- Default injected `AI-家宽` rule count is 44.
+
+### Notes
+
+- `chatgpt.com` stays a suffix. Subdomains such as `help.` and `status.` stay on the residential link.
+- Three `alkali*` AI Studio hosts stay in `gemini_web_core` and remain UNVERIFIED.
+- `claudemcpcontent.com` stays a suffix for Claude Desktop MCP App widgets.
+
 ## [5.9.0] - 2026-08-18
 
 ### Added
