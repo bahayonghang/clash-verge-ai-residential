@@ -1,0 +1,28 @@
+{
+  "id": "ai-route-domain-audit",
+  "name": "ai-route-domain-audit",
+  "title": "AI 家宽路由域名清单审计",
+  "description": "",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "结合官方文档核对 clash-verge-ai-residential.js 的 49 条 AI-家宽 注入规则，判定过度代理与匹配缺口，产出收窄方案"
+  }
+}

@@ -495,3 +495,24 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 17: 分析报告自动小时与日档案
+
+**Date**: 2026-08-19
+**Task**: 分析报告自动小时与日档案
+**Branch**: `dev`
+
+### Summary
+
+落地闭合本地小时/日冻结 ReportResult 档案、v4 report_archive、采集后分批补跑，以及分析报告页进页读最新档案。手动查询不覆盖档案。just monitor-check 通过。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4953502` | (see git log) |
+
+### Status
+
+[OK] **Completed**
