@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/backend/index.md","reason":"子任务修改 Rust 生命周期 / collector，需要 backend 模块边界和质量门。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"复用 collector、AppFacade、错误码和托盘 / shutdown 约束。"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"自动连接不能改变凭据解析、取消和 secret 脱敏边界。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"启动状态仍通过既有 Channel bootstrap/resync 消费。"}
+{"file":".trellis/tasks/08-19-monitor-auto-connect-settings-redesign/research/current-state.md","reason":"当前启动、单实例、collector 与并行托盘任务证据。"}
