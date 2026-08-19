@@ -73,20 +73,20 @@ agentn.global.api5.cursor.sh
 
 ## 逐条判定
 
-| 脚本条目                          | 规则类型             | 官方出处                                   | 判定                                                                           |
-| --------------------------------- | -------------------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
-| `api2.cursor.sh`                  | DOMAIN-SUFFIX        | 官方精确主机                               | 可收窄为 DOMAIN。官方未列该主机的子域                                          |
-| `api5.cursor.sh`                  | DOMAIN-SUFFIX        | 官方列出六个 `agent*` 子域                 | 保留后缀。必需                                                                 |
-| `gcpp.cursor.sh`                  | DOMAIN-SUFFIX        | 官方列出三个区域前缀                       | 保留后缀。必需                                                                 |
-| `authenticate.cursor.sh`          | DOMAIN-SUFFIX        | 官方精确主机                               | 可收窄为 DOMAIN                                                                |
-| `authentication.cursor.sh`        | DOMAIN-SUFFIX        | 官方另列 `prod.authentication.cursor.sh`   | 保留后缀。必需                                                                 |
-| `cursorvm.com`                    | DOMAIN-SUFFIX        | 官方 `*.cursorvm.com` / `*.*.cursorvm.com` | 保留后缀。与官方一致                                                           |
-| `api3.cursor.sh`                  | DOMAIN               | 官方精确主机                               | 保留                                                                           |
-| `api4.cursor.sh`                  | DOMAIN               | 官方精确主机                               | 保留                                                                           |
-| `authenticator.cursor.sh`         | DOMAIN               | 官方精确主机                               | 保留                                                                           |
-| `api.cursor.com`                  | DOMAIN               | 未在官方网络配置文档出现                   | 存疑。CHANGELOG 记录用途为 Cloud Agent / Bugbot AI API，本次检索未复现官方出处 |
-| `^adminportal[0-9]+\.cursor\.sh$` | DOMAIN-REGEX         | 官方仅 `adminportal42.cursor.sh`           | 已记录为前向兼容策略。可收窄为 DOMAIN 精确匹配官方主机                         |
-| `^repo[0-9]+\.cursor\.sh$`        | 未注入（开关默认关） | 官方 `repo42.cursor.sh` 用于索引           | 与「不代理多余流量」一致                                                       |
+| 脚本条目                          | 规则类型             | 官方出处                                   | 判定                                                                                                              |
+| --------------------------------- | -------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `api2.cursor.sh`                  | DOMAIN-SUFFIX        | 官方精确主机                               | 可收窄为 DOMAIN。官方未列该主机的子域                                                                             |
+| `api5.cursor.sh`                  | DOMAIN-SUFFIX        | 官方列出六个 `agent*` 子域                 | 保留后缀。必需                                                                                                    |
+| `gcpp.cursor.sh`                  | DOMAIN-SUFFIX        | 官方列出三个区域前缀                       | 保留后缀。必需                                                                                                    |
+| `authenticate.cursor.sh`          | DOMAIN-SUFFIX        | 官方精确主机                               | 可收窄为 DOMAIN                                                                                                   |
+| `authentication.cursor.sh`        | DOMAIN-SUFFIX        | 官方另列 `prod.authentication.cursor.sh`   | 保留后缀。必需                                                                                                    |
+| `cursorvm.com`                    | DOMAIN-SUFFIX        | 官方 `*.cursorvm.com` / `*.*.cursorvm.com` | 保留后缀。与官方一致                                                                                              |
+| `api3.cursor.sh`                  | DOMAIN               | 官方精确主机                               | 保留                                                                                                              |
+| `api4.cursor.sh`                  | DOMAIN               | 官方精确主机                               | 保留                                                                                                              |
+| `authenticator.cursor.sh`         | DOMAIN               | 官方精确主机                               | 保留                                                                                                              |
+| `api.cursor.com`                  | DOMAIN               | Cloud Agents API / Bugbot API 文档         | **保留（更正）**。官方 curl 示例使用 `https://api.cursor.com/v1/agents` 与 `https://api.cursor.com/bugbot/review` |
+| `^adminportal[0-9]+\.cursor\.sh$` | DOMAIN-REGEX         | 官方仅 `adminportal42.cursor.sh`           | 已记录为前向兼容策略。可收窄为 DOMAIN 精确匹配官方主机                                                            |
+| `^repo[0-9]+\.cursor\.sh$`        | 未注入（开关默认关） | 官方 `repo42.cursor.sh` 用于索引           | 与「不代理多余流量」一致                                                                                          |
 
 ## 过度覆盖实测
 
@@ -96,3 +96,20 @@ agentn.global.api5.cursor.sh
 的任意编号，官方只有一个 `adminportal42.cursor.sh`。
 
 这些额外覆盖的主机在官方文档中不存在，实际泄漏面为零；属于规则宽于证据，不是当前的功能问题。
+
+## 更正记录（2026-08-19 二次检索）
+
+本文件第一版把 `api.cursor.com` 判为「未在官方网络配置文档出现」。该判定不准确：
+主机确实不在 `cursor.com/docs/enterprise/network-configuration` 的防火墙清单中，
+但在产品 API 文档中有逐字官方出处。
+
+- https://cursor.com/docs/cloud-agent/api/endpoints
+  官方 curl 示例：`--url https://api.cursor.com/v1/agents`
+- https://cursor.com/docs/bugbot
+  官方 curl 示例：`--url https://api.cursor.com/bugbot/review`
+
+注意范围差异：这两处文档描述的是**用 API key 编程调用**的 Cloud Agents / Bugbot 接口，
+不等于 Cursor 桌面客户端自身会连接该主机。Cursor Desktop 的「Cloud」下拉可启动
+Cloud Agent，但客户端走 `api.cursor.com` 还是 `api2.cursor.sh`，官方文档没有说明。
+该主机保留在激活清单中，其「客户端是否实际使用」标记为 UNVERIFIED，
+需要脱敏 Connections 证据确认。

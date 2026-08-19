@@ -108,3 +108,31 @@ workos.imgix.net
 `help.`、`status.`、`ab.`、`events.`、`browser-intake.` 等前缀形式的主机。
 OpenAI 官方本身以 `*.chatgpt.com` 通配放行该域，因此脚本与官方口径一致；
 代价是该域下的遥测与状态页也占用家宽链路。
+
+## 更正记录（2026-08-19 第三次检索）
+
+本文件第一版把 Codex 只写成「WebSocket 走 chatgpt.com」，没有写下源码里的默认后端。
+完整核验见 `openai-codex-endpoints.md`。此处只记对判定表有影响的三点。
+
+1. **Codex 默认后台已核实。** 官方源码
+   `codex-rs/model-provider-info/src/lib.rs`：
+   `CHATGPT_CODEX_BASE_URL = "https://chatgpt.com/backend-api/codex"`。
+   ChatGPT 登录态再拼 `/responses` 与 `/responses/compact`；
+   API Key 走 `https://api.openai.com/v1/responses`。
+   现行 `DOMAIN-SUFFIX,chatgpt.com` 与 `DOMAIN-SUFFIX,api.openai.com` 已覆盖这两条通道。
+   缺口不在漏匹配，而在后缀把无关子域一并注入。
+
+2. **官方 WebSocket 表比「chatgpt.com 通配」更细。**
+   help 9247338（2026-08-19 再取）原文：
+   ChatGPT → `wss://ws.chatgpt.com`；Codex → `wss://chatgpt.com/`。
+   `ws.chatgpt.com` 是会话通道，不是无关子域。
+   若把 `chatgpt.com` 收到 `DOMAIN` 精确匹配，必须同时注入 `DOMAIN,ws.chatgpt.com`，
+   否则 ChatGPT 网页对话的官方 WebSocket 会离开家宽。
+
+3. **9247338 是防火墙不要拦截的清单，不是家宽注入合同。**
+   同页的 `*.oaistatic.com`、Intercom、Sentry 已被本仓库排除。
+   「官方写了 `*.chatgpt.com` 所以必须保留后缀」不成立。
+   可枚举的更窄集合：`DOMAIN,chatgpt.com` + `DOMAIN,ws.chatgpt.com`，
+   加上已有的 `api.openai.com` 后缀与 `oaiusercontent.com` 后缀。
+   裸域 `chatgpt.com` 上的路径（Codex `/backend-api/codex/*` 与网页 `/backend-api/conversation`、帮助页）
+   Clash 无法再拆。用户已确认保持 `DOMAIN-SUFFIX,chatgpt.com`。
