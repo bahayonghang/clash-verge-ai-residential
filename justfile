@@ -44,8 +44,10 @@ monitor-c5-auto:
     cargo run --quiet --manifest-path residential-monitor/src-tauri/Cargo.toml --bin monitor-bench -- c5-supply
 
 # 构建 NSIS 并静默安装到 current-user。不启动应用。会改本机安装态。
+# 安装前结束正在运行的 residential-monitor，避免 NSIS 覆盖被占用的文件。
 [windows]
 tinstall: monitor-build
+    $name = 'residential-monitor'; $procs = @(Get-Process -Name $name -ErrorAction SilentlyContinue); if ($procs.Count -gt 0) { Write-Host ("停止 {0} 个 {1} 进程。" -f $procs.Count, $name); $procs | Stop-Process -Force; $deadline = (Get-Date).AddSeconds(20); do { Start-Sleep -Milliseconds 250; $left = @(Get-Process -Name $name -ErrorAction SilentlyContinue) } while ($left.Count -gt 0 -and (Get-Date) -lt $deadline); if (@(Get-Process -Name $name -ErrorAction SilentlyContinue).Count -gt 0) { Write-Error "无法结束正在运行的 $name，安装会覆盖锁定文件。"; exit 1 } }
     $nsis = "residential-monitor\src-tauri\target\release\bundle\nsis"; $setup = Get-ChildItem -Path $nsis -Filter "*-setup.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if ($null -eq $setup) { Write-Error "未找到 NSIS 安装包。"; exit 1 }; Write-Host $setup.FullName; $p = Start-Process -FilePath $setup.FullName -ArgumentList "/S" -PassThru -Wait; if ($null -eq $p) { Write-Error "无法启动安装包。"; exit 1 }; exit $p.ExitCode
 
 # 家宽监控 v1 只提供 Windows 11 NSIS current-user 安装。
