@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "查询页为准，Channel 不含全表。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "空态与关闭语义。"}
+{"file": ".trellis/tasks/08-19-live-table-filter/prd.md", "reason": "列与筛选验收。"}
+{"file": ".trellis/tasks/08-19-live-clash-columns/prd.md", "reason": "父任务 AC1–AC5。"}

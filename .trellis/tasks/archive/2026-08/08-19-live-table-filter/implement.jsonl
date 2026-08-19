@@ -1,0 +1,10 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "后端 checklist。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C2 只消费 C1；不传原始 JSON。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Vanilla TS 质量门。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "列表走 query_live_connections；追加可选字段。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "筛选只存在视图状态；空态五类；单条关闭。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "筛选必须在查询层，不在视图重滤。"}
+{"file": ".trellis/tasks/08-19-live-table-filter/prd.md", "reason": "本子任务需求。"}
+{"file": ".trellis/tasks/08-19-live-table-filter/design.md", "reason": "列、速率、查询合同。"}
+{"file": ".trellis/tasks/08-19-live-clash-columns/prd.md", "reason": "父任务列对照与家宽决定。"}
+{"file": ".trellis/tasks/archive/2026-08/08-18-residential-monitor-mvp/research/clash-controller-api.md", "reason": "connections 样本含 port/start/type。"}
