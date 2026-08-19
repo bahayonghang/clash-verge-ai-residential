@@ -1,0 +1,28 @@
+{
+  "id": "live-table-columns",
+  "name": "live-table-columns",
+  "title": "实时表列宽拖动与显隐",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-19",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-19-live-table-sort-width",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "固定列宽、拖动、显隐、live_table_layout"
+  }
+}

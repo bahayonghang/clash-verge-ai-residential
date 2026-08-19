@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "前端质量门。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "空态与关闭保持。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "设置键与 Recovery。"}
+{"file": ".trellis/tasks/08-19-live-table-columns/prd.md", "reason": "AC1–AC3。"}
+{"file": ".trellis/tasks/08-19-live-table-sort-width/design.md", "reason": "默认宽与 sanitize。"}
