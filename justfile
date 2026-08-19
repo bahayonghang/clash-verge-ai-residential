@@ -43,10 +43,10 @@ monitor-c5-auto:
     cargo run --quiet --manifest-path residential-monitor/src-tauri/Cargo.toml --bin monitor-bench -- c5-fault
     cargo run --quiet --manifest-path residential-monitor/src-tauri/Cargo.toml --bin monitor-bench -- c5-supply
 
-# 构建 NSIS 并执行 current-user 安装。会改本机安装态。
+# 构建 NSIS 并静默安装到 current-user。不启动应用。会改本机安装态。
 [windows]
 tinstall: monitor-build
-    $nsis = "residential-monitor\src-tauri\target\release\bundle\nsis"; $setup = Get-ChildItem -Path $nsis -Filter "*-setup.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if ($null -eq $setup) { Write-Error "未找到 NSIS 安装包。"; exit 1 }; Write-Host $setup.FullName; Start-Process -FilePath $setup.FullName -Wait
+    $nsis = "residential-monitor\src-tauri\target\release\bundle\nsis"; $setup = Get-ChildItem -Path $nsis -Filter "*-setup.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if ($null -eq $setup) { Write-Error "未找到 NSIS 安装包。"; exit 1 }; Write-Host $setup.FullName; $p = Start-Process -FilePath $setup.FullName -ArgumentList "/S" -PassThru -Wait; if ($null -eq $p) { Write-Error "无法启动安装包。"; exit 1 }; exit $p.ExitCode
 
 # 家宽监控 v1 只提供 Windows 11 NSIS current-user 安装。
 [unix]

@@ -12,7 +12,7 @@ v1 只支持 Windows 11 NSIS current-user。无应用内自动更新。无 Windo
 just tdev              开发态桌面壳
 just monitor-check     子项目质量门
 just monitor-build     生成 NSIS，不安装
-just tinstall          构建并安装。会改本机安装态，需再确认
+just tinstall          构建并静默安装。不启动应用。会改本机安装态，需再确认
 just monitor-c5-auto   C5 自动硬化门。不含 30 天库、24 小时 soak、本机安装
 ```
 

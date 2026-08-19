@@ -10,7 +10,7 @@ just monitor-build
 
 产物位于 `residential-monitor/src-tauri/target/release/bundle/nsis/`。该命令只出包，不安装。
 
-`just tinstall` 会在本机执行安装。未再确认前不要运行。
+`just tinstall` 会在本机以 NSIS `/S` 静默执行 current-user 安装。安装结束后配方退出，不启动应用。未再确认前不要运行。
 
 ## 稳定标识
 
