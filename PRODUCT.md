@@ -24,7 +24,7 @@ web
 
 - 本地 Tauri WebView 桌面窗，默认 1200×800，与 Clash Verge Rev 同时运行。
 - 数据只留本机。无遥测，无云同步，无应用内自动更新，无 Windows Service。
-- TCP secret 只进本机凭据库或当前进程内存，不进页面、日志、SQLite、Channel 或导出。
+- TCP secret 只进本机凭据库或当前进程内存。设置页密码框可以回填并切换显示。日志、SQLite、Channel、导出仍不得出现 secret。
 - 普通卸载不删除本地库。删除全部本地数据走预览和二次确认短语。
 - 数据库无法按普通 schema 打开时，只进入 Recovery Shell。
 

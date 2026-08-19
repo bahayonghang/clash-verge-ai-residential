@@ -45,7 +45,7 @@ impl Drop for Secret {
     }
 }
 
-pub trait CredentialStore {
+pub trait CredentialStore: Send + Sync {
     fn put(&self, target: &str, secret: &Secret) -> Result<(), CredentialError>;
     fn get(&self, target: &str) -> Result<Secret, CredentialError>;
     fn replace(&self, target: &str, secret: &Secret) -> Result<(), CredentialError>;

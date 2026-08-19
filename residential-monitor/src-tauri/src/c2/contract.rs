@@ -2,6 +2,8 @@
 
 pub const SCHEMA_VERSION: u32 = 1;
 pub const LIST_PAGE_DEFAULT: u32 = 200;
+/// 采集节拍间隔。不改 C0 峰值定义与 `LIST_PAGE_*`。
+pub const SAMPLE_INTERVAL_MS: u64 = 1_000;
 pub const LIST_PAGE_MAX: u32 = 1_000;
 pub const COALESCE_MAX_KEYS: usize = 20_000;
 pub const COALESCE_MAX_BYTES: usize = 1_048_576;

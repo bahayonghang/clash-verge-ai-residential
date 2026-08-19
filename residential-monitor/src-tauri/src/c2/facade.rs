@@ -131,7 +131,7 @@ pub struct AppFacade {
     pub settings: ControllerSettings,
     pub wizard: WizardState,
     pub wizard_complete: bool,
-    pub workflow: SettingsWorkflow<FakeCredentialStore>,
+    pub workflow: SettingsWorkflow,
     pub closes: CloseRegistry,
     pub operations: OperationRegistry,
     pub dialog: FakeFileDialog,
@@ -276,8 +276,9 @@ impl AppFacade {
         self.hub.resync(subscription_id)
     }
 
-    pub fn apply_lifecycle(&mut self, input: ControllerInput) {
+    pub fn apply_lifecycle(&mut self, input: ControllerInput) -> Option<MonitorStreamMessage> {
         let utc = chrono::Utc::now().timestamp();
+        let keep_rows = retain_live_rows(&input);
         let batch = self.engine.apply(input, 0, utc);
         let health = health_from(
             self.session_status,
@@ -286,11 +287,21 @@ impl AppFacade {
                 .and_then(|item| item.health().ok())
                 .as_ref(),
         );
-        self.commit_eval(&batch, &[], utc, 0);
-        let _ = self.hub.publish(&batch, Vec::new(), health, utc);
+        let live = if keep_rows {
+            self.hub.rows()
+        } else {
+            Vec::new()
+        };
+        self.commit_eval(&batch, &live, utc, 0);
+        self.hub.publish(&batch, live, health, utc).ok().flatten()
     }
 
-    pub fn ingest_snapshot(&mut self, input: ControllerInput, utc: i64, mono: u64) {
+    pub fn ingest_snapshot(
+        &mut self,
+        input: ControllerInput,
+        utc: i64,
+        mono: u64,
+    ) -> Option<MonitorStreamMessage> {
         if let ControllerInput::Snapshot {
             ref connections, ..
         } = input
@@ -319,9 +330,9 @@ impl AppFacade {
             );
             self.session_status = SessionStatus::Connected;
             self.commit_eval(&batch, &live, utc, utc as u64);
-            let _ = self.hub.publish(&batch, live, health, utc);
+            self.hub.publish(&batch, live, health, utc).ok().flatten()
         } else {
-            self.apply_lifecycle(input);
+            self.apply_lifecycle(input)
         }
     }
 
@@ -500,28 +511,66 @@ impl AppFacade {
         Ok(next)
     }
 
-    pub fn apply_probe_ok(&mut self, inputs: Vec<ControllerInput>) {
+    /// 只给设置页密码框回填。不得写入日志、Channel、SQLite 或错误详情。
+    pub fn reveal_secret(&self) -> Result<Option<String>, AppErrorDto> {
+        if !self.settings.has_secret {
+            return Ok(None);
+        }
+        let secret = self
+            .workflow
+            .resolve(
+                &self.settings.credential_target,
+                &self.settings.secret_mode,
+            )
+            .map_err(AppErrorDto::from_settings)?;
+        Ok(Some(
+            String::from_utf8_lossy(secret.as_header_bytes()).into_owned(),
+        ))
+    }
+
+    pub fn apply_probe_ok(&mut self, inputs: Vec<ControllerInput>) -> Vec<MonitorStreamMessage> {
         let utc = chrono::Utc::now().timestamp();
+        let mut messages = Vec::new();
         for input in inputs {
-            if matches!(input, ControllerInput::Snapshot { .. }) {
-                self.ingest_snapshot(input, utc, utc as u64);
+            let message = if matches!(input, ControllerInput::Snapshot { .. }) {
+                self.ingest_snapshot(input, utc, utc as u64)
             } else {
-                self.apply_lifecycle(input);
+                self.apply_lifecycle(input)
+            };
+            if let Some(message) = message {
+                messages.push(message);
             }
         }
         self.session_status = SessionStatus::Connected;
+        messages
     }
 
-    pub fn apply_probe_err(&mut self, status: SessionStatus) {
+    pub fn apply_probe_err(&mut self, status: SessionStatus) -> Option<MonitorStreamMessage> {
         self.session_status = status;
-        self.apply_lifecycle(ControllerInput::Disconnected { reason: status });
+        self.apply_lifecycle(ControllerInput::Disconnected { reason: status })
     }
 
-    pub fn disconnect_now(&mut self) {
+    pub fn disconnect_now(&mut self) -> Option<MonitorStreamMessage> {
         self.session_status = SessionStatus::Cancelled;
         self.apply_lifecycle(ControllerInput::Disconnected {
             reason: SessionStatus::Cancelled,
-        });
+        })
+    }
+
+    /// 离开 Cancelled，让已有采集循环的下一拍可以取帧。
+    pub fn reconnect_now(&mut self) -> Option<MonitorStreamMessage> {
+        self.session_status = SessionStatus::Connecting;
+        let _ = self.desktop.set_collector_running(true);
+        let input = self.desktop.reconnect();
+        self.apply_lifecycle(input)
+    }
+
+    pub fn resume_collector(&mut self) -> Option<MonitorStreamMessage> {
+        if matches!(self.session_status, SessionStatus::Cancelled) {
+            self.session_status = SessionStatus::Connecting;
+        }
+        let input = self.desktop.set_collector_running(true);
+        self.apply_lifecycle(input)
     }
 
     pub fn probe_result(status: SessionStatus) -> ProbeResult {
@@ -588,7 +637,7 @@ impl AppFacade {
 
     pub fn shutdown(&mut self) -> Vec<ShutdownPhase> {
         self.workflow.clear_session();
-        self.apply_lifecycle(ControllerInput::Shutdown);
+        let _ = self.apply_lifecycle(ControllerInput::Shutdown);
         self.desktop.begin_shutdown()
     }
 
@@ -933,6 +982,13 @@ impl AppFacade {
     }
 }
 
+fn retain_live_rows(input: &ControllerInput) -> bool {
+    matches!(
+        input,
+        ControllerInput::Paused | ControllerInput::Resumed | ControllerInput::SleepGap { .. }
+    )
+}
+
 fn recovery_only() -> AppErrorDto {
     AppErrorDto {
         code: "recovery_only".into(),
@@ -1026,6 +1082,31 @@ mod c2_facade_contract_tests {
     }
 
     #[test]
+    fn persistent_secret_can_be_revealed_for_settings() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let saved = facade
+            .save_controller("127.0.0.1:9097".into(), Some("echo-secret".into()), false)
+            .expect("save");
+        assert_eq!(saved.secret_mode, "persistent");
+        assert!(saved.has_secret);
+        let revealed = facade.reveal_secret().expect("reveal");
+        assert_eq!(revealed.as_deref(), Some("echo-secret"));
+    }
+
+    #[test]
+    fn reconnect_now_leaves_connecting_health() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.session_status = SessionStatus::Connected;
+        facade.disconnect_now();
+        facade.reconnect_now();
+        assert_eq!(facade.session_status, SessionStatus::Connecting);
+        assert_eq!(facade.hub.overview().health.session, "connecting");
+        assert!(facade.desktop.collector_running);
+    }
+
+    #[test]
     fn future_schema_enters_recovery_without_writer() {
         let dir = tempdir().expect("dir");
         let path = dir.path().join("monitor.sqlite3");
@@ -1079,6 +1160,28 @@ mod c2_close_control_tests {
                 })
                 .collect(),
         }
+    }
+
+    #[test]
+    fn pause_keeps_existing_projection_rows() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.ingest_snapshot(snap(&["keep"]), 10, 10);
+        assert_eq!(facade.hub.row_count(), 1);
+        facade.apply_lifecycle(ControllerInput::Paused);
+        assert_eq!(facade.hub.row_count(), 1);
+        assert_eq!(facade.hub.rows()[0].connection_id, "keep");
+        facade.apply_lifecycle(ControllerInput::Resumed);
+        assert_eq!(facade.hub.row_count(), 1);
+        facade.apply_lifecycle(ControllerInput::SleepGap {
+            started_utc: 1,
+            ended_utc: 2,
+        });
+        assert_eq!(facade.hub.row_count(), 1);
+        facade.apply_lifecycle(ControllerInput::Disconnected {
+            reason: SessionStatus::Cancelled,
+        });
+        assert_eq!(facade.hub.row_count(), 0);
     }
 
     #[test]

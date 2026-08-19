@@ -21,6 +21,9 @@
 - 后续消息只接受 `seq > baseSeq`。
 - `snapshot` 是概览 DTO，不含 10k 连接数组。
 - 列表与详情走 `query_live_connections` / `get_connection`。
+- `subscribe_monitor` / `resync_monitor` 必须保存 Tauri `Channel`，后续 `publish` 转发到该 Channel。只发 bootstrap 后丢弃 Channel，实时页会一直空。
+- 前端用 `@tauri-apps/api/core` 的 `Channel` + `invoke`。禁止把 `window.message` 当成 Monitor Channel。
+- bootstrap 与 `connectionDelta` 之后必须再查默认第一页（`sortField=identity`，`limit=LIST_PAGE_DEFAULT`）。表格以查询页为准，不以 Channel upsert 排序。
 
 ### 4. Validation & Error Matrix
 - `seq == lastSeq + 1` → 应用增量
@@ -36,13 +39,15 @@
 
 ### 6. Tests Required
 - TS `reducer.test.ts`：迟到订阅、缺口、重复、`204` 后等 remove
+- TS `live-session.test.ts`：产品源码不含 `window.message` Channel
 - Rust `channel_contract_tests`：首帧 bootstrap、resync 换 identity
+- Rust `subscription_forward_tests`：存下的 sink 能收到 bootstrap 之后的 delta
 
 ### 7. Wrong vs Correct
 #### Wrong
-前端把 `meterUpload` 与 `attributedUpload` 加成「全局流量」，缺口当 0。
+前端把 `meterUpload` 与 `attributedUpload` 加成「全局流量」，缺口当 0。监听 `window.message` 或只渲染 `bootstrap.snapshot`。
 #### Correct
-分字段展示；`null` 显示「未知」。
+分字段展示；`null` 显示「未知」。用 Tauri Channel 订阅，再用 `query_live_connections` 填表。
 
 ## Scenario: C3 Report Commands
 

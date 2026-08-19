@@ -321,6 +321,61 @@ label {
   min-width: 12rem;
 }
 
+.secret-label {
+  min-width: 16rem;
+}
+
+.secret-field {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
+.secret-field input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--mono);
+}
+
+.secret-toggle {
+  position: relative;
+  flex: 0 0 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  background: #e8ecf3;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.secret-toggle:hover {
+  background: #d7dee9;
+}
+
+.secret-toggle svg {
+  display: block;
+}
+
+.secret-toggle .icon-hide {
+  display: none;
+}
+
+.secret-toggle[aria-pressed="true"] .icon-show {
+  display: none;
+}
+
+.secret-toggle[aria-pressed="true"] .icon-hide {
+  display: block;
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

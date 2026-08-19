@@ -1,0 +1,28 @@
+{
+  "id": "monitor-live-connections",
+  "name": "monitor-live-connections",
+  "title": "实时连接无数据分析与优化",
+  "description": "",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": "residential-monitor",
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-18",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "package": "residential-monitor"
+  }
+}

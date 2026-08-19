@@ -91,6 +91,16 @@ impl ControllerSession {
             endpoint: addr.to_string(),
             core_identity: identity,
         });
+        inputs.push(Self::fetch_normalized_snapshot(addr, secret).await?);
+        Ok(inputs)
+    }
+
+    /// GET `/connections` 并归一化。鉴权规则与 `connect_tcp` 后半段相同。
+    pub async fn fetch_normalized_snapshot(
+        addr: SocketAddr,
+        secret: Option<&str>,
+    ) -> Result<ControllerInput, SessionStatus> {
+        reject_non_loopback_ip(addr.ip())?;
         let (conn_status, body) = fetch_connections(addr, secret)
             .await
             .map_err(|_| SessionStatus::EndpointMissing)?;
@@ -99,12 +109,11 @@ impl ControllerSession {
         }
         let raw = serde_json::from_str(&body).map_err(|_| SessionStatus::ProtocolIncompatible)?;
         let now = Instant::now();
-        inputs.push(normalize_snapshot(
+        normalize_snapshot(
             &raw,
             now.elapsed().as_millis() as u64,
             chrono::Utc::now().timestamp(),
-        )?);
-        Ok(inputs)
+        )
     }
 
     pub fn probe_missing_pipe() -> SessionStatus {

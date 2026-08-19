@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "后端 checklist 与质量门。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C2 只消费 C1 接口；错误只暴露稳定码和中文下一步。"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "采集节拍复制 secret 时不得写入日志、Channel 或错误。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Vanilla TS、禁止远程资源、质量门命令。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "列表走 query_live_connections；Channel 只推有界增量。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "前端只缓存 DTO；关闭 204 后等 remove。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "采集、Channel、查询页跨层，禁止把原始 payload 送进视图。"}
+{"file": ".trellis/tasks/08-18-monitor-live-connections/research/empty-live-table.md", "reason": "三层断点与文件锚点。"}

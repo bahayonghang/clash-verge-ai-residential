@@ -14,6 +14,7 @@ import {
   type DeletePreview,
   type DeleteReport,
   type DiagnosticsSnapshot,
+  type LiveConnectionView,
   type LiveOverview,
   type NotifyCapability,
   type ReportQuery,
@@ -22,11 +23,19 @@ import {
   type RouteId
 } from "./dto";
 import { decodeMonitorMessage } from "./ipc/decoder";
+import { liveEmptyCopy, liveEmptyKind } from "./ipc/live-empty";
+import {
+  fetchTraySummary,
+  isTauriRuntime,
+  queryLiveConnections,
+  resyncMonitor,
+  subscribeMonitor
+} from "./ipc/live-session";
+import { applySecretField, secretFieldMarkup } from "./ipc/secret-field";
 import {
   emptyMonitorState,
   markCloseAccepted,
   reduceMonitor,
-  visibleRows,
   type MonitorState
 } from "./ipc/reducer";
 import { formatBytes, formatUtc, unknownOr } from "./format/units";
@@ -92,8 +101,31 @@ function renderOverview(overview: LiveOverview): string {
   `;
 }
 
-function renderLive(state: MonitorState): string {
-  const rows = visibleRows(state.connections, 0, 20, 4)
+function renderLive(
+  state: MonitorState,
+  rows: LiveConnectionView[],
+  address: string,
+  collectorRunning: boolean | null
+): string {
+  const snapshot = state.snapshot;
+  const session = snapshot?.health.session ?? "no_data";
+  const health = HEALTH_ZH[session] ?? { title: session, action: "查看诊断" };
+  const kind = liveEmptyKind({
+    address,
+    session,
+    collectorRunning,
+    coverageKind: snapshot?.coverageKind ?? null,
+    coverageReason: snapshot?.coverageReason ?? null,
+    rowCount: rows.length,
+    needResync: state.needResync,
+    frozen: state.frozen,
+    errorZh: state.errorZh
+  });
+  const emptyText =
+    kind === "disconnected"
+      ? `${health.title}。下一步：${health.action}`
+      : (liveEmptyCopy(kind) ?? health.title);
+  const rowHtml = rows
     .map((row) => {
       const mark = state.closeMarks.get(row.identity);
       const closeLabel =
@@ -109,12 +141,23 @@ function renderLive(state: MonitorState): string {
       </tr>`;
     })
     .join("");
+  const action =
+    kind === "unconfigured"
+      ? `<button type="button" data-route="settings-data">去设置页</button>`
+      : kind === "needResync"
+        ? `<button type="button" id="resync-monitor">重新订阅</button>`
+        : "";
+  const pauseNote =
+    collectorRunning === false ? `<p>采集已暂停。可在托盘选择继续采集。</p>` : "";
   return `
     <section class="panel">
-      <p>列表按稳定 identity 排序。关闭全部连接入口不存在。</p>
+      <p class="status" data-state="${session}">${health.title}。下一步：${health.action}</p>
+      <p>最后采样 ${formatUtc(snapshot?.lastSampleUtc ?? null)}</p>
+      ${pauseNote}
+      ${action}
       <table class="data">
         <thead><tr><th>域名</th><th>进程</th><th>主分类</th><th>上行</th><th>下行</th><th>网络</th><th>操作</th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="7">无数据</td></tr>`}</tbody>
+        <tbody>${rowHtml || `<tr><td colspan="7">${emptyText}</td></tr>`}</tbody>
       </table>
     </section>
   `;
@@ -244,9 +287,7 @@ function renderSettings(
       <label>控制器地址
         <input id="controller-address" value="${boot.settings.address || "127.0.0.1:9097"}" />
       </label>
-      <label>TCP secret（不会回显到日志或 Channel）
-        <input id="controller-secret" type="password" autocomplete="off" />
-      </label>
+      ${secretFieldMarkup()}
       <label>重点目标（逗号分隔）
         <input id="targets" value="家宽" />
       </label>
@@ -519,7 +560,9 @@ function renderApp(
   deletePreview: DeletePreview | null,
   deleteReport: DeleteReport | null,
   probeStatus: string,
-  probeState: string
+  probeState: string,
+  liveRows: LiveConnectionView[],
+  collectorRunning: boolean | null
 ): void {
   const focusedId = document.activeElement instanceof HTMLElement ? document.activeElement.id : "";
   const body =
@@ -528,7 +571,7 @@ function renderApp(
       : route === "overview"
         ? renderOverview(state.snapshot ?? boot.overview)
         : route === "live"
-          ? renderLive(state)
+          ? renderLive(state, liveRows, boot.settings.address, collectorRunning)
           : route === "settings-data"
             ? renderSettings(boot, about, deletePreview, deleteReport, probeStatus, probeState)
             : route === "reports"
@@ -593,6 +636,12 @@ async function main(): Promise<void> {
   let deleteReport: DeleteReport | null = null;
   let probeStatus = "";
   let probeState = "";
+  let liveRows: LiveConnectionView[] = [];
+  let collectorRunning: boolean | null = null;
+  let resyncInFlight = false;
+  let settingsSecret = "";
+  let settingsSecretVisible = false;
+  let settingsSecretLoaded = false;
   state.snapshot = boot.overview;
   const paint = (): void => {
     renderApp(
@@ -610,8 +659,75 @@ async function main(): Promise<void> {
       deletePreview,
       deleteReport,
       probeStatus,
-      probeState
+      probeState,
+      liveRows,
+      collectorRunning
     );
+    applySecretField(app, settingsSecret, settingsSecretVisible);
+  };
+
+  const loadSettingsSecret = async (): Promise<void> => {
+    if (settingsSecretLoaded || !isTauriRuntime()) {
+      settingsSecretLoaded = true;
+      return;
+    }
+    if (!boot.settings.hasSecret) {
+      settingsSecretLoaded = true;
+      return;
+    }
+    try {
+      const value = await invokeCommand<string | null>("get_controller_secret");
+      settingsSecret = value ?? "";
+    } catch {
+      settingsSecret = "";
+    }
+    settingsSecretLoaded = true;
+  };
+
+  const refreshLivePage = async (): Promise<void> => {
+    if (!isTauriRuntime()) {
+      liveRows = [];
+      return;
+    }
+    try {
+      const page = await queryLiveConnections();
+      liveRows = page.rows;
+    } catch {
+      liveRows = [];
+    }
+    try {
+      const tray = await fetchTraySummary();
+      collectorRunning = tray.collectorRunning;
+    } catch {
+      collectorRunning = null;
+    }
+  };
+
+  const onMonitorRaw = (raw: unknown): void => {
+    void handleMonitorRaw(raw);
+  };
+
+  const handleMonitorRaw = async (raw: unknown): Promise<void> => {
+    try {
+      const message = decodeMonitorMessage(raw);
+      state = reduceMonitor(state, message);
+      if (state.needResync && !resyncInFlight && state.subscriptionId !== null) {
+        resyncInFlight = true;
+        try {
+          await resyncMonitor(state.subscriptionId, onMonitorRaw);
+        } catch {
+          /* 保持冻结，页面提供重新订阅 */
+        } finally {
+          resyncInFlight = false;
+        }
+      }
+      if (message.kind === "bootstrap" || message.kind === "connectionDelta" || route === "live") {
+        await refreshLivePage();
+      }
+      paint();
+    } catch {
+      /* 非 Channel 或解码失败 */
+    }
   };
   paint();
 
@@ -654,6 +770,13 @@ async function main(): Promise<void> {
     return query;
   };
 
+  app.addEventListener("input", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement && target.id === "controller-secret") {
+      settingsSecret = target.value;
+    }
+  });
+
   app.addEventListener("click", async (event) => {
     const raw = event.target;
     if (!(raw instanceof Element)) {
@@ -669,6 +792,14 @@ async function main(): Promise<void> {
       | undefined;
     if (nextRoute) {
       apply(state, nextRoute);
+      if (nextRoute === "settings-data") {
+        await loadSettingsSecret();
+        paint();
+      }
+      if (nextRoute === "live") {
+        await refreshLivePage();
+        paint();
+      }
       if (nextRoute === "alerts") {
         try {
           const page = decodeAlertCenter(
@@ -696,6 +827,11 @@ async function main(): Promise<void> {
         apply({ ...state, errorZh: "关闭请求未发送。未向未隔离控制器发出 DELETE。" });
       }
     }
+    if (raw.closest("#toggle-secret")) {
+      settingsSecretVisible = !settingsSecretVisible;
+      applySecretField(app, settingsSecret, settingsSecretVisible);
+      return;
+    }
     if (target.id === "save-settings") {
       const address = (document.querySelector("#controller-address") as HTMLInputElement | null)?.value ?? "";
       const secret = (document.querySelector("#controller-secret") as HTMLInputElement | null)?.value;
@@ -704,8 +840,12 @@ async function main(): Promise<void> {
         boot.settings = await invokeCommand("save_settings", {
           address,
           secret: secret && secret.length > 0 ? secret : null,
-          sessionOnly: true
+          sessionOnly: false
         });
+        if (secret && secret.length > 0) {
+          settingsSecret = secret;
+          settingsSecretLoaded = true;
+        }
         await invokeCommand("save_targets", {
           targets: targets
             .split(",")
@@ -910,6 +1050,15 @@ async function main(): Promise<void> {
         apply({ ...state, errorZh: "删除未执行。确认短语必须完全匹配。" });
       }
     }
+    if (target.id === "resync-monitor") {
+      if (state.subscriptionId !== null && isTauriRuntime()) {
+        try {
+          await resyncMonitor(state.subscriptionId, onMonitorRaw);
+        } catch {
+          apply({ ...state, errorZh: "重新订阅失败。请重载窗口。" });
+        }
+      }
+    }
     if (target.id === "run-vacuum") {
       try {
         await invokeCommand("run_user_vacuum");
@@ -963,14 +1112,13 @@ async function main(): Promise<void> {
     /* 预览态没有 Tauri */
   }
 
-  window.addEventListener("message", (event) => {
+  if (isTauriRuntime()) {
     try {
-      const message = decodeMonitorMessage(event.data);
-      apply(reduceMonitor(state, message));
+      await subscribeMonitor(onMonitorRaw);
     } catch {
-      /* 非 Channel 消息 */
+      /* 订阅失败时保持可诊断空表 */
     }
-  });
+  }
 }
 
 void main();

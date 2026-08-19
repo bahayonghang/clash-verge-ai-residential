@@ -18,14 +18,15 @@ pub mod transport;
 pub mod workload;
 
 use crate::session::ControllerSession;
-use c2::desktop::InstanceClaim;
 #[cfg(not(windows))]
 use c2::desktop::ProcessSingleInstance;
+use c2::desktop::{InstanceClaim, ShutdownPhase};
 use c2::facade::{parse_socket, AppErrorDto, AppFacade, BootstrapDto, ProbeResult};
 use c2::hub::{LiveConnectionView, MonitorStreamMessage};
 use c2::query::{ConnectionPage, ConnectionQuery};
 use c2::settings::ControllerSettings;
 use c2::shell::{FileMode, FilePurpose, OperationProgress, RecoveryStatus, RouteDescriptor};
+use c2::subscriptions::SubscriptionRegistry;
 use c3::export::{ExportPreview, ExportSpec};
 use c3::query::{ReportQuery, ReportResult};
 use c3::retention::RetentionPreview;
@@ -63,6 +64,69 @@ fn try_windows_single_instance() -> InstanceClaim {
     }
 }
 
+fn live_channels() -> &'static Mutex<SubscriptionRegistry<Channel<MonitorStreamMessage>>> {
+    static CHANNELS: std::sync::OnceLock<
+        Mutex<SubscriptionRegistry<Channel<MonitorStreamMessage>>>,
+    > = std::sync::OnceLock::new();
+    CHANNELS.get_or_init(|| Mutex::new(SubscriptionRegistry::new()))
+}
+
+fn forward_published(
+    state: &Mutex<AppFacade>,
+    messages: impl IntoIterator<Item = MonitorStreamMessage>,
+) {
+    let mut dead = Vec::new();
+    {
+        let mut registry = live_channels().lock().expect("channels");
+        for message in messages {
+            dead.extend(registry.forward(&message));
+        }
+    }
+    if dead.is_empty() {
+        return;
+    }
+    let guard = state.lock().expect("state");
+    for id in dead {
+        guard.hub.drop_subscription(id);
+    }
+}
+
+async fn collector_loop_tick(state: &Mutex<AppFacade>) -> bool {
+    let plan = {
+        let guard = state.lock().expect("state");
+        if guard.desktop.shutdown != ShutdownPhase::Idle {
+            return false;
+        }
+        c2::collector::plan_tick(&guard)
+    };
+    if !plan.should_fetch {
+        return true;
+    }
+    let Some(addr) = plan.address() else {
+        return true;
+    };
+    let result = c2::collector::fetch_snapshot(addr, plan.secret()).await;
+    let message = {
+        let mut guard = state.lock().expect("state");
+        if guard.desktop.shutdown != ShutdownPhase::Idle {
+            return false;
+        }
+        if !guard.desktop.collector_running
+            || matches!(
+                guard.session_status,
+                crate::controller::SessionStatus::Cancelled
+            )
+        {
+            return true;
+        }
+        c2::collector::apply_tick_result(&mut guard, result)
+    };
+    if let Some(message) = message {
+        forward_published(state, [message]);
+    }
+    true
+}
+
 fn boot_facade() -> AppFacade {
     let args: Vec<String> = std::env::args().collect();
     let claim = {
@@ -79,7 +143,21 @@ fn boot_facade() -> AppFacade {
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|_| std::env::temp_dir().join(crate::identity::IDENTIFIER));
     let _ = std::fs::create_dir_all(&data_dir);
-    AppFacade::boot(data_dir, &args, claim)
+    let mut facade = AppFacade::boot(data_dir, &args, claim);
+    #[cfg(windows)]
+    attach_windows_credentials(&mut facade);
+    facade
+}
+
+#[cfg(windows)]
+fn attach_windows_credentials(facade: &mut AppFacade) {
+    if facade.branch != c2::shell::BootBranch::NormalReady {
+        return;
+    }
+    facade.workflow = c2::settings::SettingsWorkflow::new(
+        crate::credential::windows_cm::WindowsCredentialManager,
+        true,
+    );
 }
 
 #[tauri::command]
@@ -106,6 +184,10 @@ fn subscribe_monitor(
         action: "重新订阅".into(),
         details_redacted: "channel".into(),
     })?;
+    live_channels()
+        .lock()
+        .expect("channels")
+        .insert(id, on_event);
     Ok(id)
 }
 
@@ -122,13 +204,18 @@ fn resync_monitor(
         } => *subscription_id,
         _ => 0,
     };
-    on_event.send(message).map_err(|_| AppErrorDto {
-        code: "channel".into(),
-        message_zh: "无法发送 resync 首帧。".into(),
-        retryable: true,
-        action: "重新订阅".into(),
-        details_redacted: "channel".into(),
-    })?;
+    {
+        let mut registry = live_channels().lock().expect("channels");
+        registry.remove(subscription_id);
+        on_event.send(message).map_err(|_| AppErrorDto {
+            code: "channel".into(),
+            message_zh: "无法发送 resync 首帧。".into(),
+            retryable: true,
+            action: "重新订阅".into(),
+            details_redacted: "channel".into(),
+        })?;
+        registry.insert(id, on_event);
+    }
     Ok(id)
 }
 
@@ -210,6 +297,11 @@ fn get_settings(state: State<Mutex<AppFacade>>) -> Result<ControllerSettings, Ap
 }
 
 #[tauri::command]
+fn get_controller_secret(state: State<Mutex<AppFacade>>) -> Result<Option<String>, AppErrorDto> {
+    state.lock().expect("state").reveal_secret()
+}
+
+#[tauri::command]
 fn save_settings(
     state: State<Mutex<AppFacade>>,
     address: String,
@@ -244,7 +336,7 @@ async fn test_controller(
                 details_redacted: "recovery".into(),
             });
         }
-        guard.save_controller(address.clone(), secret, true)?;
+        guard.save_controller(address.clone(), secret, false)?;
     }
     let (addr, secret) = {
         let guard = state.lock().expect("state");
@@ -266,17 +358,25 @@ async fn test_controller(
     let mut session = ControllerSession::new(addr.to_string());
     match session.connect_tcp(addr, secret.as_deref()).await {
         Ok(inputs) => {
-            let mut guard = state.lock().expect("state");
-            guard.session.endpoint = addr.to_string();
-            guard.session.core_identity = session.core_identity;
-            guard.apply_probe_ok(inputs);
+            let messages = {
+                let mut guard = state.lock().expect("state");
+                guard.session.endpoint = addr.to_string();
+                guard.session.core_identity = session.core_identity;
+                guard.apply_probe_ok(inputs)
+            };
+            forward_published(&state, messages);
             Ok(AppFacade::probe_result(
                 crate::controller::SessionStatus::Connected,
             ))
         }
         Err(status) => {
-            let mut guard = state.lock().expect("state");
-            guard.apply_probe_err(status);
+            let message = {
+                let mut guard = state.lock().expect("state");
+                guard.apply_probe_err(status)
+            };
+            if let Some(message) = message {
+                forward_published(&state, [message]);
+            }
             Err(AppErrorDto::from_status(status))
         }
     }
@@ -284,8 +384,10 @@ async fn test_controller(
 
 #[tauri::command]
 fn disconnect_controller(state: State<Mutex<AppFacade>>) -> Result<ProbeResult, AppErrorDto> {
-    let mut guard = state.lock().expect("state");
-    guard.disconnect_now();
+    let message = state.lock().expect("state").disconnect_now();
+    if let Some(message) = message {
+        forward_published(&state, [message]);
+    }
     Ok(AppFacade::probe_result(
         crate::controller::SessionStatus::Cancelled,
     ))
@@ -428,37 +530,49 @@ fn data_directory(state: State<Mutex<AppFacade>>) -> Result<String, AppErrorDto>
 
 #[tauri::command]
 fn pause_collector(state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
-    let mut guard = state.lock().expect("state");
-    let input = guard.desktop.set_collector_running(false);
-    guard.apply_lifecycle(input);
+    let message = {
+        let mut guard = state.lock().expect("state");
+        let input = guard.desktop.set_collector_running(false);
+        guard.apply_lifecycle(input)
+    };
+    if let Some(message) = message {
+        forward_published(&state, [message]);
+    }
     Ok(())
 }
 
 #[tauri::command]
 fn resume_collector(state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
-    let mut guard = state.lock().expect("state");
-    let input = guard.desktop.set_collector_running(true);
-    guard.apply_lifecycle(input);
+    let message = state.lock().expect("state").resume_collector();
+    if let Some(message) = message {
+        forward_published(&state, [message]);
+    }
     Ok(())
 }
 
 #[tauri::command]
 fn reconnect_now(state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
-    let mut guard = state.lock().expect("state");
-    let input = guard.desktop.reconnect();
-    guard.apply_lifecycle(input);
+    let message = state.lock().expect("state").reconnect_now();
+    if let Some(message) = message {
+        forward_published(&state, [message]);
+    }
     Ok(())
 }
 
 #[tauri::command]
 fn notify_power_event(state: State<Mutex<AppFacade>>, sleeping: bool) -> Result<(), AppErrorDto> {
-    let mut guard = state.lock().expect("state");
-    let input = if sleeping {
-        guard.desktop.on_sleep()
-    } else {
-        guard.desktop.on_resume()
+    let message = {
+        let mut guard = state.lock().expect("state");
+        let input = if sleeping {
+            guard.desktop.on_sleep()
+        } else {
+            guard.desktop.on_resume()
+        };
+        guard.apply_lifecycle(input)
     };
-    guard.apply_lifecycle(input);
+    if let Some(message) = message {
+        forward_published(&state, [message]);
+    }
     Ok(())
 }
 
@@ -619,23 +733,30 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                 }
                 "pause" => {
                     if let Some(state) = handle.try_state::<Mutex<AppFacade>>() {
-                        let mut guard = state.lock().expect("state");
-                        let input = guard.desktop.set_collector_running(false);
-                        guard.apply_lifecycle(input);
+                        let message = {
+                            let mut guard = state.lock().expect("state");
+                            let input = guard.desktop.set_collector_running(false);
+                            guard.apply_lifecycle(input)
+                        };
+                        if let Some(message) = message {
+                            forward_published(&state, [message]);
+                        }
                     }
                 }
                 "resume" => {
                     if let Some(state) = handle.try_state::<Mutex<AppFacade>>() {
-                        let mut guard = state.lock().expect("state");
-                        let input = guard.desktop.set_collector_running(true);
-                        guard.apply_lifecycle(input);
+                        let message = state.lock().expect("state").resume_collector();
+                        if let Some(message) = message {
+                            forward_published(&state, [message]);
+                        }
                     }
                 }
                 "reconnect" => {
                     if let Some(state) = handle.try_state::<Mutex<AppFacade>>() {
-                        let mut guard = state.lock().expect("state");
-                        let input = guard.desktop.reconnect();
-                        guard.apply_lifecycle(input);
+                        let message = state.lock().expect("state").reconnect_now();
+                        if let Some(message) = message {
+                            forward_published(&state, [message]);
+                        }
                     }
                 }
                 "quit" => {
@@ -673,6 +794,21 @@ pub fn run() {
                 let _ = window.set_icon(icon);
             }
             let _ = app.emit("desktop-ready", true);
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    tokio::time::sleep(std::time::Duration::from_millis(
+                        crate::c2::contract::SAMPLE_INTERVAL_MS,
+                    ))
+                    .await;
+                    let Some(state) = handle.try_state::<Mutex<AppFacade>>() else {
+                        break;
+                    };
+                    if !collector_loop_tick(&state).await {
+                        break;
+                    }
+                }
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -683,6 +819,7 @@ pub fn run() {
             get_connection,
             close_connection,
             get_settings,
+            get_controller_secret,
             save_settings,
             save_targets,
             test_controller,

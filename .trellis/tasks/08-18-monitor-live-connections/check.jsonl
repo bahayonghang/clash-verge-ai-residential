@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "核对 cargo 质量门与模块边界。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "核对 typecheck / lint / test / build。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "确认未放宽 Channel 合同或把 10k 行塞进 bootstrap。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "确认空态与关闭语义，无关闭全部入口。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "核对采样、转发、查询页没有第二套账本。"}
+{"file": ".trellis/tasks/08-18-monitor-live-connections/prd.md", "reason": "对照 AC1–AC7。"}
+{"file": ".trellis/tasks/08-18-monitor-live-connections/research/empty-live-table.md", "reason": "三层断点都已接通。"}

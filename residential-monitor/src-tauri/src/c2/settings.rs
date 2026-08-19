@@ -107,16 +107,16 @@ pub fn validate_targets(targets: &[String]) -> Result<(), SettingsError> {
     Ok(())
 }
 
-pub struct SettingsWorkflow<S: CredentialStore> {
-    store: S,
+pub struct SettingsWorkflow {
+    store: Box<dyn CredentialStore>,
     session: ProcessLocalStore,
     persistent_available: bool,
 }
 
-impl<S: CredentialStore> SettingsWorkflow<S> {
-    pub fn new(store: S, persistent_available: bool) -> Self {
+impl SettingsWorkflow {
+    pub fn new(store: impl CredentialStore + 'static, persistent_available: bool) -> Self {
         Self {
-            store,
+            store: Box::new(store),
             session: ProcessLocalStore::new(),
             persistent_available,
         }
@@ -309,6 +309,26 @@ mod settings_workflow_tests {
         assert!(workflow
             .resolve(&format!("{CREDENTIAL_TARGET}/pending"), "persistent")
             .is_err());
+    }
+
+    #[test]
+    fn persistent_save_can_be_resolved() {
+        let workflow = SettingsWorkflow::new(FakeCredentialStore::new(), true);
+        let next = workflow
+            .save_secret(
+                &ControllerSettings::default(),
+                "127.0.0.1:9097",
+                Some("echo-secret"),
+                false,
+                true,
+            )
+            .expect("save");
+        assert_eq!(next.secret_mode, "persistent");
+        assert!(next.has_secret);
+        let saved = workflow
+            .resolve(CREDENTIAL_TARGET, "persistent")
+            .expect("resolve");
+        assert_eq!(saved.as_header_bytes(), b"echo-secret");
     }
 
     #[test]
