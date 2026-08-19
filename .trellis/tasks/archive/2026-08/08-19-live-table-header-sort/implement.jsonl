@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "后端 checklist。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "表格以查询页为准。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "排序在查询层。"}
+{"file": ".trellis/tasks/08-19-live-table-sort-width/design.md", "reason": "sort_field 与未知在后。"}
+{"file": ".trellis/tasks/08-19-live-table-sort-width/research/table-layout-and-sort.md", "reason": "现有 sort_key 缺口。"}
+{"file": ".trellis/tasks/08-19-live-table-header-sort/prd.md", "reason": "本子任务需求。"}
+{"file": ".trellis/tasks/08-19-live-table-header-sort/design.md", "reason": "本子任务边界。"}
