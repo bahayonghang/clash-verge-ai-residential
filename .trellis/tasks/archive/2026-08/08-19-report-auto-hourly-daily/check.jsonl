@@ -1,0 +1,10 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "fmt/clippy/test 质量门。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C2 不直接 SQL；Recovery 不跑 ReportService。"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "取消必须 interrupt。"}
+{"file": ".trellis/spec/residential-monitor/storage/index.md", "reason": "c3 测试与自动 DELETE 关闭。"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "不得改已发布 C3/C4 migration 文本。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "typecheck/lint/test/build。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "缺字段解码失败；导出不重查。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "缺口不画零；前端不核算。"}
+{"file": ".trellis/tasks/08-19-report-auto-hourly-daily/prd.md", "reason": "对照 AC1–AC10。"}
+{"file": ".trellis/tasks/08-19-report-auto-hourly-daily/design.md", "reason": "对照 v4 与调度合同。"}
