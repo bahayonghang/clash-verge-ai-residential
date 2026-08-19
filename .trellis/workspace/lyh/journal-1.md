@@ -363,3 +363,41 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 13: 接通实时连接并回填设置密钥
+
+**Date**: 2026-08-19
+**Task**: 接通实时连接并回填设置密钥
+**Package**: residential-monitor
+**Branch**: `dev`
+
+### Summary
+
+接通 1 Hz 采集、Channel 转发与实时连接空态；设置页密钥默认保存并回填圆点。tinstall 改为静默安装。
+
+### Main Changes
+
+- 1 Hz HTTP 采集、Channel 订阅表、query_live_connections 填表与可诊断空态
+- 设置页密钥默认写入本机凭据，密码框回填并提供显示按钮
+- tinstall 使用 NSIS /S 且安装后不启动应用
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9cd49d8` | (see git log) |
+| `eeca0e2` | (see git log) |
+
+### Testing
+
+- [OK] npm --prefix residential-monitor run typecheck/lint/test/build 通过
+- [OK] cargo test collector_tick/subscription_forward/pause_keeps_existing 此前通过；收尾时本机 windows crate 缺 Win32 模块未能复跑
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 用 just tdev 对本机 Clash Verge 9097 测实时连接与密钥回填

@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 12
-- **Last Active**: 2026-08-18
+- **Total Sessions**: 13
+- **Last Active**: 2026-08-19
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~365 | Active |
+| `journal-1.md` | ~403 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 13 | 2026-08-19 | 接通实时连接并回填设置密钥 | `9cd49d8`, `eeca0e2` | `dev` |
 | 12 | 2026-08-18 | 家宽监控壳层侧栏与控制器探测 | `df0f1d9`, `a437fde`, `b42f528`, `582f9f5` | `dev` |
 | 11 | 2026-08-18 | C5 发布硬化与归档 | `15f960f` | `dev` |
 | 10 | 2026-08-18 | C4 家宽监控告警与诊断 | `e83cc5c` | `dev` |
