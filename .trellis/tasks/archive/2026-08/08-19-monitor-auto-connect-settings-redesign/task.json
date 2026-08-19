@@ -1,0 +1,29 @@
+{
+  "id": "monitor-auto-connect-settings-redesign",
+  "name": "monitor-auto-connect-settings-redesign",
+  "title": "启动即监控与设置页现代化",
+  "description": "启动 residential-monitor 时自动连接并进入监控，同时按 SkillPort 设置页的信息架构重构设置与数据管理界面。",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-20",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-19-monitor-auto-connect",
+    "08-19-monitor-settings-redesign"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
