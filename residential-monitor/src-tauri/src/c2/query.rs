@@ -101,9 +101,9 @@ fn matches_filter(row: &LiveConnectionView, filter: &ConnectionFilter, targets: 
 }
 
 fn is_residential(row: &LiveConnectionView, targets: &[String]) -> bool {
-    row.chains.iter().any(|node| {
-        targets.iter().any(|target| target == node) || node.contains("家宽")
-    })
+    row.chains
+        .iter()
+        .any(|node| targets.iter().any(|target| target == node) || node.contains("家宽"))
 }
 
 fn matches_clause(row: &LiveConnectionView, clause: &FilterClause) -> bool {
@@ -124,16 +124,18 @@ fn clause_candidates(row: &LiveConnectionView, field: &str) -> Vec<String> {
         "process" => opt_vec(row.process_name.as_deref()),
         "rule" => {
             let mut items = opt_vec(row.rule.as_deref());
-            if let (Some(rule), Some(payload)) = (row.rule.as_deref(), row.rule_payload.as_deref()) {
+            if let (Some(rule), Some(payload)) = (row.rule.as_deref(), row.rule_payload.as_deref())
+            {
                 items.push(format!("{rule}({payload})"));
             }
             items
         }
         "chain" => row.chains.clone(),
         "source" => joined_host(row.source_ip.as_deref(), row.source_port.as_deref()),
-        "destination" => {
-            joined_host(row.destination_ip.as_deref(), row.destination_port.as_deref())
-        }
+        "destination" => joined_host(
+            row.destination_ip.as_deref(),
+            row.destination_port.as_deref(),
+        ),
         "type" => {
             let mut items = opt_vec(row.inbound.as_deref());
             items.extend(opt_vec(row.network.as_deref()));

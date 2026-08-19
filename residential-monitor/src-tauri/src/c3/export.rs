@@ -1,8 +1,8 @@
 //! 流式导出：只消费 snapshot token，不重新查询。
 
 use crate::c3::query::{ReportError, ReportResult};
-use crate::i18n::{t, UiLocale};
 use crate::c3::space::SpaceBudget;
+use crate::i18n::{t, UiLocale};
 use serde::{Deserialize, Serialize};
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -276,7 +276,7 @@ td,th{{border-bottom:1px solid #2a3340;padding:6px;font-variant-numeric:tabular-
             t(locale, "export.col_upload"),
             t(locale, "export.col_download")
         )
-            .map_err(|_| ReportError::Failed("html"))?;
+        .map_err(|_| ReportError::Failed("html"))?;
         for row in &result.rankings {
             check_cancel(cancel)?;
             writeln!(

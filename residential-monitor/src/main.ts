@@ -42,11 +42,14 @@ import {
   reduceMonitor,
   type MonitorState
 } from "./ipc/reducer";
+import { categoryRows } from "./format/overview";
 import { formatBytes, formatUtc, unknownOr } from "./format/units";
 import { healthAction, healthTitle, parseUiLocale, t, type UiLocale } from "./i18n";
 import { BRAND_MARK, ROUTE_ICONS } from "./nav-icons";
+import { applyTheme, parseUiTheme, type UiTheme } from "./theme";
 
 let uiLocale: UiLocale = "zh";
+let uiTheme: UiTheme = "mocha";
 let liveQuery: LiveConnectionQuery = defaultLiveQuery();
 
 const FILTER_FIELDS = ["host", "chain", "rule", "process", "source", "destination", "type"] as const;
@@ -71,6 +74,11 @@ function applyLocale(locale: UiLocale): void {
   uiLocale = locale;
 }
 
+function adoptTheme(theme: UiTheme): void {
+  uiTheme = theme;
+  applyTheme(theme);
+}
+
 function localizeRoutes(routes: BootstrapDto["routes"]): BootstrapDto["routes"] {
   return routes.map((route) => ({
     ...route,
@@ -86,34 +94,64 @@ function healthOf(session: string): { title: string; action: string } {
   return { title, action: healthAction(uiLocale, session) };
 }
 
-function metric(label: string, value: number | null): string {
-  return `<div class="metric"><span>${label}</span><strong>${formatBytes(value, unknownLabel())}</strong></div>`;
+function caliberPair(
+  title: string,
+  upload: number | null,
+  download: number | null
+): string {
+  const unknown = unknownLabel();
+  return `<article class="caliber">
+      <h3>${title}</h3>
+      <dl>
+        <div>
+          <dt>${tx("overview.dir.up")}</dt>
+          <dd>${formatBytes(upload, unknown)}</dd>
+        </div>
+        <div>
+          <dt>${tx("overview.dir.down")}</dt>
+          <dd>${formatBytes(download, unknown)}</dd>
+        </div>
+      </dl>
+    </article>`;
 }
 
 function renderOverview(overview: LiveOverview): string {
   const health = healthOf(overview.health.session);
-  const categories = Object.keys(overview.categoryUpload)
-    .map((name) => `<li>${name}：${formatBytes(overview.categoryUpload[name] ?? null, unknownLabel())}</li>`)
-    .join("");
+  const unknown = unknownLabel();
+  const rows = categoryRows(overview.categoryUpload, overview.categoryDownload);
+  const categoryBody = rows.length
+    ? rows
+        .map(
+          (row) =>
+            `<tr><td>${row.name}</td><td>${formatBytes(row.upload, unknown)}</td><td>${formatBytes(row.download, unknown)}</td></tr>`
+        )
+        .join("")
+    : `<tr><td colspan="3">${tx("common.none")}</td></tr>`;
   const coverage = overview.coverageKind
     ? `<p class="gap">${fmt("overview.coverage_gap", { kind: overview.coverageKind, reason: unknownOr(overview.coverageReason, unknownLabel()) })}</p>`
     : `<p>${fmt("overview.coverage_ok", { time: formatUtc(overview.lastSampleUtc, tx("common.no_sample")) })}</p>`;
   return `
-    <section class="grid" aria-label="${tx("overview.aria")}">
-      ${metric(tx("overview.meter_up"), overview.meterUpload)}
-      ${metric(tx("overview.meter_down"), overview.meterDownload)}
-      ${metric(tx("overview.attr_up"), overview.attributedUpload)}
-      ${metric(tx("overview.attr_down"), overview.attributedDownload)}
-      ${metric(tx("overview.other_up"), overview.otherUpload)}
-      ${metric(tx("overview.gap_up"), overview.gapUpload)}
-      ${metric(tx("overview.over_up"), overview.overUpload)}
-      <div class="metric"><span>${tx("overview.active")}</span><strong>${overview.activeCount}</strong></div>
-    </section>
-    <section class="panel">
-      <h2>${tx("overview.categories")}</h2>
-      <ul>${categories || `<li>${tx("common.none")}</li>`}</ul>
-      ${coverage}
-      <p class="status" data-state="${overview.health.session}">${health.title}。${tx("common.next")}：${health.action}</p>
+    <section class="overview">
+      <section class="caliber-grid" aria-label="${tx("overview.aria")}">
+        ${caliberPair(tx("overview.meter"), overview.meterUpload, overview.meterDownload)}
+        ${caliberPair(tx("overview.attr"), overview.attributedUpload, overview.attributedDownload)}
+        ${caliberPair(tx("overview.other"), overview.otherUpload, overview.otherDownload)}
+        ${caliberPair(tx("overview.gap"), overview.gapUpload, overview.gapDownload)}
+        ${caliberPair(tx("overview.over"), overview.overUpload, overview.overDownload)}
+        <article class="caliber session">
+          <h3>${tx("overview.active")}</h3>
+          <p class="caliber-active">${overview.activeCount}</p>
+          ${coverage}
+          <p class="status" data-state="${overview.health.session}">${health.title}。${tx("common.next")}：${health.action}</p>
+        </article>
+      </section>
+      <section class="panel categories">
+        <h2>${tx("overview.categories")}</h2>
+        <table class="data">
+          <thead><tr><th>${tx("overview.col.name")}</th><th>${tx("overview.col.upload")}</th><th>${tx("overview.col.download")}</th></tr></thead>
+          <tbody>${categoryBody}</tbody>
+        </table>
+      </section>
     </section>
   `;
 }
@@ -193,21 +231,24 @@ function renderLive(
           <option value="exact" ${clause.mode === "exact" ? "selected" : ""}>${tx("live.filter.exact")}</option>
         </select>
         <input data-filter-value="${index}" value="${clause.value.replaceAll('"', "&quot;")}" />
-        <button type="button" data-filter-remove="${index}">${tx("live.filter.remove")}</button>
+        <button type="button" class="btn-secondary" data-filter-remove="${index}">${tx("live.filter.remove")}</button>
       </div>`;
     })
     .join("");
   return `
-    <section class="panel">
-      <p class="status" data-state="${session}">${health.title}。${tx("common.next")}：${health.action}</p>
-      <p>${fmt("live.last_sample", { time: formatUtc(snapshot?.lastSampleUtc ?? null, tx("common.no_sample")) })}</p>
-      ${pauseNote}
-      ${action}
-      <div class="live-filters">
-        <label><input type="checkbox" id="live-residential" ${liveQuery.filter.residentialOnly ? "checked" : ""} /> ${tx("live.filter.residential")}</label>
-        ${clauseHtml}
-        <button type="button" id="live-add-clause" ${liveQuery.filter.clauses.length >= 8 ? "disabled" : ""}>${tx("live.filter.add")}</button>
-      </div>
+    <section class="live-page">
+      <header class="live-toolbar">
+        <p class="status" data-state="${session}">${health.title}。${tx("common.next")}：${health.action}</p>
+        <p class="live-sample">${fmt("live.last_sample", { time: formatUtc(snapshot?.lastSampleUtc ?? null, tx("common.no_sample")) })}</p>
+        ${pauseNote}
+        ${action}
+        <div class="live-filter-bar">
+          <label class="inline"><input type="checkbox" id="live-residential" ${liveQuery.filter.residentialOnly ? "checked" : ""} /> ${tx("live.filter.residential")}</label>
+          <button type="button" class="btn-secondary" id="live-add-clause" ${liveQuery.filter.clauses.length >= 8 ? "disabled" : ""}>${tx("live.filter.add")}</button>
+        </div>
+        ${clauseHtml ? `<div class="filter-clauses">${clauseHtml}</div>` : ""}
+      </header>
+      <div class="live-table-wrap">
       <table class="data live-table">
         <thead><tr>
           <th>${tx("live.col.host")}</th>
@@ -226,6 +267,7 @@ function renderLive(
         </tr></thead>
         <tbody>${rowHtml || `<tr><td colspan="13">${emptyText}</td></tr>`}</tbody>
       </table>
+      </div>
     </section>
   `;
 }
@@ -271,7 +313,7 @@ function renderReports(report: ReportResult | null, statusZh: string): string {
   return `
     <section class="panel">
       <p>${tx("report.same_token")}</p>
-      <label>${tx("report.preset")}
+      <label class="stack">${tx("report.preset")}
         <select id="report-preset">
           <option value="hour">${tx("report.preset.hour")}</option>
           <option value="day">${tx("report.preset.day")}</option>
@@ -280,14 +322,14 @@ function renderReports(report: ReportResult | null, statusZh: string): string {
           <option value="month">${tx("report.preset.month")}</option>
         </select>
       </label>
-      <label>${tx("report.granularity")}
+      <label class="stack">${tx("report.granularity")}
         <select id="report-granularity">
           <option value="hour">${tx("report.granularity.hour")}</option>
           <option value="day">${tx("report.granularity.day")}</option>
           <option value="month">${tx("report.granularity.month")}</option>
         </select>
       </label>
-      <label>${tx("report.grouping")}
+      <label class="stack">${tx("report.grouping")}
         <select id="report-grouping">
           <option value="host">${tx("report.grouping.host")}</option>
           <option value="process">${tx("report.grouping.process")}</option>
@@ -354,17 +396,25 @@ function renderSettings(
         <li>${tx("settings.wizard.4")}</li>
         <li>${tx("settings.wizard.5")}</li>
       </ol>
-      <label>${tx("settings.locale")}
+      <label class="stack">${tx("settings.locale")}
         <select id="ui-locale">
           <option value="zh" ${uiLocale === "zh" ? "selected" : ""}>${tx("settings.locale.zh")}</option>
           <option value="en" ${uiLocale === "en" ? "selected" : ""}>${tx("settings.locale.en")}</option>
         </select>
       </label>
-      <label>${tx("settings.address")}
+      <label class="stack">${tx("settings.theme")}
+        <select id="ui-theme">
+          <option value="latte" ${uiTheme === "latte" ? "selected" : ""}>${tx("settings.theme.latte")}</option>
+          <option value="frappe" ${uiTheme === "frappe" ? "selected" : ""}>${tx("settings.theme.frappe")}</option>
+          <option value="macchiato" ${uiTheme === "macchiato" ? "selected" : ""}>${tx("settings.theme.macchiato")}</option>
+          <option value="mocha" ${uiTheme === "mocha" ? "selected" : ""}>${tx("settings.theme.mocha")}</option>
+        </select>
+      </label>
+      <label class="stack">${tx("settings.address")}
         <input id="controller-address" value="${boot.settings.address || "127.0.0.1:9097"}" />
       </label>
       ${secretFieldMarkup(uiLocale)}
-      <label>${tx("settings.targets")}
+      <label class="stack">${tx("settings.targets")}
         <input id="targets" value="家宽" />
       </label>
       <p>${fmt("settings.cred", { status: boot.settings.hasSecret ? tx("settings.cred_yes") : tx("settings.cred_no"), mode: boot.settings.secretMode })}</p>
@@ -397,7 +447,7 @@ function renderSettings(
       <p>${deletePreview?.noteZh ?? tx("settings.delete_help")}</p>
       ${uiLocale === "en" ? `<p>${tx("settings.delete_phrase_en")}</p>` : ""}
       <ul>${deleteItems}</ul>
-      <label>${tx("settings.delete_phrase")}
+      <label class="stack">${tx("settings.delete_phrase")}
         <input id="delete-phrase" autocomplete="off" />
       </label>
       <button type="button" id="preview-delete">${tx("settings.preview_delete")}</button>
@@ -473,15 +523,15 @@ function renderAlerts(
     <section class="panel">
       <h2>${tx("alerts.rules")}</h2>
       <p>${tx("alerts.rules_help")}</p>
-      <label>${tx("alerts.rule_id")} <input id="alert-rule-id" value="rate-home" /></label>
-      <label>${tx("alerts.kind")}
+      <label class="stack">${tx("alerts.rule_id")} <input id="alert-rule-id" value="rate-home" /></label>
+      <label class="stack">${tx("alerts.kind")}
         <select id="alert-kind">
           <option value="rate">${tx("alerts.kind.rate")}</option>
           <option value="period-usage">${tx("alerts.kind.period")}</option>
           <option value="health">${tx("alerts.kind.health")}</option>
         </select>
       </label>
-      <label>${tx("alerts.selector")}
+      <label class="stack">${tx("alerts.selector")}
         <select id="alert-selector-kind">
           <option value="primary-category">${tx("alerts.selector.category")}</option>
           <option value="domain">${tx("alerts.selector.domain")}</option>
@@ -489,17 +539,17 @@ function renderAlerts(
           <option value="health-kind">${tx("alerts.selector.health")}</option>
         </select>
       </label>
-      <label>${tx("alerts.selector_value")} <input id="alert-selector-value" value="家宽" /></label>
-      <label>${tx("alerts.direction")}
+      <label class="stack">${tx("alerts.selector_value")} <input id="alert-selector-value" value="家宽" /></label>
+      <label class="stack">${tx("alerts.direction")}
         <select id="alert-direction">
           <option value="download">${tx("alerts.dir.down")}</option>
           <option value="upload">${tx("alerts.dir.up")}</option>
           <option value="combined">${tx("alerts.dir.combined")}</option>
         </select>
       </label>
-      <label>${tx("alerts.threshold")} <input id="alert-threshold" type="number" value="1000000" /></label>
-      <label>${tx("alerts.recovery")} <input id="alert-recovery" type="number" value="400000" /></label>
-      <label>${tx("alerts.period")}
+      <label class="stack">${tx("alerts.threshold")} <input id="alert-threshold" type="number" value="1000000" /></label>
+      <label class="stack">${tx("alerts.recovery")} <input id="alert-recovery" type="number" value="400000" /></label>
+      <label class="stack">${tx("alerts.period")}
         <select id="alert-period">
           <option value="">${tx("alerts.period.none")}</option>
           <option value="rolling-1h">${tx("alerts.period.1h")}</option>
@@ -507,7 +557,7 @@ function renderAlerts(
           <option value="local-month">${tx("alerts.period.month")}</option>
         </select>
       </label>
-      <label>${tx("alerts.timezone")} <input id="alert-timezone" value="Asia/Shanghai" /></label>
+      <label class="stack">${tx("alerts.timezone")} <input id="alert-timezone" value="Asia/Shanghai" /></label>
       <button type="button" id="save-alert-rule">${tx("alerts.save")}</button>
     </section>
     <section class="panel">
@@ -578,7 +628,8 @@ function previewBootstrap(): BootstrapDto {
     wizardComplete: false,
     recovery: null,
     launchMode: "interactive",
-    uiLocale: "zh"
+    uiLocale: "zh",
+    uiTheme: "mocha"
   };
 }
 
@@ -701,6 +752,7 @@ async function main(): Promise<void> {
     boot = previewBootstrap();
   }
   applyLocale(parseUiLocale(boot.uiLocale));
+  adoptTheme(parseUiTheme(boot.uiTheme));
 
   let route: RouteId = boot.branch === "recovery-only" ? "settings-data" : "overview";
   let state = emptyMonitorState();
@@ -904,6 +956,19 @@ async function main(): Promise<void> {
       paint();
       return;
     }
+    if (target instanceof HTMLSelectElement && target.id === "ui-theme") {
+      const nextTheme = parseUiTheme(target.value);
+      try {
+        const saved = await invokeCommand<string>("save_ui_theme", { theme: nextTheme });
+        adoptTheme(parseUiTheme(saved));
+        boot.uiTheme = uiTheme;
+      } catch {
+        adoptTheme(nextTheme);
+        boot.uiTheme = nextTheme;
+      }
+      paint();
+      return;
+    }
     if (!(target instanceof HTMLSelectElement) || target.id !== "ui-locale") {
       return;
     }
@@ -1029,6 +1094,11 @@ async function main(): Promise<void> {
         const saved = await invokeCommand<string>("save_ui_locale", { locale: nextLocale });
         applyLocale(parseUiLocale(saved));
         boot.uiLocale = uiLocale;
+        const selectedTheme = (document.querySelector("#ui-theme") as HTMLSelectElement | null)?.value;
+        const nextTheme = parseUiTheme(selectedTheme);
+        const savedTheme = await invokeCommand<string>("save_ui_theme", { theme: nextTheme });
+        adoptTheme(parseUiTheme(savedTheme));
+        boot.uiTheme = uiTheme;
         try {
           const next = await invokeCommand<BootstrapDto>("get_bootstrap");
           boot.routes = next.routes;

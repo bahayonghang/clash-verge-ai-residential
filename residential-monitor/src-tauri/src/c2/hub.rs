@@ -9,7 +9,7 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LiveConnectionView {
     pub identity: String,
@@ -35,36 +35,6 @@ pub struct LiveConnectionView {
     pub rule: Option<String>,
     pub rule_payload: Option<String>,
     pub chains: Vec<String>,
-}
-
-impl Default for LiveConnectionView {
-    fn default() -> Self {
-        Self {
-            identity: String::new(),
-            connection_id: String::new(),
-            epoch: 0,
-            upload: 0,
-            download: 0,
-            rate_upload: None,
-            rate_download: None,
-            duration_ms: None,
-            primary: None,
-            tags: Vec::new(),
-            host: None,
-            source_ip: None,
-            destination_ip: None,
-            process_name: None,
-            process_path: None,
-            network: None,
-            inbound: None,
-            source_port: None,
-            destination_port: None,
-            start: None,
-            rule: None,
-            rule_payload: None,
-            chains: Vec::new(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -321,9 +291,11 @@ impl MonitorHub {
             {
                 if utc > *prev_utc {
                     let dt = (utc - *prev_utc) as u64;
-                    row.rate_upload = Some(row.upload.saturating_sub(*prev_up).saturating_mul(1000) / dt.max(1));
-                    row.rate_download =
-                        Some(row.download.saturating_sub(*prev_down).saturating_mul(1000) / dt.max(1));
+                    row.rate_upload =
+                        Some(row.upload.saturating_sub(*prev_up).saturating_mul(1000) / dt.max(1));
+                    row.rate_download = Some(
+                        row.download.saturating_sub(*prev_down).saturating_mul(1000) / dt.max(1),
+                    );
                 }
             }
             next_sample.insert(row.connection_id.clone(), (row.upload, row.download, utc));
@@ -426,7 +398,9 @@ fn duration_from_start(start: Option<&str>, utc: i64) -> Option<u64> {
     let parsed = chrono::DateTime::parse_from_rfc3339(start)
         .or_else(|_| chrono::DateTime::parse_from_rfc3339(&format!("{start}Z")))
         .ok()?;
-    let delta = utc.saturating_mul(1000).saturating_sub(parsed.timestamp_millis());
+    let delta = utc
+        .saturating_mul(1000)
+        .saturating_sub(parsed.timestamp_millis());
     Some(delta.max(0) as u64)
 }
 

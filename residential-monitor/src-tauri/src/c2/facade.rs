@@ -14,7 +14,6 @@ use crate::c2::shell::{
     default_routes_for, recovery_status, validate_backup, BootBranch, FakeFileDialog, FileMode,
     FilePurpose, OperationProgress, OperationRegistry, RecoveryStatus, RouteDescriptor,
 };
-use crate::i18n::{t, UiLocale, SETTING_KEY};
 use crate::c3::backup::BackupRestoreService;
 use crate::c3::export::{ExportPreview, ExportService, ExportSpec};
 use crate::c3::query::{ReportError, ReportQuery, ReportResult, RAW_RETAIN_DAYS_DEFAULT};
@@ -28,8 +27,10 @@ use crate::c4::types::{
 };
 use crate::controller::{ControllerInput, SessionStatus};
 use crate::credential::FakeCredentialStore;
+use crate::i18n::{t, UiLocale, SETTING_KEY};
 use crate::session::ControllerSession;
 use crate::storage::{AlertCommitSlice, CommitBundle, RecoveryFacade, StorageCoordinator};
+use crate::theme::{UiTheme, THEME_SETTING_KEY};
 use serde::Serialize;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
@@ -114,7 +115,9 @@ pub fn status_message_zh(status: SessionStatus) -> &'static str {
 pub fn status_action(status: SessionStatus, locale: UiLocale) -> &'static str {
     let key = match status {
         SessionStatus::AuthFailed => "action.check_secret",
-        SessionStatus::PipeAccessDenied | SessionStatus::ProtocolIncompatible => "action.enable_tcp",
+        SessionStatus::PipeAccessDenied | SessionStatus::ProtocolIncompatible => {
+            "action.enable_tcp"
+        }
         SessionStatus::EndpointMissing => "action.check_address",
         _ => "action.retry_connect",
     };
@@ -137,6 +140,7 @@ pub struct BootstrapDto {
     pub recovery: Option<RecoveryStatus>,
     pub launch_mode: LaunchMode,
     pub ui_locale: UiLocale,
+    pub ui_theme: UiTheme,
 }
 
 pub struct AppFacade {
@@ -167,6 +171,7 @@ pub struct AppFacade {
     pub last_frame_utc: Option<i64>,
     pub last_period_eval_utc: i64,
     pub ui_locale: UiLocale,
+    pub ui_theme: UiTheme,
 }
 
 impl AppFacade {
@@ -188,9 +193,11 @@ impl AppFacade {
                     .flatten()
                     .as_deref()
                     == Some("1");
-                let ui_locale = UiLocale::parse(
+                let ui_locale =
+                    UiLocale::parse(storage.get_setting(SETTING_KEY).ok().flatten().as_deref());
+                let ui_theme = UiTheme::parse(
                     storage
-                        .get_setting(SETTING_KEY)
+                        .get_setting(THEME_SETTING_KEY)
                         .ok()
                         .flatten()
                         .as_deref(),
@@ -238,6 +245,7 @@ impl AppFacade {
                     last_frame_utc: None,
                     last_period_eval_utc: 0,
                     ui_locale,
+                    ui_theme,
                 }
             }
             Err(_) => Self {
@@ -268,18 +276,21 @@ impl AppFacade {
                 last_frame_utc: None,
                 last_period_eval_utc: 0,
                 ui_locale: UiLocale::Zh,
+                ui_theme: UiTheme::Mocha,
             },
         }
     }
 
     pub fn bootstrap(&self) -> Result<BootstrapDto, AppErrorDto> {
         let recovery = if self.branch == BootBranch::RecoveryOnly {
-            Some(recovery_status(&self.recovery).map_err(|_| self.err(
-                "recovery_status",
-                "error.recovery_status",
-                "action.open_data_dir",
-                true,
-            ))?)
+            Some(recovery_status(&self.recovery).map_err(|_| {
+                self.err(
+                    "recovery_status",
+                    "error.recovery_status",
+                    "action.open_data_dir",
+                    true,
+                )
+            })?)
         } else {
             None
         };
@@ -293,10 +304,17 @@ impl AppFacade {
             recovery,
             launch_mode: self.desktop.launch_mode,
             ui_locale: self.ui_locale,
+            ui_theme: self.ui_theme,
         })
     }
 
-    pub fn err(&self, code: &str, message_key: &str, action_key: &str, retryable: bool) -> AppErrorDto {
+    pub fn err(
+        &self,
+        code: &str,
+        message_key: &str,
+        action_key: &str,
+        retryable: bool,
+    ) -> AppErrorDto {
         localized_error(self.ui_locale, code, message_key, action_key, retryable)
     }
 
@@ -309,6 +327,17 @@ impl AppFacade {
         }
         self.ui_locale = locale;
         Ok(locale)
+    }
+
+    pub fn save_ui_theme(&mut self, raw: &str) -> Result<UiTheme, AppErrorDto> {
+        let theme = UiTheme::parse(Some(raw));
+        if let Some(storage) = &self.storage {
+            storage
+                .put_setting(THEME_SETTING_KEY, theme.as_str())
+                .map_err(|_| self.err("storage", "error.theme", "action.check_disk", true))?;
+        }
+        self.ui_theme = theme;
+        Ok(theme)
     }
 
     pub fn subscribe(&self) -> MonitorStreamMessage {
@@ -507,9 +536,8 @@ impl AppFacade {
                 false,
             )
         })?;
-        let encoded = serde_json::to_string(&self.settings).map_err(|_| {
-            self.err("encode", "error.encode", "action.retry", false)
-        })?;
+        let encoded = serde_json::to_string(&self.settings)
+            .map_err(|_| self.err("encode", "error.encode", "action.retry", false))?;
         storage
             .put_setting("controller", &encoded)
             .map_err(|_| self.err("storage", "error.storage", "action.check_disk", true))?;
@@ -552,10 +580,7 @@ impl AppFacade {
         }
         let secret = self
             .workflow
-            .resolve(
-                &self.settings.credential_target,
-                &self.settings.secret_mode,
-            )
+            .resolve(&self.settings.credential_target, &self.settings.secret_mode)
             .map_err(|error| AppErrorDto::from_settings_locale(error, self.ui_locale))?;
         Ok(Some(
             String::from_utf8_lossy(secret.as_header_bytes()).into_owned(),
@@ -630,9 +655,9 @@ impl AppFacade {
                 false,
             )
         })?;
-        let version = storage.save_targets(&targets).map_err(|_| {
-            self.err("storage", "error.targets", "action.check_disk", true)
-        })?;
+        let version = storage
+            .save_targets(&targets)
+            .map_err(|_| self.err("storage", "error.targets", "action.check_disk", true))?;
         self.engine.set_targets(targets);
         Ok(version)
     }
@@ -764,9 +789,8 @@ impl AppFacade {
 
     pub fn list_alert_rules(&self) -> Result<Vec<AlertRule>, AppErrorDto> {
         let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
-        crate::c4::store::load_rules(storage.connection()).map_err(|_| {
-            self.err("storage", "error.alert_rules", "action.check_disk", true)
-        })
+        crate::c4::store::load_rules(storage.connection())
+            .map_err(|_| self.err("storage", "error.alert_rules", "action.check_disk", true))
     }
 
     pub fn upsert_alert_rule(&mut self, rule: AlertRule) -> Result<AlertRule, AppErrorDto> {
@@ -791,7 +815,13 @@ impl AppFacade {
         let locale = self.ui_locale;
         let storage = self.storage.as_mut().ok_or_else(recovery_only)?;
         crate::c4::store::upsert_rule(storage.connection(), &rule).map_err(|_| {
-            localized_error(locale, "storage", "error.alert_write", "action.check_disk", true)
+            localized_error(
+                locale,
+                "storage",
+                "error.alert_write",
+                "action.check_disk",
+                true,
+            )
         })?;
         if !writes.instances.is_empty() || !writes.events.is_empty() {
             let bundle = CommitBundle {
@@ -888,7 +918,14 @@ impl AppFacade {
             .coverage_kind
             .unwrap_or_else(|| "unknown".into());
         crate::c4::diagnose::collect(storage, self.session_status, self.last_frame_utc, &coverage)
-            .map_err(|_| self.err("diagnostics", "error.diagnostics", "action.retry_later", true))
+            .map_err(|_| {
+                self.err(
+                    "diagnostics",
+                    "error.diagnostics",
+                    "action.retry_later",
+                    true,
+                )
+            })
     }
 
     pub fn export_diagnostics(&self, dest: &std::path::Path) -> Result<String, AppErrorDto> {
@@ -1117,16 +1154,31 @@ mod c2_facade_contract_tests {
         drop(first);
         let second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         assert_eq!(second.ui_locale, UiLocale::En);
-        assert_eq!(
-            second.bootstrap().expect("boot").ui_locale,
-            UiLocale::En
-        );
+        assert_eq!(second.bootstrap().expect("boot").ui_locale, UiLocale::En);
         drop(second);
         let mut third = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         assert_eq!(third.save_ui_locale("nope").expect("bad"), UiLocale::Zh);
         drop(third);
         let fourth = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         assert_eq!(fourth.ui_locale, UiLocale::Zh);
+    }
+
+    #[test]
+    fn ui_theme_persists_and_falls_back_to_mocha() {
+        let dir = tempdir().expect("dir");
+        let mut first = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(first.ui_theme, UiTheme::Mocha);
+        assert_eq!(first.save_ui_theme("latte").expect("save"), UiTheme::Latte);
+        drop(first);
+        let second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(second.ui_theme, UiTheme::Latte);
+        assert_eq!(second.bootstrap().expect("boot").ui_theme, UiTheme::Latte);
+        drop(second);
+        let mut third = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(third.save_ui_theme("nope").expect("bad"), UiTheme::Mocha);
+        drop(third);
+        let fourth = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(fourth.ui_theme, UiTheme::Mocha);
     }
 
     #[test]

@@ -4,7 +4,7 @@ import { t, type UiLocale } from "../i18n";
 
 export function secretFieldMarkup(locale: UiLocale = "zh"): string {
   const show = t(locale, "secret.show");
-  return `<label class="secret-label">${t(locale, "secret.label")}
+  return `<label class="stack secret-label">${t(locale, "secret.label")}
     <span class="secret-field">
       <input id="controller-secret" type="password" autocomplete="off" spellcheck="false" />
       <button type="button" id="toggle-secret" class="secret-toggle" aria-label="${show}" aria-pressed="false" title="${show}">

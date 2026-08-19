@@ -15,9 +15,11 @@ pub mod live;
 pub mod session;
 pub mod sqlite_probe;
 pub mod storage;
+pub mod theme;
 pub mod transport;
 pub mod workload;
 
+use crate::i18n::{t, UiLocale};
 use crate::session::ControllerSession;
 #[cfg(not(windows))]
 use c2::desktop::ProcessSingleInstance;
@@ -34,7 +36,6 @@ use c3::retention::RetentionPreview;
 use c4::diagnose::DiagnosticsSnapshot;
 use c4::notify::NotifyCapability;
 use c4::types::{AlertCenterPage, AlertRule, AlertSummary};
-use crate::i18n::{t, UiLocale};
 use std::sync::Mutex;
 use tauri::ipc::Channel;
 use tauri::menu::Menu;
@@ -411,9 +412,19 @@ fn list_routes(state: State<Mutex<AppFacade>>) -> Result<Vec<RouteDescriptor>, A
 }
 
 #[tauri::command]
-fn save_ui_locale(app: AppHandle, state: State<Mutex<AppFacade>>, locale: String) -> Result<String, AppErrorDto> {
+fn save_ui_locale(
+    app: AppHandle,
+    state: State<Mutex<AppFacade>>,
+    locale: String,
+) -> Result<String, AppErrorDto> {
     let parsed = state.lock().expect("state").save_ui_locale(&locale)?;
     apply_locale_chrome(&app, parsed);
+    Ok(parsed.as_str().into())
+}
+
+#[tauri::command]
+fn save_ui_theme(state: State<Mutex<AppFacade>>, theme: String) -> Result<String, AppErrorDto> {
+    let parsed = state.lock().expect("state").save_ui_theme(&theme)?;
     Ok(parsed.as_str().into())
 }
 
@@ -726,7 +737,8 @@ fn build_tray_menu<R: Runtime>(
     let open = MenuItemBuilder::with_id("open", t(locale, "tray.open")).build(app)?;
     let pause = MenuItemBuilder::with_id("pause", t(locale, "tray.pause")).build(app)?;
     let resume = MenuItemBuilder::with_id("resume", t(locale, "tray.resume")).build(app)?;
-    let reconnect = MenuItemBuilder::with_id("reconnect", t(locale, "tray.reconnect")).build(app)?;
+    let reconnect =
+        MenuItemBuilder::with_id("reconnect", t(locale, "tray.reconnect")).build(app)?;
     let quit = MenuItemBuilder::with_id("quit", t(locale, "tray.quit")).build(app)?;
     Ok(MenuBuilder::new(app)
         .items(&[&open, &pause, &resume, &reconnect, &quit])
@@ -873,6 +885,7 @@ pub fn run() {
             get_controller_secret,
             save_settings,
             save_ui_locale,
+            save_ui_theme,
             save_targets,
             test_controller,
             disconnect_controller,

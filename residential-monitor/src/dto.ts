@@ -1,3 +1,5 @@
+import type { UiTheme } from "./theme";
+
 export const SCHEMA_VERSION = 1;
 
 export type RouteId = "overview" | "live" | "reports" | "alerts" | "settings-data";
@@ -228,6 +230,7 @@ export interface BootstrapDto {
   recovery: RecoveryStatus | null;
   launchMode: "interactive" | "background";
   uiLocale?: "zh" | "en";
+  uiTheme?: UiTheme;
 }
 
 export interface OperationProgress {
