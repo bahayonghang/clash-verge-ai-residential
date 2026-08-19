@@ -56,6 +56,20 @@ import {
   type MonitorState
 } from "./ipc/reducer";
 import { categoryRows } from "./format/overview";
+import {
+  applyPresetRange,
+  defaultReportForm,
+  formFromQueryEcho,
+  formatSharePct,
+  isArchiveKindFilter,
+  isReportPreset,
+  reportShareModel,
+  reportTrendModel,
+  type ArchiveKindFilter,
+  type ReportForm,
+  type ShareRow
+} from "./format/report-view";
+import { reportPieSvg, reportTrendSvg } from "./format/report-svg";
 import { formatBytes, formatUtc, unknownOr } from "./format/units";
 import { healthAction, healthTitle, parseUiLocale, t, type UiLocale } from "./i18n";
 import { BRAND_MARK, ROUTE_ICONS } from "./nav-icons";
@@ -85,6 +99,8 @@ let liveTableLayout = defaultLiveTableLayout();
 let liveTableDragging = false;
 let liveColumnPanelOpen = false;
 let liveResize: { col: DataColumnId; startX: number; startW: number } | null = null;
+let reportForm: ReportForm = defaultReportForm();
+let archiveKindFilter: ArchiveKindFilter = "all";
 
 const FILTER_FIELDS = [
   "host",
@@ -411,6 +427,22 @@ function archiveStatusLabel(status: string): string {
   return tx("report.archive.status.failed");
 }
 
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function optionHtml(value: string, current: string, label: string): string {
+  return `<option value="${value}"${value === current ? " selected" : ""}>${label}</option>`;
+}
+
+function shareRowHtml(row: ShareRow): string {
+  const up = row.upload === null ? tx("report.dash") : formatBytes(row.upload, unknownLabel());
+  const width = row.share === null ? 0 : Math.max(0, Math.round(row.share * 100));
+  const bar = row.share === null ? "" : `<span class="bar" style="width:${width}%"></span>`;
+  const klass = row.kind === "remainder" ? " class=\"report-remainder\"" : "";
+  return `<tr${klass}><td>${escapeHtml(row.label)}</td><td class="num">${up}</td><td class="num">${formatBytes(row.download, unknownLabel())}</td><td><div class="share"><span class="share-pct">${formatSharePct(row.share, unknownLabel())}</span><span class="share-track">${bar}</span></div></td></tr>`;
+}
+
 function renderReports(
   report: ReportResult | null,
   statusZh: string,
@@ -418,24 +450,24 @@ function renderReports(
   selectedArchiveId: string | null,
   reportSource: ReportSource
 ): string {
+  const unknown = unknownLabel();
+  const share = report
+    ? reportShareModel(report, { unknown, remainder: tx("report.remainder") })
+    : null;
+  const trend = reportTrendModel(report?.series ?? []);
   const seriesRows =
     report?.series
       .map(
         (point) =>
-          `<tr><td>${formatUtc(point.bucketUtc)}</td><td>${formatBytes(point.upload)}</td><td>${formatBytes(point.download)}</td></tr>`
+          `<tr><td>${formatUtc(point.bucketUtc)}</td><td class="num">${formatBytes(point.upload)}</td><td class="num">${formatBytes(point.download)}</td></tr>`
       )
       .join("") ?? "";
-  const rankRows =
-    report?.rankings
-      .map((row) => {
-        const max = report.rankings[0]?.download || 1;
-        const width = Math.max(4, Math.round((row.download / max) * 100));
-        return `<tr><td>${row.label}</td><td>${formatBytes(row.upload)}</td><td>${formatBytes(row.download)}</td><td><span class="bar" style="width:${width}%"></span></td></tr>`;
-      })
-      .join("") ?? "";
-  const capability = report
-    ? `<p>${report.drilldownCapability.noteZh} ${fmt("report.tier", { tier: report.dataTier })} ${report.policyMetadata.noteZh}</p>
-       <p>${fmt("report.coverage", { status: report.coverage.status, gap: report.coverage.gapSec, unit: report.unit })}</p>`
+  const rankRows = share?.rows.map(shareRowHtml).join("") ?? "";
+  const coverage = report
+    ? `<p>${fmt("report.coverage", { status: report.coverage.status, gap: report.coverage.gapSec, unit: report.unit })}</p>`
+    : "";
+  const notes = report
+    ? `<details class="report-notes"><summary>${tx("report.notes")}</summary><p>${escapeHtml(report.drilldownCapability.noteZh)} ${fmt("report.tier", { tier: report.dataTier })} ${escapeHtml(report.policyMetadata.noteZh)}</p></details>`
     : "";
   const sourceLine =
     reportSource === "manual"
@@ -449,64 +481,116 @@ function renderReports(
     archives?.items
       .map((item) => {
         const current = item.archiveId === selectedArchiveId ? " aria-current=\"true\"" : "";
-        return `<tr data-archive-id="${item.archiveId}"${current}><td>${formatUtc(item.rangeStartUtc)}</td><td>${archiveKindLabel(item.kind)}</td><td>${archiveStatusLabel(item.status)}</td></tr>`;
+        const down =
+          item.totalsDownload === null || item.totalsDownload === undefined
+            ? unknown
+            : formatBytes(item.totalsDownload, unknown);
+        return `<tr data-archive-id="${escapeHtml(item.archiveId)}"${current}><td>${formatUtc(item.rangeStartUtc)}</td><td>${archiveKindLabel(item.kind)}</td><td class="num">${down}</td><td>${archiveStatusLabel(item.status)}</td></tr>`;
       })
       .join("") ?? "";
+  const pieSlices =
+    share?.rows.map((row) => ({ kind: row.kind, value: row.download })) ?? [];
+  const trendSvg = reportTrendSvg(trend, tx("report.trend"));
+  const pieSvg = share?.drawPie ? reportPieSvg(pieSlices, tx("report.pie")) : "";
+  const pieNote =
+    report && share && !share.drawPie && !share.capabilityUnsupported ? `<p>${tx("report.pie.unavailable")}</p>` : "";
+  const rankBody = share?.capabilityUnsupported
+    ? `<tr><td colspan="4">${tx("report.empty_cap")}</td></tr>`
+    : rankRows || `<tr><td colspan="4">${tx("report.empty_cap")}</td></tr>`;
+  const totals = report
+    ? `<dl class="report-metrics">
+        <div class="report-metric"><dt>${tx("report.metric.upload")}</dt><dd>${formatBytes(report.totals.upload, unknown)}</dd></div>
+        <div class="report-metric"><dt>${tx("report.metric.download")}</dt><dd>${formatBytes(report.totals.download, unknown)}</dd></div>
+        <div class="report-metric"><dt>${tx("report.metric.connections")}</dt><dd>${report.totals.connectionCount}</dd></div>
+      </dl>`
+    : `<p>${tx("report.none")}</p>`;
   return `
+    <div class="reports">
     <section class="panel">
       <p>${tx("report.same_token")}</p>
+      <div class="report-toolbar">
       <label class="stack">${tx("report.preset")}
         <select id="report-preset">
-          <option value="hour">${tx("report.preset.hour")}</option>
-          <option value="day">${tx("report.preset.day")}</option>
-          <option value="7">${tx("report.preset.7")}</option>
-          <option value="30">${tx("report.preset.30")}</option>
-          <option value="month">${tx("report.preset.month")}</option>
+          ${optionHtml("hour", reportForm.preset, tx("report.preset.hour"))}
+          ${optionHtml("day", reportForm.preset, tx("report.preset.day"))}
+          ${optionHtml("7", reportForm.preset, tx("report.preset.7"))}
+          ${optionHtml("30", reportForm.preset, tx("report.preset.30"))}
+          ${optionHtml("month", reportForm.preset, tx("report.preset.month"))}
         </select>
       </label>
       <label class="stack">${tx("report.granularity")}
         <select id="report-granularity">
-          <option value="hour">${tx("report.granularity.hour")}</option>
-          <option value="day">${tx("report.granularity.day")}</option>
-          <option value="month">${tx("report.granularity.month")}</option>
+          ${optionHtml("hour", reportForm.granularity, tx("report.granularity.hour"))}
+          ${optionHtml("day", reportForm.granularity, tx("report.granularity.day"))}
+          ${optionHtml("month", reportForm.granularity, tx("report.granularity.month"))}
         </select>
       </label>
       <label class="stack">${tx("report.grouping")}
         <select id="report-grouping">
-          <option value="host">${tx("report.grouping.host")}</option>
-          <option value="process">${tx("report.grouping.process")}</option>
-          <option value="rule">${tx("report.grouping.rule")}</option>
-          <option value="chain">${tx("report.grouping.chain")}</option>
-          <option value="network">${tx("report.grouping.network")}</option>
-          <option value="category">${tx("report.grouping.category")}</option>
+          ${optionHtml("host", reportForm.grouping, tx("report.grouping.host"))}
+          ${optionHtml("process", reportForm.grouping, tx("report.grouping.process"))}
+          ${optionHtml("rule", reportForm.grouping, tx("report.grouping.rule"))}
+          ${optionHtml("chain", reportForm.grouping, tx("report.grouping.chain"))}
+          ${optionHtml("network", reportForm.grouping, tx("report.grouping.network"))}
+          ${optionHtml("category", reportForm.grouping, tx("report.grouping.category"))}
         </select>
       </label>
+      <div class="report-actions">
       <button type="button" id="run-report">${tx("report.run")}</button>
-      <button type="button" id="export-csv">${tx("report.export_csv")}</button>
-      <button type="button" id="export-json">${tx("report.export_json")}</button>
-      <button type="button" id="export-html">${tx("report.export_html")}</button>
+      <button type="button" class="btn-secondary" id="export-csv">${tx("report.export_csv")}</button>
+      <button type="button" class="btn-secondary" id="export-json">${tx("report.export_json")}</button>
+      <button type="button" class="btn-secondary" id="export-html">${tx("report.export_html")}</button>
+      </div>
+      ${reportForm.windowSource === "archive" ? `<p class="report-window">${tx("report.preset.archive")}</p>` : ""}
+      </div>
       <p class="status" data-state="${report ? "connected" : "no_data"}">${statusZh}</p>
       ${sourceLine ? `<p>${sourceLine}</p>` : ""}
-      ${capability}
-      <h2>${tx("report.archive.list")}</h2>
-      <p>${tx("report.archive.failed_retry")}</p>
-      <table class="data"><thead><tr><th>${tx("report.archive.col.time")}</th><th>${tx("report.archive.col.kind")}</th><th>${tx("report.archive.col.status")}</th></tr></thead>
-      <tbody>${archiveRows || `<tr><td colspan="3">${tx("report.archive.empty")}</td></tr>`}</tbody></table>
+      ${coverage}
+      ${notes}
     </section>
     <section class="panel" aria-label="${tx("report.numbers")}">
       <h2>${tx("report.totals")}</h2>
-      ${report ? `<p>${fmt("report.totals_line", { up: formatBytes(report.totals.upload, unknownLabel()), down: formatBytes(report.totals.download, unknownLabel()), count: report.totals.connectionCount })}</p>` : `<p>${tx("report.none")}</p>`}
+      ${totals}
     </section>
+    <div class="report-visuals">
     <section class="panel">
-      <h2>${tx("report.chart_table")}</h2>
-      <table class="data"><thead><tr><th>${tx("report.col.time")}</th><th>${tx("report.col.upload")}</th><th>${tx("report.col.download")}</th></tr></thead>
+      <h2>${tx("report.trend")}</h2>
+      ${trendSvg}
+      <div class="report-table-wrap" aria-label="${tx("report.chart_table")}">
+      <table class="data"><thead><tr><th>${tx("report.col.time")}</th><th class="num">${tx("report.col.upload")}</th><th class="num">${tx("report.col.download")}</th></tr></thead>
       <tbody>${seriesRows || `<tr><td colspan="3">${tx("report.empty")}</td></tr>`}</tbody></table>
+      </div>
     </section>
     <section class="panel">
       <h2>${tx("report.topn")}</h2>
-      <table class="data"><thead><tr><th>${tx("report.col.name")}</th><th>${tx("report.col.upload")}</th><th>${tx("report.col.download")}</th><th>${tx("report.col.share")}</th></tr></thead>
-      <tbody>${rankRows || `<tr><td colspan="4">${tx("report.empty_cap")}</td></tr>`}</tbody></table>
+      <div class="report-topn-body${pieSvg ? " has-pie" : ""}">
+      ${pieSvg}
+      <div>
+      ${pieNote}
+      <div class="report-table-wrap">
+      <table class="data"><thead><tr><th>${tx("report.col.name")}</th><th class="num">${tx("report.col.upload")}</th><th class="num">${tx("report.col.download")}</th><th>${tx("report.col.share")}</th></tr></thead>
+      <tbody>${rankBody}</tbody></table>
+      </div>
+      </div>
+      </div>
     </section>
+    </div>
+    <section class="panel report-archives">
+      <h2>${tx("report.archive.list")}</h2>
+      <p>${tx("report.archive.failed_retry")}</p>
+      <label class="stack">${tx("report.archive.filter")}
+        <select id="archive-kind">
+          ${optionHtml("all", archiveKindFilter, tx("report.archive.filter.all"))}
+          ${optionHtml("day", archiveKindFilter, tx("report.archive.kind.day"))}
+          ${optionHtml("hour", archiveKindFilter, tx("report.archive.kind.hour"))}
+        </select>
+      </label>
+      <div class="report-archive-wrap">
+      <table class="data"><thead><tr><th>${tx("report.archive.col.time")}</th><th>${tx("report.archive.col.kind")}</th><th class="num">${tx("report.archive.col.download")}</th><th>${tx("report.archive.col.status")}</th></tr></thead>
+      <tbody>${archiveRows || `<tr><td colspan="4">${tx("report.archive.empty")}</td></tr>`}</tbody></table>
+      </div>
+    </section>
+    </div>
   `;
 }
 
@@ -1065,6 +1149,9 @@ async function main(): Promise<void> {
     report = next;
     reportStatus = status;
     reportSource = source;
+    if (next) {
+      reportForm = formFromQueryEcho(next.queryEcho, reportForm);
+    }
     paint();
   };
 
@@ -1076,13 +1163,18 @@ async function main(): Promise<void> {
     return page.items.find((item) => item.kind === "hour" && item.status === "ok") ?? null;
   };
 
+  const loadArchiveList = async (): Promise<void> => {
+    const kind = archiveKindFilter === "all" ? null : archiveKindFilter;
+    archives = decodeReportArchivePage(
+      await invokeCommand("list_report_archives", { kind, after: null, limit: 50 })
+    );
+  };
+
   const loadArchives = async (): Promise<void> => {
     applyReport(report, tx("report.archive.catchup"), reportSource);
     try {
-      const page = decodeReportArchivePage(
-        await invokeCommand("list_report_archives", { kind: null, after: null, limit: 50 })
-      );
-      archives = page;
+      await loadArchiveList();
+      const page = archives ?? { schemaVersion: 1, items: [], next: null };
       const latest = pickLatestArchive(page);
       if (!latest) {
         selectedArchiveId = null;
@@ -1125,17 +1217,15 @@ async function main(): Promise<void> {
   };
 
   const buildQuery = (): ReportQuery => {
-    const query = defaultReportQuery();
-    const preset = (document.querySelector("#report-preset") as HTMLSelectElement | null)?.value ?? "hour";
-    const now = Math.floor(Date.now() / 1000);
-    const spans: Record<string, number> = { hour: 3600, day: 86400, "7": 7 * 86400, "30": 30 * 86400, month: 30 * 86400 };
-    query.rangeStartUtc = now - (spans[preset] ?? 3600);
-    query.rangeEndUtc = now;
-    query.granularity = ((document.querySelector("#report-granularity") as HTMLSelectElement | null)?.value ??
-      "hour") as ReportQuery["granularity"];
-    query.grouping = ((document.querySelector("#report-grouping") as HTMLSelectElement | null)?.value ??
-      "host") as ReportQuery["grouping"];
-    return query;
+    const archiveRange =
+      reportForm.windowSource === "archive" && report
+        ? {
+            start: report.queryEcho.rangeStartUtc,
+            end: report.queryEcho.rangeEndUtc,
+            timezone: report.queryEcho.displayTimezone
+          }
+        : undefined;
+    return applyPresetRange(defaultReportQuery(), reportForm, Math.floor(Date.now() / 1000), archiveRange);
   };
 
   app.addEventListener("input", (event) => {
@@ -1220,6 +1310,42 @@ async function main(): Promise<void> {
       } catch {
         adoptTheme(nextTheme);
         boot.uiTheme = nextTheme;
+      }
+      paint();
+      return;
+    }
+    if (target instanceof HTMLSelectElement && target.id === "report-preset" && isReportPreset(target.value)) {
+      reportForm = { ...reportForm, preset: target.value, windowSource: "preset" };
+      paint();
+      return;
+    }
+    if (target instanceof HTMLSelectElement && target.id === "report-granularity") {
+      if (target.value === "hour" || target.value === "day" || target.value === "month") {
+        reportForm = { ...reportForm, granularity: target.value };
+      }
+      return;
+    }
+    if (target instanceof HTMLSelectElement && target.id === "report-grouping") {
+      const grouping = target.value;
+      if (
+        grouping === "host" ||
+        grouping === "process" ||
+        grouping === "rule" ||
+        grouping === "chain" ||
+        grouping === "network" ||
+        grouping === "category"
+      ) {
+        reportForm = { ...reportForm, grouping };
+      }
+      return;
+    }
+    if (target instanceof HTMLSelectElement && target.id === "archive-kind" && isArchiveKindFilter(target.value)) {
+      archiveKindFilter = target.value;
+      try {
+        await loadArchiveList();
+      } catch {
+        archives = null;
+        reportStatus = tx("report.archive.unavailable");
       }
       paint();
       return;
