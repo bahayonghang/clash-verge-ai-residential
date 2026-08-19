@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "错误码稳定，secret 不进错误。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "uiLocale 缺省解码。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "删除确认短语不随语言改。"}
+{"file": ".trellis/tasks/08-19-ui-locale-zh-en/prd.md", "reason": "语言验收。"}
+{"file": ".trellis/tasks/08-19-live-clash-columns/prd.md", "reason": "父任务 AC6。"}
