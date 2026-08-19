@@ -4,6 +4,7 @@ import {
   decodeDeletePreview,
   decodeDeleteReport,
   decodeDiagnostics,
+  decodeReportArchivePage,
   decodeReportResult,
   decodeShellStatus,
   type AboutDto,
@@ -17,6 +18,8 @@ import {
   type LiveConnectionView,
   type LiveOverview,
   type NotifyCapability,
+  type ReportArchivePage,
+  type ReportArchiveSummary,
   type ReportQuery,
   type ReportResult,
   type RetentionPreview,
@@ -392,7 +395,29 @@ function defaultReportQuery(): ReportQuery {
   };
 }
 
-function renderReports(report: ReportResult | null, statusZh: string): string {
+type ReportSource = "auto-hour" | "auto-day" | "manual" | null;
+
+function archiveKindLabel(kind: string): string {
+  if (kind === "day") {
+    return tx("report.archive.kind.day");
+  }
+  return tx("report.archive.kind.hour");
+}
+
+function archiveStatusLabel(status: string): string {
+  if (status === "ok") {
+    return tx("report.archive.status.ok");
+  }
+  return tx("report.archive.status.failed");
+}
+
+function renderReports(
+  report: ReportResult | null,
+  statusZh: string,
+  archives: ReportArchivePage | null,
+  selectedArchiveId: string | null,
+  reportSource: ReportSource
+): string {
   const seriesRows =
     report?.series
       .map(
@@ -412,6 +437,21 @@ function renderReports(report: ReportResult | null, statusZh: string): string {
     ? `<p>${report.drilldownCapability.noteZh} ${fmt("report.tier", { tier: report.dataTier })} ${report.policyMetadata.noteZh}</p>
        <p>${fmt("report.coverage", { status: report.coverage.status, gap: report.coverage.gapSec, unit: report.unit })}</p>`
     : "";
+  const sourceLine =
+    reportSource === "manual"
+      ? tx("report.archive.kind.manual")
+      : reportSource === "auto-day"
+        ? tx("report.archive.kind.day")
+        : reportSource === "auto-hour"
+          ? tx("report.archive.kind.hour")
+          : "";
+  const archiveRows =
+    archives?.items
+      .map((item) => {
+        const current = item.archiveId === selectedArchiveId ? " aria-current=\"true\"" : "";
+        return `<tr data-archive-id="${item.archiveId}"${current}><td>${formatUtc(item.rangeStartUtc)}</td><td>${archiveKindLabel(item.kind)}</td><td>${archiveStatusLabel(item.status)}</td></tr>`;
+      })
+      .join("") ?? "";
   return `
     <section class="panel">
       <p>${tx("report.same_token")}</p>
@@ -446,7 +486,12 @@ function renderReports(report: ReportResult | null, statusZh: string): string {
       <button type="button" id="export-json">${tx("report.export_json")}</button>
       <button type="button" id="export-html">${tx("report.export_html")}</button>
       <p class="status" data-state="${report ? "connected" : "no_data"}">${statusZh}</p>
+      ${sourceLine ? `<p>${sourceLine}</p>` : ""}
       ${capability}
+      <h2>${tx("report.archive.list")}</h2>
+      <p>${tx("report.archive.failed_retry")}</p>
+      <table class="data"><thead><tr><th>${tx("report.archive.col.time")}</th><th>${tx("report.archive.col.kind")}</th><th>${tx("report.archive.col.status")}</th></tr></thead>
+      <tbody>${archiveRows || `<tr><td colspan="3">${tx("report.archive.empty")}</td></tr>`}</tbody></table>
     </section>
     <section class="panel" aria-label="${tx("report.numbers")}">
       <h2>${tx("report.totals")}</h2>
@@ -784,6 +829,9 @@ function renderApp(
   route: RouteId,
   report: ReportResult | null,
   reportStatus: string,
+  archives: ReportArchivePage | null,
+  selectedArchiveId: string | null,
+  reportSource: ReportSource,
   alerts: AlertCenterPage | null,
   alertStatus: string,
   diagnostics: DiagnosticsSnapshot | null,
@@ -810,7 +858,7 @@ function renderApp(
           : route === "settings-data"
             ? renderSettings(boot, about, deletePreview, deleteReport, probeStatus, probeState)
             : route === "reports"
-              ? renderReports(report, reportStatus)
+              ? renderReports(report, reportStatus, archives, selectedArchiveId, reportSource)
               : route === "alerts"
                 ? renderAlerts(alerts, alertStatus, diagnostics, notify)
                 : renderUnavailable(tx("route.alerts"), "C4");
@@ -870,6 +918,9 @@ async function main(): Promise<void> {
   let state = emptyMonitorState();
   let report: ReportResult | null = null;
   let reportStatus = tx("report.idle");
+  let archives: ReportArchivePage | null = null;
+  let selectedArchiveId: string | null = null;
+  let reportSource: ReportSource = null;
   let alerts: AlertCenterPage | null = null;
   let alertStatus = tx("alerts.idle");
   let diagnostics: DiagnosticsSnapshot | null = null;
@@ -911,6 +962,9 @@ async function main(): Promise<void> {
       route,
       report,
       reportStatus,
+      archives,
+      selectedArchiveId,
+      reportSource,
       alerts,
       alertStatus,
       diagnostics,
@@ -1003,10 +1057,58 @@ async function main(): Promise<void> {
     paint();
   };
 
-  const applyReport = (next: ReportResult | null, status: string): void => {
+  const applyReport = (
+    next: ReportResult | null,
+    status: string,
+    source: ReportSource = reportSource
+  ): void => {
     report = next;
     reportStatus = status;
+    reportSource = source;
     paint();
+  };
+
+  const pickLatestArchive = (page: ReportArchivePage): ReportArchiveSummary | null => {
+    const latestDay = page.items.find((item) => item.kind === "day" && item.status === "ok");
+    if (latestDay) {
+      return latestDay;
+    }
+    return page.items.find((item) => item.kind === "hour" && item.status === "ok") ?? null;
+  };
+
+  const loadArchives = async (): Promise<void> => {
+    applyReport(report, tx("report.archive.catchup"), reportSource);
+    try {
+      const page = decodeReportArchivePage(
+        await invokeCommand("list_report_archives", { kind: null, after: null, limit: 50 })
+      );
+      archives = page;
+      const latest = pickLatestArchive(page);
+      if (!latest) {
+        selectedArchiveId = null;
+        const hasFailed = page.items.some((item) => item.status === "failed");
+        if (hasFailed) {
+          applyReport(null, tx("report.archive.failed"), null);
+        } else if (page.items.length === 0) {
+          applyReport(null, `${tx("report.archive.empty")} ${tx("report.archive.catchup")}`, null);
+        } else {
+          applyReport(null, tx("report.archive.none_closed"), null);
+        }
+        return;
+      }
+      selectedArchiveId = latest.archiveId;
+      const decoded = decodeReportResult(
+        await invokeCommand("get_report_archive", { archiveId: latest.archiveId })
+      );
+      const source: ReportSource = latest.kind === "day" ? "auto-day" : "auto-hour";
+      applyReport(
+        decoded,
+        latest.kind === "day" ? tx("report.archive.loaded_day") : tx("report.archive.loaded_hour"),
+        source
+      );
+    } catch {
+      applyReport(null, tx("report.archive.unavailable"), null);
+    }
   };
 
   const applyAlerts = (
@@ -1238,6 +1340,10 @@ async function main(): Promise<void> {
         await refreshLivePage();
         paint();
       }
+      if (nextRoute === "reports") {
+        await loadArchives();
+        return;
+      }
       if (nextRoute === "alerts") {
         try {
           const page = decodeAlertCenter(
@@ -1389,13 +1495,41 @@ async function main(): Promise<void> {
       }
     }
     if (target.id === "run-report") {
-      applyReport(report, tx("report.running"));
+      applyReport(report, tx("report.running"), "manual");
       try {
         const raw = await invokeCommand<unknown>("run_report", { query: buildQuery() });
         const decoded = decodeReportResult(raw);
-        applyReport(decoded, `已生成快照 ${decoded.reportSnapshotToken.slice(0, 8)}。`);
+        selectedArchiveId = null;
+        applyReport(decoded, fmt("report.done", { token: decoded.reportSnapshotToken.slice(0, 8) }), "manual");
       } catch (error) {
-        applyReport(null, error instanceof Error ? error.message : tx("report.fail"));
+        applyReport(null, error instanceof Error ? error.message : tx("report.fail"), "manual");
+      }
+    }
+    const archiveEl = raw.closest("[data-archive-id]");
+    if (archiveEl instanceof HTMLElement && archiveEl.dataset.archiveId) {
+      const archiveId = archiveEl.dataset.archiveId;
+      const item = archives?.items.find((row) => row.archiveId === archiveId);
+      selectedArchiveId = archiveId;
+      if (!item || item.status !== "ok") {
+        applyReport(
+          report,
+          item?.noteZh ? item.noteZh : tx("report.archive.failed"),
+          reportSource
+        );
+        return;
+      }
+      try {
+        const decoded = decodeReportResult(
+          await invokeCommand("get_report_archive", { archiveId })
+        );
+        const source: ReportSource = item.kind === "day" ? "auto-day" : "auto-hour";
+        applyReport(
+          decoded,
+          item.kind === "day" ? tx("report.archive.loaded_day") : tx("report.archive.loaded_hour"),
+          source
+        );
+      } catch {
+        applyReport(report, tx("report.archive.unavailable"), reportSource);
       }
     }
     if (target.id === "export-csv" || target.id === "export-json" || target.id === "export-html") {

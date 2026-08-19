@@ -59,6 +59,8 @@
 - `run_report(query: ReportQuery) -> ReportResult`
 - `get_report(token) -> ReportResult`
 - `release_report(token) -> bool`
+- `list_report_archives({ kind?, after?, limit? }) -> ReportArchivePage`
+- `get_report_archive({ archiveId }) -> ReportResult`
 - `preview_export(token, spec) -> ExportPreview`
 - `export_report(token, spec, path) -> path`
 - `create_backup(path) -> checksum`
@@ -94,6 +96,49 @@
 前端自己按表格重算 Top N，或导出时再跑一遍 SQL。
 #### Correct
 图表、数据表和导出都读当前 `ReportResult`。
+
+## Scenario: C3 Report Archives
+
+### 1. Scope / Trigger
+- Trigger: 已闭合本地小时 / 自然日自动出报、进分析报告页读档案、从冻结结果导出。
+
+### 2. Signatures
+- 表 `report_archive`（`user_version` 4，`c3-archive-v4`）
+- `list_report_archives({ kind?: "hour"|"day", after?: string, limit?: number }) -> ReportArchivePage`
+- `get_report_archive({ archiveId }) -> ReportResult`
+
+### 3. Contracts
+- `ReportArchivePage.schemaVersion` 必须为 `1`。`next` 为 `string` 或 `null`。列表项不含 `resultJson`。
+- 默认查询：`displayTimezone=local`，`grouping=host`，`targetPolicy=historical`，`topN=20`，`comparison.previousEqualWindow=true`。
+- 小时窗口为已闭合本地小时，日窗口为 `local_day_bounds`。同一 `(kind, range_start_utc, query_fingerprint)` 只留一份 `ok`。
+- 小时档案保留 30 天，日档案保留 13 个月。过期删除只针对 `report_archive`。
+- `get_report_archive` 把冻结 JSON 水合进 10 分钟 snapshot token，供现有 `export_report` 使用。不得为导出再查更新后的库。
+- 每采集 tick 最多 1 份。先近后远：最近闭合小时，再最近闭合日。`failed` 可重试。
+- 大结果不经实时 Channel。
+
+### 4. Validation & Error Matrix
+- 非法 `kind` / `archiveId` → `invalid_query`
+- 档案 `failed` 或 JSON 缺失 → `storage_failure`
+- raw / 精确 Top N 过期 → `capability_unsupported`，写 `failed`，不写假总量
+- 用户取消 / deadline → `cancelled` / `deadline_exceeded`
+- 磁盘不足 → `insufficient_space`，不写半份 `ok`
+
+### 5. Good/Base/Bad Cases
+- Good: 重启后 `result_json` 与生成时一致；同一小时两次调度仍一行 `ok`
+- Base: 空区间 totals 为 0，coverage=`empty`，仍可归档
+- Bad: 新 `ReportSnapshotStore::open(data_dir)` 清掉门面 spool；前端把 24 份小时档案加总成日总量
+
+### 6. Tests Required
+- Rust `c3::archive`：幂等、失败替换、过期删除、重启一致、next_job 顺序
+- Rust `c3::query`：`local_hour_bounds` DST
+- Rust `storage`：v3→v4 升级；`C3_DDL` 不含 `report_archive`
+- TS `decodeReportArchivePage` 拒绝缺 `schemaVersion` / `items` / 非法 `kind`
+
+### 7. Wrong vs Correct
+#### Wrong
+进页现查滚动最近 3600 秒，或把档案写进 10 分钟 `report-spool` 当历史。
+#### Correct
+闭合窗口的冻结 `ReportResult` 进 SQLite。进页 `list` 后 `get` 最新成功日或小时档案。
 
 ## Scenario: C4 Alert Commands
 

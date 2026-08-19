@@ -30,11 +30,15 @@ use c2::facade::{parse_socket_locale, AppErrorDto, AppFacade, BootstrapDto, Prob
 use c2::hub::{LiveConnectionView, MonitorStreamMessage};
 use c2::query::{ConnectionPage, ConnectionQuery};
 use c2::settings::ControllerSettings;
-use c2::shell::{FileMode, FilePurpose, OperationProgress, RecoveryStatus, RouteDescriptor};
+use c2::shell::{
+    BootBranch, FileMode, FilePurpose, OperationProgress, RecoveryStatus, RouteDescriptor,
+};
 use c2::subscriptions::SubscriptionRegistry;
+use c3::archive::{ReportArchivePage, ReportArchiveService};
 use c3::export::{ExportPreview, ExportSpec};
 use c3::query::{ReportQuery, ReportResult};
 use c3::retention::RetentionPreview;
+use c3::snapshot::ReportSnapshotStore;
 use c4::diagnose::DiagnosticsSnapshot;
 use c4::notify::NotifyCapability;
 use c4::types::{AlertCenterPage, AlertRule, AlertSummary};
@@ -105,32 +109,105 @@ async fn collector_loop_tick(state: &Mutex<AppFacade>) -> bool {
         }
         c2::collector::plan_tick(&guard)
     };
-    if !plan.should_fetch {
-        return true;
-    }
-    let Some(addr) = plan.address() else {
-        return true;
-    };
-    let result = c2::collector::fetch_snapshot(addr, plan.secret()).await;
-    let message = {
-        let mut guard = state.lock().expect("state");
-        if guard.desktop.shutdown != ShutdownPhase::Idle {
-            return false;
+    if plan.should_fetch {
+        if let Some(addr) = plan.address() {
+            let result = c2::collector::fetch_snapshot(addr, plan.secret()).await;
+            let message = {
+                let mut guard = state.lock().expect("state");
+                if guard.desktop.shutdown != ShutdownPhase::Idle {
+                    return false;
+                }
+                if guard.desktop.collector_running
+                    && !matches!(
+                        guard.session_status,
+                        crate::controller::SessionStatus::Cancelled
+                    )
+                {
+                    c2::collector::apply_tick_result(&mut guard, result)
+                } else {
+                    None
+                }
+            };
+            if let Some(message) = message {
+                forward_published(state, [message]);
+            }
         }
-        if !guard.desktop.collector_running
-            || matches!(
-                guard.session_status,
-                crate::controller::SessionStatus::Cancelled
-            )
-        {
-            return true;
-        }
-        c2::collector::apply_tick_result(&mut guard, result)
-    };
-    if let Some(message) = message {
-        forward_published(state, [message]);
     }
+    archive_tick(state);
     true
+}
+
+fn archive_tick(state: &Mutex<AppFacade>) {
+    archive_tick_at(state, chrono::Utc::now().timestamp());
+}
+
+fn archive_tick_at(state: &Mutex<AppFacade>, now_utc: i64) {
+    let prepared = {
+        let guard = match state.lock() {
+            Ok(guard) => guard,
+            Err(_) => return,
+        };
+        if guard.branch != BootBranch::NormalReady {
+            return;
+        }
+        if guard.desktop.shutdown != ShutdownPhase::Idle {
+            return;
+        }
+        let Some(storage) = guard.storage.as_ref() else {
+            return;
+        };
+        let connection = storage.connection();
+        let _ = ReportArchiveService::purge_expired(connection, now_utc);
+        let job = match ReportArchiveService::next_job(connection, now_utc) {
+            Ok(Some(job)) => job,
+            _ => return,
+        };
+        (
+            job,
+            storage.path().to_path_buf(),
+            guard.data_dir.clone(),
+            guard.raw_retain_days,
+        )
+    };
+    let (job, db_path, data_dir, raw_retain_days) = prepared;
+    // 独立 spool 目录，避免新 store 清理门面里仍有效的 token。
+    let mut store = ReportSnapshotStore::open(data_dir.join("archive-tick"));
+    let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let outcome = c3::ReportService::run(
+        &db_path,
+        &mut store,
+        job.query.clone(),
+        now_utc,
+        raw_retain_days,
+        &cancel,
+        None,
+    );
+    let token = outcome
+        .as_ref()
+        .ok()
+        .map(|item| item.report_snapshot_token.clone());
+    persist_archive_outcome(state, &job, outcome, now_utc);
+    if let Some(token) = token {
+        store.release(&token);
+    }
+}
+
+fn persist_archive_outcome(
+    state: &Mutex<AppFacade>,
+    job: &c3::archive::ArchiveJob,
+    outcome: Result<ReportResult, c3::query::ReportError>,
+    now_utc: i64,
+) {
+    let Ok(guard) = state.lock() else {
+        return;
+    };
+    if guard.branch != BootBranch::NormalReady || guard.desktop.shutdown != ShutdownPhase::Idle {
+        return;
+    }
+    let Some(storage) = guard.storage.as_ref() else {
+        return;
+    };
+    let _ = ReportArchiveService::persist_outcome(storage.connection(), job, outcome, now_utc);
 }
 
 fn boot_facade() -> AppFacade {
@@ -486,6 +563,27 @@ fn run_report(
     query: ReportQuery,
 ) -> Result<ReportResult, AppErrorDto> {
     state.lock().expect("state").run_report(query)
+}
+
+#[tauri::command]
+fn list_report_archives(
+    state: State<Mutex<AppFacade>>,
+    kind: Option<String>,
+    after: Option<String>,
+    limit: Option<u32>,
+) -> Result<ReportArchivePage, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .list_report_archives(kind, after, limit)
+}
+
+#[tauri::command]
+fn get_report_archive(
+    state: State<Mutex<AppFacade>>,
+    archive_id: String,
+) -> Result<ReportResult, AppErrorDto> {
+    state.lock().expect("state").get_report_archive(&archive_id)
 }
 
 #[tauri::command]
@@ -906,6 +1004,8 @@ pub fn run() {
             cancel_operation,
             get_recovery_status,
             run_report,
+            list_report_archives,
+            get_report_archive,
             get_report,
             release_report,
             preview_export,
@@ -939,4 +1039,56 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("启动家宽流量监控失败");
+}
+
+#[cfg(test)]
+mod archive_scheduler_tests {
+    use super::*;
+    use c2::desktop::{InstanceClaim, ShutdownPhase};
+    use tempfile::tempdir;
+
+    fn list_kind(state: &Mutex<AppFacade>, kind: &str) -> usize {
+        let guard = state.lock().expect("state");
+        let storage = guard.storage.as_ref().expect("storage");
+        ReportArchiveService::list(storage.connection(), Some(kind), None, None)
+            .expect("list")
+            .items
+            .iter()
+            .filter(|item| item.status == "ok")
+            .count()
+    }
+
+    #[test]
+    fn archive_tick_skips_recovery_and_shutdown() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.branch = BootBranch::RecoveryOnly;
+        let state = Mutex::new(facade);
+        archive_tick_at(&state, chrono::Utc::now().timestamp());
+        assert_eq!(list_kind(&state, "hour"), 0);
+
+        let dir = tempdir().expect("dir2");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.desktop.shutdown = ShutdownPhase::StopIntake;
+        let state = Mutex::new(facade);
+        archive_tick_at(&state, chrono::Utc::now().timestamp());
+        assert_eq!(list_kind(&state, "hour"), 0);
+    }
+
+    #[test]
+    fn archive_tick_writes_closed_hour_once_then_day() {
+        let dir = tempdir().expect("dir");
+        let facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let state = Mutex::new(facade);
+        let now = chrono::Utc::now().timestamp();
+        archive_tick_at(&state, now);
+        assert_eq!(list_kind(&state, "hour"), 1);
+        assert_eq!(list_kind(&state, "day"), 0);
+        archive_tick_at(&state, now);
+        assert_eq!(list_kind(&state, "hour"), 1);
+        assert_eq!(list_kind(&state, "day"), 1);
+        archive_tick_at(&state, now);
+        assert_eq!(list_kind(&state, "hour"), 2);
+        assert_eq!(list_kind(&state, "day"), 1);
+    }
 }

@@ -369,6 +369,56 @@ pub fn local_day_bounds(timezone: &str, at_utc: i64) -> Result<(i64, i64), Repor
     Ok((start, end))
 }
 
+/// 本地小时的 UTC 半开区间 `[start, end)`。DST 不固定 3600。
+pub fn local_hour_bounds(timezone: &str, at_utc: i64) -> Result<(i64, i64), ReportError> {
+    let (_, _, _, hour) = local_ymdh(timezone, at_utc)?;
+    let start = find_local_hour_start(timezone, at_utc, hour)?;
+    let end = find_local_hour_end(timezone, start, hour)?;
+    if end <= start {
+        return Err(ReportError::InvalidQuery("hour bounds"));
+    }
+    Ok((start, end))
+}
+
+/// 当前本地小时起点之前的已闭合小时。
+pub fn closed_local_hour_bounds(timezone: &str, now_utc: i64) -> Result<(i64, i64), ReportError> {
+    let (current_start, _) = local_hour_bounds(timezone, now_utc)?;
+    local_hour_bounds(timezone, current_start.saturating_sub(1))
+}
+
+/// 当前本地自然日起点之前的已闭合日。
+pub fn closed_local_day_bounds(timezone: &str, now_utc: i64) -> Result<(i64, i64), ReportError> {
+    let (current_start, _) = local_day_bounds(timezone, now_utc)?;
+    local_day_bounds(timezone, current_start.saturating_sub(1))
+}
+
+/// 自动小时 / 日档案的默认查询。fingerprint 对同一窗口稳定。
+pub fn default_auto_report_query(
+    granularity: Granularity,
+    range_start_utc: i64,
+    range_end_utc: i64,
+) -> ReportQuery {
+    ReportQuery {
+        range_start_utc,
+        range_end_utc,
+        display_timezone: "local".into(),
+        granularity,
+        filters: ReportFilters::default(),
+        grouping: DimensionKind::Host,
+        target_policy: TargetPolicy::Historical,
+        comparison: Some(ComparisonSpec {
+            previous_equal_window: true,
+        }),
+        sort: SortSpec::default(),
+        page: PageSpec {
+            limit: PAGE_DEFAULT,
+            after: None,
+        },
+        top_n: TOP_N_DEFAULT,
+        include_sessions: false,
+    }
+}
+
 /// 本地自然月的 UTC 半开区间 `[start, end)`。月份长度按本地历法。
 pub fn local_month_bounds(timezone: &str, at_utc: i64) -> Result<(i64, i64), ReportError> {
     let (year, month, _) = local_ymd(timezone, at_utc)?;
@@ -383,12 +433,17 @@ pub fn local_month_bounds(timezone: &str, at_utc: i64) -> Result<(i64, i64), Rep
 }
 
 fn local_ymd(timezone: &str, at_utc: i64) -> Result<(i32, u32, u32), ReportError> {
-    use chrono::Datelike;
+    let (year, month, day, _) = local_ymdh(timezone, at_utc)?;
+    Ok((year, month, day))
+}
+
+fn local_ymdh(timezone: &str, at_utc: i64) -> Result<(i32, u32, u32, u32), ReportError> {
+    use chrono::{Datelike, Timelike};
     let offset = i64::from(timezone_offset_secs(timezone, at_utc)?);
     let local = chrono::DateTime::from_timestamp(at_utc + offset, 0)
         .ok_or(ReportError::InvalidQuery("timestamp"))?;
     let date = local.date_naive();
-    Ok((date.year(), date.month(), date.day()))
+    Ok((date.year(), date.month(), date.day(), local.hour()))
 }
 
 fn utc_from_local_naive(
@@ -414,6 +469,36 @@ fn next_local_day(year: i32, month: u32, day: u32) -> (i32, u32, u32) {
     let date = chrono::NaiveDate::from_ymd_opt(year, month, day).unwrap_or(chrono::NaiveDate::MIN);
     let next = date.succ_opt().unwrap_or(date);
     (next.year(), next.month(), next.day())
+}
+
+fn find_local_hour_start(timezone: &str, at_utc: i64, hour: u32) -> Result<i64, ReportError> {
+    let mut lo = at_utc.saturating_sub(3 * 3600);
+    let mut hi = at_utc;
+    while lo < hi {
+        let mid = lo + (hi - lo) / 2;
+        let (_, _, _, found) = local_ymdh(timezone, mid)?;
+        if found == hour {
+            hi = mid;
+        } else {
+            lo = mid + 1;
+        }
+    }
+    Ok(lo)
+}
+
+fn find_local_hour_end(timezone: &str, start: i64, hour: u32) -> Result<i64, ReportError> {
+    let mut lo = start.saturating_add(1);
+    let mut hi = start.saturating_add(3 * 3600);
+    while lo < hi {
+        let mid = lo + (hi - lo) / 2;
+        let (_, _, _, found) = local_ymdh(timezone, mid)?;
+        if found == hour {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    Ok(lo)
 }
 
 fn local_offset_secs() -> i32 {
@@ -750,6 +835,87 @@ mod query_contract_tests {
         assert_eq!(end - start, 23 * 3600);
         let (again_s, again_e) = local_day_bounds("America/New_York", start).expect("start");
         assert_eq!((again_s, again_e), (start, end));
+    }
+
+    #[test]
+    fn local_hour_bounds_utc_and_shanghai() {
+        let utc_at = chrono::NaiveDate::from_ymd_opt(2026, 1, 15)
+            .unwrap()
+            .and_hms_opt(10, 30, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp();
+        let (start, end) = local_hour_bounds("UTC", utc_at).expect("utc");
+        assert_eq!(end - start, 3_600);
+        assert_eq!(start, utc_at - 1_800);
+        let shanghai_ten = chrono::NaiveDate::from_ymd_opt(2026, 1, 15)
+            .unwrap()
+            .and_hms_opt(2, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp();
+        let (closed_s, closed_e) =
+            closed_local_hour_bounds("Asia/Shanghai", shanghai_ten).expect("closed");
+        assert_eq!(closed_e, shanghai_ten);
+        assert_eq!(closed_s, shanghai_ten - 3_600);
+        let (open_s, open_e) = local_hour_bounds("Asia/Shanghai", shanghai_ten).expect("open");
+        assert_eq!((open_s, open_e), (shanghai_ten, shanghai_ten + 3_600));
+    }
+
+    #[test]
+    fn local_hour_bounds_chain_across_new_york_dst() {
+        let spring_four = chrono::NaiveDate::from_ymd_opt(2026, 3, 8)
+            .unwrap()
+            .and_hms_opt(8, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp();
+        let (cur_s, _) = local_hour_bounds("America/New_York", spring_four).expect("spring");
+        let (closed_s, closed_e) =
+            local_hour_bounds("America/New_York", cur_s.saturating_sub(1)).expect("closed");
+        assert_eq!(closed_e, cur_s);
+        assert!(closed_e > closed_s);
+        let (prev_s, prev_e) =
+            local_hour_bounds("America/New_York", closed_s.saturating_sub(1)).expect("prev");
+        assert_eq!(prev_e, closed_s);
+        assert!(prev_e > prev_s);
+        let fall_two = chrono::NaiveDate::from_ymd_opt(2026, 11, 1)
+            .unwrap()
+            .and_hms_opt(7, 0, 0)
+            .unwrap()
+            .and_utc()
+            .timestamp();
+        let (fall_s, fall_e) = local_hour_bounds("America/New_York", fall_two).expect("fall");
+        assert!(fall_e > fall_s);
+        let (fall_prev_s, fall_prev_e) =
+            local_hour_bounds("America/New_York", fall_s.saturating_sub(1)).expect("fall prev");
+        assert_eq!(fall_prev_e, fall_s);
+        assert!(fall_prev_e > fall_prev_s);
+        assert!(fall_prev_e - fall_prev_s >= 3_600);
+        let local_now = chrono::Utc::now().timestamp();
+        let (local_s, local_e) = local_hour_bounds("local", local_now).expect("local");
+        assert!(local_e > local_s);
+    }
+
+    #[test]
+    fn default_auto_report_query_fingerprint_is_stable() {
+        let first = default_auto_report_query(Granularity::Hour, 3_600, 7_200);
+        let second = default_auto_report_query(Granularity::Hour, 3_600, 7_200);
+        assert_eq!(query_fingerprint(&first), query_fingerprint(&second));
+        assert_eq!(first.display_timezone, "local");
+        assert_eq!(first.grouping, DimensionKind::Host);
+        assert_eq!(first.target_policy, TargetPolicy::Historical);
+        assert_eq!(first.top_n, 20);
+        assert!(!first.include_sessions);
+        assert_eq!(
+            first.comparison,
+            Some(ComparisonSpec {
+                previous_equal_window: true
+            })
+        );
+        let day = default_auto_report_query(Granularity::Day, 0, 86_400);
+        assert_eq!(day.granularity, Granularity::Day);
+        assert_ne!(query_fingerprint(&first), query_fingerprint(&day));
     }
 
     #[test]

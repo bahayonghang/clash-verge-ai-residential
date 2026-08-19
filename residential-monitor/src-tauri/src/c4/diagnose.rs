@@ -140,10 +140,7 @@ mod diagnose_tests {
         let coordinator = StorageCoordinator::open(&dir.path().join("d.sqlite3")).expect("open");
         let snap =
             collect(&coordinator, SessionStatus::Connected, Some(10), "covered").expect("collect");
-        assert_eq!(
-            snap.sqlite_user_version,
-            crate::c4::schema::C4_SCHEMA_VERSION
-        );
+        assert_eq!(snap.sqlite_user_version, crate::c0_contract::SCHEMA_VERSION);
         assert!(!snap.contains_secret());
         let encoded = serde_json::to_string(&snap).expect("json");
         assert!(!encoded.contains("127.0.0.1"));

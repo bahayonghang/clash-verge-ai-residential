@@ -2,7 +2,10 @@
 
 use crate::c0_contract::{BUSY_TIMEOUT_MS, RETRY_WINDOW_RECEIPTS, SCHEMA_VERSION};
 use crate::c3::query::ReportError;
-use crate::c3::schema::{C3_DDL, C3_MIGRATION_CHECKSUM, C3_SCHEMA_VERSION};
+use crate::c3::schema::{
+    C3_ARCHIVE_DDL, C3_ARCHIVE_MIGRATION_CHECKSUM, C3_ARCHIVE_SCHEMA_VERSION, C3_DDL,
+    C3_MIGRATION_CHECKSUM, C3_SCHEMA_VERSION,
+};
 use crate::c4::schema::{C4_DDL, C4_MIGRATION_CHECKSUM, C4_SCHEMA_VERSION};
 use crate::c4::types::AlertWriteSet;
 
@@ -92,6 +95,12 @@ pub fn migrate(path: &Path) -> Result<Connection, StorageError> {
         &connection,
         C4_SCHEMA_VERSION,
         C4_MIGRATION_CHECKSUM,
+        user_version,
+    )?;
+    verify_checksum(
+        &connection,
+        C3_ARCHIVE_SCHEMA_VERSION,
+        C3_ARCHIVE_MIGRATION_CHECKSUM,
         user_version,
     )?;
     if user_version == 0 {
@@ -194,6 +203,15 @@ pub fn migrate(path: &Path) -> Result<Connection, StorageError> {
         connection.execute(
             "insert or ignore into schema_migration(version, checksum, applied_utc) values (?1, ?2, 0)",
             params![C4_SCHEMA_VERSION, C4_MIGRATION_CHECKSUM],
+        )?;
+    }
+    let current: i32 = connection.query_row("pragma user_version", [], |row| row.get(0))?;
+    if current < C3_ARCHIVE_SCHEMA_VERSION {
+        connection.execute_batch(C3_ARCHIVE_DDL)?;
+        connection.execute_batch("pragma user_version = 4")?;
+        connection.execute(
+            "insert or ignore into schema_migration(version, checksum, applied_utc) values (?1, ?2, 0)",
+            params![C3_ARCHIVE_SCHEMA_VERSION, C3_ARCHIVE_MIGRATION_CHECKSUM],
         )?;
     }
     Ok(connection)
@@ -841,10 +859,11 @@ mod storage_schema_tests {
         assert!(tables.iter().any(|item| item == "traffic_hourly_dimension"));
         assert!(tables.iter().any(|item| item == "alert_rule"));
         assert!(tables.iter().any(|item| item == "notification_outbox"));
+        assert!(tables.iter().any(|item| item == "report_archive"));
         let version: i32 = connection
             .query_row("pragma user_version", [], |row| row.get(0))
             .expect("ver");
-        assert_eq!(version, crate::c4::schema::C4_SCHEMA_VERSION);
+        assert_eq!(version, SCHEMA_VERSION);
         let c1: String = connection
             .query_row(
                 "select checksum from schema_migration where version = 1",
@@ -859,8 +878,84 @@ mod storage_schema_tests {
                 |row| row.get(0),
             )
             .expect("c3");
+        let c4: String = connection
+            .query_row(
+                "select checksum from schema_migration where version = 3",
+                [],
+                |row| row.get(0),
+            )
+            .expect("c4");
+        let archive: String = connection
+            .query_row(
+                "select checksum from schema_migration where version = 4",
+                [],
+                |row| row.get(0),
+            )
+            .expect("archive");
         assert_eq!(c1, MIGRATION_CHECKSUM);
         assert_eq!(c3, C3_MIGRATION_CHECKSUM);
+        assert_eq!(c4, C4_MIGRATION_CHECKSUM);
+        assert_eq!(archive, C3_ARCHIVE_MIGRATION_CHECKSUM);
+    }
+
+    #[test]
+    fn storage_v3_upgrades_to_archive_v4() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("v3.sqlite3");
+        {
+            let connection = Connection::open(&path).expect("open");
+            connection
+                .execute_batch(
+                    "create table schema_migration (
+                        version integer primary key,
+                        checksum text not null,
+                        applied_utc integer not null
+                    ) strict;
+                    insert into schema_migration(version, checksum, applied_utc) values
+                        (1, 'c1-core-v1', 0),
+                        (2, 'c3-report-v2', 0),
+                        (3, 'c4-alert-v3', 0);
+                    pragma user_version = 3;",
+                )
+                .expect("seed v3");
+        }
+        let connection = migrate(&path).expect("upgrade");
+        let version: i32 = connection
+            .query_row("pragma user_version", [], |row| row.get(0))
+            .expect("ver");
+        assert_eq!(version, 4);
+        let checksum: String = connection
+            .query_row(
+                "select checksum from schema_migration where version = 4",
+                [],
+                |row| row.get(0),
+            )
+            .expect("v4");
+        assert_eq!(checksum, C3_ARCHIVE_MIGRATION_CHECKSUM);
+        let has_archive: i64 = connection
+            .query_row(
+                "select count(*) from sqlite_master where type = 'table' and name = 'report_archive'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("table");
+        assert_eq!(has_archive, 1);
+        let c3: String = connection
+            .query_row(
+                "select checksum from schema_migration where version = 2",
+                [],
+                |row| row.get(0),
+            )
+            .expect("c3");
+        let c4: String = connection
+            .query_row(
+                "select checksum from schema_migration where version = 3",
+                [],
+                |row| row.get(0),
+            )
+            .expect("c4");
+        assert_eq!(c3, C3_MIGRATION_CHECKSUM);
+        assert_eq!(c4, C4_MIGRATION_CHECKSUM);
     }
 }
 

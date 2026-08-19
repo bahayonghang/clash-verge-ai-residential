@@ -9,7 +9,7 @@
 - Credential Manager 不可用时只允许 `ProcessLocalStore` 会话 secret，退出或替换后必须 `clear`。v1 无 DPAPI fallback。
 - 长操作必须可取消。SQLite 使用 interrupt / progress。
 - C2 `FileDialogPort` 只返回预声明用途的用户选择路径。
-- C3 真实 operation：`run_report`、`export_report`、`create_backup`、`restore_backup`、`run_retention`。取消必须 interrupt 实际 SQLite / 备份 step，不只丢弃前端结果。
+- C3 真实 operation：`run_report`、`export_report`、`create_backup`、`restore_backup`、`run_retention`、`list_report_archives`、`get_report_archive`。取消必须 interrupt 实际 SQLite / 备份 step，不只丢弃前端结果。自动档案生成走同一 `ReportService` 取消 / deadline 路径。
 - rusqlite `progress_handler` 返回 `true` 表示中断，`false` 表示继续。
 - secret 不得进入 URL、日志、SQLite、Channel、预览、导出、诊断或 Release 资产说明。导出与诊断前扫描 `bearer ` / `password=` / `secret=`。
 - C4 诊断只含白名单字段；完整域名、IP、进程路径和 Credential Manager 内容不得进入诊断包。

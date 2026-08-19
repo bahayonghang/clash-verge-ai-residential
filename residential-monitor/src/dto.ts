@@ -419,6 +419,62 @@ export function decodeReportResult(value: unknown): ReportResult {
   return value as unknown as ReportResult;
 }
 
+export type ReportArchiveKind = "hour" | "day";
+
+export interface ReportArchiveSummary {
+  archiveId: string;
+  kind: ReportArchiveKind;
+  rangeStartUtc: number;
+  rangeEndUtc: number;
+  displayTimezone: string;
+  grouping: string;
+  status: "ok" | "failed" | string;
+  generatedUtc: number;
+  dataVersion: number | null;
+  coverageStatus: string | null;
+  totalsUpload: number | null;
+  totalsDownload: number | null;
+  connectionCount: number | null;
+  errorCode: string | null;
+  noteZh: string | null;
+}
+
+export interface ReportArchivePage {
+  schemaVersion: number;
+  items: ReportArchiveSummary[];
+  next: string | null;
+}
+
+function decodeReportArchiveSummary(value: unknown): ReportArchiveSummary {
+  if (
+    !isRecord(value) ||
+    typeof value.archiveId !== "string" ||
+    (value.kind !== "hour" && value.kind !== "day") ||
+    typeof value.status !== "string" ||
+    typeof value.rangeStartUtc !== "number" ||
+    typeof value.rangeEndUtc !== "number"
+  ) {
+    throw new Error("ReportArchivePage 无效");
+  }
+  return value as unknown as ReportArchiveSummary;
+}
+
+export function decodeReportArchivePage(value: unknown): ReportArchivePage {
+  if (
+    !isRecord(value) ||
+    value.schemaVersion !== 1 ||
+    !Array.isArray(value.items) ||
+    (value.next !== null && typeof value.next !== "string")
+  ) {
+    throw new Error("ReportArchivePage 无效");
+  }
+  return {
+    schemaVersion: 1,
+    items: value.items.map(decodeReportArchiveSummary),
+    next: typeof value.next === "string" ? value.next : null
+  };
+}
+
 export type ShellPhase = "c0-skeleton" | "c2-shell";
 
 export interface ShellStatus {

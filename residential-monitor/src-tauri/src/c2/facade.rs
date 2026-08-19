@@ -14,6 +14,7 @@ use crate::c2::shell::{
     default_routes_for, recovery_status, validate_backup, BootBranch, FakeFileDialog, FileMode,
     FilePurpose, OperationProgress, OperationRegistry, RecoveryStatus, RouteDescriptor,
 };
+use crate::c3::archive::{ReportArchivePage, ReportArchiveService};
 use crate::c3::backup::BackupRestoreService;
 use crate::c3::export::{ExportPreview, ExportService, ExportSpec};
 use crate::c3::query::{ReportError, ReportQuery, ReportResult, RAW_RETAIN_DAYS_DEFAULT};
@@ -763,6 +764,35 @@ impl AppFacade {
 
     pub fn release_report(&mut self, token: &str) -> bool {
         self.snapshots.release(token)
+    }
+
+    pub fn list_report_archives(
+        &self,
+        kind: Option<String>,
+        after: Option<String>,
+        limit: Option<u32>,
+    ) -> Result<ReportArchivePage, AppErrorDto> {
+        let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
+        ReportArchiveService::list(
+            storage.connection(),
+            kind.as_deref(),
+            after.as_deref(),
+            limit,
+        )
+        .map_err(map_report)
+    }
+
+    pub fn get_report_archive(&mut self, archive_id: &str) -> Result<ReportResult, AppErrorDto> {
+        let now = chrono::Utc::now().timestamp();
+        let frozen = {
+            let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
+            ReportArchiveService::load_frozen(storage.connection(), archive_id)
+                .map_err(map_report)?
+        };
+        let query = frozen.query_echo.clone();
+        self.snapshots
+            .insert(&query, frozen, now, false)
+            .map_err(map_report)
     }
 
     pub fn preview_export(

@@ -22,7 +22,7 @@ pub const PEAK_HZ: u32 = 1;
 pub const PEAK_MINUTES: u32 = 30;
 pub const C1_SCHEMA_VERSION: i32 = 1;
 pub const C3_COMPAT_SCHEMA_VERSION: i32 = 2;
-pub const SCHEMA_VERSION: i32 = 3;
+pub const SCHEMA_VERSION: i32 = 4;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContractError {
@@ -91,7 +91,7 @@ mod c0_contract_tests {
         assert_eq!(PEAK_ACTIVE, 10_000);
         assert_eq!(C1_SCHEMA_VERSION, 1);
         assert_eq!(C3_COMPAT_SCHEMA_VERSION, 2);
-        assert_eq!(SCHEMA_VERSION, 3);
+        assert_eq!(SCHEMA_VERSION, 4);
     }
 }
 

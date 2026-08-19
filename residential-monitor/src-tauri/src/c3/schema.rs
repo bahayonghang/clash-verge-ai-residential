@@ -2,6 +2,8 @@
 
 pub const C3_SCHEMA_VERSION: i32 = 2;
 pub const C3_MIGRATION_CHECKSUM: &str = "c3-report-v2";
+pub const C3_ARCHIVE_SCHEMA_VERSION: i32 = 4;
+pub const C3_ARCHIVE_MIGRATION_CHECKSUM: &str = "c3-archive-v4";
 
 pub const C3_TABLES: &[&str] = &[
     "dimension_dict",
@@ -13,6 +15,7 @@ pub const C3_TABLES: &[&str] = &[
     "retention_state",
     "retention_watermark",
     "report_snapshot_meta",
+    "report_archive",
 ];
 
 pub const C3_DDL: &str = "
@@ -115,6 +118,32 @@ insert or ignore into retention_watermark(layer, watermark_utc, delete_watermark
     values ('hourly', 0, 0), ('daily', 0, 0), ('core', 0, 0), ('raw_delete', 0, 0);
 ";
 
+pub const C3_ARCHIVE_DDL: &str = "
+create table if not exists report_archive (
+    archive_id text primary key,
+    kind text not null,
+    range_start_utc integer not null,
+    range_end_utc integer not null,
+    display_timezone text not null,
+    grouping text not null,
+    query_fingerprint text not null,
+    status text not null,
+    generated_utc integer not null,
+    data_version integer,
+    coverage_status text,
+    totals_upload integer,
+    totals_download integer,
+    connection_count integer,
+    result_json text,
+    error_code text,
+    note_zh text
+) strict;
+create unique index if not exists report_archive_period_uniq
+    on report_archive(kind, range_start_utc, query_fingerprint);
+create index if not exists idx_report_archive_kind_start
+    on report_archive(kind, range_start_utc desc);
+";
+
 pub fn c3_table_allowlist() -> &'static [&'static str] {
     C3_TABLES
 }
@@ -133,5 +162,11 @@ mod c3_schema_contract_tests {
         assert!(C3_DDL.contains("traffic_hourly_dimension"));
         assert!(!C3_DDL.contains("create table") || !C3_DDL.contains("alert_"));
         assert!(!C3_DDL.contains("notification_outbox"));
+        assert!(!C3_DDL.contains("report_archive"));
+        assert!(C3_TABLES.contains(&"report_archive"));
+        assert!(C3_ARCHIVE_DDL.contains("report_archive"));
+        assert_eq!(C3_MIGRATION_CHECKSUM, "c3-report-v2");
+        assert_eq!(C3_ARCHIVE_MIGRATION_CHECKSUM, "c3-archive-v4");
+        assert_eq!(C3_ARCHIVE_SCHEMA_VERSION, 4);
     }
 }

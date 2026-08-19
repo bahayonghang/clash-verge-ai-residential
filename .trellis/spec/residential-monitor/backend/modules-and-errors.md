@@ -12,7 +12,9 @@
 - 产品进程用 `c2/collector.rs` 约 1 Hz HTTP GET `/connections`。`test_controller` 只取一帧，不能代替循环。HTTP 期间不得持 `Mutex<AppFacade>`。
 - `Paused` / `Resumed` / `SleepGap` 发布时保留 `hub.rows()`。`Disconnected` 才允许清空。`session_status == Cancelled` 时跳过取帧；`reconnect_now` / `resume_collector` 必须离开 `Cancelled`，不得新开第二条循环。
 - Tauri `Channel` 只放在 `lib.rs` 订阅表，不进入 `AppFacade`。
-- C3 代码位于 `residential-monitor/src-tauri/src/c3/`。C3 只通过 `StorageCoordinator` / `RecoveryFacade` 访问 SQLite，不得另建 writer 或通用 Repository。
+- C3 代码位于 `residential-monitor/src-tauri/src/c3/`。C3 只通过 `StorageCoordinator` / `RecoveryFacade` 访问 SQLite，不得另建 writer 或通用 Repository。`ReportArchiveService` 拥有 `report_archive` 读写与过期删除。
+- `collector_loop_tick` 在 `apply_tick_result` 之后调用 `archive_tick`。`ReportService::run` 不得持 `Mutex<AppFacade>`。每 tick 最多 1 份档案。临时 snapshot 必须打开独立目录（`data_dir/archive-tick`），不得 `ReportSnapshotStore::open(data_dir)`，否则 `cleanup_orphans` 会删掉门面仍有效的 spool token。
+- Recovery Shell 与 shutdown 跳过档案调度，不初始化 `ReportArchiveService` 循环。
 - C4 代码位于 `residential-monitor/src-tauri/src/c4/`。`AlertEngine` 拥有告警状态机；周期用量只调用 `ReportService`；通知只经 `NotificationSink`。C4 不得另建 writer 或第二套小时 / 日 / 月聚合。
 - C5 代码位于 `residential-monitor/src-tauri/src/c5/`。只做发布硬化：关于页、删除、VACUUM、故障矩阵、并发 fixture、供应链与 C0 基线核验。不得改写 C1 核算、C3 报告 / retention / backup 或 C4 告警语义。
 - Recovery Shell：`restoreAvailable` 为 `true`。restore 不初始化 `ReportService`；失败必须保留当前可用库。

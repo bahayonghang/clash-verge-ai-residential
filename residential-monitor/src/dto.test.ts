@@ -4,6 +4,7 @@ import {
   decodeAlertCenter,
   decodeDeleteReport,
   decodeDiagnostics,
+  decodeReportArchivePage,
   decodeReportResult,
   decodeShellStatus
 } from "./dto";
@@ -85,5 +86,51 @@ describe("decodeShellStatus", () => {
   it("接受告警中心分页", () => {
     const decoded = decodeAlertCenter({ schemaVersion: 1, items: [], nextCursor: null });
     expect(decoded.items).toEqual([]);
+  });
+
+  it("拒绝缺少 schemaVersion 的档案页", () => {
+    expect(() => decodeReportArchivePage({ items: [] })).toThrow(/无效/);
+  });
+
+  it("拒绝缺少 items 的档案页", () => {
+    expect(() => decodeReportArchivePage({ schemaVersion: 1 })).toThrow(/无效/);
+  });
+
+  it("拒绝缺少 next 的档案页", () => {
+    expect(() => decodeReportArchivePage({ schemaVersion: 1, items: [] })).toThrow(/无效/);
+  });
+
+  it("拒绝缺少 archiveId 的档案项", () => {
+    expect(() =>
+      decodeReportArchivePage({
+        schemaVersion: 1,
+        items: [{ kind: "hour", status: "ok", rangeStartUtc: 1, rangeEndUtc: 2 }],
+        next: null
+      })
+    ).toThrow(/无效/);
+  });
+
+  it("接受档案分页", () => {
+    const decoded = decodeReportArchivePage({ schemaVersion: 1, items: [], next: null });
+    expect(decoded.items).toEqual([]);
+    expect(decoded.next).toBeNull();
+  });
+
+  it("接受含档案项的分页", () => {
+    const decoded = decodeReportArchivePage({
+      schemaVersion: 1,
+      items: [
+        {
+          archiveId: "a1",
+          kind: "day",
+          status: "ok",
+          rangeStartUtc: 1,
+          rangeEndUtc: 2
+        }
+      ],
+      next: "1|a1"
+    });
+    expect(decoded.items[0]?.archiveId).toBe("a1");
+    expect(decoded.next).toBe("1|a1");
   });
 });

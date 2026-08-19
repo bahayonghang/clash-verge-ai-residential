@@ -2,6 +2,7 @@
 //!
 //! 只通过 StorageCoordinator / RecoveryFacade 访问 SQLite，不另建 writer。
 
+pub mod archive;
 pub mod backup;
 pub mod export;
 pub mod query;
@@ -12,14 +13,15 @@ pub mod snapshot;
 pub mod space;
 pub mod sql;
 
+pub use archive::ReportArchiveService;
 pub use backup::BackupRestoreService;
 pub use export::{ExportService, ExportSpec};
 pub use query::{
-    local_day_bounds, local_month_bounds, plan_capability, timezone_offset_secs, validate_query,
-    CapabilityPlan, DrilldownCapability, ReportError, ReportQuery, ReportResult,
-    AUTO_DELETE_ENABLED, DIMENSION_RETAIN_DAYS, MAX_ACTIVE_TOKENS, MAX_SPOOL_BYTES,
-    MAX_TOKEN_BYTES, PAGE_DEADLINE_MS, RAW_RETAIN_DAYS_DEFAULT, RAW_RETAIN_DAYS_MAX,
-    REPORT_DEADLINE_MS, TOKEN_TTL_SECS,
+    default_auto_report_query, local_day_bounds, local_hour_bounds, local_month_bounds,
+    plan_capability, timezone_offset_secs, validate_query, CapabilityPlan, DrilldownCapability,
+    ReportError, ReportQuery, ReportResult, AUTO_DELETE_ENABLED, DIMENSION_RETAIN_DAYS,
+    MAX_ACTIVE_TOKENS, MAX_SPOOL_BYTES, MAX_TOKEN_BYTES, PAGE_DEADLINE_MS, RAW_RETAIN_DAYS_DEFAULT,
+    RAW_RETAIN_DAYS_MAX, REPORT_DEADLINE_MS, TOKEN_TTL_SECS,
 };
 pub use retention::RetentionService;
 pub use service::ReportService;
@@ -32,6 +34,7 @@ pub fn c3_owners() -> &'static [&'static str] {
         "StorageCoordinator",
         "RecoveryFacade",
         "ReportService",
+        "ReportArchiveService",
         "ReportSnapshotStore",
         "ExportService",
         "RetentionService",
