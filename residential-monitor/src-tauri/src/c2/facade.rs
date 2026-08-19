@@ -6,14 +6,15 @@ use crate::c2::close::{CloseRegistry, CloseState, ControlResult};
 use crate::c2::contract::SCHEMA_VERSION;
 use crate::c2::desktop::{DesktopRuntime, FakeAutostart, InstanceClaim, LaunchMode, ShutdownPhase};
 use crate::c2::hub::{health_from, LiveOverview, MonitorHub, MonitorStreamMessage};
-use crate::c2::query::{query_connections, ConnectionPage, ConnectionQuery};
+use crate::c2::query::{ConnectionPage, ConnectionQuery};
 use crate::c2::settings::{
     validate_targets, ControllerSettings, SettingsError, SettingsWorkflow, WizardState,
 };
 use crate::c2::shell::{
-    default_routes, recovery_status, validate_backup, BootBranch, FakeFileDialog, FileMode,
+    default_routes_for, recovery_status, validate_backup, BootBranch, FakeFileDialog, FileMode,
     FilePurpose, OperationProgress, OperationRegistry, RecoveryStatus, RouteDescriptor,
 };
+use crate::i18n::{t, UiLocale, SETTING_KEY};
 use crate::c3::backup::BackupRestoreService;
 use crate::c3::export::{ExportPreview, ExportService, ExportSpec};
 use crate::c3::query::{ReportError, ReportQuery, ReportResult, RAW_RETAIN_DAYS_DEFAULT};
@@ -54,58 +55,74 @@ pub struct ProbeResult {
 
 impl AppErrorDto {
     pub fn from_settings(error: SettingsError) -> Self {
+        Self::from_settings_locale(error, UiLocale::Zh)
+    }
+
+    pub fn from_settings_locale(error: SettingsError, locale: UiLocale) -> Self {
         Self {
             code: error.code().into(),
-            message_zh: error.message_zh().into(),
+            message_zh: error.message(locale).into(),
             retryable: matches!(
                 error,
                 SettingsError::ProbeFailed | SettingsError::Unavailable
             ),
-            action: "检查控制器或凭据后重试".into(),
+            action: t(locale, "settings.check_controller").into(),
             details_redacted: error.code().into(),
         }
     }
 
     pub fn from_status(status: SessionStatus) -> Self {
+        Self::from_status_locale(status, UiLocale::Zh)
+    }
+
+    pub fn from_status_locale(status: SessionStatus, locale: UiLocale) -> Self {
         let code = crate::c2::hub::session_status_name(status);
         Self {
             code: code.clone(),
-            message_zh: status_message_zh(status).into(),
+            message_zh: status_message(status, locale).into(),
             retryable: !matches!(
                 status,
                 SessionStatus::NonLoopback | SessionStatus::ProtocolIncompatible
             ),
-            action: status_action_zh(status).into(),
+            action: status_action(status, locale).into(),
             details_redacted: code,
         }
     }
 }
 
+pub fn status_message(status: SessionStatus, locale: UiLocale) -> &'static str {
+    let key = match status {
+        SessionStatus::Connecting => "session.connecting",
+        SessionStatus::Connected => "session.connected",
+        SessionStatus::AuthFailed => "session.auth_failed",
+        SessionStatus::PipeAccessDenied => "session.pipe_access_denied",
+        SessionStatus::PipeBusyTimeout => "session.pipe_busy_timeout",
+        SessionStatus::EndpointMissing => "session.endpoint_missing",
+        SessionStatus::ProtocolIncompatible => "session.protocol_incompatible",
+        SessionStatus::PidMismatch => "session.pid_mismatch",
+        SessionStatus::CoreRestarted => "session.core_restarted",
+        SessionStatus::Cancelled => "session.cancelled",
+        SessionStatus::NonLoopback => "session.non_loopback",
+    };
+    t(locale, key)
+}
+
 pub fn status_message_zh(status: SessionStatus) -> &'static str {
-    match status {
-        SessionStatus::Connecting => "正在连接控制器。",
-        SessionStatus::Connected => "已连接。",
-        SessionStatus::AuthFailed => "TCP 鉴权失败。",
-        SessionStatus::PipeAccessDenied => "管道访问被拒绝。",
-        SessionStatus::PipeBusyTimeout => "管道忙超时。",
-        SessionStatus::EndpointMissing => "控制器端点不存在。",
-        SessionStatus::ProtocolIncompatible => "协议不兼容，请改用 TCP。",
-        SessionStatus::PidMismatch => "管道进程身份不匹配。",
-        SessionStatus::CoreRestarted => "核心已重启。",
-        SessionStatus::Cancelled => "操作已取消。",
-        SessionStatus::NonLoopback => "拒绝非回环地址。",
-    }
+    status_message(status, UiLocale::Zh)
+}
+
+pub fn status_action(status: SessionStatus, locale: UiLocale) -> &'static str {
+    let key = match status {
+        SessionStatus::AuthFailed => "action.check_secret",
+        SessionStatus::PipeAccessDenied | SessionStatus::ProtocolIncompatible => "action.enable_tcp",
+        SessionStatus::EndpointMissing => "action.check_address",
+        _ => "action.retry_connect",
+    };
+    t(locale, key)
 }
 
 pub fn status_action_zh(status: SessionStatus) -> &'static str {
-    match status {
-        SessionStatus::AuthFailed => "检查本机 secret 后重试",
-        SessionStatus::PipeAccessDenied | SessionStatus::ProtocolIncompatible => {
-            "启用 TCP External Controller"
-        }
-        SessionStatus::EndpointMissing => "检查控制器地址或重新发现",
-        _ => "重试连接",
-    }
+    status_action(status, UiLocale::Zh)
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -119,6 +136,7 @@ pub struct BootstrapDto {
     pub wizard_complete: bool,
     pub recovery: Option<RecoveryStatus>,
     pub launch_mode: LaunchMode,
+    pub ui_locale: UiLocale,
 }
 
 pub struct AppFacade {
@@ -148,6 +166,7 @@ pub struct AppFacade {
     pub bundle_seq: u64,
     pub last_frame_utc: Option<i64>,
     pub last_period_eval_utc: i64,
+    pub ui_locale: UiLocale,
 }
 
 impl AppFacade {
@@ -169,6 +188,13 @@ impl AppFacade {
                     .flatten()
                     .as_deref()
                     == Some("1");
+                let ui_locale = UiLocale::parse(
+                    storage
+                        .get_setting(SETTING_KEY)
+                        .ok()
+                        .flatten()
+                        .as_deref(),
+                );
                 let mut engine = AccountingEngine::new();
                 if let Ok((_, targets)) = storage.load_targets() {
                     if !targets.is_empty() {
@@ -211,6 +237,7 @@ impl AppFacade {
                     bundle_seq: 1,
                     last_frame_utc: None,
                     last_period_eval_utc: 0,
+                    ui_locale,
                 }
             }
             Err(_) => Self {
@@ -240,32 +267,48 @@ impl AppFacade {
                 bundle_seq: 1,
                 last_frame_utc: None,
                 last_period_eval_utc: 0,
+                ui_locale: UiLocale::Zh,
             },
         }
     }
 
     pub fn bootstrap(&self) -> Result<BootstrapDto, AppErrorDto> {
         let recovery = if self.branch == BootBranch::RecoveryOnly {
-            Some(recovery_status(&self.recovery).map_err(|_| AppErrorDto {
-                code: "recovery_status".into(),
-                message_zh: "无法读取恢复诊断。".into(),
-                retryable: true,
-                action: "打开数据目录检查文件".into(),
-                details_redacted: "recovery".into(),
-            })?)
+            Some(recovery_status(&self.recovery).map_err(|_| self.err(
+                "recovery_status",
+                "error.recovery_status",
+                "action.open_data_dir",
+                true,
+            ))?)
         } else {
             None
         };
         Ok(BootstrapDto {
             schema_version: SCHEMA_VERSION,
             branch: self.branch,
-            routes: default_routes(),
+            routes: default_routes_for(self.ui_locale),
             overview: self.hub.overview(),
             settings: self.settings.clone(),
             wizard_complete: self.wizard_complete,
             recovery,
             launch_mode: self.desktop.launch_mode,
+            ui_locale: self.ui_locale,
         })
+    }
+
+    pub fn err(&self, code: &str, message_key: &str, action_key: &str, retryable: bool) -> AppErrorDto {
+        localized_error(self.ui_locale, code, message_key, action_key, retryable)
+    }
+
+    pub fn save_ui_locale(&mut self, raw: &str) -> Result<UiLocale, AppErrorDto> {
+        let locale = UiLocale::parse(Some(raw));
+        if let Some(storage) = &self.storage {
+            storage
+                .put_setting(SETTING_KEY, locale.as_str())
+                .map_err(|_| self.err("storage", "error.locale", "action.check_disk", true))?;
+        }
+        self.ui_locale = locale;
+        Ok(locale)
     }
 
     pub fn subscribe(&self) -> MonitorStreamMessage {
@@ -424,14 +467,20 @@ impl AppFacade {
             self.last_frame_utc = Some(utc);
             let token = format!("lease-{}", self.bundle_seq);
             if let Some(storage) = self.storage.as_mut() {
-                let _ = crate::c4::outbox::scan_once(storage, &mut self.notify, utc, &token);
+                let _ = crate::c4::outbox::scan_once(
+                    storage,
+                    &mut self.notify,
+                    utc,
+                    &token,
+                    self.ui_locale,
+                );
             }
         }
     }
 
     pub fn query(&self, query: &ConnectionQuery) -> ConnectionPage {
         let rows = self.hub.rows();
-        query_connections(&rows, query)
+        crate::c2::query::query_connections_with_targets(&rows, query, self.engine.targets())
     }
 
     pub fn accept_close(&mut self, identity: String, request_id: String) -> CloseState {
@@ -450,41 +499,26 @@ impl AppFacade {
     }
 
     pub fn persist_settings(&mut self) -> Result<(), AppErrorDto> {
-        let storage = self.storage.as_ref().ok_or_else(|| AppErrorDto {
-            code: "recovery_only".into(),
-            message_zh: "当前处于恢复模式，不能保存设置。".into(),
-            retryable: false,
-            action: "先修复数据库".into(),
-            details_redacted: "recovery".into(),
+        let storage = self.storage.as_ref().ok_or_else(|| {
+            self.err(
+                "recovery_only",
+                "error.recovery_only",
+                "action.fix_db",
+                false,
+            )
         })?;
-        let encoded = serde_json::to_string(&self.settings).map_err(|_| AppErrorDto {
-            code: "encode".into(),
-            message_zh: "设置编码失败。".into(),
-            retryable: false,
-            action: "重试".into(),
-            details_redacted: "encode".into(),
+        let encoded = serde_json::to_string(&self.settings).map_err(|_| {
+            self.err("encode", "error.encode", "action.retry", false)
         })?;
         storage
             .put_setting("controller", &encoded)
-            .map_err(|_| AppErrorDto {
-                code: "storage".into(),
-                message_zh: "设置写入失败。".into(),
-                retryable: true,
-                action: "检查磁盘后重试".into(),
-                details_redacted: "storage".into(),
-            })?;
+            .map_err(|_| self.err("storage", "error.storage", "action.check_disk", true))?;
         storage
             .put_setting(
                 "wizard_complete",
                 if self.wizard_complete { "1" } else { "0" },
             )
-            .map_err(|_| AppErrorDto {
-                code: "storage".into(),
-                message_zh: "向导状态写入失败。".into(),
-                retryable: true,
-                action: "检查磁盘后重试".into(),
-                details_redacted: "storage".into(),
-            })?;
+            .map_err(|_| self.err("storage", "error.wizard", "action.check_disk", true))?;
         Ok(())
     }
 
@@ -504,7 +538,7 @@ impl AppFacade {
                 session_only,
                 probe_ok,
             )
-            .map_err(AppErrorDto::from_settings)?;
+            .map_err(|error| AppErrorDto::from_settings_locale(error, self.ui_locale))?;
         self.settings = next.clone();
         self.session.endpoint = address;
         self.persist_settings()?;
@@ -522,7 +556,7 @@ impl AppFacade {
                 &self.settings.credential_target,
                 &self.settings.secret_mode,
             )
-            .map_err(AppErrorDto::from_settings)?;
+            .map_err(|error| AppErrorDto::from_settings_locale(error, self.ui_locale))?;
         Ok(Some(
             String::from_utf8_lossy(secret.as_header_bytes()).into_owned(),
         ))
@@ -574,28 +608,30 @@ impl AppFacade {
     }
 
     pub fn probe_result(status: SessionStatus) -> ProbeResult {
+        Self::probe_result_locale(status, UiLocale::Zh)
+    }
+
+    pub fn probe_result_locale(status: SessionStatus, locale: UiLocale) -> ProbeResult {
         ProbeResult {
             status: crate::c2::hub::session_status_name(status),
-            message_zh: status_message_zh(status).into(),
-            action: status_action_zh(status).into(),
+            message_zh: status_message(status, locale).into(),
+            action: status_action(status, locale).into(),
         }
     }
 
     pub fn save_targets(&mut self, targets: Vec<String>) -> Result<u32, AppErrorDto> {
-        validate_targets(&targets).map_err(AppErrorDto::from_settings)?;
-        let storage = self.storage.as_ref().ok_or_else(|| AppErrorDto {
-            code: "recovery_only".into(),
-            message_zh: "恢复模式不能保存目标。".into(),
-            retryable: false,
-            action: "先修复数据库".into(),
-            details_redacted: "recovery".into(),
+        validate_targets(&targets)
+            .map_err(|error| AppErrorDto::from_settings_locale(error, self.ui_locale))?;
+        let storage = self.storage.as_ref().ok_or_else(|| {
+            self.err(
+                "recovery_only",
+                "error.recovery_only_targets",
+                "action.fix_db",
+                false,
+            )
         })?;
-        let version = storage.save_targets(&targets).map_err(|_| AppErrorDto {
-            code: "storage".into(),
-            message_zh: "目标写入失败。".into(),
-            retryable: true,
-            action: "检查磁盘后重试".into(),
-            details_redacted: "storage".into(),
+        let version = storage.save_targets(&targets).map_err(|_| {
+            self.err("storage", "error.targets", "action.check_disk", true)
         })?;
         self.engine.set_targets(targets);
         Ok(version)
@@ -607,22 +643,24 @@ impl AppFacade {
     }
 
     pub fn recovery(&self) -> Result<RecoveryStatus, AppErrorDto> {
-        recovery_status(&self.recovery).map_err(|_| AppErrorDto {
-            code: "recovery_status".into(),
-            message_zh: "无法读取恢复诊断。".into(),
-            retryable: true,
-            action: "打开数据目录".into(),
-            details_redacted: "recovery".into(),
+        recovery_status(&self.recovery).map_err(|_| {
+            self.err(
+                "recovery_status",
+                "error.recovery_status",
+                "action.open_data_dir_short",
+                true,
+            )
         })
     }
 
     pub fn validate_candidate(&self, path: &Path) -> Result<bool, AppErrorDto> {
-        validate_backup(&self.recovery, path).map_err(|_| AppErrorDto {
-            code: "validate_backup".into(),
-            message_zh: "候选备份无效。".into(),
-            retryable: false,
-            action: "选择其他备份".into(),
-            details_redacted: "backup".into(),
+        validate_backup(&self.recovery, path).map_err(|_| {
+            self.err(
+                "validate_backup",
+                "error.invalid_backup",
+                "action.other_backup",
+                false,
+            )
         })
     }
 
@@ -688,7 +726,9 @@ impl AppFacade {
     ) -> Result<String, AppErrorDto> {
         let result = self.get_report(token)?;
         let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        ExportService::export_to_path(&result, spec, dest, &self.space, &cancel)
+        let mut spec = spec.clone();
+        spec.ui_locale = self.ui_locale;
+        ExportService::export_to_path(&result, &spec, dest, &self.space, &cancel)
             .map(|path| path.to_string_lossy().into_owned())
             .map_err(map_report)
     }
@@ -724,12 +764,8 @@ impl AppFacade {
 
     pub fn list_alert_rules(&self) -> Result<Vec<AlertRule>, AppErrorDto> {
         let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
-        crate::c4::store::load_rules(storage.connection()).map_err(|_| AppErrorDto {
-            code: "storage".into(),
-            message_zh: "无法读取告警规则。".into(),
-            retryable: true,
-            action: "检查磁盘后重试".into(),
-            details_redacted: "alert".into(),
+        crate::c4::store::load_rules(storage.connection()).map_err(|_| {
+            self.err("storage", "error.alert_rules", "action.check_disk", true)
         })
     }
 
@@ -752,13 +788,10 @@ impl AppFacade {
                 action: error.action_zh().into(),
                 details_redacted: error.code().into(),
             })?;
+        let locale = self.ui_locale;
         let storage = self.storage.as_mut().ok_or_else(recovery_only)?;
-        crate::c4::store::upsert_rule(storage.connection(), &rule).map_err(|_| AppErrorDto {
-            code: "storage".into(),
-            message_zh: "规则写入失败。".into(),
-            retryable: true,
-            action: "检查磁盘后重试".into(),
-            details_redacted: "alert".into(),
+        crate::c4::store::upsert_rule(storage.connection(), &rule).map_err(|_| {
+            localized_error(locale, "storage", "error.alert_write", "action.check_disk", true)
         })?;
         if !writes.instances.is_empty() || !writes.events.is_empty() {
             let bundle = CommitBundle {
@@ -799,7 +832,7 @@ impl AppFacade {
         )
         .map_err(|_| AppErrorDto {
             code: "storage".into(),
-            message_zh: "无法读取告警中心。".into(),
+            message_zh: t(self.ui_locale, "error.alert_center").into(),
             retryable: true,
             action: "刷新后重试".into(),
             details_redacted: "alert".into(),
@@ -835,8 +868,8 @@ impl AppFacade {
     ) -> Result<crate::c4::notify::NotifyCapability, AppErrorDto> {
         let cap = self.notify.capability();
         let payload = NotifyPayload {
-            title_zh: "测试通知".into(),
-            body_zh: "这是测试通知，不会写入告警历史。".into(),
+            title_zh: t(self.ui_locale, "notify.test_title").into(),
+            body_zh: t(self.ui_locale, "notify.test_body").into(),
             event_id: "test-notify".into(),
             instance_id: None,
             test_only: true,
@@ -855,38 +888,28 @@ impl AppFacade {
             .coverage_kind
             .unwrap_or_else(|| "unknown".into());
         crate::c4::diagnose::collect(storage, self.session_status, self.last_frame_utc, &coverage)
-            .map_err(|_| AppErrorDto {
-                code: "diagnostics".into(),
-                message_zh: "诊断生成失败。采集未中断。".into(),
-                retryable: true,
-                action: "稍后重试".into(),
-                details_redacted: "diagnostics".into(),
-            })
+            .map_err(|_| self.err("diagnostics", "error.diagnostics", "action.retry_later", true))
     }
 
     pub fn export_diagnostics(&self, dest: &std::path::Path) -> Result<String, AppErrorDto> {
         let snap = self.get_diagnostics()?;
-        crate::c4::diagnose::export_atomic(&snap, dest).map_err(|_| AppErrorDto {
-            code: "diagnostics_export".into(),
-            message_zh: "诊断导出失败。采集与告警未回滚。".into(),
-            retryable: true,
-            action: "更换路径后重试".into(),
-            details_redacted: "diagnostics".into(),
+        crate::c4::diagnose::export_atomic(&snap, dest).map_err(|_| {
+            self.err(
+                "diagnostics_export",
+                "error.diagnostics_export",
+                "action.change_path",
+                true,
+            )
         })
     }
 
     pub fn scan_outbox(&mut self) -> Result<u32, AppErrorDto> {
         let now = chrono::Utc::now().timestamp();
         let token = format!("scan-{}", self.bundle_seq);
+        let locale = self.ui_locale;
         let storage = self.storage.as_mut().ok_or_else(recovery_only)?;
-        crate::c4::outbox::scan_once(storage, &mut self.notify, now, &token).map_err(|_| {
-            AppErrorDto {
-                code: "outbox".into(),
-                message_zh: "通知扫描失败。".into(),
-                retryable: true,
-                action: "稍后重试".into(),
-                details_redacted: "outbox".into(),
-            }
+        crate::c4::outbox::scan_once(storage, &mut self.notify, now, &token, locale).map_err(|_| {
+            localized_error(locale, "outbox", "error.outbox", "action.retry_later", true)
         })
     }
 
@@ -912,13 +935,12 @@ impl AppFacade {
                 self.branch = BootBranch::NormalReady;
                 Ok(())
             }
-            Err(_) => Err(AppErrorDto {
-                code: "restore_reopen".into(),
-                message_zh: "恢复后无法打开数据库，仍停留在 Recovery Shell。".into(),
-                retryable: true,
-                action: "检查备份后重试".into(),
-                details_redacted: "restore".into(),
-            }),
+            Err(_) => Err(self.err(
+                "restore_reopen",
+                "error.restore_reopen",
+                "action.check_backup",
+                true,
+            )),
         }
     }
 
@@ -989,35 +1011,63 @@ fn retain_live_rows(input: &ControllerInput) -> bool {
     )
 }
 
+fn localized_error(
+    locale: UiLocale,
+    code: &str,
+    message_key: &str,
+    action_key: &str,
+    retryable: bool,
+) -> AppErrorDto {
+    AppErrorDto {
+        code: code.into(),
+        message_zh: t(locale, message_key).into(),
+        retryable,
+        action: t(locale, action_key).into(),
+        details_redacted: code.into(),
+    }
+}
+
 fn recovery_only() -> AppErrorDto {
+    recovery_only_locale(UiLocale::Zh)
+}
+
+fn recovery_only_locale(locale: UiLocale) -> AppErrorDto {
     AppErrorDto {
         code: "recovery_only".into(),
-        message_zh: "恢复模式不能运行普通报告。".into(),
+        message_zh: t(locale, "error.recovery_only_report").into(),
         retryable: false,
-        action: "先恢复数据库".into(),
+        action: t(locale, "action.restore_db").into(),
         details_redacted: "recovery".into(),
     }
 }
 
 fn map_report(error: ReportError) -> AppErrorDto {
+    map_report_locale(error, UiLocale::Zh)
+}
+
+fn map_report_locale(error: ReportError, locale: UiLocale) -> AppErrorDto {
     AppErrorDto {
         code: error.code().into(),
-        message_zh: error.message_zh().into(),
+        message_zh: error.message(locale).into(),
         retryable: matches!(
             error,
             ReportError::StorageBusy(_) | ReportError::DeadlineExceeded(_)
         ),
-        action: error.action_zh().into(),
+        action: error.action(locale).into(),
         details_redacted: error.code().into(),
     }
 }
 
 pub fn parse_socket(address: &str) -> Result<SocketAddr, AppErrorDto> {
+    parse_socket_locale(address, UiLocale::Zh)
+}
+
+pub fn parse_socket_locale(address: &str, locale: UiLocale) -> Result<SocketAddr, AppErrorDto> {
     SocketAddr::from_str(address).map_err(|_| AppErrorDto {
         code: "invalid_address".into(),
-        message_zh: "控制器地址无效。".into(),
+        message_zh: t(locale, "error.invalid_address").into(),
         retryable: false,
-        action: "改用 127.0.0.1:端口".into(),
+        action: t(locale, "action.change_loopback").into(),
         details_redacted: "address".into(),
     })
 }
@@ -1056,6 +1106,27 @@ mod c2_facade_contract_tests {
             ]
         );
         let _ = LiveProjection::new();
+    }
+
+    #[test]
+    fn ui_locale_persists_and_falls_back_to_zh() {
+        let dir = tempdir().expect("dir");
+        let mut first = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(first.ui_locale, UiLocale::Zh);
+        assert_eq!(first.save_ui_locale("en").expect("save"), UiLocale::En);
+        drop(first);
+        let second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(second.ui_locale, UiLocale::En);
+        assert_eq!(
+            second.bootstrap().expect("boot").ui_locale,
+            UiLocale::En
+        );
+        drop(second);
+        let mut third = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(third.save_ui_locale("nope").expect("bad"), UiLocale::Zh);
+        drop(third);
+        let fourth = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(fourth.ui_locale, UiLocale::Zh);
     }
 
     #[test]
@@ -1156,6 +1227,7 @@ mod c2_close_control_tests {
                         network: Some("tcp".into()),
                         rule: None,
                         rule_payload: None,
+                        ..crate::controller::ConnectionMeta::default()
                     },
                 })
                 .collect(),
@@ -1207,7 +1279,7 @@ mod c2_close_control_tests {
 mod c2_peak_ui_tests {
     use super::*;
     use crate::c2::hub::LiveConnectionView;
-    use crate::c2::query::ConnectionFilter;
+    use crate::c2::query::{query_connections, ConnectionFilter};
     use std::time::Instant;
 
     fn row(index: u32, upload: u64) -> LiveConnectionView {
@@ -1231,6 +1303,7 @@ mod c2_peak_ui_tests {
             rule: None,
             rule_payload: None,
             chains: Vec::new(),
+            ..LiveConnectionView::default()
         }
     }
 
@@ -1309,6 +1382,7 @@ pub fn run_peak_ui_replay(frames: u32, active: u32) -> PeakUiReport {
                 rule: None,
                 rule_payload: None,
                 chains: Vec::new(),
+                ..crate::c2::hub::LiveConnectionView::default()
             })
             .collect();
         let batch = AccountingEngine::new().apply(
@@ -1323,7 +1397,7 @@ pub fn run_peak_ui_replay(frames: u32, active: u32) -> PeakUiReport {
             health_from(SessionStatus::Connected, None),
             i64::from(frame),
         );
-        let _ = query_connections(&hub.rows(), &ConnectionQuery::default());
+        let _ = crate::c2::query::query_connections(&hub.rows(), &ConnectionQuery::default());
         latencies.push(started.elapsed().as_secs_f64() * 1000.0);
     }
     latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());

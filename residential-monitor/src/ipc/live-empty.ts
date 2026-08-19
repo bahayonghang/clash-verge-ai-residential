@@ -1,3 +1,5 @@
+import { t, type UiLocale } from "../i18n";
+
 export type LiveEmptyKind =
   | "unconfigured"
   | "disconnected"
@@ -61,16 +63,16 @@ export function liveEmptyKind(input: LiveEmptyInput): LiveEmptyKind {
   return "connectedEmpty";
 }
 
-export function liveEmptyCopy(kind: LiveEmptyKind): string | null {
+export function liveEmptyCopy(kind: LiveEmptyKind, locale: UiLocale = "zh"): string | null {
   switch (kind) {
     case "unconfigured":
-      return "尚未配置控制器。请到设置页填写回环地址并测试连接。";
+      return t(locale, "live.empty.unconfigured");
     case "paused":
-      return "采集已暂停。可在托盘选择继续采集。";
+      return t(locale, "live.empty.paused");
     case "connectedEmpty":
-      return "当前没有活跃连接";
+      return t(locale, "live.empty.connected");
     case "needResync":
-      return "实时序号出现缺口或协议不兼容，已停止应用增量。请重新订阅或重载窗口。";
+      return t(locale, "live.empty.resync");
     case "disconnected":
     case "hasRows":
       return null;

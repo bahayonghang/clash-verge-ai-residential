@@ -105,6 +105,7 @@ mod subscription_forward_tests {
             rule: None,
             rule_payload: None,
             chains: Vec::new(),
+            ..LiveConnectionView::default()
         }
     }
 

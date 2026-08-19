@@ -4,6 +4,7 @@
 - 每条 Channel 消息必须检查 `schemaVersion`、`kind` 和单调 `seq`。
 - 禁止把 mihomo 原始 JSON 或 SQL 行传到视图层。
 - 时间展示用用户本地时区；持久时间保持 UTC integer。
+- `BootstrapDto.uiLocale` 缺字段时按 `zh`。`messageZh` 字段名保持不变，内容为当前语言。
 
 ## Scenario: C2 Monitor Channel
 

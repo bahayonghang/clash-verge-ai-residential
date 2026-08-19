@@ -17,7 +17,9 @@ describe("live-session", () => {
       process: null,
       rule: null,
       chain: null,
-      network: null
+      network: null,
+      residentialOnly: true,
+      clauses: []
     });
   });
 

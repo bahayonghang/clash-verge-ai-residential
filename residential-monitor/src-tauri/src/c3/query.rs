@@ -58,32 +58,48 @@ impl ReportError {
         }
     }
 
-    pub fn message_zh(&self) -> &'static str {
+    pub fn message_key(&self) -> &'static str {
         match self {
-            Self::InvalidQuery(_) => "查询参数无效。",
-            Self::CapabilityUnsupported(_) => "当前数据层不支持该查询。",
-            Self::Cancelled(_) => "查询已取消。",
-            Self::DeadlineExceeded(_) => "查询超过时限。",
-            Self::TokenExpired(_) => "报告快照已过期，请重新运行。",
-            Self::QuotaExceeded(_) => "报告快照配额已满。",
-            Self::StorageBusy(_) => "存储正忙。",
-            Self::InsufficientSpace(_) => "磁盘空间不足，已停止。",
-            Self::Failed(_) => "存储失败。",
+            Self::InvalidQuery(_) => "report.invalid_query",
+            Self::CapabilityUnsupported(_) => "report.capability_unsupported",
+            Self::Cancelled(_) => "report.cancelled",
+            Self::DeadlineExceeded(_) => "report.deadline_exceeded",
+            Self::TokenExpired(_) => "report.token_expired",
+            Self::QuotaExceeded(_) => "report.quota_exceeded",
+            Self::StorageBusy(_) => "report.storage_busy",
+            Self::InsufficientSpace(_) => "report.insufficient_space",
+            Self::Failed(_) => "report.failed",
         }
     }
 
-    pub fn action_zh(&self) -> &'static str {
+    pub fn action_key(&self) -> &'static str {
         match self {
-            Self::InvalidQuery(_) => "检查时间范围、维度和分页",
-            Self::CapabilityUnsupported(_) => "缩小范围或改用支持的维度",
-            Self::Cancelled(_) => "可重新运行报告",
-            Self::DeadlineExceeded(_) => "缩小范围后重试",
-            Self::TokenExpired(_) => "重新运行报告",
-            Self::QuotaExceeded(_) => "释放旧报告后再试",
-            Self::StorageBusy(_) => "等待写入完成后再试",
-            Self::InsufficientSpace(_) => "清理磁盘后重试",
-            Self::Failed(_) => "打开数据管理检查磁盘",
+            Self::InvalidQuery(_) => "report.action.invalid_query",
+            Self::CapabilityUnsupported(_) => "report.action.capability_unsupported",
+            Self::Cancelled(_) => "report.action.cancelled",
+            Self::DeadlineExceeded(_) => "report.action.deadline_exceeded",
+            Self::TokenExpired(_) => "report.action.token_expired",
+            Self::QuotaExceeded(_) => "report.action.quota_exceeded",
+            Self::StorageBusy(_) => "report.action.storage_busy",
+            Self::InsufficientSpace(_) => "report.action.insufficient_space",
+            Self::Failed(_) => "report.action.failed",
         }
+    }
+
+    pub fn message(&self, locale: crate::i18n::UiLocale) -> &'static str {
+        crate::i18n::t(locale, self.message_key())
+    }
+
+    pub fn action(&self, locale: crate::i18n::UiLocale) -> &'static str {
+        crate::i18n::t(locale, self.action_key())
+    }
+
+    pub fn message_zh(&self) -> &'static str {
+        self.message(crate::i18n::UiLocale::Zh)
+    }
+
+    pub fn action_zh(&self) -> &'static str {
+        self.action(crate::i18n::UiLocale::Zh)
     }
 }
 

@@ -99,6 +99,10 @@ impl AccountingEngine {
                     process_name: connection.meta.process_name.clone(),
                     process_path: connection.meta.process_path.clone(),
                     network: connection.meta.network.clone(),
+                    inbound: connection.meta.inbound.clone(),
+                    source_port: connection.meta.source_port.clone(),
+                    destination_port: connection.meta.destination_port.clone(),
+                    start: connection.meta.start.clone(),
                     rule: connection.meta.rule.clone(),
                     rule_payload: connection.meta.rule_payload.clone(),
                     chains: connection.chains.clone(),
@@ -339,6 +343,7 @@ mod accounting_replay_tests {
                 network: Some("tcp".into()),
                 rule: None,
                 rule_payload: None,
+                ..ConnectionMeta::default()
             },
         }
     }
@@ -409,6 +414,7 @@ mod accounting_properties_tests {
                 network: None,
                 rule: None,
                 rule_payload: None,
+                ..ConnectionMeta::default()
             },
         };
         engine.apply(
@@ -496,6 +502,7 @@ mod accounting_policy_tests {
                 network: None,
                 rule: None,
                 rule_payload: None,
+                ..ConnectionMeta::default()
             },
         };
         for engine in [&mut left, &mut right] {

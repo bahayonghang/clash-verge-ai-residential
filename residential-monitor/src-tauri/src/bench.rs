@@ -226,6 +226,7 @@ pub fn replay_c1(
                     network: Some("tcp".into()),
                     rule: None,
                     rule_payload: None,
+                    ..crate::controller::ConnectionMeta::default()
                 },
             })
             .collect();

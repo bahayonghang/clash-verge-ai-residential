@@ -4,6 +4,12 @@ import type { LiveConnectionView } from "../dto";
 /** 与 C2 `LIST_PAGE_DEFAULT` 对齐。 */
 export const LIST_PAGE_DEFAULT = 200;
 
+export interface LiveFilterClause {
+  field: string;
+  mode: "exact" | "contains";
+  value: string;
+}
+
 export interface LiveConnectionQuery {
   filter: {
     category: string | null;
@@ -12,6 +18,8 @@ export interface LiveConnectionQuery {
     rule: string | null;
     chain: string | null;
     network: string | null;
+    residentialOnly: boolean;
+    clauses: LiveFilterClause[];
   };
   sortField: string;
   descending: boolean;
@@ -44,7 +52,9 @@ export function defaultLiveQuery(): LiveConnectionQuery {
       process: null,
       rule: null,
       chain: null,
-      network: null
+      network: null,
+      residentialOnly: true,
+      clauses: []
     },
     sortField: "identity",
     descending: false,
@@ -76,8 +86,10 @@ export async function resyncMonitor(
   return invoke<number>("resync_monitor", { subscriptionId, onEvent: channel });
 }
 
-export async function queryLiveConnections(): Promise<LiveConnectionPage> {
-  const raw = await invoke<unknown>("query_live_connections", { query: defaultLiveQuery() });
+export async function queryLiveConnections(
+  query: LiveConnectionQuery = defaultLiveQuery()
+): Promise<LiveConnectionPage> {
+  const raw = await invoke<unknown>("query_live_connections", { query });
   if (!raw || typeof raw !== "object" || !Array.isArray((raw as { rows?: unknown }).rows)) {
     throw new Error("连接页无效");
   }

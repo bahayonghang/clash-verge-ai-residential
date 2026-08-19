@@ -123,6 +123,10 @@ export function decodeMonitorMessage(value: unknown): MonitorStreamMessage {
         processName: item.processName == null ? null : String(item.processName),
         processPath: item.processPath == null ? null : String(item.processPath),
         network: item.network == null ? null : String(item.network),
+        inbound: item.inbound == null ? null : String(item.inbound),
+        sourcePort: item.sourcePort == null ? null : String(item.sourcePort),
+        destinationPort: item.destinationPort == null ? null : String(item.destinationPort),
+        start: item.start == null ? null : String(item.start),
         rule: item.rule == null ? null : String(item.rule),
         rulePayload: item.rulePayload == null ? null : String(item.rulePayload),
         chains: Array.isArray(item.chains) ? item.chains.map((node) => String(node)) : []

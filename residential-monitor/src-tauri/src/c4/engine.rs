@@ -857,6 +857,7 @@ mod alert_engine_tests {
             rule: None,
             rule_payload: None,
             chains: vec!["家宽".into()],
+            ..LiveConnectionView::default()
         }]
     }
 

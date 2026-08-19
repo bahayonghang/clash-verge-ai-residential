@@ -264,6 +264,25 @@ select:focus-visible,
   padding: 0.25rem 0.55rem;
 }
 
+.live-table {
+  display: block;
+  overflow-x: auto;
+}
+
+.live-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.65rem 0;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
 .status {
   color: var(--ink);
 }

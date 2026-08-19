@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { HEALTH_KEYS, healthTitle } from "../i18n";
 import { BRAND_MARK, ROUTE_ICONS } from "../nav-icons";
 
 const routes = [
@@ -47,23 +48,10 @@ describe("发布硬化状态", () => {
       "migration_failed",
       "no_data"
     ];
-    const titles: Record<string, string> = {
-      connecting: "正在连接控制器",
-      connected: "已连接",
-      disconnected: "控制器已断开",
-      tcp_unauthorized: "TCP 鉴权失败",
-      pipe_access_denied: "管道访问被拒绝",
-      pipe_busy_timeout: "管道忙超时",
-      protocol_incompatible: "协议不兼容",
-      storage_failure: "存储故障",
-      coverage_gap: "存在采集缺口",
-      capability_expired: "数据能力已过期",
-      notification_unavailable: "系统通知不可用",
-      migration_failed: "迁移失败",
-      no_data: "暂无采样"
-    };
     for (const key of required) {
-      expect(titles[key].length).toBeGreaterThan(0);
+      expect(HEALTH_KEYS).toContain(key);
+      expect(healthTitle("zh", key).length).toBeGreaterThan(0);
+      expect(healthTitle("en", key)).not.toBe(healthTitle("zh", key));
     }
   });
 });

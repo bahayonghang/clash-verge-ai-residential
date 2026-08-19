@@ -24,12 +24,16 @@ import {
 } from "./dto";
 import { decodeMonitorMessage } from "./ipc/decoder";
 import { liveEmptyCopy, liveEmptyKind } from "./ipc/live-empty";
+import { displayLiveRow } from "./format/live-row";
 import {
+  defaultLiveQuery,
   fetchTraySummary,
   isTauriRuntime,
   queryLiveConnections,
   resyncMonitor,
-  subscribeMonitor
+  subscribeMonitor,
+  type LiveConnectionQuery,
+  type LiveFilterClause
 } from "./ipc/live-session";
 import { applySecretField, secretFieldMarkup } from "./ipc/secret-field";
 import {
@@ -39,64 +43,77 @@ import {
   type MonitorState
 } from "./ipc/reducer";
 import { formatBytes, formatUtc, unknownOr } from "./format/units";
+import { healthAction, healthTitle, parseUiLocale, t, type UiLocale } from "./i18n";
 import { BRAND_MARK, ROUTE_ICONS } from "./nav-icons";
 
-const HEALTH_ZH: Record<string, { title: string; action: string }> = {
-  connecting: { title: "正在连接控制器", action: "等待连接完成" },
-  connected: { title: "已连接", action: "无需操作" },
-  disconnected: { title: "控制器已断开", action: "检查 Verge / mihomo 后立即重连" },
-  tcp_unauthorized: { title: "TCP 鉴权失败", action: "检查 secret 后重试" },
-  pipe_access_denied: { title: "管道访问被拒绝", action: "改用 TCP External Controller" },
-  pipe_busy_timeout: { title: "管道忙超时", action: "稍后重试或改用 TCP" },
-  endpoint_missing: { title: "控制器端点不存在", action: "检查地址或重新发现" },
-  protocol_incompatible: { title: "协议不兼容", action: "启用 TCP External Controller" },
-  pid_mismatch: { title: "管道进程身份不匹配", action: "重新发现后改用 TCP" },
-  core_restarted: { title: "核心已重启", action: "等待重新建立会话" },
-  cancelled: { title: "操作已取消", action: "可立即重连" },
-  non_loopback: { title: "拒绝非回环地址", action: "改为 127.0.0.1" },
-  storage_failure: { title: "存储故障", action: "打开恢复界面检查磁盘" },
-  storage_backpressure: { title: "存储背压", action: "等待写入恢复；缺口不是零" },
-  sleeping_or_clock_gap: { title: "睡眠或时钟缺口", action: "恢复后核对覆盖区间" },
-  paused: { title: "采集已暂停", action: "在托盘选择继续采集" },
-  coverage_gap: { title: "存在采集缺口", action: "查看覆盖原因，勿把缺口当零" },
-  capability_expired: { title: "数据能力已过期", action: "缩小范围或改用支持的维度" },
-  notification_unavailable: { title: "系统通知不可用", action: "应用内告警仍完整" },
-  migration_failed: { title: "迁移失败", action: "使用 Recovery Shell 恢复备份" },
-  restore_failed: { title: "恢复失败", action: "当前可用库未覆盖" },
-  no_data: { title: "暂无采样", action: "确认采集已启动" }
-};
+let uiLocale: UiLocale = "zh";
+let liveQuery: LiveConnectionQuery = defaultLiveQuery();
+
+const FILTER_FIELDS = ["host", "chain", "rule", "process", "source", "destination", "type"] as const;
+
+function tx(key: string): string {
+  return t(uiLocale, key);
+}
+
+function fmt(key: string, vars: Record<string, string | number>): string {
+  let text = tx(key);
+  for (const [name, value] of Object.entries(vars)) {
+    text = text.replaceAll(`{${name}}`, String(value));
+  }
+  return text;
+}
+
+function unknownLabel(): string {
+  return tx("common.unknown");
+}
+
+function applyLocale(locale: UiLocale): void {
+  uiLocale = locale;
+}
+
+function localizeRoutes(routes: BootstrapDto["routes"]): BootstrapDto["routes"] {
+  return routes.map((route) => ({
+    ...route,
+    titleZh: t(uiLocale, `route.${route.id}`)
+  }));
+}
+
+function healthOf(session: string): { title: string; action: string } {
+  const title = healthTitle(uiLocale, session);
+  if (title === `health.${session}`) {
+    return { title: session, action: tx("health.view_diag") };
+  }
+  return { title, action: healthAction(uiLocale, session) };
+}
 
 function metric(label: string, value: number | null): string {
-  return `<div class="metric"><span>${label}</span><strong>${formatBytes(value)}</strong></div>`;
+  return `<div class="metric"><span>${label}</span><strong>${formatBytes(value, unknownLabel())}</strong></div>`;
 }
 
 function renderOverview(overview: LiveOverview): string {
-  const health = HEALTH_ZH[overview.health.session] ?? {
-    title: overview.health.session,
-    action: "查看诊断"
-  };
+  const health = healthOf(overview.health.session);
   const categories = Object.keys(overview.categoryUpload)
-    .map((name) => `<li>${name}：${formatBytes(overview.categoryUpload[name] ?? null)}</li>`)
+    .map((name) => `<li>${name}：${formatBytes(overview.categoryUpload[name] ?? null, unknownLabel())}</li>`)
     .join("");
   const coverage = overview.coverageKind
-    ? `<p class="gap">覆盖：${overview.coverageKind} / ${unknownOr(overview.coverageReason)}。缺口不显示为零。</p>`
-    : `<p>覆盖：采集中。最后采样 ${formatUtc(overview.lastSampleUtc)}</p>`;
+    ? `<p class="gap">${fmt("overview.coverage_gap", { kind: overview.coverageKind, reason: unknownOr(overview.coverageReason, unknownLabel()) })}</p>`
+    : `<p>${fmt("overview.coverage_ok", { time: formatUtc(overview.lastSampleUtc, tx("common.no_sample")) })}</p>`;
   return `
-    <section class="grid" aria-label="实时口径">
-      ${metric("控制器 meter 上行", overview.meterUpload)}
-      ${metric("控制器 meter 下行", overview.meterDownload)}
-      ${metric("可归因观测上行", overview.attributedUpload)}
-      ${metric("可归因观测下行", overview.attributedDownload)}
-      ${metric("其他连接上行", overview.otherUpload)}
-      ${metric("未归因 gap 上行", overview.gapUpload)}
-      ${metric("over-attributed 上行", overview.overUpload)}
-      <div class="metric"><span>活跃连接</span><strong>${overview.activeCount}</strong></div>
+    <section class="grid" aria-label="${tx("overview.aria")}">
+      ${metric(tx("overview.meter_up"), overview.meterUpload)}
+      ${metric(tx("overview.meter_down"), overview.meterDownload)}
+      ${metric(tx("overview.attr_up"), overview.attributedUpload)}
+      ${metric(tx("overview.attr_down"), overview.attributedDownload)}
+      ${metric(tx("overview.other_up"), overview.otherUpload)}
+      ${metric(tx("overview.gap_up"), overview.gapUpload)}
+      ${metric(tx("overview.over_up"), overview.overUpload)}
+      <div class="metric"><span>${tx("overview.active")}</span><strong>${overview.activeCount}</strong></div>
     </section>
     <section class="panel">
-      <h2>重点分类</h2>
-      <ul>${categories || "<li>无</li>"}</ul>
+      <h2>${tx("overview.categories")}</h2>
+      <ul>${categories || `<li>${tx("common.none")}</li>`}</ul>
       ${coverage}
-      <p class="status" data-state="${overview.health.session}">${health.title}。下一步：${health.action}</p>
+      <p class="status" data-state="${overview.health.session}">${health.title}。${tx("common.next")}：${health.action}</p>
     </section>
   `;
 }
@@ -109,7 +126,7 @@ function renderLive(
 ): string {
   const snapshot = state.snapshot;
   const session = snapshot?.health.session ?? "no_data";
-  const health = HEALTH_ZH[session] ?? { title: session, action: "查看诊断" };
+  const health = healthOf(session);
   const kind = liveEmptyKind({
     address,
     session,
@@ -123,41 +140,91 @@ function renderLive(
   });
   const emptyText =
     kind === "disconnected"
-      ? `${health.title}。下一步：${health.action}`
-      : (liveEmptyCopy(kind) ?? health.title);
+      ? `${health.title}。${tx("common.next")}：${health.action}`
+      : (liveEmptyCopy(kind, uiLocale) ?? health.title);
+  const unknown = unknownLabel();
   const rowHtml = rows
     .map((row) => {
       const mark = state.closeMarks.get(row.identity);
       const closeLabel =
-        mark === "accepted" ? "已发送关闭请求" : mark === "closed" ? "已关闭" : mark === "unconfirmed" ? "未确认" : "关闭";
+        mark === "accepted"
+          ? tx("live.close_accepted")
+          : mark === "closed"
+            ? tx("live.close_done")
+            : mark === "unconfirmed"
+              ? tx("live.close_unconfirmed")
+              : tx("live.close");
+      const view = displayLiveRow(row, uiLocale, unknown);
       return `<tr>
-        <td>${unknownOr(row.host)}</td>
-        <td>${unknownOr(row.processName)}</td>
-        <td>${unknownOr(row.primary)}</td>
-        <td>${formatBytes(row.upload)}</td>
-        <td>${formatBytes(row.download)}</td>
-        <td>${unknownOr(row.network)}</td>
+        <td>${view.host}</td>
+        <td>${view.download}</td>
+        <td>${view.upload}</td>
+        <td>${view.dlSpeed}</td>
+        <td>${view.ulSpeed}</td>
+        <td>${view.chains}</td>
+        <td>${view.rule}</td>
+        <td>${view.process}</td>
+        <td>${view.time}</td>
+        <td>${view.source}</td>
+        <td>${view.destination}</td>
+        <td>${view.type}</td>
         <td><button type="button" data-close="${row.identity}" ${mark ? "disabled" : ""}>${closeLabel}</button></td>
       </tr>`;
     })
     .join("");
   const action =
     kind === "unconfigured"
-      ? `<button type="button" data-route="settings-data">去设置页</button>`
+      ? `<button type="button" data-route="settings-data">${tx("live.go_settings")}</button>`
       : kind === "needResync"
-        ? `<button type="button" id="resync-monitor">重新订阅</button>`
+        ? `<button type="button" id="resync-monitor">${tx("live.resync")}</button>`
         : "";
   const pauseNote =
-    collectorRunning === false ? `<p>采集已暂停。可在托盘选择继续采集。</p>` : "";
+    collectorRunning === false ? `<p>${tx("live.paused")}</p>` : "";
+  const clauseHtml = liveQuery.filter.clauses
+    .map((clause, index) => {
+      const fields = FILTER_FIELDS.map(
+        (field) =>
+          `<option value="${field}" ${clause.field === field ? "selected" : ""}>${tx(`live.filter.field.${field}`)}</option>`
+      ).join("");
+      return `<div class="filter-row">
+        <select data-filter-field="${index}">${fields}</select>
+        <select data-filter-mode="${index}">
+          <option value="contains" ${clause.mode === "contains" ? "selected" : ""}>${tx("live.filter.contains")}</option>
+          <option value="exact" ${clause.mode === "exact" ? "selected" : ""}>${tx("live.filter.exact")}</option>
+        </select>
+        <input data-filter-value="${index}" value="${clause.value.replaceAll('"', "&quot;")}" />
+        <button type="button" data-filter-remove="${index}">${tx("live.filter.remove")}</button>
+      </div>`;
+    })
+    .join("");
   return `
     <section class="panel">
-      <p class="status" data-state="${session}">${health.title}。下一步：${health.action}</p>
-      <p>最后采样 ${formatUtc(snapshot?.lastSampleUtc ?? null)}</p>
+      <p class="status" data-state="${session}">${health.title}。${tx("common.next")}：${health.action}</p>
+      <p>${fmt("live.last_sample", { time: formatUtc(snapshot?.lastSampleUtc ?? null, tx("common.no_sample")) })}</p>
       ${pauseNote}
       ${action}
-      <table class="data">
-        <thead><tr><th>域名</th><th>进程</th><th>主分类</th><th>上行</th><th>下行</th><th>网络</th><th>操作</th></tr></thead>
-        <tbody>${rowHtml || `<tr><td colspan="7">${emptyText}</td></tr>`}</tbody>
+      <div class="live-filters">
+        <label><input type="checkbox" id="live-residential" ${liveQuery.filter.residentialOnly ? "checked" : ""} /> ${tx("live.filter.residential")}</label>
+        ${clauseHtml}
+        <button type="button" id="live-add-clause" ${liveQuery.filter.clauses.length >= 8 ? "disabled" : ""}>${tx("live.filter.add")}</button>
+      </div>
+      <table class="data live-table">
+        <thead><tr>
+          <th>${tx("live.col.host")}</th>
+          <th>${tx("live.col.download")}</th>
+          <th>${tx("live.col.upload")}</th>
+          <th>${tx("live.col.dl_speed")}</th>
+          <th>${tx("live.col.ul_speed")}</th>
+          <th>${tx("live.col.chains")}</th>
+          <th>${tx("live.col.rule")}</th>
+          <th>${tx("live.col.process")}</th>
+          <th>${tx("live.col.time")}</th>
+          <th>${tx("live.col.source")}</th>
+          <th>${tx("live.col.destination")}</th>
+          <th>${tx("live.col.type")}</th>
+          <th>${tx("live.col.action")}</th>
+        </tr></thead>
+        <tbody>${rowHtml || `<tr><td colspan="13">${emptyText}</td></tr>`}</tbody>
       </table>
     </section>
   `;
@@ -198,58 +265,58 @@ function renderReports(report: ReportResult | null, statusZh: string): string {
       })
       .join("") ?? "";
   const capability = report
-    ? `<p>${report.drilldownCapability.noteZh} 数据层 ${report.dataTier}。${report.policyMetadata.noteZh}</p>
-       <p>覆盖 ${report.coverage.status}，缺口 ${report.coverage.gapSec} 秒。单位 ${report.unit}。</p>`
+    ? `<p>${report.drilldownCapability.noteZh} ${fmt("report.tier", { tier: report.dataTier })} ${report.policyMetadata.noteZh}</p>
+       <p>${fmt("report.coverage", { status: report.coverage.status, gap: report.coverage.gapSec, unit: report.unit })}</p>`
     : "";
   return `
     <section class="panel">
-      <p>图表与数据表使用同一 ReportResult。观测下界，不是账单。</p>
-      <label>预设
+      <p>${tx("report.same_token")}</p>
+      <label>${tx("report.preset")}
         <select id="report-preset">
-          <option value="hour">最近一小时</option>
-          <option value="day">指定日（近 24 小时）</option>
-          <option value="7">近 7 日</option>
-          <option value="30">近 30 日</option>
-          <option value="month">自然月（近 30 日）</option>
+          <option value="hour">${tx("report.preset.hour")}</option>
+          <option value="day">${tx("report.preset.day")}</option>
+          <option value="7">${tx("report.preset.7")}</option>
+          <option value="30">${tx("report.preset.30")}</option>
+          <option value="month">${tx("report.preset.month")}</option>
         </select>
       </label>
-      <label>粒度
+      <label>${tx("report.granularity")}
         <select id="report-granularity">
-          <option value="hour">小时</option>
-          <option value="day">日</option>
-          <option value="month">月</option>
+          <option value="hour">${tx("report.granularity.hour")}</option>
+          <option value="day">${tx("report.granularity.day")}</option>
+          <option value="month">${tx("report.granularity.month")}</option>
         </select>
       </label>
-      <label>排名维度
+      <label>${tx("report.grouping")}
         <select id="report-grouping">
-          <option value="host">域名</option>
-          <option value="process">进程</option>
-          <option value="rule">规则</option>
-          <option value="chain">链路</option>
-          <option value="network">网络类型</option>
-          <option value="category">分类</option>
+          <option value="host">${tx("report.grouping.host")}</option>
+          <option value="process">${tx("report.grouping.process")}</option>
+          <option value="rule">${tx("report.grouping.rule")}</option>
+          <option value="chain">${tx("report.grouping.chain")}</option>
+          <option value="network">${tx("report.grouping.network")}</option>
+          <option value="category">${tx("report.grouping.category")}</option>
         </select>
       </label>
-      <button type="button" id="run-report">运行报告</button>
-      <button type="button" id="export-csv">导出 CSV</button>
-      <button type="button" id="export-json">导出 JSON</button>
-      <button type="button" id="export-html">导出 HTML</button>
+      <button type="button" id="run-report">${tx("report.run")}</button>
+      <button type="button" id="export-csv">${tx("report.export_csv")}</button>
+      <button type="button" id="export-json">${tx("report.export_json")}</button>
+      <button type="button" id="export-html">${tx("report.export_html")}</button>
       <p class="status" data-state="${report ? "connected" : "no_data"}">${statusZh}</p>
       ${capability}
     </section>
-    <section class="panel" aria-label="报告数字">
-      <h2>总量（与导出同一 token）</h2>
-      ${report ? `<p>上行 ${formatBytes(report.totals.upload)} / 下行 ${formatBytes(report.totals.download)} / 连接 ${report.totals.connectionCount}</p>` : "<p>尚未运行报告。</p>"}
+    <section class="panel" aria-label="${tx("report.numbers")}">
+      <h2>${tx("report.totals")}</h2>
+      ${report ? `<p>${fmt("report.totals_line", { up: formatBytes(report.totals.upload, unknownLabel()), down: formatBytes(report.totals.download, unknownLabel()), count: report.totals.connectionCount })}</p>` : `<p>${tx("report.none")}</p>`}
     </section>
     <section class="panel">
-      <h2>趋势图对应数据表</h2>
-      <table class="data"><thead><tr><th>时间</th><th>上行</th><th>下行</th></tr></thead>
-      <tbody>${seriesRows || `<tr><td colspan="3">无数据</td></tr>`}</tbody></table>
+      <h2>${tx("report.chart_table")}</h2>
+      <table class="data"><thead><tr><th>${tx("report.col.time")}</th><th>${tx("report.col.upload")}</th><th>${tx("report.col.download")}</th></tr></thead>
+      <tbody>${seriesRows || `<tr><td colspan="3">${tx("report.empty")}</td></tr>`}</tbody></table>
     </section>
     <section class="panel">
-      <h2>精确 Top N</h2>
-      <table class="data"><thead><tr><th>名称</th><th>上行</th><th>下行</th><th>占比条</th></tr></thead>
-      <tbody>${rankRows || `<tr><td colspan="4">无数据或能力不支持</td></tr>`}</tbody></table>
+      <h2>${tx("report.topn")}</h2>
+      <table class="data"><thead><tr><th>${tx("report.col.name")}</th><th>${tx("report.col.upload")}</th><th>${tx("report.col.download")}</th><th>${tx("report.col.share")}</th></tr></thead>
+      <tbody>${rankRows || `<tr><td colspan="4">${tx("report.empty_cap")}</td></tr>`}</tbody></table>
     </section>
   `;
 }
@@ -263,68 +330,78 @@ function renderSettings(
   probeState: string
 ): string {
   const aboutBlock = about
-    ? `<p>版本 ${about.version}。identifier ${about.identifier}。AUMID ${about.aumid}。</p>
-       <p>签名：${about.signed ? "已签名" : "未签名"}。${about.signatureNoteZh}</p>
-       <p>无应用内自动更新，无 Windows Service。发布页 ${about.releasesUrl}</p>`
-    : "<p>尚未加载关于信息。</p>";
+    ? `<p>${fmt("settings.about_meta", { version: about.version, identifier: about.identifier, aumid: about.aumid })}</p>
+       <p>${fmt("settings.about_sign", { state: about.signed ? tx("settings.signed") : tx("settings.unsigned"), note: about.signatureNoteZh })}</p>
+       <p>${fmt("settings.about_release", { url: about.releasesUrl })}</p>`
+    : `<p>${tx("settings.about_idle")}</p>`;
   const deleteItems =
     deletePreview?.items
-      .map((item) => `<li><strong>${item.id}</strong>：${item.noteZh} ${item.exists ? "存在" : "不存在"}</li>`)
-      .join("") ?? "<li>尚未预览。</li>";
+      .map(
+        (item) =>
+          `<li><strong>${item.id}</strong>：${item.noteZh} ${item.exists ? tx("settings.exists") : tx("settings.missing")}</li>`
+      )
+      .join("") ?? `<li>${tx("settings.preview_idle")}</li>`;
   const deleteResult = deleteReport
     ? `<p class="status" data-state="${deleteReport.allDeclaredOk ? "connected" : "storage_failure"}">${deleteReport.summaryZh}</p>`
     : "";
   return `
     <section class="panel">
-      <h2>设置向导</h2>
+      <h2>${tx("settings.wizard")}</h2>
       <ol>
-        <li>控制器发现与测试（仅 loopback TCP）</li>
-        <li>重点目标选择与排序</li>
-        <li>登录自启动需再次确认后才会写入本机</li>
-        <li>保留与本地隐私说明：数据只留本机，secret 不进 SQLite</li>
-        <li>通知能力预检：本阶段不发送系统通知</li>
+        <li>${tx("settings.wizard.1")}</li>
+        <li>${tx("settings.wizard.2")}</li>
+        <li>${tx("settings.wizard.3")}</li>
+        <li>${tx("settings.wizard.4")}</li>
+        <li>${tx("settings.wizard.5")}</li>
       </ol>
-      <label>控制器地址
+      <label>${tx("settings.locale")}
+        <select id="ui-locale">
+          <option value="zh" ${uiLocale === "zh" ? "selected" : ""}>${tx("settings.locale.zh")}</option>
+          <option value="en" ${uiLocale === "en" ? "selected" : ""}>${tx("settings.locale.en")}</option>
+        </select>
+      </label>
+      <label>${tx("settings.address")}
         <input id="controller-address" value="${boot.settings.address || "127.0.0.1:9097"}" />
       </label>
-      ${secretFieldMarkup()}
-      <label>重点目标（逗号分隔）
+      ${secretFieldMarkup(uiLocale)}
+      <label>${tx("settings.targets")}
         <input id="targets" value="家宽" />
       </label>
-      <p>凭据状态：${boot.settings.hasSecret ? "已配置" : "未配置"}，模式 ${boot.settings.secretMode}</p>
-      <p>Clash Verge Rev 本机模板端口是 9097，不是 9090。</p>
+      <p>${fmt("settings.cred", { status: boot.settings.hasSecret ? tx("settings.cred_yes") : tx("settings.cred_no"), mode: boot.settings.secretMode })}</p>
+      <p>${tx("settings.port_note")}</p>
       <div class="actions">
-        <button type="button" id="save-settings">保存设置</button>
-        <button type="button" id="test-controller">测试连接</button>
-        <button type="button" id="disconnect-controller">断开连接</button>
+        <button type="button" id="save-settings">${tx("settings.save")}</button>
+        <button type="button" id="test-controller">${tx("settings.test")}</button>
+        <button type="button" id="disconnect-controller">${tx("settings.disconnect")}</button>
       </div>
       <p id="controller-probe" class="status" data-state="${probeState}">${probeStatus}</p>
     </section>
     <section class="panel">
-      <h2>数据管理</h2>
-      <p>备份使用 Online Backup，不复制热库。恢复失败保留当前库。secret 不随备份迁移。</p>
-      <button type="button" id="create-backup">创建备份</button>
-      <button type="button" id="restore-backup">恢复备份</button>
-      <button type="button" id="retention-preview">保留预览</button>
-      <button type="button" id="run-retention">物化汇总（不自动删除）</button>
-      <p id="data-note">自动 DELETE 在守恒门通过前保持关闭。不自动 VACUUM。</p>
-      <button type="button" id="run-vacuum">用户主动 VACUUM</button>
+      <h2>${tx("settings.data")}</h2>
+      <p>${tx("settings.data_help")}</p>
+      <button type="button" id="create-backup">${tx("settings.backup")}</button>
+      <button type="button" id="restore-backup">${tx("settings.restore")}</button>
+      <button type="button" id="retention-preview">${tx("settings.retention_preview")}</button>
+      <button type="button" id="run-retention">${tx("settings.retention_run")}</button>
+      <p id="data-note">${tx("settings.retention_note")}</p>
+      <button type="button" id="run-vacuum">${tx("settings.vacuum")}</button>
     </section>
     <section class="panel" id="about">
-      <h2>关于与发布</h2>
+      <h2>${tx("settings.about")}</h2>
       ${aboutBlock}
-      <button type="button" id="load-about">刷新关于</button>
-      <button type="button" id="open-releases">显示 GitHub Releases 地址</button>
+      <button type="button" id="load-about">${tx("settings.refresh_about")}</button>
+      <button type="button" id="open-releases">${tx("settings.open_releases")}</button>
     </section>
     <section class="panel">
-      <h2>删除全部本地数据</h2>
-      <p>${deletePreview?.noteZh ?? "先预览声明对象，再输入确认短语。普通卸载不会走此路径。"}</p>
+      <h2>${tx("settings.delete_title")}</h2>
+      <p>${deletePreview?.noteZh ?? tx("settings.delete_help")}</p>
+      ${uiLocale === "en" ? `<p>${tx("settings.delete_phrase_en")}</p>` : ""}
       <ul>${deleteItems}</ul>
-      <label>确认短语
+      <label>${tx("settings.delete_phrase")}
         <input id="delete-phrase" autocomplete="off" />
       </label>
-      <button type="button" id="preview-delete">预览删除范围</button>
-      <button type="button" id="confirm-delete">二次确认删除</button>
+      <button type="button" id="preview-delete">${tx("settings.preview_delete")}</button>
+      <button type="button" id="confirm-delete">${tx("settings.confirm_delete")}</button>
       ${deleteResult}
     </section>
   `;
@@ -333,24 +410,24 @@ function renderSettings(
 function renderRecovery(boot: BootstrapDto): string {
   const recovery = boot.recovery;
   if (!recovery) {
-    return `<section class="panel"><p>恢复信息不可用。</p></section>`;
+    return `<section class="panel"><p>${tx("recovery.missing")}</p></section>`;
   }
   const backups = recovery.backups.map((item) => `<li>${item}</li>`).join("");
   return `
     <section class="panel recovery">
-      <h2>Recovery Shell</h2>
-      <p>应用版本 ${recovery.appVersion}，数据库版本 ${recovery.userVersion}，支持上限 ${recovery.supportedMax}。</p>
-      <p>${recovery.future ? "数据库版本高于应用，已 fail closed。" : "数据库无法按普通 schema 打开。"}</p>
+      <h2>${tx("recovery.title")}</h2>
+      <p>${fmt("recovery.meta", { app: recovery.appVersion, db: recovery.userVersion, max: recovery.supportedMax })}</p>
+      <p>${recovery.future ? tx("recovery.future") : tx("recovery.unreadable")}</p>
       <p>${recovery.restoreNoteZh}</p>
-      <button type="button" id="restore-backup" ${recovery.restoreAvailable ? "" : "disabled"}>执行恢复</button>
-      <h3>migration backup</h3>
-      <ul>${backups || "<li>无</li>"}</ul>
+      <button type="button" id="restore-backup" ${recovery.restoreAvailable ? "" : "disabled"}>${tx("recovery.run")}</button>
+      <h3>${tx("recovery.backups")}</h3>
+      <ul>${backups || `<li>${tx("common.none")}</li>`}</ul>
     </section>
   `;
 }
 
 function renderUnavailable(name: string, until: string): string {
-  return `<section class="panel"><h2>${name}</h2><p>此页面尚未交付，由 ${until} 接入。不显示伪数据。</p></section>`;
+  return `<section class="panel"><h2>${name}</h2><p>${fmt("unavailable.body", { until })}</p></section>`;
 }
 
 function renderAlerts(
@@ -363,7 +440,7 @@ function renderAlerts(
     page?.items
       .map((item) => {
         const observed =
-          item.evidence.observedValue === null ? "未知" : String(item.evidence.observedValue);
+          item.evidence.observedValue === null ? unknownLabel() : String(item.evidence.observedValue);
         const recovered = item.resolvedUtc === null ? "—" : formatUtc(item.resolvedUtc);
         return `<tr>
           <td>${item.ruleId} v${item.ruleVersion}</td>
@@ -377,67 +454,67 @@ function renderAlerts(
       })
       .join("") ?? "";
   const notifyZh = notify
-    ? `${notify.available ? "通知 seam 可用" : "通知不可用"}。${notify.reasonZh}`
-    : "尚未检测通知能力。";
+    ? `${notify.available ? tx("alerts.notify_on") : tx("alerts.notify_off")}。${notify.reasonZh}`
+    : tx("alerts.notify_idle");
   const diag = diagnostics
-    ? `<p>应用 ${diagnostics.appVersion}，schema ${diagnostics.sqliteUserVersion} / ${diagnostics.supportedSchema}，WAL ${diagnostics.journalMode} / ${diagnostics.synchronous}。</p>
-       <p>传输 ${diagnostics.controllerTransportStatus}，覆盖 ${diagnostics.coverageSummary}，watermark ${diagnostics.writerWatermark}，活动告警 ${diagnostics.alertActive}，outbox ${diagnostics.outboxBacklog}。</p>
+    ? `<p>${fmt("alerts.diag_app", { app: diagnostics.appVersion, schema: diagnostics.sqliteUserVersion, supported: diagnostics.supportedSchema, journal: diagnostics.journalMode, sync: diagnostics.synchronous })}</p>
+       <p>${fmt("alerts.diag_ctrl", { transport: diagnostics.controllerTransportStatus, coverage: diagnostics.coverageSummary, wm: diagnostics.writerWatermark, active: diagnostics.alertActive, outbox: diagnostics.outboxBacklog })}</p>
        <p>${diagnostics.backupRetentionNoteZh} ${diagnostics.reconnectHintZh}</p>`
-    : "<p>尚未生成诊断。</p>";
+    : `<p>${tx("alerts.diag_idle")}</p>`;
   return `
     <section class="panel">
-      <p>应用内记录是权威来源。系统通知是尽力送达。静默只抑制通知，不删除事件。</p>
+      <p>${tx("alerts.intro")}</p>
       <p class="status">${statusZh}</p>
       <p>${notifyZh}</p>
-      <button type="button" id="refresh-alerts">刷新告警</button>
-      <button type="button" id="test-notification">测试通知</button>
-      <button type="button" id="export-diagnostics">导出诊断</button>
+      <button type="button" id="refresh-alerts">${tx("alerts.refresh")}</button>
+      <button type="button" id="test-notification">${tx("alerts.test")}</button>
+      <button type="button" id="export-diagnostics">${tx("alerts.export_diag")}</button>
     </section>
     <section class="panel">
-      <h2>规则</h2>
-      <p>速率单位 bps，周期用量单位 byte。恢复阈值必须小于触发阈值。时区用于自然日 / 月。</p>
-      <label>规则 ID <input id="alert-rule-id" value="rate-home" /></label>
-      <label>类型
+      <h2>${tx("alerts.rules")}</h2>
+      <p>${tx("alerts.rules_help")}</p>
+      <label>${tx("alerts.rule_id")} <input id="alert-rule-id" value="rate-home" /></label>
+      <label>${tx("alerts.kind")}
         <select id="alert-kind">
-          <option value="rate">速率</option>
-          <option value="period-usage">周期用量</option>
-          <option value="health">健康</option>
+          <option value="rate">${tx("alerts.kind.rate")}</option>
+          <option value="period-usage">${tx("alerts.kind.period")}</option>
+          <option value="health">${tx("alerts.kind.health")}</option>
         </select>
       </label>
-      <label>对象
+      <label>${tx("alerts.selector")}
         <select id="alert-selector-kind">
-          <option value="primary-category">主分类</option>
-          <option value="domain">域名</option>
-          <option value="process">进程</option>
-          <option value="health-kind">健康根因</option>
+          <option value="primary-category">${tx("alerts.selector.category")}</option>
+          <option value="domain">${tx("alerts.selector.domain")}</option>
+          <option value="process">${tx("alerts.selector.process")}</option>
+          <option value="health-kind">${tx("alerts.selector.health")}</option>
         </select>
       </label>
-      <label>选择值 <input id="alert-selector-value" value="家宽" /></label>
-      <label>方向
+      <label>${tx("alerts.selector_value")} <input id="alert-selector-value" value="家宽" /></label>
+      <label>${tx("alerts.direction")}
         <select id="alert-direction">
-          <option value="download">下行</option>
-          <option value="upload">上行</option>
-          <option value="combined">合计</option>
+          <option value="download">${tx("alerts.dir.down")}</option>
+          <option value="upload">${tx("alerts.dir.up")}</option>
+          <option value="combined">${tx("alerts.dir.combined")}</option>
         </select>
       </label>
-      <label>触发阈值 <input id="alert-threshold" type="number" value="1000000" /></label>
-      <label>恢复阈值 <input id="alert-recovery" type="number" value="400000" /></label>
-      <label>周期
+      <label>${tx("alerts.threshold")} <input id="alert-threshold" type="number" value="1000000" /></label>
+      <label>${tx("alerts.recovery")} <input id="alert-recovery" type="number" value="400000" /></label>
+      <label>${tx("alerts.period")}
         <select id="alert-period">
-          <option value="">无</option>
-          <option value="rolling-1h">滚动 1 小时</option>
-          <option value="local-day">本地自然日</option>
-          <option value="local-month">本地自然月</option>
+          <option value="">${tx("alerts.period.none")}</option>
+          <option value="rolling-1h">${tx("alerts.period.1h")}</option>
+          <option value="local-day">${tx("alerts.period.day")}</option>
+          <option value="local-month">${tx("alerts.period.month")}</option>
         </select>
       </label>
-      <label>时区 <input id="alert-timezone" value="Asia/Shanghai" /></label>
-      <button type="button" id="save-alert-rule">保存规则</button>
+      <label>${tx("alerts.timezone")} <input id="alert-timezone" value="Asia/Shanghai" /></label>
+      <button type="button" id="save-alert-rule">${tx("alerts.save")}</button>
     </section>
     <section class="panel">
-      <h2>活动与历史</h2>
+      <h2>${tx("alerts.history")}</h2>
       <table class="data">
-        <thead><tr><th>规则</th><th>状态</th><th>对象</th><th>观测值</th><th>覆盖</th><th>恢复时间</th><th>不可评估</th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="7">无告警</td></tr>`}</tbody>
+        <thead><tr><th>${tx("alerts.col.rule")}</th><th>${tx("alerts.col.status")}</th><th>${tx("alerts.col.target")}</th><th>${tx("alerts.col.observed")}</th><th>${tx("alerts.col.coverage")}</th><th>${tx("alerts.col.resolved")}</th><th>${tx("alerts.col.noteval")}</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="7">${tx("alerts.empty")}</td></tr>`}</tbody>
       </table>
     </section>
     <section class="panel">
@@ -500,7 +577,8 @@ function previewBootstrap(): BootstrapDto {
     },
     wizardComplete: false,
     recovery: null,
-    launchMode: "interactive"
+    launchMode: "interactive",
+    uiLocale: "zh"
   };
 }
 
@@ -518,7 +596,7 @@ async function invokeCommand<T>(name: string, args?: Record<string, unknown>): P
 
 function probeErrorText(error: unknown): { messageZh: string; action: string; code: string } {
   if (!error || typeof error !== "object") {
-    return { messageZh: "连接失败。", action: "", code: "" };
+    return { messageZh: tx("settings.connect_fail"), action: "", code: "" };
   }
   const rec = error as Record<string, unknown>;
   if (typeof rec.messageZh === "string") {
@@ -542,7 +620,7 @@ function probeErrorText(error: unknown): { messageZh: string; action: string; co
       /* 非 JSON */
     }
   }
-  return { messageZh: "连接失败。", action: "", code: "" };
+  return { messageZh: tx("settings.connect_fail"), action: "", code: "" };
 }
 
 function renderApp(
@@ -578,19 +656,19 @@ function renderApp(
               ? renderReports(report, reportStatus)
               : route === "alerts"
                 ? renderAlerts(alerts, alertStatus, diagnostics, notify)
-                : renderUnavailable("告警", "C4");
+                : renderUnavailable(tx("route.alerts"), "C4");
   const recovery = boot.branch === "recovery-only";
   root.innerHTML = `
     <aside class="shell">
       <div class="brand">
         <img class="brand-mark" src="${BRAND_MARK}" alt="" width="56" height="56" />
-        <h1 class="brand-name">家宽流量监控</h1>
-        <p class="brand-slogan">观测下界，不是账单。secret 不会出现在此页面。</p>
+        <h1 class="brand-name">${tx("product.display_name")}</h1>
+        <p class="brand-slogan">${tx("product.slogan")}</p>
       </div>
       ${
         recovery
-          ? `<p class="shell-recovery">Recovery Shell</p>`
-          : `<nav class="nav" aria-label="主导航">${navHtml(route, boot.routes)}</nav>`
+          ? `<p class="shell-recovery">${tx("shell.recovery")}</p>`
+          : `<nav class="nav" aria-label="${tx("nav.aria")}">${navHtml(route, boot.routes)}</nav>`
       }
     </aside>
     <main class="workspace" id="workspace" tabindex="-1">
@@ -622,13 +700,14 @@ async function main(): Promise<void> {
   } catch {
     boot = previewBootstrap();
   }
+  applyLocale(parseUiLocale(boot.uiLocale));
 
   let route: RouteId = boot.branch === "recovery-only" ? "settings-data" : "overview";
   let state = emptyMonitorState();
   let report: ReportResult | null = null;
-  let reportStatus = "尚未运行报告。";
+  let reportStatus = tx("report.idle");
   let alerts: AlertCenterPage | null = null;
-  let alertStatus = "尚未加载告警。";
+  let alertStatus = tx("alerts.idle");
   let diagnostics: DiagnosticsSnapshot | null = null;
   let notify: NotifyCapability | null = null;
   let about: AboutDto | null = null;
@@ -663,7 +742,7 @@ async function main(): Promise<void> {
       liveRows,
       collectorRunning
     );
-    applySecretField(app, settingsSecret, settingsSecretVisible);
+    applySecretField(app, settingsSecret, settingsSecretVisible, uiLocale);
   };
 
   const loadSettingsSecret = async (): Promise<void> => {
@@ -690,7 +769,7 @@ async function main(): Promise<void> {
       return;
     }
     try {
-      const page = await queryLiveConnections();
+      const page = await queryLiveConnections(liveQuery);
       liveRows = page.rows;
     } catch {
       liveRows = [];
@@ -775,6 +854,74 @@ async function main(): Promise<void> {
     if (target instanceof HTMLInputElement && target.id === "controller-secret") {
       settingsSecret = target.value;
     }
+    if (target instanceof HTMLInputElement && target.dataset.filterValue != null) {
+      const index = Number(target.dataset.filterValue);
+      const clauses = liveQuery.filter.clauses.map((clause, item) =>
+        item === index ? { ...clause, value: target.value } : clause
+      );
+      liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
+    }
+  });
+
+  app.addEventListener("change", async (event) => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement && target.id === "live-residential") {
+      liveQuery = {
+        ...liveQuery,
+        filter: { ...liveQuery.filter, residentialOnly: target.checked }
+      };
+      await refreshLivePage();
+      paint();
+      return;
+    }
+    if (target instanceof HTMLSelectElement && target.dataset.filterField != null) {
+      const index = Number(target.dataset.filterField);
+      const clauses = liveQuery.filter.clauses.map((clause, item) =>
+        item === index ? { ...clause, field: target.value } : clause
+      );
+      liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
+      await refreshLivePage();
+      paint();
+      return;
+    }
+    if (target instanceof HTMLSelectElement && target.dataset.filterMode != null) {
+      const index = Number(target.dataset.filterMode);
+      const clauses = liveQuery.filter.clauses.map((clause, item) =>
+        item === index ? { ...clause, mode: target.value as LiveFilterClause["mode"] } : clause
+      );
+      liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
+      await refreshLivePage();
+      paint();
+      return;
+    }
+    if (target instanceof HTMLInputElement && target.dataset.filterValue != null) {
+      const index = Number(target.dataset.filterValue);
+      const clauses = liveQuery.filter.clauses.map((clause, item) =>
+        item === index ? { ...clause, value: target.value } : clause
+      );
+      liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
+      await refreshLivePage();
+      paint();
+      return;
+    }
+    if (!(target instanceof HTMLSelectElement) || target.id !== "ui-locale") {
+      return;
+    }
+    const nextLocale = parseUiLocale(target.value);
+    try {
+      const saved = await invokeCommand<string>("save_ui_locale", { locale: nextLocale });
+      applyLocale(parseUiLocale(saved));
+      const next = await invokeCommand<BootstrapDto>("get_bootstrap");
+      boot.routes = next.routes;
+      boot.uiLocale = parseUiLocale(next.uiLocale);
+      applyLocale(boot.uiLocale);
+    } catch {
+      applyLocale(nextLocale);
+      boot.routes = localizeRoutes(boot.routes);
+    }
+    reportStatus = tx("report.idle");
+    alertStatus = tx("alerts.idle");
+    paint();
   });
 
   app.addEventListener("click", async (event) => {
@@ -806,9 +953,9 @@ async function main(): Promise<void> {
             await invokeCommand("list_alert_center", { status: null, after: null })
           );
           const diag = decodeDiagnostics(await invokeCommand("get_diagnostics"));
-          applyAlerts(page, `已加载 ${page.items.length} 条。`, diag, notify);
+          applyAlerts(page, fmt("alerts.loaded", { count: page.items.length }), diag, notify);
         } catch {
-          applyAlerts(alerts, "告警中心暂不可用。");
+          applyAlerts(alerts, tx("alerts.unavailable"));
         }
       }
       return;
@@ -824,12 +971,37 @@ async function main(): Promise<void> {
           apply(markCloseAccepted(state, closeId));
         }
       } catch {
-        apply({ ...state, errorZh: "关闭请求未发送。未向未隔离控制器发出 DELETE。" });
+        apply({ ...state, errorZh: tx("alerts.close_fail") });
       }
     }
     if (raw.closest("#toggle-secret")) {
       settingsSecretVisible = !settingsSecretVisible;
-      applySecretField(app, settingsSecret, settingsSecretVisible);
+      applySecretField(app, settingsSecret, settingsSecretVisible, uiLocale);
+      return;
+    }
+    if (target.id === "live-add-clause") {
+      if (liveQuery.filter.clauses.length < 8) {
+        const next: LiveFilterClause = { field: "host", mode: "contains", value: "" };
+        liveQuery = {
+          ...liveQuery,
+          filter: { ...liveQuery.filter, clauses: [...liveQuery.filter.clauses, next] }
+        };
+        paint();
+      }
+      return;
+    }
+    const remove = target.dataset.filterRemove;
+    if (remove != null) {
+      const index = Number(remove);
+      liveQuery = {
+        ...liveQuery,
+        filter: {
+          ...liveQuery.filter,
+          clauses: liveQuery.filter.clauses.filter((_, item) => item !== index)
+        }
+      };
+      await refreshLivePage();
+      paint();
       return;
     }
     if (target.id === "save-settings") {
@@ -852,13 +1024,26 @@ async function main(): Promise<void> {
             .map((item) => item.trim())
             .filter(Boolean)
         });
-        probeStatus = "设置已保存。下一步：测试连接。";
+        const selected = (document.querySelector("#ui-locale") as HTMLSelectElement | null)?.value;
+        const nextLocale = parseUiLocale(selected);
+        const saved = await invokeCommand<string>("save_ui_locale", { locale: nextLocale });
+        applyLocale(parseUiLocale(saved));
+        boot.uiLocale = uiLocale;
+        try {
+          const next = await invokeCommand<BootstrapDto>("get_bootstrap");
+          boot.routes = next.routes;
+          boot.uiLocale = parseUiLocale(next.uiLocale);
+          applyLocale(boot.uiLocale);
+        } catch {
+          boot.routes = localizeRoutes(boot.routes);
+        }
+        probeStatus = tx("settings.saved");
         probeState = "connected";
         apply(state, "settings-data");
       } catch {
-        probeStatus = "设置保存失败。请检查回环地址。";
+        probeStatus = tx("settings.save_fail");
         probeState = "storage_failure";
-        apply({ ...state, errorZh: "设置保存失败。请检查回环地址。" }, "settings-data");
+        apply({ ...state, errorZh: tx("settings.save_fail") }, "settings-data");
       }
     }
     if (target.id === "test-controller") {
@@ -908,18 +1093,18 @@ async function main(): Promise<void> {
       }
     }
     if (target.id === "run-report") {
-      applyReport(report, "正在查询…");
+      applyReport(report, tx("report.running"));
       try {
         const raw = await invokeCommand<unknown>("run_report", { query: buildQuery() });
         const decoded = decodeReportResult(raw);
         applyReport(decoded, `已生成快照 ${decoded.reportSnapshotToken.slice(0, 8)}。`);
       } catch (error) {
-        applyReport(null, error instanceof Error ? error.message : "报告失败。");
+        applyReport(null, error instanceof Error ? error.message : tx("report.fail"));
       }
     }
     if (target.id === "export-csv" || target.id === "export-json" || target.id === "export-html") {
       if (!report) {
-        applyReport(null, "请先运行报告。");
+        applyReport(null, tx("report.need_run"));
         return;
       }
       const format = target.id === "export-csv" ? "csv" : target.id === "export-json" ? "json" : "html";
@@ -944,7 +1129,7 @@ async function main(): Promise<void> {
           },
           path: picked
         });
-        applyReport(report, `已导出 ${format.toUpperCase()}。`);
+        applyReport(report, fmt("report.exported", { format: format.toUpperCase() }));
       } catch {
         applyReport(report, "导出失败。未覆盖已有文件。");
       }

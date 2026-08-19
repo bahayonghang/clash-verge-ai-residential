@@ -28,9 +28,43 @@ pub struct LiveConnectionView {
     pub process_name: Option<String>,
     pub process_path: Option<String>,
     pub network: Option<String>,
+    pub inbound: Option<String>,
+    pub source_port: Option<String>,
+    pub destination_port: Option<String>,
+    pub start: Option<String>,
     pub rule: Option<String>,
     pub rule_payload: Option<String>,
     pub chains: Vec<String>,
+}
+
+impl Default for LiveConnectionView {
+    fn default() -> Self {
+        Self {
+            identity: String::new(),
+            connection_id: String::new(),
+            epoch: 0,
+            upload: 0,
+            download: 0,
+            rate_upload: None,
+            rate_download: None,
+            duration_ms: None,
+            primary: None,
+            tags: Vec::new(),
+            host: None,
+            source_ip: None,
+            destination_ip: None,
+            process_name: None,
+            process_path: None,
+            network: None,
+            inbound: None,
+            source_port: None,
+            destination_port: None,
+            start: None,
+            rule: None,
+            rule_payload: None,
+            chains: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -185,6 +219,7 @@ impl Coalescer {
 struct Inner {
     snapshot: LiveOverview,
     rows: BTreeMap<String, LiveConnectionView>,
+    prev_sample: BTreeMap<String, (u64, u64, i64)>,
     coalescer: Coalescer,
     next_subscription: u64,
     active: BTreeMap<u64, bool>,
@@ -210,6 +245,7 @@ impl MonitorHub {
             inner: Mutex::new(Inner {
                 snapshot: empty_overview(SessionStatus::Connecting),
                 rows: BTreeMap::new(),
+                prev_sample: BTreeMap::new(),
                 coalescer: Coalescer::default(),
                 next_subscription: 1,
                 active: BTreeMap::new(),
@@ -278,9 +314,22 @@ impl MonitorHub {
         let mut guard = self.inner.lock().expect("hub");
         let previous: Vec<String> = guard.rows.keys().cloned().collect();
         let mut next = BTreeMap::new();
-        for row in live_rows {
+        let mut next_sample = BTreeMap::new();
+        for mut row in live_rows {
+            row.duration_ms = duration_from_start(row.start.as_deref(), utc);
+            if let Some((prev_up, prev_down, prev_utc)) = guard.prev_sample.get(&row.connection_id)
+            {
+                if utc > *prev_utc {
+                    let dt = (utc - *prev_utc) as u64;
+                    row.rate_upload = Some(row.upload.saturating_sub(*prev_up).saturating_mul(1000) / dt.max(1));
+                    row.rate_download =
+                        Some(row.download.saturating_sub(*prev_down).saturating_mul(1000) / dt.max(1));
+                }
+            }
+            next_sample.insert(row.connection_id.clone(), (row.upload, row.download, utc));
             next.insert(row.identity.clone(), row);
         }
+        guard.prev_sample = next_sample;
         for gone in previous {
             if !next.contains_key(&gone) {
                 guard
@@ -370,6 +419,15 @@ impl MonitorHub {
     pub fn row_count(&self) -> usize {
         self.inner.lock().expect("hub").rows.len()
     }
+}
+
+fn duration_from_start(start: Option<&str>, utc: i64) -> Option<u64> {
+    let start = start?;
+    let parsed = chrono::DateTime::parse_from_rfc3339(start)
+        .or_else(|_| chrono::DateTime::parse_from_rfc3339(&format!("{start}Z")))
+        .ok()?;
+    let delta = utc.saturating_mul(1000).saturating_sub(parsed.timestamp_millis());
+    Some(delta.max(0) as u64)
 }
 
 pub fn session_status_name(status: SessionStatus) -> String {
@@ -533,6 +591,7 @@ mod coalesce_tests {
             rule: None,
             rule_payload: None,
             chains: Vec::new(),
+            ..LiveConnectionView::default()
         };
         coalescer
             .push(PendingOp::Upsert(Box::new(row.clone())))

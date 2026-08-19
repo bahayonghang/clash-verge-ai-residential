@@ -53,6 +53,10 @@ export interface LiveConnectionView {
   processName: string | null;
   processPath: string | null;
   network: string | null;
+  inbound?: string | null;
+  sourcePort?: string | null;
+  destinationPort?: string | null;
+  start?: string | null;
   rule: string | null;
   rulePayload: string | null;
   chains: string[];
@@ -223,6 +227,7 @@ export interface BootstrapDto {
   wizardComplete: boolean;
   recovery: RecoveryStatus | null;
   launchMode: "interactive" | "background";
+  uiLocale?: "zh" | "en";
 }
 
 export interface OperationProgress {

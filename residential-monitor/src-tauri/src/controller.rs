@@ -5,14 +5,18 @@ use crate::credential::Secret;
 use serde_json::{Map, Value};
 use std::net::IpAddr;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ConnectionMeta {
     pub host: Option<String>,
     pub source_ip: Option<String>,
     pub destination_ip: Option<String>,
+    pub source_port: Option<String>,
+    pub destination_port: Option<String>,
     pub process_name: Option<String>,
     pub process_path: Option<String>,
     pub network: Option<String>,
+    pub inbound: Option<String>,
+    pub start: Option<String>,
     pub rule: Option<String>,
     pub rule_payload: Option<String>,
 }
@@ -133,9 +137,16 @@ fn normalize_connection(value: &Value) -> Option<ConnectionFact> {
             host: text_field(&metadata, "host"),
             source_ip: text_field(&metadata, "sourceIP"),
             destination_ip: text_field(&metadata, "destinationIP"),
+            source_port: text_field(&metadata, "sourcePort"),
+            destination_port: text_field(&metadata, "destinationPort"),
             process_name: text_field(&metadata, "process"),
             process_path: text_field(&metadata, "processPath"),
             network: text_field(&metadata, "network"),
+            inbound: text_field(&metadata, "type"),
+            start: object
+                .get("start")
+                .and_then(Value::as_str)
+                .and_then(truncate_string),
             rule: object
                 .get("rule")
                 .and_then(Value::as_str)

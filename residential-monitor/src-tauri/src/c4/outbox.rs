@@ -206,14 +206,19 @@ pub fn scan_once<S: NotificationSink>(
     sink: &mut S,
     now_utc: i64,
     lease_token: &str,
+    locale: crate::i18n::UiLocale,
 ) -> Result<u32, StorageError> {
     let _ = reclaim_stale(coordinator, now_utc)?;
     let claimed = claim_due(coordinator, now_utc, lease_token)?;
     let mut handled = 0_u32;
     for item in claimed {
         let payload = NotifyPayload {
-            title_zh: "家宽流量监控告警".into(),
-            body_zh: format!("告警事件 {}", redact_id(&item.event_id)),
+            title_zh: crate::i18n::t(locale, "notify.alert_title").into(),
+            body_zh: format!(
+                "{} {}",
+                crate::i18n::t(locale, "notify.alert_body"),
+                redact_id(&item.event_id)
+            ),
             event_id: item.event_id.clone(),
             instance_id: None,
             test_only: false,
@@ -338,7 +343,14 @@ mod outbox_worker_tests {
             StorageCoordinator::open(&dir.path().join("o.sqlite3")).expect("open");
         seed_pending(&coordinator, "o1", 10);
         let mut sink = FakeNotificationSink::default();
-        let handled = scan_once(&mut coordinator, &mut sink, 10, "tok-a").expect("scan");
+        let handled = scan_once(
+            &mut coordinator,
+            &mut sink,
+            10,
+            "tok-a",
+            crate::i18n::UiLocale::Zh,
+        )
+        .expect("scan");
         assert_eq!(handled, 1);
         assert_eq!(sink.sent.len(), 1);
         let item = load_item(&coordinator, "o1").expect("load").expect("row");

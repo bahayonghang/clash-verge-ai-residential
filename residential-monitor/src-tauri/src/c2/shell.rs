@@ -1,6 +1,7 @@
 //! 导航 seam、文件选择、操作进度与 Recovery 启动分支。
 
 use crate::c0_contract::SCHEMA_VERSION;
+use crate::i18n::{t, UiLocale};
 use crate::storage::{RecoveryFacade, StorageError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -23,38 +24,25 @@ pub struct RouteDescriptor {
 }
 
 pub fn default_routes() -> Vec<RouteDescriptor> {
-    vec![
-        RouteDescriptor {
-            id: "overview".into(),
-            title_zh: "概览".into(),
-            available: true,
-            unavailable_until: None,
-        },
-        RouteDescriptor {
-            id: "live".into(),
-            title_zh: "实时连接".into(),
-            available: true,
-            unavailable_until: None,
-        },
-        RouteDescriptor {
-            id: "reports".into(),
-            title_zh: "分析报告".into(),
-            available: true,
-            unavailable_until: None,
-        },
-        RouteDescriptor {
-            id: "alerts".into(),
-            title_zh: "告警".into(),
-            available: true,
-            unavailable_until: None,
-        },
-        RouteDescriptor {
-            id: "settings-data".into(),
-            title_zh: "设置 / 数据管理".into(),
-            available: true,
-            unavailable_until: None,
-        },
+    default_routes_for(UiLocale::Zh)
+}
+
+pub fn default_routes_for(locale: UiLocale) -> Vec<RouteDescriptor> {
+    [
+        ("overview", "route.overview"),
+        ("live", "route.live"),
+        ("reports", "route.reports"),
+        ("alerts", "route.alerts"),
+        ("settings-data", "route.settings-data"),
     ]
+    .into_iter()
+    .map(|(id, key)| RouteDescriptor {
+        id: id.into(),
+        title_zh: t(locale, key).into(),
+        available: true,
+        unavailable_until: None,
+    })
+    .collect()
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

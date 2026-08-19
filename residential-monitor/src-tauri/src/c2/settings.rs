@@ -58,20 +58,26 @@ impl SettingsError {
         }
     }
 
-    pub fn message_zh(&self) -> &'static str {
+    pub fn message_key(&self) -> &'static str {
         match self {
-            Self::InvalidAddress => "控制器地址无效。",
-            Self::NonLoopback => "TCP 只接受本机回环地址。",
-            Self::FieldTooLong => "字段超过长度上限。",
-            Self::TooManyTargets => "重点目标数量超过上限。",
-            Self::EmptyTarget => "目标名称不能为空。",
-            Self::Credential(CredentialError::Unavailable) => {
-                "凭据存储不可用，只能使用当前进程临时 secret。"
-            }
-            Self::Credential(_) => "凭据操作失败。",
-            Self::ProbeFailed => "控制器探测失败。",
-            Self::Unavailable => "设置无法保存。",
+            Self::InvalidAddress => "settings.invalid_address",
+            Self::NonLoopback => "settings.non_loopback",
+            Self::FieldTooLong => "settings.field_too_long",
+            Self::TooManyTargets => "settings.too_many_targets",
+            Self::EmptyTarget => "settings.empty_target",
+            Self::Credential(CredentialError::Unavailable) => "settings.credential_unavailable",
+            Self::Credential(_) => "settings.credential_failed",
+            Self::ProbeFailed => "settings.probe_failed",
+            Self::Unavailable => "settings.unavailable",
         }
+    }
+
+    pub fn message(&self, locale: crate::i18n::UiLocale) -> &'static str {
+        crate::i18n::t(locale, self.message_key())
+    }
+
+    pub fn message_zh(&self) -> &'static str {
+        self.message(crate::i18n::UiLocale::Zh)
     }
 }
 

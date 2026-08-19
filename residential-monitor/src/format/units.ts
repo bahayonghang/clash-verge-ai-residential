@@ -1,6 +1,6 @@
-export function formatBytes(value: number | null): string {
+export function formatBytes(value: number | null, unknown = "未知"): string {
   if (value === null) {
-    return "未知";
+    return unknown;
   }
   const units = ["B", "KiB", "MiB", "GiB"];
   let amount = value;
@@ -12,20 +12,20 @@ export function formatBytes(value: number | null): string {
   return `${amount.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
 }
 
-export function formatRate(value: number | null): string {
+export function formatRate(value: number | null, unknown = "未知"): string {
   if (value === null) {
-    return "未知";
+    return unknown;
   }
-  return `${formatBytes(value)}/s`;
+  return `${formatBytes(value, unknown)}/s`;
 }
 
-export function formatUtc(value: number | null): string {
+export function formatUtc(value: number | null, empty = "无采样"): string {
   if (value === null) {
-    return "无采样";
+    return empty;
   }
   return new Date(value * 1000).toLocaleString();
 }
 
-export function unknownOr(value: string | null | undefined): string {
-  return value && value.length > 0 ? value : "未知";
+export function unknownOr(value: string | null | undefined, fallback = "未知"): string {
+  return value && value.length > 0 ? value : fallback;
 }

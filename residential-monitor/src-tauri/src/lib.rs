@@ -9,6 +9,7 @@ pub mod candidate_schema;
 pub mod controller;
 pub mod credential;
 pub mod evidence;
+pub mod i18n;
 pub mod identity;
 pub mod live;
 pub mod session;
@@ -21,7 +22,7 @@ use crate::session::ControllerSession;
 #[cfg(not(windows))]
 use c2::desktop::ProcessSingleInstance;
 use c2::desktop::{InstanceClaim, ShutdownPhase};
-use c2::facade::{parse_socket, AppErrorDto, AppFacade, BootstrapDto, ProbeResult};
+use c2::facade::{parse_socket_locale, AppErrorDto, AppFacade, BootstrapDto, ProbeResult};
 use c2::hub::{LiveConnectionView, MonitorStreamMessage};
 use c2::query::{ConnectionPage, ConnectionQuery};
 use c2::settings::ControllerSettings;
@@ -33,9 +34,11 @@ use c3::retention::RetentionPreview;
 use c4::diagnose::DiagnosticsSnapshot;
 use c4::notify::NotifyCapability;
 use c4::types::{AlertCenterPage, AlertRule, AlertSummary};
+use crate::i18n::{t, UiLocale};
 use std::sync::Mutex;
 use tauri::ipc::Channel;
-use tauri::{Emitter, Manager, State};
+use tauri::menu::Menu;
+use tauri::{AppHandle, Emitter, Manager, Runtime, State};
 
 #[cfg(not(windows))]
 fn claim_process_instance() -> InstanceClaim {
@@ -244,24 +247,22 @@ async fn close_connection(
     let (addr, secret, connection_id) = {
         let guard = state.lock().expect("state");
         if guard.branch != c2::shell::BootBranch::NormalReady {
-            return Err(AppErrorDto {
-                code: "recovery_only".into(),
-                message_zh: "恢复模式不能关闭连接。".into(),
-                retryable: false,
-                action: "先修复数据库".into(),
-                details_redacted: "recovery".into(),
-            });
+            return Err(guard.err(
+                "recovery_only",
+                "error.recovery_only_close",
+                "action.fix_db",
+                false,
+            ));
         }
         if guard.settings.address.is_empty() {
-            return Err(AppErrorDto {
-                code: "not_configured".into(),
-                message_zh: "尚未配置控制器。".into(),
-                retryable: false,
-                action: "完成设置向导".into(),
-                details_redacted: "settings".into(),
-            });
+            return Err(guard.err(
+                "not_configured",
+                "error.not_configured",
+                "action.complete_wizard",
+                false,
+            ));
         }
-        let addr = parse_socket(&guard.settings.address)?;
+        let addr = parse_socket_locale(&guard.settings.address, guard.ui_locale)?;
         let secret = if guard.settings.has_secret {
             guard
                 .workflow
@@ -285,7 +286,10 @@ async fn close_connection(
         session
             .close_connection(addr, secret.as_deref(), &connection_id)
             .await
-            .map_err(AppErrorDto::from_status)?
+            .map_err(|status| {
+                let locale = state.lock().expect("state").ui_locale;
+                AppErrorDto::from_status_locale(status, locale)
+            })?
     };
     let mut guard = state.lock().expect("state");
     Ok(guard.mark_close_accepted_from_control(identity, request_id, result))
@@ -328,19 +332,18 @@ async fn test_controller(
     {
         let mut guard = state.lock().expect("state");
         if guard.branch != c2::shell::BootBranch::NormalReady {
-            return Err(AppErrorDto {
-                code: "recovery_only".into(),
-                message_zh: "恢复模式不能测试控制器。".into(),
-                retryable: false,
-                action: "先修复数据库".into(),
-                details_redacted: "recovery".into(),
-            });
+            return Err(guard.err(
+                "recovery_only",
+                "error.recovery_only_probe",
+                "action.fix_db",
+                false,
+            ));
         }
         guard.save_controller(address.clone(), secret, false)?;
     }
     let (addr, secret) = {
         let guard = state.lock().expect("state");
-        let addr = parse_socket(&guard.settings.address)?;
+        let addr = parse_socket_locale(&guard.settings.address, guard.ui_locale)?;
         let secret = if guard.settings.has_secret {
             guard
                 .workflow
@@ -365,38 +368,53 @@ async fn test_controller(
                 guard.apply_probe_ok(inputs)
             };
             forward_published(&state, messages);
-            Ok(AppFacade::probe_result(
+            let locale = state.lock().expect("state").ui_locale;
+            Ok(AppFacade::probe_result_locale(
                 crate::controller::SessionStatus::Connected,
+                locale,
             ))
         }
         Err(status) => {
-            let message = {
+            let (message, locale) = {
                 let mut guard = state.lock().expect("state");
-                guard.apply_probe_err(status)
+                let message = guard.apply_probe_err(status);
+                (message, guard.ui_locale)
             };
             if let Some(message) = message {
                 forward_published(&state, [message]);
             }
-            Err(AppErrorDto::from_status(status))
+            Err(AppErrorDto::from_status_locale(status, locale))
         }
     }
 }
 
 #[tauri::command]
 fn disconnect_controller(state: State<Mutex<AppFacade>>) -> Result<ProbeResult, AppErrorDto> {
-    let message = state.lock().expect("state").disconnect_now();
+    let (message, locale) = {
+        let mut guard = state.lock().expect("state");
+        let message = guard.disconnect_now();
+        (message, guard.ui_locale)
+    };
     if let Some(message) = message {
         forward_published(&state, [message]);
     }
-    Ok(AppFacade::probe_result(
+    Ok(AppFacade::probe_result_locale(
         crate::controller::SessionStatus::Cancelled,
+        locale,
     ))
 }
 
 #[tauri::command]
 fn list_routes(state: State<Mutex<AppFacade>>) -> Result<Vec<RouteDescriptor>, AppErrorDto> {
-    let _ = state;
-    Ok(c2::shell::default_routes())
+    let locale = state.lock().expect("state").ui_locale;
+    Ok(c2::shell::default_routes_for(locale))
+}
+
+#[tauri::command]
+fn save_ui_locale(app: AppHandle, state: State<Mutex<AppFacade>>, locale: String) -> Result<String, AppErrorDto> {
+    let parsed = state.lock().expect("state").save_ui_locale(&locale)?;
+    apply_locale_chrome(&app, parsed);
+    Ok(parsed.as_str().into())
 }
 
 #[tauri::command]
@@ -700,20 +718,47 @@ fn attach_window_close(app: &tauri::App) {
     }
 }
 
-fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn build_tray_menu<R: Runtime>(
+    app: &impl Manager<R>,
+    locale: UiLocale,
+) -> Result<Menu<R>, Box<dyn std::error::Error>> {
     use tauri::menu::{MenuBuilder, MenuItemBuilder};
+    let open = MenuItemBuilder::with_id("open", t(locale, "tray.open")).build(app)?;
+    let pause = MenuItemBuilder::with_id("pause", t(locale, "tray.pause")).build(app)?;
+    let resume = MenuItemBuilder::with_id("resume", t(locale, "tray.resume")).build(app)?;
+    let reconnect = MenuItemBuilder::with_id("reconnect", t(locale, "tray.reconnect")).build(app)?;
+    let quit = MenuItemBuilder::with_id("quit", t(locale, "tray.quit")).build(app)?;
+    Ok(MenuBuilder::new(app)
+        .items(&[&open, &pause, &resume, &reconnect, &quit])
+        .build()?)
+}
+
+fn apply_locale_chrome(app: &AppHandle, locale: UiLocale) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_title(t(locale, "product.display_name"));
+    }
+    if let Some(tray) = app.tray_by_id("main") {
+        if let Ok(menu) = build_tray_menu(app, locale) {
+            let _ = tray.set_menu(Some(menu));
+        }
+        let _ = tray.set_tooltip(Some(t(locale, "product.display_name")));
+    }
+}
+
+fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     use tauri::tray::TrayIconBuilder;
 
-    let open = MenuItemBuilder::with_id("open", "打开窗口").build(app)?;
-    let pause = MenuItemBuilder::with_id("pause", "暂停采集").build(app)?;
-    let resume = MenuItemBuilder::with_id("resume", "继续采集").build(app)?;
-    let reconnect = MenuItemBuilder::with_id("reconnect", "立即重连").build(app)?;
-    let quit = MenuItemBuilder::with_id("quit", "退出").build(app)?;
-    let menu = MenuBuilder::new(app)
-        .items(&[&open, &pause, &resume, &reconnect, &quit])
-        .build()?;
+    let locale = app
+        .state::<Mutex<AppFacade>>()
+        .lock()
+        .map(|guard| guard.ui_locale)
+        .unwrap_or(UiLocale::Zh);
+    let handle = app.handle().clone();
+    let menu = build_tray_menu(&handle, locale)?;
     let icon = app.default_window_icon().cloned();
-    let mut builder = TrayIconBuilder::new().menu(&menu);
+    let mut builder = TrayIconBuilder::with_id("main")
+        .menu(&menu)
+        .tooltip(t(locale, "product.display_name"));
     if let Some(icon) = icon {
         builder = builder.icon(icon);
     }
@@ -784,6 +829,12 @@ pub fn run() {
         .setup(move |app| {
             attach_window_close(app);
             let _ = build_tray(app);
+            let locale = app
+                .state::<Mutex<AppFacade>>()
+                .lock()
+                .map(|guard| guard.ui_locale)
+                .unwrap_or(UiLocale::Zh);
+            apply_locale_chrome(app.handle(), locale);
             if background {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.hide();
@@ -821,6 +872,7 @@ pub fn run() {
             get_settings,
             get_controller_secret,
             save_settings,
+            save_ui_locale,
             save_targets,
             test_controller,
             disconnect_controller,

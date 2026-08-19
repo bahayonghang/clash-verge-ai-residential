@@ -1,6 +1,7 @@
 //! 流式导出：只消费 snapshot token，不重新查询。
 
 use crate::c3::query::{ReportError, ReportResult};
+use crate::i18n::{t, UiLocale};
 use crate::c3::space::SpaceBudget;
 use serde::{Deserialize, Serialize};
 use std::io::{BufWriter, Write};
@@ -34,6 +35,8 @@ pub struct ExportSpec {
     pub include_sessions: bool,
     pub redact_host: RedactMode,
     pub redact_process: RedactMode,
+    #[serde(default)]
+    pub ui_locale: UiLocale,
 }
 
 impl Default for ExportSpec {
@@ -45,6 +48,7 @@ impl Default for ExportSpec {
             include_sessions: false,
             redact_host: RedactMode::None,
             redact_process: RedactMode::None,
+            ui_locale: UiLocale::Zh,
         }
     }
 }
@@ -240,25 +244,38 @@ fn write_html<W: Write>(
     cancel: &Arc<AtomicBool>,
 ) -> Result<(), ReportError> {
     check_cancel(cancel)?;
+    let locale = spec.ui_locale;
     write!(
         writer,
-        "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><title>家宽流量报告</title>\
+        "<!DOCTYPE html><html lang=\"{}\"><head><meta charset=\"utf-8\"><title>{}</title>\
 <style>body{{font-family:sans-serif;background:#12161c;color:#e8eef6}}table{{border-collapse:collapse}}\
 td,th{{border-bottom:1px solid #2a3340;padding:6px;font-variant-numeric:tabular-nums}}\
-@media print{{body{{background:#fff;color:#000}}td,th{{border-bottom:1px solid #000}}}}</style></head><body>"
+@media print{{body{{background:#fff;color:#000}}td,th{{border-bottom:1px solid #000}}}}</style></head><body>",
+        locale.html_lang(),
+        t(locale, "export.html_title")
     )
     .map_err(|_| ReportError::Failed("html"))?;
+    let totals = t(locale, "export.html_totals")
+        .replacen("{}", &result.totals.upload.to_string(), 1)
+        .replacen("{}", &result.totals.download.to_string(), 1)
+        .replacen("{}", &html_escape(&result.coverage.status), 1);
     writeln!(
         writer,
-        "<h1>家宽流量报告</h1><p>{}</p><p>总量 上行 {} 下行 {}。覆盖 {}。</p>",
+        "<h1>{}</h1><p>{}</p><p>{}</p>",
+        t(locale, "export.html_title"),
         html_escape(&metadata_line(result)),
-        result.totals.upload,
-        result.totals.download,
-        html_escape(&result.coverage.status)
+        totals
     )
     .map_err(|_| ReportError::Failed("html"))?;
     if spec.include_rankings {
-        writeln!(writer, "<h2>排名（与图表同一结果）</h2><table><thead><tr><th>名称</th><th>上行</th><th>下行</th></tr></thead><tbody>")
+        writeln!(
+            writer,
+            "<h2>{}</h2><table><thead><tr><th>{}</th><th>{}</th><th>{}</th></tr></thead><tbody>",
+            t(locale, "export.html_rankings"),
+            t(locale, "export.col_name"),
+            t(locale, "export.col_upload"),
+            t(locale, "export.col_download")
+        )
             .map_err(|_| ReportError::Failed("html"))?;
         for row in &result.rankings {
             check_cancel(cancel)?;

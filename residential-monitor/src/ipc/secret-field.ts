@@ -1,10 +1,13 @@
 /** 设置页密钥框。密钥由 JS 写入 input.value，不得插进 HTML 模板。 */
 
-export function secretFieldMarkup(): string {
-  return `<label class="secret-label">TCP secret
+import { t, type UiLocale } from "../i18n";
+
+export function secretFieldMarkup(locale: UiLocale = "zh"): string {
+  const show = t(locale, "secret.show");
+  return `<label class="secret-label">${t(locale, "secret.label")}
     <span class="secret-field">
       <input id="controller-secret" type="password" autocomplete="off" spellcheck="false" />
-      <button type="button" id="toggle-secret" class="secret-toggle" aria-label="显示密钥" aria-pressed="false" title="显示密钥">
+      <button type="button" id="toggle-secret" class="secret-toggle" aria-label="${show}" aria-pressed="false" title="${show}">
         <svg class="icon-show" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
           <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"/>
           <circle fill="none" stroke="currentColor" stroke-width="1.75" cx="12" cy="12" r="3"/>
@@ -16,14 +19,15 @@ export function secretFieldMarkup(): string {
         </svg>
       </button>
     </span>
-    <span class="field-hint">保存后回填此框，默认显示圆点。不会写入日志或 Channel。</span>
+    <span class="field-hint">${t(locale, "secret.hint")}</span>
   </label>`;
 }
 
 export function applySecretField(
   root: ParentNode,
   value: string,
-  visible: boolean
+  visible: boolean,
+  locale: UiLocale = "zh"
 ): void {
   const input = root.querySelector("#controller-secret");
   if (!(input instanceof HTMLInputElement)) {
@@ -34,7 +38,7 @@ export function applySecretField(
   const button = root.querySelector("#toggle-secret");
   if (button instanceof HTMLButtonElement) {
     button.setAttribute("aria-pressed", visible ? "true" : "false");
-    const label = visible ? "隐藏密钥" : "显示密钥";
+    const label = visible ? t(locale, "secret.hide") : t(locale, "secret.show");
     button.setAttribute("aria-label", label);
     button.title = label;
   }
