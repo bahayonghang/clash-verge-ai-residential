@@ -133,15 +133,22 @@ impl DesktopRuntime {
         }
     }
 
-    pub fn open_window(&mut self) {
+    /// Show the owner window and report whether it transitioned from hidden.
+    ///
+    /// The transition is the lifecycle boundary for automatic recovery. Calling
+    /// this repeatedly while the window is already visible must not override a
+    /// user's explicit disconnect or pause.
+    pub fn open_window(&mut self) -> bool {
+        let was_visible = self.window_visible;
         if self.instance == InstanceClaim::Owner && self.shutdown == ShutdownPhase::Idle {
             self.window_visible = true;
         }
+        !was_visible && self.window_visible
     }
 
     pub fn request_focus_from_second_instance(&mut self) {
         self.focus_requested = true;
-        self.open_window();
+        let _ = self.open_window();
     }
 
     pub fn set_collector_running(&mut self, running: bool) -> ControllerInput {
@@ -292,6 +299,14 @@ mod desktop_lifecycle_tests {
             DesktopRuntime::start(&["app".into(), "--background".into()], InstanceClaim::Owner);
         assert!(!background.window_visible);
         assert_eq!(background.launch_mode, LaunchMode::Background);
+    }
+
+    #[test]
+    fn opening_hidden_owner_reports_transition_once() {
+        let mut runtime =
+            DesktopRuntime::start(&["app".into(), "--background".into()], InstanceClaim::Owner);
+        assert!(runtime.open_window());
+        assert!(!runtime.open_window());
     }
 
     #[test]

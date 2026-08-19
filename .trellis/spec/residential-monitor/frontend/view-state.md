@@ -20,3 +20,10 @@
 - 设置页 TCP secret 默认保存到本机凭据并回填密码框（圆点）。显示/隐藏走独立按钮。密钥只写 `input.value`，不插进 `innerHTML`。
 - `AboutDto.signed === true` 时解码失败。发布地址只展示固定 GitHub Releases URL。
 
+## Settings workspace state
+
+- `settingsSection` is a view-only session value: `appearance`, `connection`, `data`, `about`, or `danger`; the default is `connection`. It must not become a new top-level route or a persisted controller setting.
+- `settingsDraft.address` and `settingsDraft.targets` hold unsaved form text across section switches and dynamic paints. On save, read the draft through the existing `save_settings` / `save_targets` commands; Rust remains the validation authority.
+- The secret is never part of the settings render string. `secretFieldMarkup` creates the password control and `applySecretField` writes only `input.value`; show/hide remains a separate button.
+- The connection section renders `state.snapshot ?? boot.overview` for health and uses `tray_summary.collector_running` for collector status. A `test_controller` result is explicitly a single-frame probe; `reconnect_now` is the continuous-monitoring recovery action.
+- Locale and theme segmented controls persist immediately through `save_ui_locale` / `save_ui_theme`, then localize routes and repaint. Settings section buttons expose `aria-current="page"`; narrow layouts use a horizontally scrollable secondary nav without changing top-level routes.

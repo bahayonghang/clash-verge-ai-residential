@@ -58,7 +58,16 @@ fn claim_process_instance() -> InstanceClaim {
 fn try_windows_single_instance() -> InstanceClaim {
     use std::os::windows::ffi::OsStrExt;
     use windows_sys::Win32::Foundation::{GetLastError, ERROR_ALREADY_EXISTS};
-    use windows_sys::Win32::System::Threading::CreateMutexW;
+    use windows_sys::Win32::System::Threading::{CreateEventW, CreateMutexW, OpenEventW, SetEvent};
+
+    let event_name = format!("{}.activate", crate::identity::IDENTIFIER);
+    let event_wide: Vec<u16> = std::ffi::OsString::from(&event_name)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    // Create the activation event before the mutex so a second process cannot
+    // observe the owner without having an event to signal.
+    let _event = unsafe { CreateEventW(std::ptr::null(), 0, 0, event_wide.as_ptr()) };
 
     let name = format!("{}.single-instance", crate::identity::IDENTIFIER);
     let wide: Vec<u16> = std::ffi::OsString::from(&name)
@@ -70,10 +79,64 @@ fn try_windows_single_instance() -> InstanceClaim {
         return InstanceClaim::Owner;
     }
     if unsafe { GetLastError() } == ERROR_ALREADY_EXISTS {
+        let signal = unsafe { OpenEventW(0x0002, 0, event_wide.as_ptr()) };
+        if !signal.is_null() {
+            let _ = unsafe { SetEvent(signal) };
+        }
         InstanceClaim::FocusExisting
     } else {
+        // Raw Win32 handles are not closed by Rust; leaving this owner handle
+        // open keeps the named event available for the listener and later
+        // second-instance signals.
         InstanceClaim::Owner
     }
+}
+
+#[cfg(windows)]
+fn start_windows_activation_listener(app: AppHandle) {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::System::Threading::{OpenEventW, WaitForSingleObject};
+
+    let event_name = format!("{}.activate", crate::identity::IDENTIFIER);
+    let wide: Vec<u16> = std::ffi::OsString::from(&event_name)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let event = unsafe { OpenEventW(0x0010_0000, 0, wide.as_ptr()) } as usize;
+    if event == 0 {
+        crate::app_log::emit(
+            crate::app_log::Level::Warn,
+            "instance_activation_listener",
+            serde_json::json!({ "status": "unavailable" }),
+        );
+        return;
+    }
+    std::thread::spawn(move || loop {
+        let event = event as windows_sys::Win32::Foundation::HANDLE;
+        // A finite wait lets the listener stop once the owner has entered its
+        // shutdown phases without holding any AppFacade lock.
+        let result = unsafe { WaitForSingleObject(event, 500) };
+        if result == 0 {
+            open_main_window(&app);
+            continue;
+        }
+        if result == 0x0000_0102 {
+            let should_stop = app
+                .try_state::<Mutex<AppFacade>>()
+                .map(|state| {
+                    state
+                        .lock()
+                        .map(|guard| guard.desktop.shutdown != ShutdownPhase::Idle)
+                        .unwrap_or(true)
+                })
+                .unwrap_or(true);
+            if should_stop {
+                break;
+            }
+            continue;
+        }
+        break;
+    });
 }
 
 fn live_channels() -> &'static Mutex<SubscriptionRegistry<Channel<MonitorStreamMessage>>> {
@@ -216,7 +279,7 @@ fn persist_archive_outcome(
     let _ = ReportArchiveService::persist_outcome(storage.connection(), job, outcome, now_utc);
 }
 
-fn boot_facade() -> AppFacade {
+fn boot_facade() -> Option<AppFacade> {
     let args: Vec<String> = std::env::args().collect();
     let claim = {
         #[cfg(windows)]
@@ -228,6 +291,14 @@ fn boot_facade() -> AppFacade {
             claim_process_instance()
         }
     };
+    if claim == InstanceClaim::FocusExisting {
+        crate::app_log::emit(
+            crate::app_log::Level::Info,
+            "instance_focus_existing",
+            serde_json::json!({}),
+        );
+        return None;
+    }
     let data_dir = std::env::var("RESIDENTIAL_MONITOR_DATA_DIR")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|_| std::env::temp_dir().join(crate::identity::IDENTIFIER));
@@ -235,7 +306,7 @@ fn boot_facade() -> AppFacade {
     let mut facade = AppFacade::boot(data_dir, &args, claim);
     #[cfg(windows)]
     attach_windows_credentials(&mut facade);
-    facade
+    Some(facade)
 }
 
 #[cfg(windows)]
@@ -864,8 +935,12 @@ fn attach_window_close(app: &tauri::App) {
 
 fn open_main_window(app: &AppHandle) {
     if let Some(state) = app.try_state::<Mutex<AppFacade>>() {
-        state.lock().expect("state").desktop.open_window();
+        let message = state.lock().expect("state").open_main_window();
+        if let Some(message) = message {
+            forward_published(&state, [message]);
+        }
     }
+    sync_tray_chrome(app);
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.show();
         let _ = window.set_focus();
@@ -1068,7 +1143,9 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     crate::app_log::init();
-    let facade = boot_facade();
+    let Some(facade) = boot_facade() else {
+        return;
+    };
     let launch = match facade.desktop.launch_mode {
         c2::desktop::LaunchMode::Background => "background",
         c2::desktop::LaunchMode::Interactive => "interactive",
@@ -1086,19 +1163,13 @@ pub fn run() {
             "version": env!("CARGO_PKG_VERSION"),
         }),
     );
-    if facade.desktop.instance == InstanceClaim::FocusExisting {
-        crate::app_log::emit(
-            crate::app_log::Level::Info,
-            "instance_focus_existing",
-            serde_json::json!({}),
-        );
-        return;
-    }
     let background = facade.desktop.launch_mode == c2::desktop::LaunchMode::Background;
     tauri::Builder::default()
         .manage(Mutex::new(facade))
         .setup(move |app| {
             attach_window_close(app);
+            #[cfg(windows)]
+            start_windows_activation_listener(app.handle().clone());
             let _ = build_tray(app);
             let locale = app
                 .state::<Mutex<AppFacade>>()

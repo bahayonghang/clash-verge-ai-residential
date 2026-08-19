@@ -102,6 +102,12 @@ let liveResize: { col: DataColumnId; startX: number; startW: number } | null = n
 let reportForm: ReportForm = defaultReportForm();
 let archiveKindFilter: ArchiveKindFilter = "all";
 
+type SettingsSection = "appearance" | "connection" | "data" | "about" | "danger";
+type SettingsDraft = { address: string; targets: string };
+
+let settingsSection: SettingsSection = "connection";
+let settingsDraft: SettingsDraft = { address: "", targets: "家宽" };
+
 const FILTER_FIELDS = [
   "host",
   "chain",
@@ -596,99 +602,111 @@ function renderReports(
 
 function renderSettings(
   boot: BootstrapDto,
+  overview: LiveOverview,
   about: AboutDto | null,
   deletePreview: DeletePreview | null,
   deleteReport: DeleteReport | null,
   probeStatus: string,
-  probeState: string
+  probeState: string,
+  collectorRunning: boolean | null
 ): string {
   const aboutBlock = about
-    ? `<p>${fmt("settings.about_meta", { version: about.version, identifier: about.identifier, aumid: about.aumid })}</p>
-       <p>${fmt("settings.about_sign", { state: about.signed ? tx("settings.signed") : tx("settings.unsigned"), note: about.signatureNoteZh })}</p>
-       <p>${fmt("settings.about_release", { url: about.releasesUrl })}</p>`
+    ? `<p>${fmt("settings.about_meta", {
+        version: escapeHtml(about.version),
+        identifier: escapeHtml(about.identifier),
+        aumid: escapeHtml(about.aumid)
+      })}</p>
+       <p>${fmt("settings.about_sign", {
+         state: about.signed ? tx("settings.signed") : tx("settings.unsigned"),
+         note: escapeHtml(about.signatureNoteZh)
+       })}</p>
+       <p>${fmt("settings.about_release", { url: escapeHtml(about.releasesUrl) })}</p>`
     : `<p>${tx("settings.about_idle")}</p>`;
   const deleteItems =
     deletePreview?.items
       .map(
         (item) =>
-          `<li><strong>${item.id}</strong>：${item.noteZh} ${item.exists ? tx("settings.exists") : tx("settings.missing")}</li>`
+          `<li><strong>${escapeHtml(item.id)}</strong>：${escapeHtml(item.noteZh)} ${item.exists ? tx("settings.exists") : tx("settings.missing")}</li>`
       )
       .join("") ?? `<li>${tx("settings.preview_idle")}</li>`;
   const deleteResult = deleteReport
-    ? `<p class="status" data-state="${deleteReport.allDeclaredOk ? "connected" : "storage_failure"}">${deleteReport.summaryZh}</p>`
+    ? `<p class="status" data-state="${deleteReport.allDeclaredOk ? "connected" : "storage_failure"}">${escapeHtml(deleteReport.summaryZh)}</p>`
     : "";
-  return `
-    <section class="panel">
-      <h2>${tx("settings.wizard")}</h2>
-      <ol>
-        <li>${tx("settings.wizard.1")}</li>
-        <li>${tx("settings.wizard.2")}</li>
-        <li>${tx("settings.wizard.3")}</li>
-        <li>${tx("settings.wizard.4")}</li>
-        <li>${tx("settings.wizard.5")}</li>
-      </ol>
-      <label class="stack">${tx("settings.locale")}
-        <select id="ui-locale">
-          <option value="zh" ${uiLocale === "zh" ? "selected" : ""}>${tx("settings.locale.zh")}</option>
-          <option value="en" ${uiLocale === "en" ? "selected" : ""}>${tx("settings.locale.en")}</option>
-        </select>
-      </label>
-      <label class="stack">${tx("settings.theme")}
-        <select id="ui-theme">
-          <option value="latte" ${uiTheme === "latte" ? "selected" : ""}>${tx("settings.theme.latte")}</option>
-          <option value="frappe" ${uiTheme === "frappe" ? "selected" : ""}>${tx("settings.theme.frappe")}</option>
-          <option value="macchiato" ${uiTheme === "macchiato" ? "selected" : ""}>${tx("settings.theme.macchiato")}</option>
-          <option value="mocha" ${uiTheme === "mocha" ? "selected" : ""}>${tx("settings.theme.mocha")}</option>
-        </select>
-      </label>
-      <label class="stack">${tx("settings.address")}
-        <input id="controller-address" value="${boot.settings.address || "127.0.0.1:9097"}" />
-      </label>
-      ${secretFieldMarkup(uiLocale)}
-      <label class="stack">${tx("settings.targets")}
-        <input id="targets" value="家宽" />
-      </label>
-      <p>${fmt("settings.cred", { status: boot.settings.hasSecret ? tx("settings.cred_yes") : tx("settings.cred_no"), mode: boot.settings.secretMode })}</p>
-      <p>${tx("settings.port_note")}</p>
-      <div class="actions">
-        <button type="button" id="save-settings">${tx("settings.save")}</button>
-        <button type="button" id="test-controller">${tx("settings.test")}</button>
-        <button type="button" id="disconnect-controller">${tx("settings.disconnect")}</button>
+  const sections: Array<{ id: SettingsSection; label: string; hint: string }> = [
+    { id: "appearance", label: tx("settings.section.appearance"), hint: tx("settings.section.appearance_hint") },
+    { id: "connection", label: tx("settings.section.connection"), hint: tx("settings.section.connection_hint") },
+    { id: "data", label: tx("settings.section.data"), hint: tx("settings.section.data_hint") },
+    { id: "about", label: tx("settings.section.about"), hint: tx("settings.section.about_hint") },
+    { id: "danger", label: tx("settings.section.danger"), hint: tx("settings.section.danger_hint") }
+  ];
+  const nav = sections
+    .map(
+      (section) => `<button type="button" class="settings-nav-item" data-settings-section="${section.id}" aria-current="${settingsSection === section.id ? "page" : "false"}">
+        <span class="settings-nav-label">${section.label}</span><span class="settings-nav-hint">${section.hint}</span>
+      </button>`
+    )
+    .join("");
+  const connectionState = overview.health.session;
+  const connectionTitle = healthOf(connectionState).title;
+  const collectorLabel = collectorRunning === null
+    ? tx("settings.collector_unknown")
+    : collectorRunning
+      ? tx("settings.collector_running")
+      : tx("settings.collector_paused");
+  const connectionPanel = `
+    <section class="settings-card settings-card-hero">
+      <div class="settings-card-heading">
+        <div><h2>${tx("settings.connection.title")}</h2><p>${tx("settings.connection.help")}</p></div>
+        <span class="settings-state" data-state="${escapeHtml(connectionState)}">${escapeHtml(connectionTitle)}</span>
       </div>
-      <p id="controller-probe" class="status" data-state="${probeState}">${probeStatus}</p>
+      <div class="settings-status-grid">
+        <div class="settings-status"><span>${tx("settings.session")}</span><strong>${escapeHtml(connectionTitle)}</strong></div>
+        <div class="settings-status"><span>${tx("settings.collector")}</span><strong>${collectorLabel}</strong></div>
+        <div class="settings-status"><span>${tx("settings.transport")}</span><strong>${escapeHtml(boot.settings.transport)}</strong></div>
+      </div>
     </section>
-    <section class="panel">
-      <h2>${tx("settings.data")}</h2>
-      <p>${tx("settings.data_help")}</p>
-      <p>${tx("settings.log_dir")}</p>
-      <p id="log-dir-path"></p>
-      <button type="button" id="open-log-dir" ${boot.logDir ? "" : "disabled"}>${tx("settings.open_log_dir")}</button>
-      <button type="button" id="create-backup">${tx("settings.backup")}</button>
-      <button type="button" id="restore-backup">${tx("settings.restore")}</button>
-      <button type="button" id="retention-preview">${tx("settings.retention_preview")}</button>
-      <button type="button" id="run-retention">${tx("settings.retention_run")}</button>
-      <p id="data-note">${tx("settings.retention_note")}</p>
-      <button type="button" id="run-vacuum">${tx("settings.vacuum")}</button>
-    </section>
-    <section class="panel" id="about">
-      <h2>${tx("settings.about")}</h2>
-      ${aboutBlock}
-      <button type="button" id="load-about">${tx("settings.refresh_about")}</button>
-      <button type="button" id="open-releases">${tx("settings.open_releases")}</button>
-    </section>
-    <section class="panel">
-      <h2>${tx("settings.delete_title")}</h2>
-      <p>${deletePreview?.noteZh ?? tx("settings.delete_help")}</p>
-      ${uiLocale === "en" ? `<p>${tx("settings.delete_phrase_en")}</p>` : ""}
-      <ul>${deleteItems}</ul>
-      <label class="stack">${tx("settings.delete_phrase")}
-        <input id="delete-phrase" autocomplete="off" />
-      </label>
-      <button type="button" id="preview-delete">${tx("settings.preview_delete")}</button>
-      <button type="button" id="confirm-delete">${tx("settings.confirm_delete")}</button>
-      ${deleteResult}
-    </section>
-  `;
+    <section class="settings-card">
+      <div class="settings-card-heading"><div><h2>${tx("settings.controller_title")}</h2><p>${tx("settings.controller_help")}</p></div><span class="settings-badge">${boot.settings.hasSecret ? tx("settings.cred_yes") : tx("settings.cred_no")}</span></div>
+      <div class="settings-form-grid">
+        <label class="settings-field settings-field-wide"><span>${tx("settings.address")}</span><input id="controller-address" value="${escapeHtml(settingsDraft.address)}" placeholder="127.0.0.1:9097" autocomplete="off" /></label>
+        <label class="settings-field"><span>${tx("settings.targets")}</span><input id="targets" value="${escapeHtml(settingsDraft.targets)}" autocomplete="off" /></label>
+        <div class="settings-field"><span>${tx("settings.credential")}</span><p class="field-hint">${fmt("settings.cred", { status: boot.settings.hasSecret ? tx("settings.cred_yes") : tx("settings.cred_no"), mode: escapeHtml(boot.settings.secretMode) })}</p></div>
+        <div class="settings-field settings-field-wide">${secretFieldMarkup(uiLocale)}</div>
+      </div>
+      <p class="field-hint">${tx("settings.port_note")}</p>
+      <details class="settings-details"><summary>${tx("settings.wizard")}</summary><ol><li>${tx("settings.wizard.1")}</li><li>${tx("settings.wizard.2")}</li><li>${tx("settings.wizard.3")}</li><li>${tx("settings.wizard.4")}</li><li>${tx("settings.wizard.5")}</li></ol></details>
+      <div class="actions settings-actions">
+        <button type="button" id="save-settings">${tx("settings.save")}</button>
+        <button type="button" class="btn-secondary" id="test-controller">${tx("settings.test_single")}</button>
+        <button type="button" class="btn-secondary" id="reconnect-controller">${tx("settings.reconnect")}</button>
+        <button type="button" class="btn-secondary" id="disconnect-controller">${tx("settings.disconnect")}</button>
+      </div>
+      <p class="field-hint">${tx("settings.test_single_help")}</p>
+      <p id="controller-probe" class="status" data-state="${escapeHtml(probeState)}">${escapeHtml(probeStatus)}</p>
+    </section>`;
+  const appearancePanel = `
+    <section class="settings-card"><div class="settings-card-heading"><div><h2>${tx("settings.appearance.title")}</h2><p>${tx("settings.appearance.help")}</p></div></div>
+      <div class="settings-option-row"><div><h3>${tx("settings.locale")}</h3><p>${tx("settings.locale_help")}</p></div><div class="segmented" role="group" aria-label="${tx("settings.locale")}"><button type="button" class="segment${uiLocale === "zh" ? " is-active" : ""}" data-settings-locale="zh">${tx("settings.locale.zh")}</button><button type="button" class="segment${uiLocale === "en" ? " is-active" : ""}" data-settings-locale="en">${tx("settings.locale.en")}</button></div></div>
+      <div class="settings-option-row settings-theme-row"><div><h3>${tx("settings.theme")}</h3><p>${tx("settings.theme_help")}</p></div><div class="theme-grid">${(["latte", "frappe", "macchiato", "mocha"] as UiTheme[]).map((theme) => `<button type="button" class="theme-choice${uiTheme === theme ? " is-active" : ""}" data-settings-theme="${theme}"><span class="theme-swatch theme-${theme}"></span><span>${tx(`settings.theme.${theme}`)}</span>${uiTheme === theme ? `<span class="theme-check" aria-hidden="true">✓</span>` : ""}</button>`).join("")}</div></div>
+    </section>`;
+  const dataPanel = `
+    <section class="settings-card"><div class="settings-card-heading"><div><h2>${tx("settings.data")}</h2><p>${tx("settings.data_help")}</p></div></div>
+      <div class="settings-resource"><div><h3>${tx("settings.log_dir")}</h3><p id="log-dir-path" class="mono-value"></p></div><button type="button" class="btn-secondary" id="open-log-dir" ${boot.logDir ? "" : "disabled"}>${tx("settings.open_log_dir")}</button></div>
+      <div class="settings-action-grid"><button type="button" class="btn-secondary" id="create-backup">${tx("settings.backup")}</button><button type="button" class="btn-secondary" id="restore-backup">${tx("settings.restore")}</button><button type="button" class="btn-secondary" id="retention-preview">${tx("settings.retention_preview")}</button><button type="button" class="btn-secondary" id="run-retention">${tx("settings.retention_run")}</button><button type="button" class="btn-secondary" id="run-vacuum">${tx("settings.vacuum")}</button></div>
+      <p id="data-note" class="field-hint">${tx("settings.retention_note")}</p>
+    </section>`;
+  const aboutPanel = `
+    <section class="settings-card" id="about"><div class="settings-card-heading"><div><h2>${tx("settings.about")}</h2><p>${tx("settings.about_help")}</p></div></div>
+      <div class="about-body">${aboutBlock}</div><div class="actions"><button type="button" class="btn-secondary" id="load-about">${tx("settings.refresh_about")}</button><button type="button" class="btn-secondary" id="open-releases">${tx("settings.open_releases")}</button></div>
+    </section>`;
+  const dangerPanel = `
+    <section class="settings-card settings-danger"><div class="settings-card-heading"><div><h2>${tx("settings.delete_title")}</h2><p>${escapeHtml(deletePreview?.noteZh ?? tx("settings.delete_help"))}</p></div></div>
+      ${uiLocale === "en" ? `<p class="field-hint">${tx("settings.delete_phrase_en")}</p>` : ""}<ul class="delete-list">${deleteItems}</ul>
+      <label class="settings-field settings-field-wide"><span>${tx("settings.delete_phrase")}</span><input id="delete-phrase" autocomplete="off" /></label>
+      <div class="actions"><button type="button" class="btn-secondary" id="preview-delete">${tx("settings.preview_delete")}</button><button type="button" class="btn-danger" id="confirm-delete">${tx("settings.confirm_delete")}</button></div>${deleteResult}
+    </section>`;
+  const content = settingsSection === "appearance" ? appearancePanel : settingsSection === "connection" ? connectionPanel : settingsSection === "data" ? dataPanel : settingsSection === "about" ? aboutPanel : dangerPanel;
+  return `<section class="settings-page"><header class="settings-header"><div><h1>${tx("settings.title")}</h1><p>${tx("settings.help")}</p></div><span class="settings-count">${sections.length} ${tx("settings.sections")}</span></header><div class="settings-layout"><nav class="settings-nav" aria-label="${tx("settings.nav_aria")}">${nav}</nav><div class="settings-content">${content}</div></div></section>`;
 }
 
 function renderRecovery(boot: BootstrapDto): string {
@@ -947,7 +965,16 @@ function renderApp(
         : route === "live"
           ? renderLive(state, liveRows, boot.settings.address, collectorRunning)
           : route === "settings-data"
-            ? renderSettings(boot, about, deletePreview, deleteReport, probeStatus, probeState)
+            ? renderSettings(
+                boot,
+                state.snapshot ?? boot.overview,
+                about,
+                deletePreview,
+                deleteReport,
+                probeStatus,
+                probeState,
+                collectorRunning
+              )
             : route === "reports"
               ? renderReports(report, reportStatus, archives, selectedArchiveId, reportSource)
               : route === "alerts"
@@ -1008,6 +1035,7 @@ async function main(): Promise<void> {
   applyLocale(parseUiLocale(boot.uiLocale));
   adoptTheme(parseUiTheme(boot.uiTheme));
   liveTableLayout = parseLiveTableLayout(boot.liveTableLayout);
+  settingsDraft = { address: boot.settings.address, targets: "家宽" };
 
   let route: RouteId = boot.branch === "recovery-only" ? "settings-data" : "overview";
   let state = emptyMonitorState();
@@ -1244,6 +1272,12 @@ async function main(): Promise<void> {
     if (target instanceof HTMLInputElement && target.id === "controller-secret") {
       settingsSecret = target.value;
     }
+    if (target instanceof HTMLInputElement && target.id === "controller-address") {
+      settingsDraft = { ...settingsDraft, address: target.value };
+    }
+    if (target instanceof HTMLInputElement && target.id === "targets") {
+      settingsDraft = { ...settingsDraft, targets: target.value };
+    }
     if (target instanceof HTMLInputElement && target.dataset.filterValue != null) {
       const index = Number(target.dataset.filterValue);
       const clauses = liveQuery.filter.clauses.map((clause, item) =>
@@ -1438,6 +1472,53 @@ async function main(): Promise<void> {
     if (!target) {
       return;
     }
+    const sectionEl = raw.closest("[data-settings-section]");
+    if (sectionEl instanceof HTMLElement && sectionEl.dataset.settingsSection) {
+      const nextSection = sectionEl.dataset.settingsSection;
+      if (
+        nextSection === "appearance" ||
+        nextSection === "connection" ||
+        nextSection === "data" ||
+        nextSection === "about" ||
+        nextSection === "danger"
+      ) {
+        settingsSection = nextSection;
+        paint();
+      }
+      return;
+    }
+    const localeEl = raw.closest("[data-settings-locale]");
+    if (localeEl instanceof HTMLElement && localeEl.dataset.settingsLocale) {
+      const nextLocale = parseUiLocale(localeEl.dataset.settingsLocale);
+      try {
+        const saved = await invokeCommand<string>("save_ui_locale", { locale: nextLocale });
+        applyLocale(parseUiLocale(saved));
+        boot.uiLocale = uiLocale;
+        boot.routes = localizeRoutes(boot.routes);
+      } catch {
+        applyLocale(nextLocale);
+        boot.uiLocale = uiLocale;
+        boot.routes = localizeRoutes(boot.routes);
+      }
+      reportStatus = tx("report.idle");
+      alertStatus = tx("alerts.idle");
+      paint();
+      return;
+    }
+    const themeEl = raw.closest("[data-settings-theme]");
+    if (themeEl instanceof HTMLElement && themeEl.dataset.settingsTheme) {
+      const nextTheme = parseUiTheme(themeEl.dataset.settingsTheme);
+      try {
+        const saved = await invokeCommand<string>("save_ui_theme", { theme: nextTheme });
+        adoptTheme(parseUiTheme(saved));
+        boot.uiTheme = uiTheme;
+      } catch {
+        adoptTheme(nextTheme);
+        boot.uiTheme = nextTheme;
+      }
+      paint();
+      return;
+    }
     const sortEl = raw.closest("[data-sort]");
     if (sortEl instanceof HTMLElement && sortEl.dataset.sort && isDataColumn(sortEl.dataset.sort)) {
       const next = nextLiveSort(sortEl.dataset.sort, {
@@ -1558,12 +1639,12 @@ async function main(): Promise<void> {
             .map((item) => item.trim())
             .filter(Boolean)
         });
-        const selected = (document.querySelector("#ui-locale") as HTMLSelectElement | null)?.value;
+        const selected = (document.querySelector("#ui-locale") as HTMLSelectElement | null)?.value ?? uiLocale;
         const nextLocale = parseUiLocale(selected);
         const saved = await invokeCommand<string>("save_ui_locale", { locale: nextLocale });
         applyLocale(parseUiLocale(saved));
         boot.uiLocale = uiLocale;
-        const selectedTheme = (document.querySelector("#ui-theme") as HTMLSelectElement | null)?.value;
+        const selectedTheme = (document.querySelector("#ui-theme") as HTMLSelectElement | null)?.value ?? uiTheme;
         const nextTheme = parseUiTheme(selectedTheme);
         const savedTheme = await invokeCommand<string>("save_ui_theme", { theme: nextTheme });
         adoptTheme(parseUiTheme(savedTheme));
@@ -1611,6 +1692,26 @@ async function main(): Promise<void> {
         const extra = dto.code === "endpoint_missing" ? " 本机 Verge 常用 127.0.0.1:9097。" : "";
         probeStatus = `${dto.messageZh}${dto.action ? `下一步：${dto.action}。` : ""}${extra}`;
         probeState = dto.code || "storage_failure";
+        apply(state, "settings-data");
+      }
+    }
+    if (target.id === "reconnect-controller") {
+      probeStatus = tx("settings.reconnecting");
+      probeState = "connecting";
+      apply(state, "settings-data");
+      try {
+        await invokeCommand("reconnect_now");
+        const next = await invokeCommand<BootstrapDto>("get_bootstrap");
+        boot.settings = next.settings;
+        boot.overview = next.overview;
+        state.snapshot = next.overview;
+        probeStatus = tx("settings.reconnected");
+        probeState = next.overview.health.session;
+        await refreshLivePage();
+        apply(state, "settings-data");
+      } catch {
+        probeStatus = tx("settings.connect_fail");
+        probeState = "storage_failure";
         apply(state, "settings-data");
       }
     }

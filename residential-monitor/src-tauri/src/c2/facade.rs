@@ -29,7 +29,7 @@ use crate::c4::notify::{FakeNotificationSink, NotificationSink, NotifyPayload};
 use crate::c4::types::{
     validate_rule, AlertCenterPage, AlertRule, AlertSummary, ALERT_DTO_VERSION,
 };
-use crate::controller::{ControllerInput, SessionStatus};
+use crate::controller::{reject_non_loopback_ip, ControllerInput, SessionStatus};
 use crate::credential::FakeCredentialStore;
 use crate::i18n::{t, UiLocale, SETTING_KEY};
 use crate::live_table_layout::{
@@ -444,6 +444,34 @@ impl AppFacade {
 
     pub fn resync(&self, subscription_id: u64) -> MonitorStreamMessage {
         self.hub.resync(subscription_id)
+    }
+
+    /// Handle an owner-window transition initiated by the tray or a second
+    /// instance. Recovery is deliberately tied to the hidden -> visible
+    /// transition so an explicit disconnect remains cancelled while the window
+    /// stays open. A persisted, valid loopback endpoint is required; the UI's
+    /// display fallback is never used as an implicit controller address.
+    pub fn open_main_window(&mut self) -> Option<MonitorStreamMessage> {
+        if !self.desktop.open_window() || self.branch != BootBranch::NormalReady {
+            return None;
+        }
+        if !self.has_valid_controller_address() {
+            return None;
+        }
+        if matches!(self.session_status, SessionStatus::Cancelled) {
+            self.reconnect_now()
+        } else if !self.desktop.collector_running {
+            self.resume_collector()
+        } else {
+            None
+        }
+    }
+
+    fn has_valid_controller_address(&self) -> bool {
+        let Ok(address) = parse_socket(&self.settings.address) else {
+            return false;
+        };
+        reject_non_loopback_ip(address.ip()).is_ok()
     }
 
     pub fn apply_lifecycle(&mut self, input: ControllerInput) -> Option<MonitorStreamMessage> {
@@ -1492,6 +1520,61 @@ mod c2_facade_contract_tests {
         assert_eq!(facade.session_status, SessionStatus::Connecting);
         assert_eq!(facade.hub.overview().health.session, "connecting");
         assert!(facade.desktop.collector_running);
+    }
+
+    #[test]
+    fn reopening_hidden_window_reconnects_cancelled_owner() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.settings.address = "127.0.0.1:9097".into();
+        facade.disconnect_now();
+        assert_eq!(facade.session_status, SessionStatus::Cancelled);
+        assert_eq!(
+            facade.desktop.close_window(),
+            crate::c2::desktop::CloseWindowResult::HiddenFirstExplain
+        );
+
+        facade.open_main_window();
+
+        assert_eq!(facade.session_status, SessionStatus::Connecting);
+        assert!(facade.desktop.collector_running);
+    }
+
+    #[test]
+    fn opening_window_without_persisted_address_does_not_reconnect() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.disconnect_now();
+        let _ = facade.desktop.close_window();
+
+        facade.open_main_window();
+
+        assert_eq!(facade.session_status, SessionStatus::Cancelled);
+    }
+
+    #[test]
+    fn opening_window_with_non_loopback_address_does_not_reconnect() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.settings.address = "192.0.2.10:9097".into();
+        facade.disconnect_now();
+        let _ = facade.desktop.close_window();
+
+        assert!(facade.open_main_window().is_none());
+
+        assert_eq!(facade.session_status, SessionStatus::Cancelled);
+    }
+
+    #[test]
+    fn visible_window_keeps_manual_disconnect_cancelled() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.settings.address = "127.0.0.1:9097".into();
+        facade.disconnect_now();
+
+        facade.open_main_window();
+
+        assert_eq!(facade.session_status, SessionStatus::Cancelled);
     }
 
     #[test]

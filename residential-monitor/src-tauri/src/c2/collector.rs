@@ -184,6 +184,26 @@ mod collector_tick_tests {
         assert!(plan.address().is_none());
     }
 
+    #[test]
+    fn persisted_loopback_address_is_ready_on_next_boot() {
+        let dir = tempdir().expect("dir");
+        let mut first = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        first.settings.address = "127.0.0.1:9097".into();
+        first
+            .persist_settings()
+            .expect("persist controller settings");
+        drop(first);
+
+        let second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+
+        let plan = plan_tick(&second);
+        assert!(plan.should_fetch);
+        assert_eq!(
+            plan.address(),
+            Some("127.0.0.1:9097".parse().expect("addr"))
+        );
+    }
+
     #[tokio::test]
     async fn two_ticks_change_hub_rows() {
         let (addr, hits, stop) = spawn_scripted_connections(vec![
