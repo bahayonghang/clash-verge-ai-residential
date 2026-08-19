@@ -473,3 +473,25 @@
 ### Next Steps
 
 - 未 push；如需发布再开 PR
+
+
+## Session 16: 实时表排序筛选与列布局
+
+**Date**: 2026-08-19
+**Task**: 实时表排序筛选与列布局
+**Branch**: `dev`
+
+### Summary
+
+交付实时连接表固定列宽、拖动显隐、表头排序与数值条件；已提交并归档 08-19-live-table-sort-width 及三个子任务。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d3d6c7a` | (see git log) |
+| `5097bcf` | (see git log) |
+
+### Status
+
+[OK] **Completed**
