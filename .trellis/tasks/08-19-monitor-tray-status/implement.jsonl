@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "Rust 拥有托盘；clippy/test 门。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C2 不 rusqlite；Paused/Resumed 语义；just tdev。"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "托盘文案不得带 secret。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "前端不 set_icon；Vanilla TS。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "暂停看 collector_running，不看 health.session === paused。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "托盘与概览共用 hub health。"}
+{"file": ".trellis/tasks/08-19-monitor-tray-status/prd.md", "reason": "四态色点与左右键验收。"}
+{"file": ".trellis/tasks/08-19-monitor-tray-status/design.md", "reason": "映射合同与 Tauri 接线。"}
