@@ -548,3 +548,43 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 19: 家宽监控本机日志与 tinstall 停进程
+
+**Date**: 2026-08-19
+**Task**: 家宽监控本机日志与 tinstall 停进程
+**Package**: residential-monitor
+**Branch**: `dev`
+
+### Summary
+
+落地本机文件日志（轮转脱敏、设置页与 Recovery 打开目录、删除清单纳入日志），并让 just tinstall 在安装前结束运行中的 residential-monitor。
+
+### Main Changes
+
+- app_log + redact：LocalAppData logs、轮转、禁止子串扫描
+- 设置页与 Recovery 打开日志目录；删除清单含 logs
+- just tinstall 安装前 Stop-Process residential-monitor
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0b0295e` | (see git log) |
+| `c325be1` | (see git log) |
+
+### Testing
+
+- [OK] cargo fmt/clippy/test workspace
+- [OK] npm --prefix residential-monitor typecheck/lint/test/build
+- [OK] npm run check:secrets
+- [OK] just --show tinstall
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- just tdev 走查打开日志目录；未跑 tinstall
