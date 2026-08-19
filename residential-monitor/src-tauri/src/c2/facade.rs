@@ -1,11 +1,14 @@
 //! C2 AppFacade：只经 C1 接口访问采集、存储、投影与恢复。
 
 use crate::accounting::AccountingEngine;
+use crate::app_log::{self, Level};
 use crate::c0_contract::{all_table_allowlist, forbidden_table_fragments};
 use crate::c2::close::{CloseRegistry, CloseState, ControlResult};
 use crate::c2::contract::SCHEMA_VERSION;
 use crate::c2::desktop::{DesktopRuntime, FakeAutostart, InstanceClaim, LaunchMode, ShutdownPhase};
-use crate::c2::hub::{health_from, LiveOverview, MonitorHub, MonitorStreamMessage};
+use crate::c2::hub::{
+    health_from, session_status_name, LiveOverview, MonitorHub, MonitorStreamMessage,
+};
 use crate::c2::query::{ConnectionPage, ConnectionQuery};
 use crate::c2::settings::{
     validate_targets, ControllerSettings, SettingsError, SettingsWorkflow, WizardState,
@@ -33,7 +36,9 @@ use crate::live_table_layout::{
     encode_setting, parse_setting, sanitize_layout, LiveTableLayout, LAYOUT_SETTING_KEY,
 };
 use crate::session::ControllerSession;
-use crate::storage::{AlertCommitSlice, CommitBundle, RecoveryFacade, StorageCoordinator};
+use crate::storage::{
+    AlertCommitSlice, CommitBundle, RecoveryFacade, StorageCoordinator, StorageError,
+};
 use crate::theme::{UiTheme, THEME_SETTING_KEY};
 use serde::Serialize;
 use std::net::SocketAddr;
@@ -146,6 +151,7 @@ pub struct BootstrapDto {
     pub ui_locale: UiLocale,
     pub ui_theme: UiTheme,
     pub live_table_layout: LiveTableLayout,
+    pub log_dir: String,
 }
 
 pub struct AppFacade {
@@ -178,6 +184,7 @@ pub struct AppFacade {
     pub ui_locale: UiLocale,
     pub ui_theme: UiTheme,
     pub live_table_layout: LiveTableLayout,
+    last_logged_session: Option<SessionStatus>,
 }
 
 impl AppFacade {
@@ -187,6 +194,11 @@ impl AppFacade {
         let desktop = DesktopRuntime::start(args, claim);
         match StorageCoordinator::open(&db_path) {
             Ok(storage) => {
+                app_log::emit(
+                    Level::Info,
+                    "storage_open",
+                    serde_json::json!({ "class": "ok" }),
+                );
                 let settings = storage
                     .get_setting("controller")
                     .ok()
@@ -260,39 +272,52 @@ impl AppFacade {
                     ui_locale,
                     ui_theme,
                     live_table_layout,
+                    last_logged_session: None,
                 }
             }
-            Err(_) => Self {
-                branch: BootBranch::RecoveryOnly,
-                desktop,
-                hub: MonitorHub::new(),
-                engine: AccountingEngine::new(),
-                storage: None,
-                recovery: RecoveryFacade::open(&db_path),
-                settings: ControllerSettings::default(),
-                wizard: WizardState::default(),
-                wizard_complete: false,
-                workflow: SettingsWorkflow::new(FakeCredentialStore::new(), false),
-                closes: CloseRegistry::new(),
-                operations: OperationRegistry::new(),
-                dialog: FakeFileDialog::default(),
-                autostart: FakeAutostart::new(),
-                session: ControllerSession::new(String::new()),
-                data_dir: data_dir.clone(),
-                session_status: SessionStatus::EndpointMissing,
-                snapshots: ReportSnapshotStore::open(&data_dir),
-                space: SpaceBudget::unlimited(),
-                raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
-                alerts: AlertEngine::new(),
-                notify: FakeNotificationSink::default(),
-                writer_epoch: 1,
-                bundle_seq: 1,
-                last_frame_utc: None,
-                last_period_eval_utc: 0,
-                ui_locale: UiLocale::Zh,
-                ui_theme: UiTheme::Mocha,
-                live_table_layout: LiveTableLayout::default(),
-            },
+            Err(error) => {
+                let class = match error {
+                    StorageError::Sqlite(_) => "sqlite",
+                    StorageError::Closed(_) => "closed",
+                };
+                app_log::emit(
+                    Level::Error,
+                    "storage_open",
+                    serde_json::json!({ "class": class }),
+                );
+                Self {
+                    branch: BootBranch::RecoveryOnly,
+                    desktop,
+                    hub: MonitorHub::new(),
+                    engine: AccountingEngine::new(),
+                    storage: None,
+                    recovery: RecoveryFacade::open(&db_path),
+                    settings: ControllerSettings::default(),
+                    wizard: WizardState::default(),
+                    wizard_complete: false,
+                    workflow: SettingsWorkflow::new(FakeCredentialStore::new(), false),
+                    closes: CloseRegistry::new(),
+                    operations: OperationRegistry::new(),
+                    dialog: FakeFileDialog::default(),
+                    autostart: FakeAutostart::new(),
+                    session: ControllerSession::new(String::new()),
+                    data_dir: data_dir.clone(),
+                    session_status: SessionStatus::EndpointMissing,
+                    snapshots: ReportSnapshotStore::open(&data_dir),
+                    space: SpaceBudget::unlimited(),
+                    raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
+                    alerts: AlertEngine::new(),
+                    notify: FakeNotificationSink::default(),
+                    writer_epoch: 1,
+                    bundle_seq: 1,
+                    last_frame_utc: None,
+                    last_period_eval_utc: 0,
+                    ui_locale: UiLocale::Zh,
+                    ui_theme: UiTheme::Mocha,
+                    live_table_layout: LiveTableLayout::default(),
+                    last_logged_session: None,
+                }
+            }
         }
     }
 
@@ -321,6 +346,7 @@ impl AppFacade {
             ui_locale: self.ui_locale,
             ui_theme: self.ui_theme,
             live_table_layout: self.live_table_layout.clone(),
+            log_dir: app_log::dir().to_string_lossy().into_owned(),
         })
     }
 
@@ -332,6 +358,46 @@ impl AppFacade {
         retryable: bool,
     ) -> AppErrorDto {
         localized_error(self.ui_locale, code, message_key, action_key, retryable)
+    }
+
+    fn log_session_change(&mut self, to: SessionStatus) {
+        if self.last_logged_session == Some(to) {
+            return;
+        }
+        let from = self
+            .last_logged_session
+            .map(session_status_name)
+            .unwrap_or_else(|| "none".into());
+        let to_name = session_status_name(to);
+        let level = if matches!(to, SessionStatus::Connected) {
+            Level::Info
+        } else {
+            Level::Warn
+        };
+        app_log::emit(
+            level,
+            "session",
+            serde_json::json!({ "from": from, "to": to_name }),
+        );
+        self.last_logged_session = Some(to);
+    }
+
+    pub fn pause_collector(&mut self) -> Option<MonitorStreamMessage> {
+        let input = self.desktop.set_collector_running(false);
+        app_log::emit(Level::Info, "collector_pause", serde_json::json!({}));
+        self.apply_lifecycle(input)
+    }
+
+    pub fn open_log_dir(&self) -> Result<String, AppErrorDto> {
+        match app_log::open_in_explorer() {
+            Ok(path) => Ok(path.to_string_lossy().into_owned()),
+            Err(_) => Err(self.err(
+                "open_log_dir",
+                "error.open_log_dir",
+                "action.open_log_dir",
+                true,
+            )),
+        }
     }
 
     pub fn save_ui_locale(&mut self, raw: &str) -> Result<UiLocale, AppErrorDto> {
@@ -433,6 +499,7 @@ impl AppFacade {
                     .as_ref(),
             );
             self.session_status = SessionStatus::Connected;
+            self.log_session_change(SessionStatus::Connected);
             self.commit_eval(&batch, &live, utc, utc as u64);
             self.hub.publish(&batch, live, health, utc).ok().flatten()
         } else {
@@ -633,16 +700,19 @@ impl AppFacade {
             }
         }
         self.session_status = SessionStatus::Connected;
+        self.log_session_change(SessionStatus::Connected);
         messages
     }
 
     pub fn apply_probe_err(&mut self, status: SessionStatus) -> Option<MonitorStreamMessage> {
         self.session_status = status;
+        self.log_session_change(status);
         self.apply_lifecycle(ControllerInput::Disconnected { reason: status })
     }
 
     pub fn disconnect_now(&mut self) -> Option<MonitorStreamMessage> {
         self.session_status = SessionStatus::Cancelled;
+        self.log_session_change(SessionStatus::Cancelled);
         self.apply_lifecycle(ControllerInput::Disconnected {
             reason: SessionStatus::Cancelled,
         })
@@ -651,7 +721,9 @@ impl AppFacade {
     /// 离开 Cancelled，让已有采集循环的下一拍可以取帧。
     pub fn reconnect_now(&mut self) -> Option<MonitorStreamMessage> {
         self.session_status = SessionStatus::Connecting;
+        self.log_session_change(SessionStatus::Connecting);
         let _ = self.desktop.set_collector_running(true);
+        app_log::emit(Level::Info, "reconnect", serde_json::json!({}));
         let input = self.desktop.reconnect();
         self.apply_lifecycle(input)
     }
@@ -659,8 +731,10 @@ impl AppFacade {
     pub fn resume_collector(&mut self) -> Option<MonitorStreamMessage> {
         if matches!(self.session_status, SessionStatus::Cancelled) {
             self.session_status = SessionStatus::Connecting;
+            self.log_session_change(SessionStatus::Connecting);
         }
         let input = self.desktop.set_collector_running(true);
+        app_log::emit(Level::Info, "collector_resume", serde_json::json!({}));
         self.apply_lifecycle(input)
     }
 
@@ -733,7 +807,24 @@ impl AppFacade {
     pub fn shutdown(&mut self) -> Vec<ShutdownPhase> {
         self.workflow.clear_session();
         let _ = self.apply_lifecycle(ControllerInput::Shutdown);
-        self.desktop.begin_shutdown()
+        let phases = self.desktop.begin_shutdown();
+        for phase in &phases {
+            let name = match phase {
+                ShutdownPhase::Idle => "idle",
+                ShutdownPhase::StopIntake => "stop-intake",
+                ShutdownPhase::FlushWriter => "flush-writer",
+                ShutdownPhase::CloseCoverage => "close-coverage",
+                ShutdownPhase::Checkpoint => "checkpoint",
+                ShutdownPhase::RemoveTray => "remove-tray",
+                ShutdownPhase::Exit => "exit",
+            };
+            app_log::emit(
+                Level::Info,
+                "shutdown",
+                serde_json::json!({ "phase": name }),
+            );
+        }
+        phases
     }
 
     pub fn run_report(&mut self, query: ReportQuery) -> Result<ReportResult, AppErrorDto> {
@@ -840,8 +931,17 @@ impl AppFacade {
             mode,
             &self.space,
             &cancel,
-        )
-        .map_err(map_report)?;
+        );
+        app_log::emit(
+            if preview.is_ok() {
+                Level::Info
+            } else {
+                Level::Error
+            },
+            "retention",
+            serde_json::json!({ "ok": preview.is_ok() }),
+        );
+        let preview = preview.map_err(map_report)?;
         if let Some(storage) = self.storage.as_ref() {
             let _ = crate::c4::store::retain_alerts(storage.connection(), now);
         }
@@ -899,6 +999,7 @@ impl AppFacade {
                 self.bundle_seq = self.bundle_seq.saturating_add(1);
             }
         }
+        app_log::emit(Level::Info, "alert_rule", serde_json::json!({ "ok": true }));
         Ok(rule)
     }
 
@@ -958,6 +1059,13 @@ impl AppFacade {
         &mut self,
     ) -> Result<crate::c4::notify::NotifyCapability, AppErrorDto> {
         let cap = self.notify.capability();
+        if !cap.available {
+            app_log::emit(
+                Level::Warn,
+                "notify_unavailable",
+                serde_json::json!({ "class": "unavailable" }),
+            );
+        }
         let payload = NotifyPayload {
             title_zh: t(self.ui_locale, "notify.test_title").into(),
             body_zh: t(self.ui_locale, "notify.test_body").into(),
@@ -967,7 +1075,14 @@ impl AppFacade {
         };
         match self.notify.send(&payload) {
             Ok(()) => Ok(cap),
-            Err(_) => Ok(self.notify.capability()),
+            Err(error) => {
+                app_log::emit(
+                    Level::Warn,
+                    "notify_unavailable",
+                    serde_json::json!({ "class": error.class() }),
+                );
+                Ok(self.notify.capability())
+            }
         }
     }
 
@@ -1015,9 +1130,17 @@ impl AppFacade {
         let live = self.data_dir.join("monitor.sqlite3");
         let now = chrono::Utc::now().timestamp();
         let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        BackupRestoreService::create_backup(&live, dest, &self.space, &cancel, now)
-            .map(|manifest| manifest.checksum)
-            .map_err(map_report)
+        let result = BackupRestoreService::create_backup(&live, dest, &self.space, &cancel, now);
+        app_log::emit(
+            if result.is_ok() {
+                Level::Info
+            } else {
+                Level::Error
+            },
+            "backup",
+            serde_json::json!({ "ok": result.is_ok() }),
+        );
+        result.map(|manifest| manifest.checksum).map_err(map_report)
     }
 
     pub fn restore_backup(&mut self, candidate: &Path) -> Result<(), AppErrorDto> {
@@ -1025,8 +1148,17 @@ impl AppFacade {
         self.branch = BootBranch::RecoveryOnly;
         let live = self.data_dir.join("monitor.sqlite3");
         let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        BackupRestoreService::restore(&live, candidate, &self.space, &cancel)
-            .map_err(map_report)?;
+        let restored = BackupRestoreService::restore(&live, candidate, &self.space, &cancel);
+        app_log::emit(
+            if restored.is_ok() {
+                Level::Info
+            } else {
+                Level::Error
+            },
+            "restore",
+            serde_json::json!({ "ok": restored.is_ok() }),
+        );
+        restored.map_err(map_report)?;
         match StorageCoordinator::open(&live) {
             Ok(storage) => {
                 self.storage = Some(storage);
@@ -1048,7 +1180,7 @@ impl AppFacade {
     }
 
     pub fn preview_delete_local_data(&self) -> crate::c5::DeletePreview {
-        crate::c5::preview_delete(&self.data_dir)
+        crate::c5::preview_delete(&self.data_dir, &app_log::dir())
     }
 
     pub fn confirm_delete_local_data(
@@ -1059,7 +1191,8 @@ impl AppFacade {
         self.storage = None;
         let target = self.settings.credential_target.clone();
         let data_dir = self.data_dir.clone();
-        let report = crate::c5::confirm_delete(&data_dir, phrase, || {
+        let log_dir = app_log::dir();
+        let report = crate::c5::confirm_delete(&data_dir, &log_dir, phrase, || {
             self.workflow
                 .delete_stored_target(&target)
                 .map_err(|error| error.message_zh().to_string())
@@ -1082,6 +1215,16 @@ impl AppFacade {
         } else {
             self.branch = BootBranch::RecoveryOnly;
         }
+        let failed = report.items.iter().filter(|item| !item.ok).count() as u32;
+        app_log::emit(
+            if report.all_declared_ok {
+                Level::Info
+            } else {
+                Level::Error
+            },
+            "delete",
+            serde_json::json!({ "ok": report.all_declared_ok, "failed": failed }),
+        );
         Ok(report)
     }
 
@@ -1089,6 +1232,15 @@ impl AppFacade {
         let live = self.data_dir.join("monitor.sqlite3");
         self.storage = None;
         let result = crate::c5::run_user_vacuum(&live, &self.space);
+        app_log::emit(
+            if result.is_ok() {
+                Level::Info
+            } else {
+                Level::Error
+            },
+            "vacuum",
+            serde_json::json!({ "ok": result.is_ok() }),
+        );
         match StorageCoordinator::open(&live) {
             Ok(storage) => {
                 self.storage = Some(storage);
@@ -1284,6 +1436,37 @@ mod c2_facade_contract_tests {
         facade.disconnect_now();
         assert_eq!(facade.session_status, SessionStatus::Cancelled);
         assert_eq!(facade.hub.overview().health.session, "cancelled");
+    }
+
+    #[test]
+    fn storage_open_failure_logs_class_without_secret() {
+        let _lock = crate::app_log::exclusive_test();
+        let dir = tempdir().expect("dir");
+        let logs = dir.path().join("logs");
+        crate::app_log::init_at(logs.clone(), crate::app_log::DEFAULT_MAX_BYTES);
+        std::fs::create_dir_all(dir.path().join("monitor.sqlite3")).expect("dir-as-db");
+        let facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(facade.branch, BootBranch::RecoveryOnly);
+        let text = std::fs::read_to_string(logs.join(crate::app_log::FILE_NAME)).expect("log");
+        assert!(text.contains("storage_open"));
+        assert!(text.contains("\"class\":\"sqlite\"") || text.contains("\"class\":\"closed\""));
+        assert!(!crate::redact::scan_text_for_secrets(&text));
+        crate::app_log::reset_for_test();
+    }
+
+    #[test]
+    fn session_change_is_logged_once_per_code() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.apply_probe_err(SessionStatus::AuthFailed);
+        assert_eq!(facade.last_logged_session, Some(SessionStatus::AuthFailed));
+        facade.apply_probe_err(SessionStatus::AuthFailed);
+        assert_eq!(facade.last_logged_session, Some(SessionStatus::AuthFailed));
+        facade.apply_probe_err(SessionStatus::EndpointMissing);
+        assert_eq!(
+            facade.last_logged_session,
+            Some(SessionStatus::EndpointMissing)
+        );
     }
 
     #[test]

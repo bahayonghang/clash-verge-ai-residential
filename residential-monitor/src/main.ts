@@ -660,6 +660,9 @@ function renderSettings(
     <section class="panel">
       <h2>${tx("settings.data")}</h2>
       <p>${tx("settings.data_help")}</p>
+      <p>${tx("settings.log_dir")}</p>
+      <p id="log-dir-path"></p>
+      <button type="button" id="open-log-dir" ${boot.logDir ? "" : "disabled"}>${tx("settings.open_log_dir")}</button>
       <button type="button" id="create-backup">${tx("settings.backup")}</button>
       <button type="button" id="restore-backup">${tx("settings.restore")}</button>
       <button type="button" id="retention-preview">${tx("settings.retention_preview")}</button>
@@ -700,6 +703,9 @@ function renderRecovery(boot: BootstrapDto): string {
       <p>${fmt("recovery.meta", { app: recovery.appVersion, db: recovery.userVersion, max: recovery.supportedMax })}</p>
       <p>${recovery.future ? tx("recovery.future") : tx("recovery.unreadable")}</p>
       <p>${recovery.restoreNoteZh}</p>
+      <p>${tx("recovery.log_dir")}</p>
+      <p id="log-dir-path"></p>
+      <button type="button" id="open-log-dir" ${boot.logDir ? "" : "disabled"}>${tx("recovery.open_log_dir")}</button>
       <button type="button" id="restore-backup" ${recovery.restoreAvailable ? "" : "disabled"}>${tx("recovery.run")}</button>
       <h3>${tx("recovery.backups")}</h3>
       <ul>${backups || `<li>${tx("common.none")}</li>`}</ul>
@@ -861,7 +867,8 @@ function previewBootstrap(): BootstrapDto {
     launchMode: "interactive",
     uiLocale: "zh",
     uiTheme: "mocha",
-    liveTableLayout: defaultLiveTableLayout()
+    liveTableLayout: defaultLiveTableLayout(),
+    logDir: ""
   };
 }
 
@@ -967,6 +974,10 @@ function renderApp(
   `;
   if (focusedId) {
     document.getElementById(focusedId)?.focus();
+  }
+  const logPath = root.querySelector("#log-dir-path");
+  if (logPath instanceof HTMLElement) {
+    logPath.textContent = boot.logDir ? boot.logDir : tx("settings.log_dir_unknown");
   }
   const nextWrap = root.querySelector(".live-table-wrap");
   if (nextWrap instanceof HTMLElement) {
@@ -1762,6 +1773,13 @@ async function main(): Promise<void> {
         apply(state, "settings-data");
       } catch {
         apply({ ...state, errorZh: "无法读取关于信息。" });
+      }
+    }
+    if (target.id === "open-log-dir") {
+      try {
+        await invokeCommand("open_log_dir");
+      } catch {
+        apply({ ...state, errorZh: tx("settings.open_log_dir_fail") });
       }
     }
     if (target.id === "open-releases") {

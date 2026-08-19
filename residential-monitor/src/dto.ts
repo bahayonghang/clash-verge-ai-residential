@@ -232,6 +232,7 @@ export interface BootstrapDto {
   uiLocale?: "zh" | "en";
   uiTheme?: UiTheme;
   liveTableLayout?: { widths: Record<string, number>; hidden: string[] };
+  logDir?: string;
 }
 
 export interface OperationProgress {

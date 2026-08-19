@@ -4,7 +4,7 @@
 - 每条 Channel 消息必须检查 `schemaVersion`、`kind` 和单调 `seq`。
 - 禁止把 mihomo 原始 JSON 或 SQL 行传到视图层。
 - 时间展示用用户本地时区；持久时间保持 UTC integer。
-- `BootstrapDto.uiLocale` 缺字段时按 `zh`。`BootstrapDto.uiTheme` 缺字段时按 `mocha`。`messageZh` 字段名保持不变，内容为当前语言。
+- `BootstrapDto.uiLocale` 缺字段时按 `zh`。`BootstrapDto.uiTheme` 缺字段时按 `mocha`。`BootstrapDto.logDir` 缺字段时「打开日志目录」禁用，显示「日志目录未知」，不猜本机路径。`messageZh` 字段名保持不变，内容为当前语言。
 
 ## Scenario: C2 Monitor Channel
 
@@ -173,6 +173,7 @@
 ### 2. Signatures
 - `get_about() -> AboutDto`
 - `open_releases() -> releasesUrl`
+- `open_log_dir() -> logDir`
 - `preview_delete_local_data() -> DeletePreview`
 - `confirm_delete_local_data(phrase) -> DeleteReport`
 - `run_user_vacuum()`
@@ -181,7 +182,7 @@
 - `AboutDto.schemaVersion` 必须为 `1`。`signed` 为 `false` 时不得写成已签名。
 - `open_releases` 只返回固定 GitHub Releases URL，不注册 updater plugin。
 - 删除确认短语必须是 `删除全部本地数据`。部分失败时 `allDeclaredOk=false`，文案不得写成「已全部删除」。
-- 删除只清理数据目录声明对象和当前进程凭据引用。未再确认前不写本机 Credential Manager。
+- 删除只清理数据目录声明对象、日志目录和当前进程凭据引用。未再确认前不写本机 Credential Manager。`open_log_dir` 不接收前端路径。
 - 用户主动 VACUUM 前检查约两倍数据库空间；失败保留当前库。不自动 VACUUM。
 
 ### 4. Validation & Error Matrix

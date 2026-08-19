@@ -6,6 +6,7 @@
 | 实时连接显示当前没有活跃连接 | 控制器已连接。表空表示此刻没有活跃连接，不是故障 |
 | 实时连接一直空且健康为已取消 | 断开后需托盘立即重连或再次测试连接，采集才会恢复取帧 |
 | TCP 鉴权失败 | 检查 loopback 与 secret，不要把 secret 贴进日志 |
+| 启动进入 Recovery 或采集反复失败 | 设置页或 Recovery 壳打开日志目录。路径为 `%LOCALAPPDATA%\io.github.bahayonghang.residential-monitor\logs`。不要把 secret 贴进日志 |
 | 管道访问拒绝 / 忙 / 不兼容 | 启用 TCP External Controller |
 | 缺口显示未知 | 正常。不要改成 0 |
 | 存储故障 / 未来 schema | 进入 Recovery Shell，使用经验证备份 |

@@ -4,17 +4,10 @@ use crate::c0_contract::{SCHEMA_VERSION, SYNCHRONOUS};
 use crate::c4::outbox;
 use crate::c4::schema::C4_MIGRATION_CHECKSUM;
 use crate::controller::SessionStatus;
+use crate::redact::scan_text_for_secrets;
 use crate::storage::{StorageCoordinator, StorageError};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-
-const FORBIDDEN: &[&str] = &[
-    "bearer ",
-    "password=",
-    "secret=",
-    "authorization:",
-    "credential",
-];
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -43,8 +36,7 @@ pub struct DiagnosticsSnapshot {
 impl DiagnosticsSnapshot {
     pub fn contains_secret(&self) -> bool {
         let encoded = serde_json::to_string(self).unwrap_or_default();
-        let lower = encoded.to_ascii_lowercase();
-        FORBIDDEN.iter().any(|item| lower.contains(item))
+        scan_text_for_secrets(&encoded)
     }
 }
 
@@ -103,8 +95,7 @@ pub fn export_atomic(snapshot: &DiagnosticsSnapshot, dest: &Path) -> Result<Stri
     ));
     let encoded = serde_json::to_vec_pretty(snapshot)
         .map_err(|error| StorageError::Closed(error.to_string()))?;
-    let lower = String::from_utf8_lossy(&encoded).to_ascii_lowercase();
-    if FORBIDDEN.iter().any(|item| lower.contains(item)) {
+    if scan_text_for_secrets(&String::from_utf8_lossy(&encoded)) {
         return Err(StorageError::Closed("diagnostics leaked secret".into()));
     }
     std::fs::write(&tmp, encoded).map_err(|error| StorageError::Closed(error.to_string()))?;
@@ -121,11 +112,6 @@ fn recent_error_classes(coordinator: &StorageCoordinator) -> Result<Vec<String>,
     )?;
     let rows = statement.query_map([], |row| row.get::<_, String>(0))?;
     Ok(rows.filter_map(Result::ok).collect())
-}
-
-pub fn scan_text_for_secrets(text: &str) -> bool {
-    let lower = text.to_ascii_lowercase();
-    FORBIDDEN.iter().any(|item| lower.contains(item))
 }
 
 #[cfg(test)]

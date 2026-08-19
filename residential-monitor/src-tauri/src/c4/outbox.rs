@@ -172,6 +172,11 @@ pub fn complete_send(
                     error.summary_zh()
                 ],
             )?;
+            crate::app_log::emit(
+                crate::app_log::Level::Warn,
+                "outbox_failed",
+                serde_json::json!({ "error_class": error.class() }),
+            );
             Ok(OutboxStatus::Failed)
         }
         Err(error) => {

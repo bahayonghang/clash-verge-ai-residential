@@ -42,24 +42,25 @@ pub struct DeleteReport {
     pub summary_zh: String,
 }
 
-pub fn preview_delete(data_dir: &Path) -> DeletePreview {
+pub fn preview_delete(data_dir: &Path, log_dir: &Path) -> DeletePreview {
     DeletePreview {
         schema_version: 1,
         confirm_phrase: DELETE_CONFIRM_PHRASE,
-        items: declared_items(data_dir),
+        items: declared_items(data_dir, log_dir),
         note_zh: "删除会停止采集并分项执行。普通卸载不走此路径，默认保留数据。凭据项只清理当前进程引用，不写本机 Credential Manager。".into(),
     }
 }
 
 pub fn confirm_delete(
     data_dir: &Path,
+    log_dir: &Path,
     phrase: &str,
     clear_credential: impl Fn() -> Result<(), String>,
 ) -> Result<DeleteReport, String> {
     if phrase != DELETE_CONFIRM_PHRASE {
         return Err("确认短语不匹配".into());
     }
-    let preview = declared_items(data_dir);
+    let preview = declared_items(data_dir, log_dir);
     let mut items = Vec::new();
     for item in preview {
         if item.id == "credential-ref" {
@@ -96,7 +97,7 @@ pub fn confirm_delete(
     })
 }
 
-fn declared_items(data_dir: &Path) -> Vec<DeleteItem> {
+fn declared_items(data_dir: &Path, log_dir: &Path) -> Vec<DeleteItem> {
     let db = data_dir.join("monitor.sqlite3");
     vec![
         file_item("database", "sqlite", &db, "主数据库。"),
@@ -124,6 +125,7 @@ fn declared_items(data_dir: &Path) -> Vec<DeleteItem> {
             &data_dir.join("migration-backup"),
             "迁移前备份目录（若存在）。",
         ),
+        file_item("logs", "directory", log_dir, "应用日志目录。"),
         DeleteItem {
             id: "credential-ref".into(),
             kind: "credential-ref".into(),
@@ -191,9 +193,13 @@ mod purge_tests {
         let dir = tempdir().expect("dir");
         let db = dir.path().join("monitor.sqlite3");
         std::fs::write(&db, b"db").expect("db");
-        let error = confirm_delete(dir.path(), "delete", || Ok(())).expect_err("phrase");
+        let logs = dir.path().join("logs");
+        std::fs::create_dir_all(&logs).expect("logs");
+        std::fs::write(logs.join("residential-monitor.log"), b"log").expect("log");
+        let error = confirm_delete(dir.path(), &logs, "delete", || Ok(())).expect_err("phrase");
         assert_eq!(error, "确认短语不匹配");
         assert!(db.exists());
+        assert!(logs.join("residential-monitor.log").exists());
     }
 
     #[test]
@@ -201,13 +207,21 @@ mod purge_tests {
         let dir = tempdir().expect("dir");
         std::fs::write(dir.path().join("monitor.sqlite3"), b"db").expect("db");
         std::fs::create_dir_all(dir.path().join("report-spool")).expect("spool");
-        let ok = confirm_delete(dir.path(), DELETE_CONFIRM_PHRASE, || Ok(())).expect("ok");
+        let logs = dir.path().join("logs");
+        std::fs::create_dir_all(&logs).expect("logs");
+        std::fs::write(logs.join("residential-monitor.log"), b"log").expect("log");
+        let preview = preview_delete(dir.path(), &logs);
+        assert!(preview.items.iter().any(|item| item.id == "logs"));
+        let ok = confirm_delete(dir.path(), &logs, DELETE_CONFIRM_PHRASE, || Ok(())).expect("ok");
         assert!(ok.all_declared_ok);
         assert!(!dir.path().join("monitor.sqlite3").exists());
+        assert!(!logs.exists());
         assert!(ok.summary_zh.contains("全部声明"));
 
         std::fs::write(dir.path().join("monitor.sqlite3"), b"db").expect("db2");
-        let failed = confirm_delete(dir.path(), DELETE_CONFIRM_PHRASE, || {
+        let logs = dir.path().join("logs");
+        std::fs::create_dir_all(&logs).expect("logs2");
+        let failed = confirm_delete(dir.path(), &logs, DELETE_CONFIRM_PHRASE, || {
             Err("凭据引用未能清除。".into())
         })
         .expect("partial");

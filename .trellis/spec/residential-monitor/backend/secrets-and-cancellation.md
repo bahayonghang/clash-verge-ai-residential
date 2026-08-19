@@ -1,7 +1,7 @@
 # 密钥与取消
 
 - secret 只存在于 Credential Manager 或当前进程内存。
-- 日志、SQLite、Channel、错误、诊断和导出不得包含 secret。
+- 日志、SQLite、Channel、错误、诊断和导出不得包含 secret。日志与诊断共用 `redact::scan_text_for_secrets`（`bearer ` / `password=` / `secret=` / `authorization:` / `credential`）。
 - 设置页可通过 `get_controller_secret` 把密钥写进密码框的 `input.value`。默认 `type=password`，由「显示密钥」按钮改成明文。密钥不得插进 HTML 模板、日志或 Channel。
 - 保存与测试连接默认 `session_only=false`，写入本机凭据。Credential Manager 不可用时才退回当前进程会话 secret。
 - C1 使用 FakeCredentialStore。C2 `SettingsWorkflow` 实现补偿：先写 pending、读回验证、probe、再写稳定 target；失败删除 pending 并保留旧引用。

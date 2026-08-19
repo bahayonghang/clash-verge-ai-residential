@@ -1,4 +1,5 @@
 pub mod accounting;
+pub mod app_log;
 pub mod bench;
 pub mod c0_contract;
 pub mod c2;
@@ -13,6 +14,7 @@ pub mod i18n;
 pub mod identity;
 pub mod live;
 pub mod live_table_layout;
+pub mod redact;
 pub mod session;
 pub mod sqlite_probe;
 pub mod storage;
@@ -680,8 +682,7 @@ fn data_directory(state: State<Mutex<AppFacade>>) -> Result<String, AppErrorDto>
 fn pause_collector(app: AppHandle, state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
     let message = {
         let mut guard = state.lock().expect("state");
-        let input = guard.desktop.set_collector_running(false);
-        guard.apply_lifecycle(input)
+        guard.pause_collector()
     };
     if let Some(message) = message {
         forward_published(&state, [message]);
@@ -805,6 +806,11 @@ fn get_about(state: State<Mutex<AppFacade>>) -> Result<c5::AboutDto, AppErrorDto
 #[tauri::command]
 fn open_releases() -> Result<String, AppErrorDto> {
     Ok(crate::identity::RELEASES_URL.to_string())
+}
+
+#[tauri::command]
+fn open_log_dir(state: State<Mutex<AppFacade>>) -> Result<String, AppErrorDto> {
+    state.lock().expect("state").open_log_dir()
 }
 
 #[tauri::command]
@@ -1020,8 +1026,7 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                     if let Some(state) = handle_menu.try_state::<Mutex<AppFacade>>() {
                         let message = {
                             let mut guard = state.lock().expect("state");
-                            let input = guard.desktop.set_collector_running(false);
-                            guard.apply_lifecycle(input)
+                            guard.pause_collector()
                         };
                         if let Some(message) = message {
                             forward_published(&state, [message]);
@@ -1062,8 +1067,31 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    crate::app_log::init();
     let facade = boot_facade();
+    let launch = match facade.desktop.launch_mode {
+        c2::desktop::LaunchMode::Background => "background",
+        c2::desktop::LaunchMode::Interactive => "interactive",
+    };
+    let branch = match facade.branch {
+        c2::shell::BootBranch::NormalReady => "normal-ready",
+        c2::shell::BootBranch::RecoveryOnly => "recovery-only",
+    };
+    crate::app_log::emit(
+        crate::app_log::Level::Info,
+        "boot",
+        serde_json::json!({
+            "launch": launch,
+            "branch": branch,
+            "version": env!("CARGO_PKG_VERSION"),
+        }),
+    );
     if facade.desktop.instance == InstanceClaim::FocusExisting {
+        crate::app_log::emit(
+            crate::app_log::Level::Info,
+            "instance_focus_existing",
+            serde_json::json!({}),
+        );
         return;
     }
     let background = facade.desktop.launch_mode == c2::desktop::LaunchMode::Background;
@@ -1153,6 +1181,7 @@ pub fn run() {
             scan_outbox,
             get_about,
             open_releases,
+            open_log_dir,
             preview_delete_local_data,
             confirm_delete_local_data,
             run_user_vacuum

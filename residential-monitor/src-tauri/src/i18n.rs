@@ -228,6 +228,8 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
             "打开数据目录检查文件",
             "Open the data directory and check files",
         ),
+        "action.open_log_dir" => ("打开日志目录", "Open the log directory"),
+        "error.open_log_dir" => ("无法打开日志目录。", "Cannot open the log directory."),
         "action.change_loopback" => ("改用 127.0.0.1:端口", "Use 127.0.0.1 and a port"),
         "action.retry_later" => ("稍后重试", "Retry later"),
         "action.change_path" => ("更换路径后重试", "Change the path, then retry"),

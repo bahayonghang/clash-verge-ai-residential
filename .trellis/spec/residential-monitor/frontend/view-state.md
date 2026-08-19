@@ -16,7 +16,7 @@
 - Top N 扇形图分母为 `totals.download`。其余 = 总量 − 排名下行，仅正差额同时出现在图和表，不写回 `ReportResult`，不进导出。
 - 自动档案列表可见约 8 行；类型筛选走 `list_report_archives.kind`。
 - 进入 `reports` 时 `list_report_archives`，优先展示最新成功日档案，否则最新成功小时档案。手动「运行报告」只更新当前会话 token，不写 `report_archive`。
-- C5 设置页可展示关于信息、删除预览 / 二次确认和用户主动 VACUUM。动态重绘后按元素 `id` 恢复焦点。缺口、未知和能力过期仍显示「未知」，不画成零。
+- C5 设置页可展示关于信息、删除预览 / 二次确认和用户主动 VACUUM。设置页与 Recovery 壳显示 `logDir` 并用 `open_log_dir` 打开目录；路径写入文本节点，不拼 `file://`。Recovery 不加删除入口。动态重绘后按元素 `id` 恢复焦点。缺口、未知和能力过期仍显示「未知」，不画成零。
 - 设置页 TCP secret 默认保存到本机凭据并回填密码框（圆点）。显示/隐藏走独立按钮。密钥只写 `input.value`，不插进 `innerHTML`。
 - `AboutDto.signed === true` 时解码失败。发布地址只展示固定 GitHub Releases URL。
 

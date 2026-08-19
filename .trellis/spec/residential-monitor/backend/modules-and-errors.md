@@ -1,6 +1,7 @@
 # 模块与错误
 
 - 稳定 identifier：`io.github.bahayonghang.residential-monitor`。
+- 本机日志由 `app_log` 拥有，目录为 `%LOCALAPPDATA%\{identifier}\logs`，不复用 `data_dir`。`RESIDENTIAL_MONITOR_LOG_DIR` 可覆盖。启动时在 `AppFacade::boot` 之前 `init`。写入失败不得中断采集。`open_log_dir` 只打开该目录，不授 WebView `fs` / opener。
 - 错误对前端只暴露稳定码和当前语言的下一步动作，详情脱敏。JSON 字段仍叫 `messageZh`。
 - 界面语言键 `ui_locale`（`zh`/`en`）走 `put_setting`，不进控制器 JSON。`identity::PRODUCT_NAME` 与删除确认短语不随语言改。
 - 外观键 `ui_theme` 与实时表列布局键 `live_table_layout` 同样走 `put_setting`，不进控制器 JSON。非法值回落默认。
