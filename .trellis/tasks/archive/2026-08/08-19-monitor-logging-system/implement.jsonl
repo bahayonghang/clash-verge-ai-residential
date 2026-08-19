@@ -1,0 +1,10 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "新模块与 clippy/test 门；禁止为演示加运行时。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C2 不 rusqlite；command 错误码；just tdev。"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "日志不得含 secret；诊断扫描子串。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Vanilla TS；禁止 fs/CDN。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "BootstrapDto 与 C5 删除契约。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "Recovery 与设置页只缓存 DTO。"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "日志不进 SQLite，不加 migration。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "logDir 跨 Rust/前端；删除清单与解析函数同源。"}
+{"file": ".trellis/tasks/08-19-monitor-logging-system/prd.md", "reason": "R1–R6 与 AC1–AC8。"}
+{"file": ".trellis/tasks/08-19-monitor-logging-system/design.md", "reason": "app_log 边界、事件码、拒绝 plugin-log。"}

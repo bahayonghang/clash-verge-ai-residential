@@ -1,0 +1,28 @@
+{
+  "id": "monitor-logging-system",
+  "name": "monitor-logging-system",
+  "title": "家宽监控本机日志系统",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-19",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "本机文件日志：LocalAppData logs、轮转脱敏、设置页与 Recovery 打开目录。planning，待批准规划摘要。"
+  }
+}
