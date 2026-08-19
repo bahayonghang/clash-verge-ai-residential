@@ -12,6 +12,7 @@
 - 产品进程用 `c2/collector.rs` 约 1 Hz HTTP GET `/connections`。`test_controller` 只取一帧，不能代替循环。HTTP 期间不得持 `Mutex<AppFacade>`。
 - `Paused` / `Resumed` / `SleepGap` 发布时保留 `hub.rows()`。`Disconnected` 才允许清空。`session_status == Cancelled` 时跳过取帧；`reconnect_now` / `resume_collector` 必须离开 `Cancelled`，不得新开第二条循环。
 - Tauri `Channel` 只放在 `lib.rs` 订阅表，不进入 `AppFacade`。
+- 托盘 id `main`。Tauri 2 默认左键弹菜单，必须 `show_menu_on_left_click(false)`。左键 Up 与左键双击打开窗口，右键才是菜单。四态由 `c2::desktop::tray_chrome(collector_running, session, storage_ok)` 决定，资源是 `icons/tray-*.png`。窗口 `icon.png` 不随状态变。`just tdev` 重启后通知区才换图标。
 - C3 代码位于 `residential-monitor/src-tauri/src/c3/`。C3 只通过 `StorageCoordinator` / `RecoveryFacade` 访问 SQLite，不得另建 writer 或通用 Repository。`ReportArchiveService` 拥有 `report_archive` 读写与过期删除。
 - `collector_loop_tick` 在 `apply_tick_result` 之后调用 `archive_tick`。`ReportService::run` 不得持 `Mutex<AppFacade>`。每 tick 最多 1 份档案。临时 snapshot 必须打开独立目录（`data_dir/archive-tick`），不得 `ReportSnapshotStore::open(data_dir)`，否则 `cleanup_orphans` 会删掉门面仍有效的 spool token。
 - Recovery Shell 与 shutdown 跳过档案调度，不初始化 `ReportArchiveService` 循环。

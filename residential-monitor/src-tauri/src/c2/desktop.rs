@@ -44,6 +44,50 @@ pub struct TraySummary {
     pub window_visible: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TrayVisual {
+    Collecting,
+    Connecting,
+    Paused,
+    Fault,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TrayChrome {
+    pub visual: TrayVisual,
+    pub tooltip_session: String,
+}
+
+/// 暂停优先于会话码与存储健康。
+pub fn tray_chrome(collector_running: bool, session: &str, storage_ok: bool) -> TrayChrome {
+    if !collector_running {
+        return TrayChrome {
+            visual: TrayVisual::Paused,
+            tooltip_session: "paused".into(),
+        };
+    }
+    if !storage_ok {
+        return TrayChrome {
+            visual: TrayVisual::Fault,
+            tooltip_session: "storage_failure".into(),
+        };
+    }
+    match session {
+        "connected" => TrayChrome {
+            visual: TrayVisual::Collecting,
+            tooltip_session: "connected".into(),
+        },
+        "connecting" | "core_restarted" => TrayChrome {
+            visual: TrayVisual::Connecting,
+            tooltip_session: session.into(),
+        },
+        _ => TrayChrome {
+            visual: TrayVisual::Fault,
+            tooltip_session: session.into(),
+        },
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DesktopRuntime {
     pub launch_mode: LaunchMode,
@@ -53,6 +97,9 @@ pub struct DesktopRuntime {
     pub collector_running: bool,
     pub shutdown: ShutdownPhase,
     pub focus_requested: bool,
+    pub last_tray_visual: Option<TrayVisual>,
+    pub last_tray_running: Option<bool>,
+    pub last_tray_tooltip: Option<String>,
 }
 
 impl DesktopRuntime {
@@ -70,6 +117,9 @@ impl DesktopRuntime {
             collector_running: claim == InstanceClaim::Owner,
             shutdown: ShutdownPhase::Idle,
             focus_requested: claim == InstanceClaim::FocusExisting,
+            last_tray_visual: None,
+            last_tray_running: None,
+            last_tray_tooltip: None,
         }
     }
 
@@ -291,5 +341,65 @@ mod desktop_lifecycle_tests {
         *port.fail_write.lock().expect("f") = false;
         port.set_enabled(true).expect("write");
         assert!(port.is_enabled().expect("os"));
+    }
+
+    #[test]
+    fn tray_chrome_maps_running_and_health() {
+        let cases = [
+            (true, "connected", true, TrayVisual::Collecting, "connected"),
+            (
+                true,
+                "connecting",
+                true,
+                TrayVisual::Connecting,
+                "connecting",
+            ),
+            (
+                true,
+                "core_restarted",
+                true,
+                TrayVisual::Connecting,
+                "core_restarted",
+            ),
+            (false, "connected", true, TrayVisual::Paused, "paused"),
+            (
+                false,
+                "tcp_unauthorized",
+                true,
+                TrayVisual::Paused,
+                "paused",
+            ),
+            (
+                true,
+                "tcp_unauthorized",
+                true,
+                TrayVisual::Fault,
+                "tcp_unauthorized",
+            ),
+            (
+                true,
+                "endpoint_missing",
+                true,
+                TrayVisual::Fault,
+                "endpoint_missing",
+            ),
+            (true, "cancelled", true, TrayVisual::Fault, "cancelled"),
+            (
+                true,
+                "connected",
+                false,
+                TrayVisual::Fault,
+                "storage_failure",
+            ),
+            (false, "connected", false, TrayVisual::Paused, "paused"),
+        ];
+        for (running, session, storage_ok, visual, tooltip) in cases {
+            let chrome = tray_chrome(running, session, storage_ok);
+            assert_eq!(
+                chrome.visual, visual,
+                "{session} running={running} storage={storage_ok}"
+            );
+            assert_eq!(chrome.tooltip_session, tooltip, "{session}");
+        }
     }
 }

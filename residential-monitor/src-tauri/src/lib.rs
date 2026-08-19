@@ -20,12 +20,12 @@ pub mod theme;
 pub mod transport;
 pub mod workload;
 
-use crate::i18n::{t, UiLocale};
+use crate::i18n::{health_title, t, UiLocale};
 use crate::live_table_layout::LiveTableLayout;
 use crate::session::ControllerSession;
 #[cfg(not(windows))]
 use c2::desktop::ProcessSingleInstance;
-use c2::desktop::{InstanceClaim, ShutdownPhase};
+use c2::desktop::{tray_chrome, InstanceClaim, ShutdownPhase, TrayVisual};
 use c2::facade::{parse_socket_locale, AppErrorDto, AppFacade, BootstrapDto, ProbeResult};
 use c2::hub::{LiveConnectionView, MonitorStreamMessage};
 use c2::query::{ConnectionPage, ConnectionQuery};
@@ -101,7 +101,10 @@ fn forward_published(
     }
 }
 
-async fn collector_loop_tick(state: &Mutex<AppFacade>) -> bool {
+async fn collector_loop_tick(handle: &AppHandle) -> bool {
+    let Some(state) = handle.try_state::<Mutex<AppFacade>>() else {
+        return false;
+    };
     let plan = {
         let guard = state.lock().expect("state");
         if guard.desktop.shutdown != ShutdownPhase::Idle {
@@ -129,11 +132,12 @@ async fn collector_loop_tick(state: &Mutex<AppFacade>) -> bool {
                 }
             };
             if let Some(message) = message {
-                forward_published(state, [message]);
+                forward_published(&state, [message]);
             }
         }
     }
-    archive_tick(state);
+    archive_tick(&state);
+    sync_tray_chrome(handle);
     true
 }
 
@@ -405,6 +409,7 @@ fn save_targets(state: State<Mutex<AppFacade>>, targets: Vec<String>) -> Result<
 
 #[tauri::command]
 async fn test_controller(
+    app: AppHandle,
     state: State<'_, Mutex<AppFacade>>,
     address: String,
     secret: Option<String>,
@@ -449,6 +454,7 @@ async fn test_controller(
             };
             forward_published(&state, messages);
             let locale = state.lock().expect("state").ui_locale;
+            sync_tray_chrome(&app);
             Ok(AppFacade::probe_result_locale(
                 crate::controller::SessionStatus::Connected,
                 locale,
@@ -463,13 +469,17 @@ async fn test_controller(
             if let Some(message) = message {
                 forward_published(&state, [message]);
             }
+            sync_tray_chrome(&app);
             Err(AppErrorDto::from_status_locale(status, locale))
         }
     }
 }
 
 #[tauri::command]
-fn disconnect_controller(state: State<Mutex<AppFacade>>) -> Result<ProbeResult, AppErrorDto> {
+fn disconnect_controller(
+    app: AppHandle,
+    state: State<Mutex<AppFacade>>,
+) -> Result<ProbeResult, AppErrorDto> {
     let (message, locale) = {
         let mut guard = state.lock().expect("state");
         let message = guard.disconnect_now();
@@ -478,6 +488,7 @@ fn disconnect_controller(state: State<Mutex<AppFacade>>) -> Result<ProbeResult, 
     if let Some(message) = message {
         forward_published(&state, [message]);
     }
+    sync_tray_chrome(&app);
     Ok(AppFacade::probe_result_locale(
         crate::controller::SessionStatus::Cancelled,
         locale,
@@ -666,7 +677,7 @@ fn data_directory(state: State<Mutex<AppFacade>>) -> Result<String, AppErrorDto>
 }
 
 #[tauri::command]
-fn pause_collector(state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
+fn pause_collector(app: AppHandle, state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
     let message = {
         let mut guard = state.lock().expect("state");
         let input = guard.desktop.set_collector_running(false);
@@ -675,29 +686,36 @@ fn pause_collector(state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
     if let Some(message) = message {
         forward_published(&state, [message]);
     }
+    sync_tray_chrome(&app);
     Ok(())
 }
 
 #[tauri::command]
-fn resume_collector(state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
+fn resume_collector(app: AppHandle, state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
     let message = state.lock().expect("state").resume_collector();
     if let Some(message) = message {
         forward_published(&state, [message]);
     }
+    sync_tray_chrome(&app);
     Ok(())
 }
 
 #[tauri::command]
-fn reconnect_now(state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
+fn reconnect_now(app: AppHandle, state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
     let message = state.lock().expect("state").reconnect_now();
     if let Some(message) = message {
         forward_published(&state, [message]);
     }
+    sync_tray_chrome(&app);
     Ok(())
 }
 
 #[tauri::command]
-fn notify_power_event(state: State<Mutex<AppFacade>>, sleeping: bool) -> Result<(), AppErrorDto> {
+fn notify_power_event(
+    app: AppHandle,
+    state: State<Mutex<AppFacade>>,
+    sleeping: bool,
+) -> Result<(), AppErrorDto> {
     let message = {
         let mut guard = state.lock().expect("state");
         let input = if sleeping {
@@ -710,6 +728,7 @@ fn notify_power_event(state: State<Mutex<AppFacade>>, sleeping: bool) -> Result<
     if let Some(message) = message {
         forward_published(&state, [message]);
     }
+    sync_tray_chrome(&app);
     Ok(())
 }
 
@@ -837,14 +856,48 @@ fn attach_window_close(app: &tauri::App) {
     }
 }
 
+fn open_main_window(app: &AppHandle) {
+    if let Some(state) = app.try_state::<Mutex<AppFacade>>() {
+        state.lock().expect("state").desktop.open_window();
+    }
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+
+fn tray_icon_image(visual: TrayVisual) -> tauri::image::Image<'static> {
+    match visual {
+        TrayVisual::Collecting => tauri::include_image!("icons/tray-collecting.png"),
+        TrayVisual::Connecting => tauri::include_image!("icons/tray-connecting.png"),
+        TrayVisual::Paused => tauri::include_image!("icons/tray-paused.png"),
+        TrayVisual::Fault => tauri::include_image!("icons/tray-fault.png"),
+    }
+}
+
+fn tray_tooltip(locale: UiLocale, session: &str) -> String {
+    let product = t(locale, "product.display_name");
+    let title = health_title(locale, session);
+    if title.is_empty() {
+        format!("{product} — {session}")
+    } else {
+        format!("{product} — {title}")
+    }
+}
+
 fn build_tray_menu<R: Runtime>(
     app: &impl Manager<R>,
     locale: UiLocale,
+    collector_running: bool,
 ) -> Result<Menu<R>, Box<dyn std::error::Error>> {
     use tauri::menu::{MenuBuilder, MenuItemBuilder};
     let open = MenuItemBuilder::with_id("open", t(locale, "tray.open")).build(app)?;
-    let pause = MenuItemBuilder::with_id("pause", t(locale, "tray.pause")).build(app)?;
-    let resume = MenuItemBuilder::with_id("resume", t(locale, "tray.resume")).build(app)?;
+    let pause = MenuItemBuilder::with_id("pause", t(locale, "tray.pause"))
+        .enabled(collector_running)
+        .build(app)?;
+    let resume = MenuItemBuilder::with_id("resume", t(locale, "tray.resume"))
+        .enabled(!collector_running)
+        .build(app)?;
     let reconnect =
         MenuItemBuilder::with_id("reconnect", t(locale, "tray.reconnect")).build(app)?;
     let quit = MenuItemBuilder::with_id("quit", t(locale, "tray.quit")).build(app)?;
@@ -853,51 +906,118 @@ fn build_tray_menu<R: Runtime>(
         .build()?)
 }
 
+fn sync_tray_chrome(app: &AppHandle) {
+    let Some(state) = app.try_state::<Mutex<AppFacade>>() else {
+        return;
+    };
+    let (visual, running, locale, skip_icon, skip_menu, skip_tooltip, tooltip) = {
+        let mut guard = state.lock().expect("state");
+        let health = guard.hub.overview().health;
+        let chrome = tray_chrome(
+            guard.desktop.collector_running,
+            &health.session,
+            health.storage_ok,
+        );
+        let running = guard.desktop.collector_running;
+        let locale = guard.ui_locale;
+        let tooltip = tray_tooltip(locale, &chrome.tooltip_session);
+        let skip_icon = guard.desktop.last_tray_visual == Some(chrome.visual);
+        let skip_menu = guard.desktop.last_tray_running == Some(running);
+        let skip_tooltip = guard.desktop.last_tray_tooltip.as_deref() == Some(tooltip.as_str());
+        if !skip_icon {
+            guard.desktop.last_tray_visual = Some(chrome.visual);
+        }
+        if !skip_menu {
+            guard.desktop.last_tray_running = Some(running);
+        }
+        if !skip_tooltip {
+            guard.desktop.last_tray_tooltip = Some(tooltip.clone());
+        }
+        (
+            chrome.visual,
+            running,
+            locale,
+            skip_icon,
+            skip_menu,
+            skip_tooltip,
+            tooltip,
+        )
+    };
+    let Some(tray) = app.tray_by_id("main") else {
+        return;
+    };
+    if !skip_icon {
+        let _ = tray.set_icon(Some(tray_icon_image(visual)));
+    }
+    if !skip_tooltip {
+        let _ = tray.set_tooltip(Some(tooltip));
+    }
+    if !skip_menu {
+        if let Ok(menu) = build_tray_menu(app, locale, running) {
+            let _ = tray.set_menu(Some(menu));
+        }
+    }
+}
+
 fn apply_locale_chrome(app: &AppHandle, locale: UiLocale) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.set_title(t(locale, "product.display_name"));
     }
-    if let Some(tray) = app.tray_by_id("main") {
-        if let Ok(menu) = build_tray_menu(app, locale) {
-            let _ = tray.set_menu(Some(menu));
-        }
-        let _ = tray.set_tooltip(Some(t(locale, "product.display_name")));
+    if let Some(state) = app.try_state::<Mutex<AppFacade>>() {
+        let mut guard = state.lock().expect("state");
+        guard.desktop.last_tray_running = None;
+        guard.desktop.last_tray_tooltip = None;
     }
+    sync_tray_chrome(app);
 }
 
 fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    use tauri::tray::TrayIconBuilder;
+    use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 
-    let locale = app
-        .state::<Mutex<AppFacade>>()
-        .lock()
-        .map(|guard| guard.ui_locale)
-        .unwrap_or(UiLocale::Zh);
+    let (locale, running, visual, tooltip) = {
+        let state = app.state::<Mutex<AppFacade>>();
+        let guard = state.lock().expect("state");
+        let health = guard.hub.overview().health;
+        let chrome = tray_chrome(
+            guard.desktop.collector_running,
+            &health.session,
+            health.storage_ok,
+        );
+        (
+            guard.ui_locale,
+            guard.desktop.collector_running,
+            chrome.visual,
+            tray_tooltip(guard.ui_locale, &chrome.tooltip_session),
+        )
+    };
     let handle = app.handle().clone();
-    let menu = build_tray_menu(&handle, locale)?;
-    let icon = app.default_window_icon().cloned();
-    let mut builder = TrayIconBuilder::with_id("main")
+    let menu = build_tray_menu(&handle, locale, running)?;
+    let icon = tray_icon_image(visual);
+    let handle_menu = app.handle().clone();
+    let handle_click = app.handle().clone();
+    TrayIconBuilder::with_id("main")
         .menu(&menu)
-        .tooltip(t(locale, "product.display_name"));
-    if let Some(icon) = icon {
-        builder = builder.icon(icon);
-    }
-    let handle = app.handle().clone();
-    builder
+        .icon(icon)
+        .tooltip(tooltip)
+        .show_menu_on_left_click(false)
+        .on_tray_icon_event(move |_tray, event| match event {
+            TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            }
+            | TrayIconEvent::DoubleClick {
+                button: MouseButton::Left,
+                ..
+            } => open_main_window(&handle_click),
+            _ => {}
+        })
         .on_menu_event(move |_tray, event| {
             let id = event.id.as_ref();
             match id {
-                "open" => {
-                    if let Some(state) = handle.try_state::<Mutex<AppFacade>>() {
-                        state.lock().expect("state").desktop.open_window();
-                    }
-                    if let Some(window) = handle.get_webview_window("main") {
-                        let _ = window.show();
-                        let _ = window.set_focus();
-                    }
-                }
+                "open" => open_main_window(&handle_menu),
                 "pause" => {
-                    if let Some(state) = handle.try_state::<Mutex<AppFacade>>() {
+                    if let Some(state) = handle_menu.try_state::<Mutex<AppFacade>>() {
                         let message = {
                             let mut guard = state.lock().expect("state");
                             let input = guard.desktop.set_collector_running(false);
@@ -907,28 +1027,31 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                             forward_published(&state, [message]);
                         }
                     }
+                    sync_tray_chrome(&handle_menu);
                 }
                 "resume" => {
-                    if let Some(state) = handle.try_state::<Mutex<AppFacade>>() {
+                    if let Some(state) = handle_menu.try_state::<Mutex<AppFacade>>() {
                         let message = state.lock().expect("state").resume_collector();
                         if let Some(message) = message {
                             forward_published(&state, [message]);
                         }
                     }
+                    sync_tray_chrome(&handle_menu);
                 }
                 "reconnect" => {
-                    if let Some(state) = handle.try_state::<Mutex<AppFacade>>() {
+                    if let Some(state) = handle_menu.try_state::<Mutex<AppFacade>>() {
                         let message = state.lock().expect("state").reconnect_now();
                         if let Some(message) = message {
                             forward_published(&state, [message]);
                         }
                     }
+                    sync_tray_chrome(&handle_menu);
                 }
                 "quit" => {
-                    if let Some(state) = handle.try_state::<Mutex<AppFacade>>() {
+                    if let Some(state) = handle_menu.try_state::<Mutex<AppFacade>>() {
                         let _ = state.lock().expect("state").shutdown();
                     }
-                    handle.exit(0);
+                    handle_menu.exit(0);
                 }
                 _ => {}
             }
@@ -972,10 +1095,7 @@ pub fn run() {
                         crate::c2::contract::SAMPLE_INTERVAL_MS,
                     ))
                     .await;
-                    let Some(state) = handle.try_state::<Mutex<AppFacade>>() else {
-                        break;
-                    };
-                    if !collector_loop_tick(&state).await {
+                    if !collector_loop_tick(&handle).await {
                         break;
                     }
                 }
