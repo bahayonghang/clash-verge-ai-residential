@@ -1,0 +1,9 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "后端 checklist。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C2 只经 put_setting 写偏好；不 rusqlite。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Vanilla TS；禁止 UI 框架。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "列表走 query_live_connections；delta 后查当前页。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "筛选会话级；列布局走本机设置。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "排序与筛选在查询层。"}
+{"file": ".trellis/tasks/08-19-live-table-sort-width/prd.md", "reason": "父需求与跨子任务验收。"}
+{"file": ".trellis/tasks/08-19-live-table-sort-width/design.md", "reason": "列 JSON、sort_key、数值换算合同。"}
+{"file": ".trellis/tasks/08-19-live-table-sort-width/research/table-layout-and-sort.md", "reason": "列宽根因与 Clash 对照。"}

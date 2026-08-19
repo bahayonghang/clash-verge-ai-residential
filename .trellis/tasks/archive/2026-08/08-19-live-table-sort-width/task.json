@@ -1,0 +1,32 @@
+{
+  "id": "live-table-sort-width",
+  "name": "live-table-sort-width",
+  "title": "实时表头排序筛选与列宽固定",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-19",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-19-live-table-columns",
+    "08-19-live-table-header-sort",
+    "08-19-live-table-numeric-filter"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "父：B+C 排序+数值条件+拖宽显隐；实施走子任务"
+  }
+}
