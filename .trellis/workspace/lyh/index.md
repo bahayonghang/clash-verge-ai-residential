@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 14
+- **Total Sessions**: 15
 - **Last Active**: 2026-08-19
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~439 | Active |
+| `journal-1.md` | ~475 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 15 | 2026-08-19 | Catppuccin 主题、成对概览与筛选工具条 | `e5d693a`, `0e2ad49` | `dev` |
 | 14 | 2026-08-19 | 实时连接 Clash 列、家宽筛选与中英界面 | `251f680` | `dev` |
 | 13 | 2026-08-19 | 接通实时连接并回填设置密钥 | `9cd49d8`, `eeca0e2` | `dev` |
 | 12 | 2026-08-18 | 家宽监控壳层侧栏与控制器探测 | `df0f1d9`, `a437fde`, `b42f528`, `582f9f5` | `dev` |

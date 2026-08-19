@@ -437,3 +437,39 @@
 ### Next Steps
 
 - 用 just tdev 对照 Clash Verge 9097 点选语言切换与只看家宽
+
+
+## Session 15: Catppuccin 主题、成对概览与筛选工具条
+
+**Date**: 2026-08-19
+**Task**: Catppuccin 主题、成对概览与筛选工具条
+**Branch**: `dev`
+
+### Summary
+
+落地四口味主题、概览成对口径和实时筛选工具条。just ci 通过后提交并归档父任务与三个子任务。
+
+### Main Changes
+
+- Catppuccin Latte/Frappé/Macchiato/Mocha 整窗换肤，键 ui_theme
+- 概览 3x2 成对上下行与分类表
+- 实时筛选横向工具条，查询语义不变
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e5d693a` | (see git log) |
+| `0e2ad49` | (see git log) |
+
+### Testing
+
+- [OK] just ci 通过：前端 45、Rust 164 passed / 1 ignored、根回归 62
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 未 push；如需发布再开 PR
