@@ -6,8 +6,9 @@ export const LIST_PAGE_DEFAULT = 200;
 
 export interface LiveFilterClause {
   field: string;
-  mode: "exact" | "contains";
+  mode: "exact" | "contains" | "gt" | "gte" | "lt" | "lte" | "eq";
   value: string;
+  unit?: string;
 }
 
 export interface LiveConnectionQuery {

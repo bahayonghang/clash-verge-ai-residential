@@ -26,6 +26,16 @@ import { decodeMonitorMessage } from "./ipc/decoder";
 import { liveEmptyCopy, liveEmptyKind } from "./ipc/live-empty";
 import { displayLiveRow } from "./format/live-row";
 import {
+  NUMERIC_FILTER_FIELDS,
+  NUMERIC_MODES,
+  clauseForField,
+  defaultFilterUnit,
+  isNumericFilterField,
+  toQueryClause,
+  unitLabelKey,
+  unitsForField
+} from "./format/live-filter-units";
+import {
   defaultLiveQuery,
   fetchTraySummary,
   isTauriRuntime,
@@ -47,12 +57,42 @@ import { formatBytes, formatUtc, unknownOr } from "./format/units";
 import { healthAction, healthTitle, parseUiLocale, t, type UiLocale } from "./i18n";
 import { BRAND_MARK, ROUTE_ICONS } from "./nav-icons";
 import { applyTheme, parseUiTheme, type UiTheme } from "./theme";
+import {
+  ACTION_WIDTH,
+  DATA_COLUMNS,
+  columnLabelKey,
+  columnWidth,
+  defaultLiveTableLayout,
+  isDataColumn,
+  isNumericColumn,
+  parseLiveTableLayout,
+  setColumnHidden,
+  setColumnWidth,
+  tablePixelWidth,
+  visibleDataColumns,
+  type DataColumnId,
+  type LiveTableLayout
+} from "./live-table-layout";
+import { nextLiveSort, sortAria, sortMarker } from "./live-table-sort";
 
 let uiLocale: UiLocale = "zh";
 let uiTheme: UiTheme = "mocha";
 let liveQuery: LiveConnectionQuery = defaultLiveQuery();
+let liveTableLayout = defaultLiveTableLayout();
+let liveTableDragging = false;
+let liveColumnPanelOpen = false;
+let liveResize: { col: DataColumnId; startX: number; startW: number } | null = null;
 
-const FILTER_FIELDS = ["host", "chain", "rule", "process", "source", "destination", "type"] as const;
+const FILTER_FIELDS = [
+  "host",
+  "chain",
+  "rule",
+  "process",
+  "source",
+  "destination",
+  "type",
+  ...NUMERIC_FILTER_FIELDS
+] as const;
 
 function tx(key: string): string {
   return t(uiLocale, key);
@@ -68,6 +108,35 @@ function fmt(key: string, vars: Record<string, string | number>): string {
 
 function unknownLabel(): string {
   return tx("common.unknown");
+}
+
+function liveRowCell(view: ReturnType<typeof displayLiveRow>, column: DataColumnId): string {
+  switch (column) {
+    case "host":
+      return view.host;
+    case "download":
+      return view.download;
+    case "upload":
+      return view.upload;
+    case "rateDownload":
+      return view.dlSpeed;
+    case "rateUpload":
+      return view.ulSpeed;
+    case "chain":
+      return view.chains;
+    case "rule":
+      return view.rule;
+    case "process":
+      return view.process;
+    case "duration":
+      return view.time;
+    case "source":
+      return view.source;
+    case "destination":
+      return view.destination;
+    case "type":
+      return view.type;
+  }
 }
 
 function applyLocale(locale: UiLocale): void {
@@ -181,6 +250,7 @@ function renderLive(
       ? `${health.title}。${tx("common.next")}：${health.action}`
       : (liveEmptyCopy(kind, uiLocale) ?? health.title);
   const unknown = unknownLabel();
+  const visible = visibleDataColumns(liveTableLayout);
   const rowHtml = rows
     .map((row) => {
       const mark = state.closeMarks.get(row.identity);
@@ -193,19 +263,14 @@ function renderLive(
               ? tx("live.close_unconfirmed")
               : tx("live.close");
       const view = displayLiveRow(row, uiLocale, unknown);
+      const cells = visible
+        .map((column) => {
+          const num = isNumericColumn(column) ? " class=\"num\"" : "";
+          return `<td${num}>${liveRowCell(view, column)}</td>`;
+        })
+        .join("");
       return `<tr>
-        <td>${view.host}</td>
-        <td>${view.download}</td>
-        <td>${view.upload}</td>
-        <td>${view.dlSpeed}</td>
-        <td>${view.ulSpeed}</td>
-        <td>${view.chains}</td>
-        <td>${view.rule}</td>
-        <td>${view.process}</td>
-        <td>${view.time}</td>
-        <td>${view.source}</td>
-        <td>${view.destination}</td>
-        <td>${view.type}</td>
+        ${cells}
         <td><button type="button" data-close="${row.identity}" ${mark ? "disabled" : ""}>${closeLabel}</button></td>
       </tr>`;
     })
@@ -224,13 +289,30 @@ function renderLive(
         (field) =>
           `<option value="${field}" ${clause.field === field ? "selected" : ""}>${tx(`live.filter.field.${field}`)}</option>`
       ).join("");
+      const numeric = isNumericFilterField(clause.field);
+      const modes = numeric
+        ? NUMERIC_MODES.map(
+            (mode) =>
+              `<option value="${mode}" ${clause.mode === mode ? "selected" : ""}>${tx(`live.filter.${mode}`)}</option>`
+          ).join("")
+        : `<option value="contains" ${clause.mode === "contains" ? "selected" : ""}>${tx("live.filter.contains")}</option>
+          <option value="exact" ${clause.mode === "exact" ? "selected" : ""}>${tx("live.filter.exact")}</option>`;
+      const unit = clause.unit ?? defaultFilterUnit(clause.field);
+      const valueControl = numeric
+        ? `<input type="number" min="0" step="any" data-filter-value="${index}" value="${clause.value.replaceAll('"', "&quot;")}" />
+          <select data-filter-unit="${index}">
+            ${unitsForField(clause.field)
+              .map(
+                (item) =>
+                  `<option value="${item}" ${unit === item ? "selected" : ""}>${tx(unitLabelKey(clause.field, item))}</option>`
+              )
+              .join("")}
+          </select>`
+        : `<input data-filter-value="${index}" value="${clause.value.replaceAll('"', "&quot;")}" />`;
       return `<div class="filter-row">
         <select data-filter-field="${index}">${fields}</select>
-        <select data-filter-mode="${index}">
-          <option value="contains" ${clause.mode === "contains" ? "selected" : ""}>${tx("live.filter.contains")}</option>
-          <option value="exact" ${clause.mode === "exact" ? "selected" : ""}>${tx("live.filter.exact")}</option>
-        </select>
-        <input data-filter-value="${index}" value="${clause.value.replaceAll('"', "&quot;")}" />
+        <select data-filter-mode="${index}">${modes}</select>
+        ${valueControl}
         <button type="button" class="btn-secondary" data-filter-remove="${index}">${tx("live.filter.remove")}</button>
       </div>`;
     })
@@ -245,27 +327,47 @@ function renderLive(
         <div class="live-filter-bar">
           <label class="inline"><input type="checkbox" id="live-residential" ${liveQuery.filter.residentialOnly ? "checked" : ""} /> ${tx("live.filter.residential")}</label>
           <button type="button" class="btn-secondary" id="live-add-clause" ${liveQuery.filter.clauses.length >= 8 ? "disabled" : ""}>${tx("live.filter.add")}</button>
+          <div class="live-columns">
+            <button type="button" class="btn-secondary" id="live-columns">${tx("live.columns")}</button>
+            ${
+              liveColumnPanelOpen
+                ? `<div class="live-columns-panel" id="live-columns-panel">
+              <p>${tx("live.columns.panel")}</p>
+              ${DATA_COLUMNS.map((column) => {
+                const checked = !liveTableLayout.hidden.includes(column) ? "checked" : "";
+                return `<label class="inline"><input type="checkbox" id="live-col-vis-${column}" data-col-visible="${column}" ${checked} /> ${tx(columnLabelKey(column))}</label>`;
+              }).join("")}
+              <button type="button" class="btn-secondary" id="live-columns-reset">${tx("live.columns.reset")}</button>
+            </div>`
+                : ""
+            }
+          </div>
         </div>
         ${clauseHtml ? `<div class="filter-clauses">${clauseHtml}</div>` : ""}
       </header>
       <div class="live-table-wrap">
-      <table class="data live-table">
+      <table class="data live-table" style="width:${tablePixelWidth(liveTableLayout)}px">
+        <colgroup>
+          ${visible
+            .map(
+              (column) =>
+                `<col data-col="${column}" style="width:${columnWidth(liveTableLayout, column)}px" />`
+            )
+            .join("")}
+          <col data-col="action" style="width:${ACTION_WIDTH}px" />
+        </colgroup>
         <thead><tr>
-          <th>${tx("live.col.host")}</th>
-          <th>${tx("live.col.download")}</th>
-          <th>${tx("live.col.upload")}</th>
-          <th>${tx("live.col.dl_speed")}</th>
-          <th>${tx("live.col.ul_speed")}</th>
-          <th>${tx("live.col.chains")}</th>
-          <th>${tx("live.col.rule")}</th>
-          <th>${tx("live.col.process")}</th>
-          <th>${tx("live.col.time")}</th>
-          <th>${tx("live.col.source")}</th>
-          <th>${tx("live.col.destination")}</th>
-          <th>${tx("live.col.type")}</th>
-          <th>${tx("live.col.action")}</th>
+          ${visible
+            .map((column) => {
+              const num = isNumericColumn(column) ? " class=\"num\"" : "";
+              const current = { sortField: liveQuery.sortField, descending: liveQuery.descending };
+              const aria = sortAria(column, current);
+              return `<th data-col="${column}"${num}><button type="button" class="live-sort" data-sort="${column}" aria-sort="${aria}">${tx(columnLabelKey(column))}${sortMarker(column, current)}</button><span class="live-col-resize" data-col-resize="${column}"></span></th>`;
+            })
+            .join("")}
+          <th data-col="action">${tx("live.col.action")}</th>
         </tr></thead>
-        <tbody>${rowHtml || `<tr><td colspan="13">${emptyText}</td></tr>`}</tbody>
+        <tbody>${rowHtml || `<tr><td colspan="${visible.length + 1}">${emptyText}</td></tr>`}</tbody>
       </table>
       </div>
     </section>
@@ -629,7 +731,8 @@ function previewBootstrap(): BootstrapDto {
     recovery: null,
     launchMode: "interactive",
     uiLocale: "zh",
-    uiTheme: "mocha"
+    uiTheme: "mocha",
+    liveTableLayout: defaultLiveTableLayout()
   };
 }
 
@@ -694,6 +797,9 @@ function renderApp(
   collectorRunning: boolean | null
 ): void {
   const focusedId = document.activeElement instanceof HTMLElement ? document.activeElement.id : "";
+  const wrap = root.querySelector(".live-table-wrap");
+  const scrollTop = wrap instanceof HTMLElement ? wrap.scrollTop : 0;
+  const scrollLeft = wrap instanceof HTMLElement ? wrap.scrollLeft : 0;
   const body =
     boot.branch === "recovery-only"
       ? renderRecovery(boot)
@@ -730,6 +836,11 @@ function renderApp(
   if (focusedId) {
     document.getElementById(focusedId)?.focus();
   }
+  const nextWrap = root.querySelector(".live-table-wrap");
+  if (nextWrap instanceof HTMLElement) {
+    nextWrap.scrollTop = scrollTop;
+    nextWrap.scrollLeft = scrollLeft;
+  }
 }
 
 async function main(): Promise<void> {
@@ -753,6 +864,7 @@ async function main(): Promise<void> {
   }
   applyLocale(parseUiLocale(boot.uiLocale));
   adoptTheme(parseUiTheme(boot.uiTheme));
+  liveTableLayout = parseLiveTableLayout(boot.liveTableLayout);
 
   let route: RouteId = boot.branch === "recovery-only" ? "settings-data" : "overview";
   let state = emptyMonitorState();
@@ -774,7 +886,24 @@ async function main(): Promise<void> {
   let settingsSecretVisible = false;
   let settingsSecretLoaded = false;
   state.snapshot = boot.overview;
+  const persistLayout = async (next: LiveTableLayout): Promise<void> => {
+    liveTableLayout = next;
+    if (!isTauriRuntime()) {
+      return;
+    }
+    try {
+      liveTableLayout = parseLiveTableLayout(
+        await invokeCommand("save_live_table_layout", { layout: liveTableLayout })
+      );
+    } catch {
+      /* 保持内存中的布局 */
+    }
+  };
+
   const paint = (): void => {
+    if (liveTableDragging) {
+      return;
+    }
     renderApp(
       app,
       boot,
@@ -821,7 +950,13 @@ async function main(): Promise<void> {
       return;
     }
     try {
-      const page = await queryLiveConnections(liveQuery);
+      const page = await queryLiveConnections({
+        ...liveQuery,
+        filter: {
+          ...liveQuery.filter,
+          clauses: liveQuery.filter.clauses.map(toQueryClause)
+        }
+      });
       liveRows = page.rows;
     } catch {
       liveRows = [];
@@ -917,6 +1052,14 @@ async function main(): Promise<void> {
 
   app.addEventListener("change", async (event) => {
     const target = event.target;
+    if (target instanceof HTMLInputElement && target.dataset.colVisible != null) {
+      const column = target.dataset.colVisible;
+      if (isDataColumn(column)) {
+        await persistLayout(setColumnHidden(liveTableLayout, column, !target.checked));
+        paint();
+      }
+      return;
+    }
     if (target instanceof HTMLInputElement && target.id === "live-residential") {
       liveQuery = {
         ...liveQuery,
@@ -929,7 +1072,17 @@ async function main(): Promise<void> {
     if (target instanceof HTMLSelectElement && target.dataset.filterField != null) {
       const index = Number(target.dataset.filterField);
       const clauses = liveQuery.filter.clauses.map((clause, item) =>
-        item === index ? { ...clause, field: target.value } : clause
+        item === index ? clauseForField(target.value) : clause
+      );
+      liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
+      await refreshLivePage();
+      paint();
+      return;
+    }
+    if (target instanceof HTMLSelectElement && target.dataset.filterUnit != null) {
+      const index = Number(target.dataset.filterUnit);
+      const clauses = liveQuery.filter.clauses.map((clause, item) =>
+        item === index ? { ...clause, unit: target.value } : clause
       );
       liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
       await refreshLivePage();
@@ -989,6 +1142,53 @@ async function main(): Promise<void> {
     paint();
   });
 
+  app.addEventListener("pointerdown", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || target.dataset.colResize == null) {
+      return;
+    }
+    const column = target.dataset.colResize;
+    if (!isDataColumn(column)) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    liveTableDragging = true;
+    liveResize = {
+      col: column,
+      startX: event.clientX,
+      startW: columnWidth(liveTableLayout, column)
+    };
+  });
+
+  window.addEventListener("pointermove", (event) => {
+    if (!liveResize) {
+      return;
+    }
+    liveTableLayout = setColumnWidth(
+      liveTableLayout,
+      liveResize.col,
+      liveResize.startW + (event.clientX - liveResize.startX)
+    );
+    const colEl = document.querySelector(`col[data-col="${liveResize.col}"]`);
+    if (colEl instanceof HTMLElement) {
+      colEl.style.width = `${columnWidth(liveTableLayout, liveResize.col)}px`;
+    }
+    const table = document.querySelector("table.live-table");
+    if (table instanceof HTMLElement) {
+      table.style.width = `${tablePixelWidth(liveTableLayout)}px`;
+    }
+  });
+
+  window.addEventListener("pointerup", () => {
+    if (!liveResize) {
+      return;
+    }
+    liveResize = null;
+    liveTableDragging = false;
+    void persistLayout(liveTableLayout).then(() => paint());
+  });
+
   app.addEventListener("click", async (event) => {
     const raw = event.target;
     if (!(raw instanceof Element)) {
@@ -997,6 +1197,32 @@ async function main(): Promise<void> {
     const routeEl = raw.closest("[data-route]");
     const target = raw instanceof HTMLElement ? raw : raw.parentElement;
     if (!target) {
+      return;
+    }
+    const sortEl = raw.closest("[data-sort]");
+    if (sortEl instanceof HTMLElement && sortEl.dataset.sort && isDataColumn(sortEl.dataset.sort)) {
+      const next = nextLiveSort(sortEl.dataset.sort, {
+        sortField: liveQuery.sortField,
+        descending: liveQuery.descending
+      });
+      liveQuery = { ...liveQuery, sortField: next.sortField, descending: next.descending, cursor: null };
+      await refreshLivePage();
+      paint();
+      return;
+    }
+    if (raw.closest("#live-columns") && !raw.closest("#live-columns-panel")) {
+      liveColumnPanelOpen = !liveColumnPanelOpen;
+      paint();
+      return;
+    }
+    if (raw.closest("#live-columns-reset")) {
+      await persistLayout(defaultLiveTableLayout());
+      paint();
+      return;
+    }
+    if (liveColumnPanelOpen && !raw.closest(".live-columns")) {
+      liveColumnPanelOpen = false;
+      paint();
       return;
     }
     const nextRoute = (routeEl instanceof HTMLElement ? routeEl.dataset.route : undefined) as

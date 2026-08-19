@@ -24,7 +24,7 @@
 - 列表与详情走 `query_live_connections` / `get_connection`。
 - `subscribe_monitor` / `resync_monitor` 必须保存 Tauri `Channel`，后续 `publish` 转发到该 Channel。只发 bootstrap 后丢弃 Channel，实时页会一直空。
 - 前端用 `@tauri-apps/api/core` 的 `Channel` + `invoke`。禁止把 `window.message` 当成 Monitor Channel。
-- bootstrap 与 `connectionDelta` 之后必须再查默认第一页（`sortField=identity`，`limit=LIST_PAGE_DEFAULT`）。表格以查询页为准，不以 Channel upsert 排序。
+- bootstrap 与 `connectionDelta` 之后必须再查当前 `liveQuery` 的第一页（默认 `sortField=identity`，`limit=LIST_PAGE_DEFAULT`）。表格以查询页为准，不以 Channel upsert 排序。
 
 ### 4. Validation & Error Matrix
 - `seq == lastSeq + 1` → 应用增量

@@ -106,9 +106,53 @@ fn is_residential(row: &LiveConnectionView, targets: &[String]) -> bool {
         .any(|node| targets.iter().any(|target| target == node) || node.contains("家宽"))
 }
 
+fn is_numeric_field(field: &str) -> bool {
+    matches!(
+        field,
+        "download" | "upload" | "rateDownload" | "rateUpload" | "duration"
+    )
+}
+
+fn numeric_row_value(row: &LiveConnectionView, field: &str) -> Option<u64> {
+    match field {
+        "download" => Some(row.download),
+        "upload" => Some(row.upload),
+        "rateDownload" => row.rate_download,
+        "rateUpload" => row.rate_upload,
+        "duration" => row.duration_ms,
+        _ => None,
+    }
+}
+
+fn matches_numeric(row: &LiveConnectionView, field: &str, mode: &str, raw: &str) -> bool {
+    if !matches!(mode, "gt" | "gte" | "lt" | "lte" | "eq") {
+        return true;
+    }
+    let Ok(threshold) = raw.parse::<u64>() else {
+        return true;
+    };
+    let Some(actual) = numeric_row_value(row, field) else {
+        return false;
+    };
+    match mode {
+        "gt" => actual > threshold,
+        "gte" => actual >= threshold,
+        "lt" => actual < threshold,
+        "lte" => actual <= threshold,
+        "eq" => actual == threshold,
+        _ => true,
+    }
+}
+
 fn matches_clause(row: &LiveConnectionView, clause: &FilterClause) -> bool {
     let value = clause.value.trim();
     if value.is_empty() {
+        return true;
+    }
+    if is_numeric_field(&clause.field) {
+        return matches_numeric(row, &clause.field, &clause.mode, value);
+    }
+    if !matches!(clause.mode.as_str(), "exact" | "contains") {
         return true;
     }
     let candidates = clause_candidates(row, &clause.field);
@@ -168,16 +212,132 @@ fn contains_opt(value: Option<&str>, needle: Option<&str>) -> bool {
     }
 }
 
-fn sort_key(row: &LiveConnectionView, field: &str) -> String {
+fn normalize_sort_field(field: &str) -> &str {
     match field {
-        "host" => row.host.clone().unwrap_or_default(),
-        "process" => row.process_name.clone().unwrap_or_default(),
-        "rule" => row.rule.clone().unwrap_or_default(),
-        "network" => row.network.clone().unwrap_or_default(),
-        "upload" => format!("{:020}", row.upload),
-        "download" => format!("{:020}", row.download),
-        _ => row.identity.clone(),
+        "host" | "download" | "upload" | "rateDownload" | "rateUpload" | "chain" | "rule"
+        | "process" | "duration" | "source" | "destination" | "type" | "identity" => field,
+        _ => "identity",
     }
+}
+
+fn known_text(value: Option<&str>) -> (u8, String) {
+    match value {
+        Some(text) if !text.is_empty() => (0, text.to_string()),
+        _ => (1, String::new()),
+    }
+}
+
+fn known_u64(value: Option<u64>) -> (u8, String) {
+    match value {
+        Some(number) => (0, format!("{number:020}")),
+        None => (1, String::new()),
+    }
+}
+
+fn join_endpoint(host: Option<&str>, port: Option<&str>) -> Option<String> {
+    let host = host.filter(|item| !item.is_empty())?;
+    match port.filter(|item| !item.is_empty()) {
+        Some(port) => Some(format!("{host}:{port}")),
+        None => Some(host.to_string()),
+    }
+}
+
+fn sort_slot(row: &LiveConnectionView, field: &str) -> (u8, String) {
+    match normalize_sort_field(field) {
+        "host" => known_text(row.host.as_deref()),
+        "process" => known_text(row.process_name.as_deref()),
+        "rule" => {
+            let display = match (row.rule.as_deref(), row.rule_payload.as_deref()) {
+                (Some(rule), Some(payload)) => Some(format!("{rule}({payload})")),
+                (Some(rule), None) => Some(rule.to_string()),
+                _ => None,
+            };
+            known_text(display.as_deref())
+        }
+        "chain" => {
+            if row.chains.is_empty() {
+                (1, String::new())
+            } else {
+                (0, row.chains.join(" / "))
+            }
+        }
+        "upload" => known_u64(Some(row.upload)),
+        "download" => known_u64(Some(row.download)),
+        "rateDownload" => known_u64(row.rate_download),
+        "rateUpload" => known_u64(row.rate_upload),
+        "duration" => known_u64(row.duration_ms),
+        "source" => known_text(
+            join_endpoint(row.source_ip.as_deref(), row.source_port.as_deref()).as_deref(),
+        ),
+        "destination" => known_text(
+            join_endpoint(
+                row.destination_ip.as_deref(),
+                row.destination_port.as_deref(),
+            )
+            .as_deref(),
+        ),
+        "type" => {
+            let display = match (row.inbound.as_deref(), row.network.as_deref()) {
+                (Some(inbound), Some(network)) => Some(format!("{inbound}({network})")),
+                (Some(inbound), None) => Some(inbound.to_string()),
+                (None, Some(network)) => Some(network.to_string()),
+                _ => None,
+            };
+            known_text(display.as_deref())
+        }
+        _ => (0, row.identity.clone()),
+    }
+}
+
+fn encode_sort_key(slot: &(u8, String)) -> String {
+    format!("{}:{}", slot.0, slot.1)
+}
+
+fn decode_sort_key(raw: &str) -> (u8, String) {
+    if let Some(rest) = raw.strip_prefix("1:") {
+        (1, rest.to_string())
+    } else if let Some(rest) = raw.strip_prefix("0:") {
+        (0, rest.to_string())
+    } else {
+        (0, raw.to_string())
+    }
+}
+
+fn cmp_slots(
+    left: &(u8, String),
+    left_id: &str,
+    right: &(u8, String),
+    right_id: &str,
+    descending: bool,
+) -> std::cmp::Ordering {
+    match left.0.cmp(&right.0) {
+        std::cmp::Ordering::Equal if left.0 == 1 => {
+            if descending {
+                right_id.cmp(left_id)
+            } else {
+                left_id.cmp(right_id)
+            }
+        }
+        std::cmp::Ordering::Equal => {
+            let keys = if descending {
+                right.1.cmp(&left.1)
+            } else {
+                left.1.cmp(&right.1)
+            };
+            keys.then_with(|| {
+                if descending {
+                    right_id.cmp(left_id)
+                } else {
+                    left_id.cmp(right_id)
+                }
+            })
+        }
+        rank => rank,
+    }
+}
+
+fn sort_key(row: &LiveConnectionView, field: &str) -> String {
+    encode_sort_key(&sort_slot(row, field))
 }
 
 pub fn query_connections(rows: &[LiveConnectionView], query: &ConnectionQuery) -> ConnectionPage {
@@ -195,26 +355,26 @@ pub fn query_connections_with_targets(
         .filter(|row| matches_filter(row, &query.filter, targets))
         .collect();
     matched.sort_by(|left, right| {
-        let left_key = (sort_key(left, &query.sort_field), left.identity.as_str());
-        let right_key = (sort_key(right, &query.sort_field), right.identity.as_str());
-        if query.descending {
-            right_key.cmp(&left_key)
-        } else {
-            left_key.cmp(&right_key)
-        }
+        cmp_slots(
+            &sort_slot(left, &query.sort_field),
+            left.identity.as_str(),
+            &sort_slot(right, &query.sort_field),
+            right.identity.as_str(),
+            query.descending,
+        )
     });
     let start = query.cursor.as_ref().map(|cursor| {
+        let cursor_slot = decode_sort_key(&cursor.sort_key);
         matched
             .iter()
             .position(|row| {
-                let key = sort_key(row, &query.sort_field);
-                if query.descending {
-                    (key.as_str(), row.identity.as_str())
-                        < (cursor.sort_key.as_str(), cursor.identity.as_str())
-                } else {
-                    (key.as_str(), row.identity.as_str())
-                        > (cursor.sort_key.as_str(), cursor.identity.as_str())
-                }
+                cmp_slots(
+                    &sort_slot(row, &query.sort_field),
+                    row.identity.as_str(),
+                    &cursor_slot,
+                    cursor.identity.as_str(),
+                    query.descending,
+                ) == std::cmp::Ordering::Greater
             })
             .unwrap_or(matched.len())
     });
@@ -331,6 +491,179 @@ mod connection_query_tests {
         let mut contains = query.clone();
         contains.filter.clauses[0].mode = "contains".into();
         let page = query_connections(&[row], &contains);
+        assert_eq!(page.rows.len(), 1);
+    }
+
+    #[test]
+    fn download_descending_puts_largest_first() {
+        let mut low = row("a", "a.test");
+        low.download = 10;
+        let mut high = row("b", "b.test");
+        high.download = 30;
+        let page = query_connections(
+            &[low, high],
+            &ConnectionQuery {
+                sort_field: "download".into(),
+                descending: true,
+                ..ConnectionQuery::default()
+            },
+        );
+        assert_eq!(page.rows[0].connection_id, "b");
+        assert_eq!(page.rows[1].connection_id, "a");
+    }
+
+    #[test]
+    fn unknown_rate_sorts_after_known_in_both_directions() {
+        let mut known = row("a", "a.test");
+        known.rate_download = Some(8);
+        let mut unknown = row("b", "b.test");
+        unknown.rate_download = None;
+        let asc = query_connections(
+            &[unknown.clone(), known.clone()],
+            &ConnectionQuery {
+                sort_field: "rateDownload".into(),
+                descending: false,
+                ..ConnectionQuery::default()
+            },
+        );
+        assert_eq!(
+            asc.rows
+                .iter()
+                .map(|item| item.connection_id.as_str())
+                .collect::<Vec<_>>(),
+            ["a", "b"]
+        );
+        let desc = query_connections(
+            &[unknown, known],
+            &ConnectionQuery {
+                sort_field: "rateDownload".into(),
+                descending: true,
+                ..ConnectionQuery::default()
+            },
+        );
+        assert_eq!(
+            desc.rows
+                .iter()
+                .map(|item| item.connection_id.as_str())
+                .collect::<Vec<_>>(),
+            ["a", "b"]
+        );
+    }
+
+    #[test]
+    fn unknown_sort_field_falls_back_to_identity() {
+        let page = query_connections(
+            &[row("b", "b.test"), row("a", "a.test")],
+            &ConnectionQuery {
+                sort_field: "nope".into(),
+                ..ConnectionQuery::default()
+            },
+        );
+        assert_eq!(page.rows[0].connection_id, "a");
+        assert_eq!(page.rows[1].connection_id, "b");
+    }
+
+    #[test]
+    fn zero_download_sorts_before_positive() {
+        let mut zero = row("a", "a.test");
+        zero.download = 0;
+        let mut other = row("b", "b.test");
+        other.download = 5;
+        let page = query_connections(
+            &[other, zero],
+            &ConnectionQuery {
+                sort_field: "download".into(),
+                descending: false,
+                ..ConnectionQuery::default()
+            },
+        );
+        assert_eq!(page.rows[0].connection_id, "a");
+        assert_eq!(page.rows[1].connection_id, "b");
+    }
+
+    #[test]
+    fn numeric_eq_zero_matches_download_zero() {
+        let mut zero = row("a", "a.test");
+        zero.download = 0;
+        let mut other = row("b", "b.test");
+        other.download = 10;
+        let page = query_connections(
+            &[zero, other],
+            &ConnectionQuery {
+                filter: ConnectionFilter {
+                    clauses: vec![FilterClause {
+                        field: "download".into(),
+                        mode: "eq".into(),
+                        value: "0".into(),
+                    }],
+                    ..ConnectionFilter::default()
+                },
+                ..ConnectionQuery::default()
+            },
+        );
+        assert_eq!(page.rows.len(), 1);
+        assert_eq!(page.rows[0].connection_id, "a");
+    }
+
+    #[test]
+    fn numeric_gt_does_not_use_contains() {
+        let mut row = row("a", "a.test");
+        row.download = 100;
+        let page = query_connections(
+            &[row],
+            &ConnectionQuery {
+                filter: ConnectionFilter {
+                    clauses: vec![FilterClause {
+                        field: "download".into(),
+                        mode: "gt".into(),
+                        value: "50".into(),
+                    }],
+                    ..ConnectionFilter::default()
+                },
+                ..ConnectionQuery::default()
+            },
+        );
+        assert_eq!(page.rows.len(), 1);
+    }
+
+    #[test]
+    fn unknown_rate_does_not_match_numeric_clause() {
+        let mut row = row("a", "a.test");
+        row.rate_download = None;
+        let page = query_connections(
+            &[row],
+            &ConnectionQuery {
+                filter: ConnectionFilter {
+                    clauses: vec![FilterClause {
+                        field: "rateDownload".into(),
+                        mode: "gte".into(),
+                        value: "0".into(),
+                    }],
+                    ..ConnectionFilter::default()
+                },
+                ..ConnectionQuery::default()
+            },
+        );
+        assert!(page.rows.is_empty());
+    }
+
+    #[test]
+    fn numeric_mode_on_text_field_is_ignored() {
+        let row = row("a", "a.test");
+        let page = query_connections(
+            &[row],
+            &ConnectionQuery {
+                filter: ConnectionFilter {
+                    clauses: vec![FilterClause {
+                        field: "host".into(),
+                        mode: "gt".into(),
+                        value: "1".into(),
+                    }],
+                    ..ConnectionFilter::default()
+                },
+                ..ConnectionQuery::default()
+            },
+        );
         assert_eq!(page.rows.len(), 1);
     }
 }

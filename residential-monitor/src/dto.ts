@@ -231,6 +231,7 @@ export interface BootstrapDto {
   launchMode: "interactive" | "background";
   uiLocale?: "zh" | "en";
   uiTheme?: UiTheme;
+  liveTableLayout?: { widths: Record<string, number>; hidden: string[] };
 }
 
 export interface OperationProgress {

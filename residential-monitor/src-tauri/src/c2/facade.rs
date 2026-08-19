@@ -28,6 +28,9 @@ use crate::c4::types::{
 use crate::controller::{ControllerInput, SessionStatus};
 use crate::credential::FakeCredentialStore;
 use crate::i18n::{t, UiLocale, SETTING_KEY};
+use crate::live_table_layout::{
+    encode_setting, parse_setting, sanitize_layout, LiveTableLayout, LAYOUT_SETTING_KEY,
+};
 use crate::session::ControllerSession;
 use crate::storage::{AlertCommitSlice, CommitBundle, RecoveryFacade, StorageCoordinator};
 use crate::theme::{UiTheme, THEME_SETTING_KEY};
@@ -141,6 +144,7 @@ pub struct BootstrapDto {
     pub launch_mode: LaunchMode,
     pub ui_locale: UiLocale,
     pub ui_theme: UiTheme,
+    pub live_table_layout: LiveTableLayout,
 }
 
 pub struct AppFacade {
@@ -172,6 +176,7 @@ pub struct AppFacade {
     pub last_period_eval_utc: i64,
     pub ui_locale: UiLocale,
     pub ui_theme: UiTheme,
+    pub live_table_layout: LiveTableLayout,
 }
 
 impl AppFacade {
@@ -198,6 +203,13 @@ impl AppFacade {
                 let ui_theme = UiTheme::parse(
                     storage
                         .get_setting(THEME_SETTING_KEY)
+                        .ok()
+                        .flatten()
+                        .as_deref(),
+                );
+                let live_table_layout = parse_setting(
+                    storage
+                        .get_setting(LAYOUT_SETTING_KEY)
                         .ok()
                         .flatten()
                         .as_deref(),
@@ -246,6 +258,7 @@ impl AppFacade {
                     last_period_eval_utc: 0,
                     ui_locale,
                     ui_theme,
+                    live_table_layout,
                 }
             }
             Err(_) => Self {
@@ -277,6 +290,7 @@ impl AppFacade {
                 last_period_eval_utc: 0,
                 ui_locale: UiLocale::Zh,
                 ui_theme: UiTheme::Mocha,
+                live_table_layout: LiveTableLayout::default(),
             },
         }
     }
@@ -305,6 +319,7 @@ impl AppFacade {
             launch_mode: self.desktop.launch_mode,
             ui_locale: self.ui_locale,
             ui_theme: self.ui_theme,
+            live_table_layout: self.live_table_layout.clone(),
         })
     }
 
@@ -338,6 +353,22 @@ impl AppFacade {
         }
         self.ui_theme = theme;
         Ok(theme)
+    }
+
+    pub fn save_live_table_layout(
+        &mut self,
+        layout: LiveTableLayout,
+    ) -> Result<LiveTableLayout, AppErrorDto> {
+        let layout = sanitize_layout(layout);
+        if let Some(storage) = &self.storage {
+            let encoded = encode_setting(&layout)
+                .ok_or_else(|| self.err("encode", "error.encode", "action.check_disk", true))?;
+            storage
+                .put_setting(LAYOUT_SETTING_KEY, &encoded)
+                .map_err(|_| self.err("storage", "error.layout", "action.check_disk", true))?;
+        }
+        self.live_table_layout = layout.clone();
+        Ok(layout)
     }
 
     pub fn subscribe(&self) -> MonitorStreamMessage {
@@ -1179,6 +1210,27 @@ mod c2_facade_contract_tests {
         drop(third);
         let fourth = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         assert_eq!(fourth.ui_theme, UiTheme::Mocha);
+    }
+
+    #[test]
+    fn live_table_layout_persists_and_sanitizes() {
+        let dir = tempdir().expect("dir");
+        let mut first = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert!(first.live_table_layout.hidden.is_empty());
+        let mut layout = LiveTableLayout::default();
+        layout.widths.insert("host".into(), 220);
+        layout.hidden = vec!["process".into(), "action".into()];
+        let saved = first.save_live_table_layout(layout).expect("save");
+        assert_eq!(saved.widths.get("host"), Some(&220));
+        assert_eq!(saved.hidden, vec!["process".to_string()]);
+        drop(first);
+        let second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(second.live_table_layout.widths.get("host"), Some(&220));
+        assert_eq!(second.live_table_layout.hidden, vec!["process".to_string()]);
+        assert_eq!(
+            second.bootstrap().expect("boot").live_table_layout.hidden,
+            vec!["process".to_string()]
+        );
     }
 
     #[test]

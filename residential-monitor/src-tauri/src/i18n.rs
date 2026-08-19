@@ -260,6 +260,7 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
         "error.targets" => ("目标写入失败。", "Target write failed."),
         "error.locale" => ("语言设置写入失败。", "Locale setting write failed."),
         "error.theme" => ("外观设置写入失败。", "Theme setting write failed."),
+        "error.layout" => ("表格列布局写入失败。", "Table column layout write failed."),
         "error.invalid_address" => ("控制器地址无效。", "Controller address is not valid."),
         "error.diagnostics" => (
             "诊断生成失败。采集未中断。",

@@ -12,6 +12,7 @@ pub mod evidence;
 pub mod i18n;
 pub mod identity;
 pub mod live;
+pub mod live_table_layout;
 pub mod session;
 pub mod sqlite_probe;
 pub mod storage;
@@ -20,6 +21,7 @@ pub mod transport;
 pub mod workload;
 
 use crate::i18n::{t, UiLocale};
+use crate::live_table_layout::LiveTableLayout;
 use crate::session::ControllerSession;
 #[cfg(not(windows))]
 use c2::desktop::ProcessSingleInstance;
@@ -426,6 +428,14 @@ fn save_ui_locale(
 fn save_ui_theme(state: State<Mutex<AppFacade>>, theme: String) -> Result<String, AppErrorDto> {
     let parsed = state.lock().expect("state").save_ui_theme(&theme)?;
     Ok(parsed.as_str().into())
+}
+
+#[tauri::command]
+fn save_live_table_layout(
+    state: State<Mutex<AppFacade>>,
+    layout: LiveTableLayout,
+) -> Result<LiveTableLayout, AppErrorDto> {
+    state.lock().expect("state").save_live_table_layout(layout)
 }
 
 #[tauri::command]
@@ -886,6 +896,7 @@ pub fn run() {
             save_settings,
             save_ui_locale,
             save_ui_theme,
+            save_live_table_layout,
             save_targets,
             test_controller,
             disconnect_controller,
