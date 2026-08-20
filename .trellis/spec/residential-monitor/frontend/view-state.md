@@ -16,8 +16,10 @@
 - 实时连接空态必须区分：未配置、未连接、采集暂停、已连接无行、订阅缺口。禁止用验收句「关闭全部连接入口不存在」或单一「无数据」兜底。暂停看 `tray_summary.collector_running` 或 coverage `closed`/`pause_or_shutdown`，不要只判断 `health.session === "paused"`。
 - C4 只替换 alerts 页面内容，不得改写桌面生命周期或实时核算。`alertChanged` 只携带小型摘要；历史走 `list_alert_center`。
 - 报告图表与数据表只读同一个 `ReportResult`。前端不聚合、不传 SQL，不计算滚动速率或周期用量。
-- 分析报告主区顺序：工具条、状态、总量、趋势图+表、Top N 扇形图+表、页尾自动档案。
+- 分析报告主区顺序：工具条、状态、总量、趋势图+表、Top N 扇形图+表、页尾自动档案。总量与图在同一结果区内，不单独占一张空卡。
 - Top N 扇形图分母为 `totals.download`。其余 = 总量 − 排名下行，仅正差额同时出现在图和表，不写回 `ReportResult`，不进导出。
+- `route === "reports"` 时 `connectionDelta` / `healthChanged` / `summaryChanged` / `alertChanged` 不得整页 `paint`，除非 `errorZh` 相对上次绘制已变。必要重绘写回 Top N / 趋势 / 档案表滚动、`details.report-notes` 展开和钉住探查。实时表仍用 `.live-table-wrap` 恢复滚动。
+- 报告图探查只读当前 `ReportResult`：悬停或键盘焦点显示名称、流量、份额；点击钉住；Escape 取消。禁止按探查改 grouping 或自动 `run_report`。
 - 自动档案列表可见约 8 行；类型筛选走 `list_report_archives.kind`。
 - 进入 `reports` 时 `list_report_archives`，优先展示最新成功日档案，否则最新成功小时档案。手动「运行报告」只更新当前会话 token，不写 `report_archive`。
 - C5 设置页可展示关于信息、删除预览 / 二次确认和用户主动 VACUUM。设置页与 Recovery 壳显示 `logDir` 并用 `open_log_dir` 打开目录；路径写入文本节点，不拼 `file://`。Recovery 不加删除入口。动态重绘后按元素 `id` 恢复焦点。缺口、未知和能力过期仍显示「未知」，不画成零。

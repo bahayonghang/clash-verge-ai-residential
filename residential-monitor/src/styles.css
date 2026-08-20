@@ -211,7 +211,8 @@ html[data-font-size="lg"] {
   min-height: 100vh;
 }
 
-#app:has(.live-page) {
+#app:has(.live-page),
+#app:has(.reports) {
   height: 100vh;
   overflow: hidden;
 }
@@ -391,7 +392,8 @@ select:focus-visible,
   flex-direction: column;
 }
 
-.workspace:has(.live-page) {
+.workspace:has(.live-page),
+.workspace:has(.reports) {
   min-height: 0;
   overflow: hidden;
 }
@@ -406,13 +408,15 @@ select:focus-visible,
 }
 
 #view:has(.live-page),
-#view:has(.settings-page) {
+#view:has(.settings-page),
+#view:has(.reports) {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
 }
 
-#view:has(.live-page) {
+#view:has(.live-page),
+#view:has(.reports) {
   overflow: hidden;
 }
 
@@ -970,12 +974,41 @@ table.live-table.data {
 .reports {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   gap: 0.85rem;
   container-type: inline-size;
 }
 
 .reports .panel {
   margin-top: 0;
+}
+
+.report-query {
+  flex: 0 0 auto;
+}
+
+.report-query > p {
+  margin: 0 0 0.55rem;
+}
+
+.report-result {
+  flex: 1 1 auto;
+  min-height: 12rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  overflow: hidden;
+}
+
+.report-result > h2 {
+  margin: 0;
+}
+
+.report-trend h3,
+.report-topn h3 {
+  margin: 0 0 0.45rem;
+  font-size: 0.95rem;
 }
 
 .report-toolbar {
@@ -1033,19 +1066,30 @@ table.live-table.data {
 }
 
 .report-visuals {
+  flex: 1 1 auto;
+  min-height: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.85rem;
 }
 
-.report-visuals .panel {
+.report-trend,
+.report-topn {
   min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .report-trend-svg {
   display: block;
   width: 100%;
   height: 8.5rem;
+  flex: 0 0 auto;
+}
+
+.report-trend-svg polyline {
+  pointer-events: none;
 }
 
 .report-pie-svg {
@@ -1054,20 +1098,39 @@ table.live-table.data {
   height: 7.5rem;
 }
 
-.report-topn-body.has-pie {
+.report-topn-body {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+}
+
+.report-topn-body.has-pie {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
   gap: 0.75rem;
 }
 
 .report-topn-body.has-pie .report-pie-svg {
-  align-self: center;
+  align-self: start;
+  justify-self: center;
+}
+
+.report-topn-table {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .report-table-wrap {
+  flex: 1 1 auto;
+  min-height: 6rem;
   overflow: auto;
-  max-height: 14rem;
+}
+
+.report-archives {
+  flex: 0 0 auto;
 }
 
 .report-archive-wrap {
@@ -1085,6 +1148,61 @@ table.live-table.data {
 
 .report-remainder {
   color: var(--muted);
+}
+
+.report-result [data-inspect] {
+  cursor: pointer;
+}
+
+.report-result tr.is-inspect td {
+  background: var(--input-bg);
+}
+
+.report-pie-svg [data-inspect]:focus-visible,
+.report-trend-svg [data-inspect]:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+path.is-inspect,
+circle.is-inspect,
+rect.trend-up.is-inspect,
+rect.trend-down.is-inspect {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.trend-hit {
+  fill: transparent;
+}
+
+.trend-hit.is-inspect {
+  fill: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.report-inspect-tip {
+  position: fixed;
+  z-index: 20;
+  max-width: min(28rem, calc(100vw - 1.5rem));
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  background: var(--sidebar);
+  color: var(--sidebar-text);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  pointer-events: none;
+  box-shadow: 0 0.45rem 1.1rem rgb(17 17 27 / 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  path.is-inspect,
+  circle.is-inspect,
+  rect.trend-up.is-inspect,
+  rect.trend-down.is-inspect,
+  .trend-hit.is-inspect,
+  .report-result tr.is-inspect td {
+    transition: none;
+  }
 }
 
 .share {
@@ -1154,7 +1272,8 @@ rect.trend-down {
 
 @container (max-width: 48rem) {
   .report-visuals,
-  .report-metrics {
+  .report-metrics,
+  .report-topn-body.has-pie {
     grid-template-columns: 1fr;
   }
 }
@@ -1804,7 +1923,8 @@ html[data-density="compact"] .caliber {
   padding: 0.6rem 0.75rem;
 }
 
-html[data-density="compact"] .overview {
+html[data-density="compact"] .overview,
+html[data-density="compact"] .reports {
   gap: 0.55rem;
 }
 
@@ -1854,7 +1974,8 @@ html[data-density="compact"] .segment {
 
   .shell,
   button,
-  .skip {
+  .skip,
+  .report-inspect-tip {
     display: none;
   }
 

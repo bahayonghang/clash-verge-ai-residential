@@ -90,6 +90,18 @@ import {
   type ReportForm,
   type ShareRow
 } from "./format/report-view";
+import {
+  applyReportScrollReset,
+  inspectKeyExists,
+  inspectKeysMatch,
+  rankingInspectKey,
+  readReportScroll,
+  reportInspectModel,
+  shouldSkipReportPaint,
+  trendInspectKey,
+  writeReportScroll,
+  type ReportInspectModel
+} from "./format/report-inspect";
 import { reportPieSvg, reportTrendSvg } from "./format/report-svg";
 import { formatBytes, formatUtc, unknownOr } from "./format/units";
 import { healthAction, healthTitle, parseUiLocale, t, type UiLocale } from "./i18n";
@@ -157,6 +169,10 @@ let liveResize: {
 } | null = null;
 let reportForm: ReportForm = defaultReportForm();
 let archiveKindFilter: ArchiveKindFilter = "all";
+let reportNotesOpen = false;
+let reportInspectPinned: string | null = null;
+let reportInspectHover: string | null = null;
+let reportScrollReset = false;
 
 type SettingsSection = "appearance" | "connection" | "data" | "about" | "danger";
 type SettingsDraft = { address: string; targets: string };
@@ -635,8 +651,46 @@ function shareRowHtml(row: ShareRow): string {
   const up = row.upload === null ? tx("report.dash") : formatBytes(row.upload, unknownLabel());
   const width = row.share === null ? 0 : Math.max(0, Math.round(row.share * 100));
   const bar = row.share === null ? "" : `<span class="bar" style="width:${width}%"></span>`;
-  const klass = row.kind === "remainder" ? " class=\"report-remainder\"" : "";
-  return `<tr${klass}><td>${escapeHtml(row.label)}</td><td class="num">${up}</td><td class="num">${formatBytes(row.download, unknownLabel())}</td><td><div class="share"><span class="share-pct">${formatSharePct(row.share, unknownLabel())}</span><span class="share-track">${bar}</span></div></td></tr>`;
+  const classes = [
+    row.kind === "remainder" ? "report-remainder" : "",
+    inspectMarkClass(rankingInspectKey(row))
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const klass = classes.length > 0 ? ` class="${classes}"` : "";
+  return `<tr data-inspect="${escapeHtml(rankingInspectKey(row))}"${klass}><td>${escapeHtml(row.label)}</td><td class="num">${up}</td><td class="num">${formatBytes(row.download, unknownLabel())}</td><td><div class="share"><span class="share-pct">${formatSharePct(row.share, unknownLabel())}</span><span class="share-track">${bar}</span></div></td></tr>`;
+}
+
+function activeInspectKey(): string | null {
+  return reportInspectHover ?? reportInspectPinned;
+}
+
+function inspectMarkClass(key: string): string {
+  const current = activeInspectKey();
+  return current && inspectKeysMatch(key, current) ? "is-inspect" : "";
+}
+
+function inspectTipText(model: ReportInspectModel): string {
+  const unknown = unknownLabel();
+  if (model.surface === "pie") {
+    const up = model.upload === null ? tx("report.dash") : formatBytes(model.upload, unknown);
+    return fmt("report.inspect.pie", {
+      name: model.label,
+      up,
+      down: formatBytes(model.download, unknown),
+      share: formatSharePct(model.share, unknown)
+    });
+  }
+  const time = formatUtc(model.bucketUtc);
+  const up = formatBytes(model.upload, unknown);
+  const down = formatBytes(model.download, unknown);
+  if (model.direction === "up") {
+    return fmt("report.inspect.trend_up", { time, up });
+  }
+  if (model.direction === "down") {
+    return fmt("report.inspect.trend_down", { time, down });
+  }
+  return fmt("report.inspect.trend", { time, up, down });
 }
 
 function renderReports(
@@ -653,17 +707,19 @@ function renderReports(
   const trend = reportTrendModel(report?.series ?? []);
   const seriesRows =
     report?.series
-      .map(
-        (point) =>
-          `<tr><td>${formatUtc(point.bucketUtc)}</td><td class="num">${formatBytes(point.upload)}</td><td class="num">${formatBytes(point.download)}</td></tr>`
-      )
+      .map((point) => {
+        const key = trendInspectKey(point.bucketUtc);
+        const mark = inspectMarkClass(key);
+        const klass = mark ? ` class="${mark}"` : "";
+        return `<tr data-inspect="${escapeHtml(key)}"${klass}><td>${formatUtc(point.bucketUtc)}</td><td class="num">${formatBytes(point.upload)}</td><td class="num">${formatBytes(point.download)}</td></tr>`;
+      })
       .join("") ?? "";
   const rankRows = share?.rows.map(shareRowHtml).join("") ?? "";
   const coverage = report
     ? `<p>${fmt("report.coverage", { status: report.coverage.status, gap: report.coverage.gapSec, unit: report.unit })}</p>`
     : "";
   const notes = report
-    ? `<details class="report-notes"><summary>${tx("report.notes")}</summary><p>${escapeHtml(report.drilldownCapability.noteZh)} ${fmt("report.tier", { tier: report.dataTier })} ${escapeHtml(report.policyMetadata.noteZh)}</p></details>`
+    ? `<details class="report-notes"${reportNotesOpen ? " open" : ""}><summary>${tx("report.notes")}</summary><p>${escapeHtml(report.drilldownCapability.noteZh)} ${fmt("report.tier", { tier: report.dataTier })} ${escapeHtml(report.policyMetadata.noteZh)}</p></details>`
     : "";
   const sourceLine =
     reportSource === "manual"
@@ -685,8 +741,27 @@ function renderReports(
       })
       .join("") ?? "";
   const pieSlices =
-    share?.rows.map((row) => ({ kind: row.kind, value: row.download })) ?? [];
-  const trendSvg = reportTrendSvg(trend, tx("report.trend"));
+    share?.rows.map((row) => ({
+      kind: row.kind,
+      value: row.download,
+      inspectKey: rankingInspectKey(row),
+      name: row.label,
+      shareLabel: formatSharePct(row.share, unknown)
+    })) ?? [];
+  const trendSvg = reportTrendSvg(trend, tx("report.trend"), (point, direction) => {
+    const time = formatUtc(point.bucketUtc);
+    if (direction === "up") {
+      return fmt("report.inspect.trend_up", { time, up: formatBytes(point.upload, unknown) });
+    }
+    if (direction === "down") {
+      return fmt("report.inspect.trend_down", { time, down: formatBytes(point.download, unknown) });
+    }
+    return fmt("report.inspect.trend", {
+      time,
+      up: formatBytes(point.upload, unknown),
+      down: formatBytes(point.download, unknown)
+    });
+  });
   const pieSvg = share?.drawPie ? reportPieSvg(pieSlices, tx("report.pie")) : "";
   const pieNote =
     report && share && !share.drawPie && !share.capabilityUnsupported ? `<p>${tx("report.pie.unavailable")}</p>` : "";
@@ -702,7 +777,7 @@ function renderReports(
     : `<p>${tx("report.none")}</p>`;
   return `
     <div class="reports">
-    <section class="panel">
+    <section class="panel report-query">
       <p>${tx("report.same_token")}</p>
       <div class="report-toolbar">
       <label class="stack">${tx("report.preset")}
@@ -744,33 +819,33 @@ function renderReports(
       ${coverage}
       ${notes}
     </section>
-    <section class="panel" aria-label="${tx("report.numbers")}">
+    <section class="panel report-result" aria-label="${tx("report.numbers")}">
       <h2>${tx("report.totals")}</h2>
       ${totals}
-    </section>
-    <div class="report-visuals">
-    <section class="panel">
-      <h2>${tx("report.trend")}</h2>
-      ${trendSvg}
-      <div class="report-table-wrap" aria-label="${tx("report.chart_table")}">
-      <table class="data"><thead><tr><th>${tx("report.col.time")}</th><th class="num">${tx("report.col.upload")}</th><th class="num">${tx("report.col.download")}</th></tr></thead>
-      <tbody>${seriesRows || `<tr><td colspan="3">${tx("report.empty")}</td></tr>`}</tbody></table>
+      <div class="report-visuals">
+      <section class="report-trend">
+        <h3>${tx("report.trend")}</h3>
+        ${trendSvg}
+        <div class="report-table-wrap" data-report-scroll="trend" aria-label="${tx("report.chart_table")}">
+        <table class="data"><thead><tr><th>${tx("report.col.time")}</th><th class="num">${tx("report.col.upload")}</th><th class="num">${tx("report.col.download")}</th></tr></thead>
+        <tbody>${seriesRows || `<tr><td colspan="3">${tx("report.empty")}</td></tr>`}</tbody></table>
+        </div>
+      </section>
+      <section class="report-topn">
+        <h3>${tx("report.topn")}</h3>
+        <div class="report-topn-body${pieSvg ? " has-pie" : ""}">
+        ${pieSvg}
+        <div class="report-topn-table">
+        ${pieNote}
+        <div class="report-table-wrap" data-report-scroll="topn">
+        <table class="data"><thead><tr><th>${tx("report.col.name")}</th><th class="num">${tx("report.col.upload")}</th><th class="num">${tx("report.col.download")}</th><th>${tx("report.col.share")}</th></tr></thead>
+        <tbody>${rankBody}</tbody></table>
+        </div>
+        </div>
+        </div>
+      </section>
       </div>
     </section>
-    <section class="panel">
-      <h2>${tx("report.topn")}</h2>
-      <div class="report-topn-body${pieSvg ? " has-pie" : ""}">
-      ${pieSvg}
-      <div>
-      ${pieNote}
-      <div class="report-table-wrap">
-      <table class="data"><thead><tr><th>${tx("report.col.name")}</th><th class="num">${tx("report.col.upload")}</th><th class="num">${tx("report.col.download")}</th><th>${tx("report.col.share")}</th></tr></thead>
-      <tbody>${rankBody}</tbody></table>
-      </div>
-      </div>
-      </div>
-    </section>
-    </div>
     <section class="panel report-archives">
       <h2>${tx("report.archive.list")}</h2>
       <p>${tx("report.archive.failed_retry")}</p>
@@ -781,11 +856,12 @@ function renderReports(
           ${optionHtml("hour", archiveKindFilter, tx("report.archive.kind.hour"))}
         </select>
       </label>
-      <div class="report-archive-wrap">
+      <div class="report-archive-wrap" data-report-scroll="archive">
       <table class="data"><thead><tr><th>${tx("report.archive.col.time")}</th><th>${tx("report.archive.col.kind")}</th><th class="num">${tx("report.archive.col.download")}</th><th>${tx("report.archive.col.status")}</th></tr></thead>
       <tbody>${archiveRows || `<tr><td colspan="4">${tx("report.archive.empty")}</td></tr>`}</tbody></table>
       </div>
     </section>
+    <div id="report-inspect-tip" class="report-inspect-tip" hidden role="status"></div>
     </div>
   `;
 }
@@ -1153,6 +1229,14 @@ function renderApp(
   const wrap = root.querySelector(".live-table-wrap");
   const scrollTop = wrap instanceof HTMLElement ? wrap.scrollTop : 0;
   const scrollLeft = wrap instanceof HTMLElement ? wrap.scrollLeft : 0;
+  if (route === "reports") {
+    const notes = root.querySelector("details.report-notes");
+    if (notes instanceof HTMLDetailsElement) {
+      reportNotesOpen = notes.open;
+    }
+  }
+  const reportScroll = applyReportScrollReset(readReportScroll(root), reportScrollReset);
+  reportScrollReset = false;
   const body =
     boot.branch === "recovery-only"
       ? renderRecovery(boot)
@@ -1207,6 +1291,15 @@ function renderApp(
     nextWrap.scrollTop = scrollTop;
     nextWrap.scrollLeft = scrollLeft;
   }
+  if (route === "reports") {
+    writeReportScroll(root, reportScroll);
+    if (reportInspectPinned && !inspectKeyExists(root, reportInspectPinned)) {
+      reportInspectPinned = null;
+    }
+    if (reportInspectHover && !inspectKeyExists(root, reportInspectHover)) {
+      reportInspectHover = null;
+    }
+  }
 }
 
 async function main(): Promise<void> {
@@ -1254,6 +1347,7 @@ async function main(): Promise<void> {
   let probeState = "";
   let livePage: LiveConnectionPage | null = null;
   let collectorRunning: boolean | null = null;
+  let paintedErrorZh: string | null = null;
   let resyncInFlight = false;
   let settingsSecret = "";
   let settingsSecretVisible = false;
@@ -1308,6 +1402,75 @@ async function main(): Promise<void> {
     paint();
   };
 
+  const inspectHit = (target: EventTarget | null): Element | null => {
+    if (!(target instanceof Element)) {
+      return null;
+    }
+    const hit = target.closest("[data-inspect]");
+    if (!hit || !hit.closest(".report-result")) {
+      return null;
+    }
+    return hit;
+  };
+
+  const placeInspectTip = (tip: HTMLElement, anchor: Element): void => {
+    const rect = anchor.getBoundingClientRect();
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+    let left = rect.left + rect.width / 2 - tw / 2;
+    let top = rect.top - th - 8;
+    if (top < 8) {
+      top = rect.bottom + 8;
+    }
+    left = Math.min(Math.max(8, left), window.innerWidth - tw - 8);
+    tip.style.left = `${Math.round(left)}px`;
+    tip.style.top = `${Math.round(top)}px`;
+  };
+
+  const applyInspect = (root: ParentNode = app): void => {
+    const key = activeInspectKey();
+    root.querySelectorAll("[data-inspect]").forEach((node) => {
+      const value = node.getAttribute("data-inspect") ?? "";
+      node.classList.toggle("is-inspect", key !== null && inspectKeysMatch(value, key));
+    });
+    const tip = root.querySelector("#report-inspect-tip");
+    if (!(tip instanceof HTMLElement)) {
+      return;
+    }
+    if (!key || !report) {
+      tip.hidden = true;
+      tip.textContent = "";
+      return;
+    }
+    const share = reportShareModel(report, { unknown: unknownLabel(), remainder: tx("report.remainder") });
+    const model = reportInspectModel(key, share, report.series);
+    if (!model) {
+      tip.hidden = true;
+      tip.textContent = "";
+      return;
+    }
+    const pinned = reportInspectPinned !== null && inspectKeysMatch(key, reportInspectPinned);
+    tip.textContent = pinned ? `${inspectTipText(model)} ${tx("report.inspect.pinned")}` : inspectTipText(model);
+    tip.hidden = false;
+    const anchor =
+      root.querySelector(`[data-inspect="${CSS.escape(key)}"]`) ??
+      [...root.querySelectorAll("[data-inspect]")].find((node) =>
+        inspectKeysMatch(node.getAttribute("data-inspect") ?? "", key)
+      ) ??
+      null;
+    if (anchor) {
+      placeInspectTip(tip, anchor);
+    }
+  };
+
+  const toggleInspectPin = (key: string | null): void => {
+    if (!key) {
+      return;
+    }
+    reportInspectPinned = reportInspectPinned === key ? null : key;
+    applyInspect();
+  };
+
   const paint = (): void => {
     if (liveTableDragging) {
       return;
@@ -1335,6 +1498,10 @@ async function main(): Promise<void> {
       collectorRunning
     );
     applySecretField(app, settingsSecret, settingsSecretVisible, uiLocale);
+    paintedErrorZh = state.errorZh;
+    if (route === "reports") {
+      applyInspect(app);
+    }
   };
 
   const loadSettingsSecret = async (): Promise<void> => {
@@ -1438,6 +1605,9 @@ async function main(): Promise<void> {
           resyncInFlight = false;
         }
       }
+      if (shouldSkipReportPaint(route, message.kind, state.errorZh, paintedErrorZh)) {
+        return;
+      }
       if (message.kind === "bootstrap" || message.kind === "connectionDelta" || route === "live") {
         await refreshLivePage();
       }
@@ -1449,6 +1619,12 @@ async function main(): Promise<void> {
   paint();
 
   const apply = (next: MonitorState, nextRoute = route): void => {
+    if (route === "reports" && nextRoute !== "reports") {
+      reportNotesOpen = false;
+      reportInspectPinned = null;
+      reportInspectHover = null;
+      reportScrollReset = true;
+    }
     state = next;
     route = nextRoute;
     paint();
@@ -1459,11 +1635,15 @@ async function main(): Promise<void> {
     status: string,
     source: ReportSource = reportSource
   ): void => {
+    const previousToken = report?.reportSnapshotToken ?? null;
     report = next;
     reportStatus = status;
     reportSource = source;
     if (next) {
       reportForm = formFromQueryEcho(next.queryEcho, reportForm);
+    }
+    if ((next?.reportSnapshotToken ?? null) !== previousToken) {
+      reportScrollReset = true;
     }
     paint();
   };
@@ -1561,8 +1741,74 @@ async function main(): Promise<void> {
     }
   });
 
+  app.addEventListener(
+    "toggle",
+    (event) => {
+      const target = event.target;
+      if (target instanceof HTMLDetailsElement && target.classList.contains("report-notes")) {
+        reportNotesOpen = target.open;
+      }
+    },
+    true
+  );
+
+  app.addEventListener("pointerover", (event) => {
+    if (route !== "reports") {
+      return;
+    }
+    const hit = inspectHit(event.target);
+    const key = hit?.getAttribute("data-inspect") ?? null;
+    if (key === reportInspectHover) {
+      return;
+    }
+    reportInspectHover = key;
+    applyInspect();
+  });
+
+  app.addEventListener("pointerout", (event) => {
+    if (route !== "reports" || reportInspectHover === null) {
+      return;
+    }
+    const related = event.relatedTarget;
+    if (inspectHit(related)) {
+      return;
+    }
+    reportInspectHover = null;
+    applyInspect();
+  });
+
+  app.addEventListener("focusin", (event) => {
+    if (route !== "reports") {
+      return;
+    }
+    const hit = inspectHit(event.target);
+    if (!hit) {
+      return;
+    }
+    const key = hit.getAttribute("data-inspect");
+    if (key && key !== reportInspectHover) {
+      reportInspectHover = key;
+      applyInspect();
+    }
+  });
+
   app.addEventListener("keydown", (event) => {
     const target = event.target;
+    if (route === "reports") {
+      if (event.key === "Escape" && (reportInspectPinned || reportInspectHover)) {
+        event.preventDefault();
+        reportInspectPinned = null;
+        reportInspectHover = null;
+        applyInspect();
+        return;
+      }
+      const hit = inspectHit(target);
+      if (hit && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        toggleInspectPin(hit.getAttribute("data-inspect"));
+        return;
+      }
+    }
     if (!(target instanceof HTMLElement) || target.closest(".live-filter-editor") == null) {
       return;
     }
@@ -1822,6 +2068,19 @@ async function main(): Promise<void> {
     const target = raw instanceof HTMLElement ? raw : raw.parentElement;
     if (!target) {
       return;
+    }
+    if (route === "reports") {
+      const hit = inspectHit(raw);
+      if (hit) {
+        event.preventDefault();
+        toggleInspectPin(hit.getAttribute("data-inspect"));
+        return;
+      }
+      if (raw.closest(".report-pie-svg, .report-trend-svg")) {
+        reportInspectPinned = null;
+        applyInspect();
+        return;
+      }
     }
     const sectionEl = raw.closest("[data-settings-section]");
     if (sectionEl instanceof HTMLElement && sectionEl.dataset.settingsSection) {
