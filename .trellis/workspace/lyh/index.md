@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 23
+- **Total Sessions**: 24
 - **Last Active**: 2026-08-20
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~708 | Active |
+| `journal-1.md` | ~744 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 24 | 2026-08-20 | 设置页系统字体与工作区排版 | `aeb778f`, `94fc17f` | `feat/settings-system-fonts-layout` |
 | 23 | 2026-08-20 | 分析报告页探查与排版 | `353e910` | `dev` |
 | 22 | 2026-08-20 | 设置页字体、字号与紧凑密度 | `d05b5bc`, `690131d` | `dev` |
 | 21 | 2026-08-20 | 实时连接筛选、列宽与热点摘要 | `7bc91ac`, `d1777e8` | `dev` |

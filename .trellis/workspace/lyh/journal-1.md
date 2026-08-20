@@ -706,3 +706,39 @@
 ### Next Steps
 
 - 实机采集运行时核 Top N 滚动、details 展开和钉住探查
+
+
+## Session 24: 设置页系统字体与工作区排版
+
+**Date**: 2026-08-20
+**Task**: 设置页系统字体与工作区排版
+**Package**: residential-monitor
+**Branch**: `feat/settings-system-fonts-layout`
+
+### Summary
+
+外观字体改为本机可搜索下拉，设置工作区在 1200x800 下占满主区；已归档 08-20-settings-system-fonts-layout。
+
+### Main Changes
+
+- ui_font 从四档枚举改为 system/旧别名/校验族名，新增 list_ui_fonts（GDI）
+- 设置工作区 grid-template-rows 1fr，末张卡片 min-height 100%
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `aeb778f` | (see git log) |
+| `94fc17f` | (see git log) |
+
+### Testing
+
+- [OK] npm typecheck/lint/test/build；cargo fmt/clippy；cargo test theme:: ui_font；Vite 1200x800 与 420 宽预览。Tauri 完整字体列表未实拍。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 在 just tdev 的 WebView 里核对本机字体列表、搜索与重启恢复
