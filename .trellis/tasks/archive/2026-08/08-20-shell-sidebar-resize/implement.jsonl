@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"宽度类偏好走本机设置键；Recovery 无库只改内存；动态重绘恢复焦点。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"Bootstrap 新可选字段缺省回落；非法值不得注入样式。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"外观键 put_setting 模式；不进控制器 JSON。"}
+{"file":".trellis/tasks/08-20-settings-about-sidebar/research/about-and-sidebar-evidence.md","reason":"当前 .shell 13.75rem 与实时列宽 pointer capture 复用点。"}
+{"file":".trellis/tasks/08-20-shell-sidebar-resize/prd.md","reason":"160–352px、默认 220、拖动/键盘、与列宽 dragging 互斥。"}
