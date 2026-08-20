@@ -6,6 +6,7 @@
 - 实时表以 `<colgroup>` 像素宽度为唯一尺寸源；wrapper 提供横向滚动。拖动或键盘只改目标列。pointercancel / 失焦 / 捕获丢失回滚；松手成功才持久化一次。
 - `uiLocale` 为 `zh` 或 `en`，默认 `zh`。设置页切换后立即重绘 WebView。删除确认短语固定为 `删除全部本地数据`。
 - `uiTheme` 为 `latte`、`frappe`、`macchiato` 或 `mocha`，默认 `mocha`。设置页切换后立即换肤。值写入本机设置键 `ui_theme`，不进控制器 JSON。非法或缺失回落 Mocha。Recovery 无库时只改内存。
+- `uiFont` 为 `system`、`yahei`、`serif` 或 `mono`，默认 `system`。`uiFontSize` 为 `sm`、`md` 或 `lg`，默认 `md`。`uiDensity` 为 `comfortable` 或 `compact`，默认 `comfortable`。设置页切换后立即应用到 `document.documentElement`。分别写入本机设置键 `ui_font`、`ui_font_size`、`ui_density`，不进控制器 JSON。非法或缺失回落默认。Recovery 无库时只改内存。
 - 不在前端实现分类、守恒、Top N 或导出统计。实时方向热点只渲染 `query_live_connections` 返回的 `summary`，不从当前页 rows 重算。
 - 缺口、未知和未归因差额必须单独展示，不能画成零。
 - 热点卡片 follow `liveHotspotStatus`：`collectorRunning === null`、未知 coverage、断连、pause/shutdown、`needResync` / frozen 隐藏方向数值和旧的 matched/sample，不得显示 0 或过期 current。`noMatch` 可显示 matched `0` 与采样时间，方向值仍为未知。
@@ -29,4 +30,4 @@
 - `settingsDraft.address` and `settingsDraft.targets` hold unsaved form text across section switches and dynamic paints. On save, read the draft through the existing `save_settings` / `save_targets` commands; Rust remains the validation authority.
 - The secret is never part of the settings render string. `secretFieldMarkup` creates the password control and `applySecretField` writes only `input.value`; show/hide remains a separate button.
 - The connection section renders `state.snapshot ?? boot.overview` for health and uses `tray_summary.collector_running` for collector status. A `test_controller` result is explicitly a single-frame probe; `reconnect_now` is the continuous-monitoring recovery action.
-- Locale and theme segmented controls persist immediately through `save_ui_locale` / `save_ui_theme`, then localize routes and repaint. Settings section buttons expose `aria-current="page"`; narrow layouts use a horizontally scrollable secondary nav without changing top-level routes.
+- Locale, theme, font, font size, and density controls persist immediately through `save_ui_locale` / `save_ui_theme` / `save_ui_font` / `save_ui_font_size` / `save_ui_density`, then localize routes and repaint. Settings section buttons expose `aria-current="page"`; narrow layouts use a horizontally scrollable secondary nav without changing top-level routes.

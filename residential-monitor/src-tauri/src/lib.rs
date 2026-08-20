@@ -592,6 +592,24 @@ fn save_ui_theme(state: State<Mutex<AppFacade>>, theme: String) -> Result<String
 }
 
 #[tauri::command]
+fn save_ui_font(state: State<Mutex<AppFacade>>, font: String) -> Result<String, AppErrorDto> {
+    let parsed = state.lock().expect("state").save_ui_font(&font)?;
+    Ok(parsed.as_str().into())
+}
+
+#[tauri::command]
+fn save_ui_font_size(state: State<Mutex<AppFacade>>, size: String) -> Result<String, AppErrorDto> {
+    let parsed = state.lock().expect("state").save_ui_font_size(&size)?;
+    Ok(parsed.as_str().into())
+}
+
+#[tauri::command]
+fn save_ui_density(state: State<Mutex<AppFacade>>, density: String) -> Result<String, AppErrorDto> {
+    let parsed = state.lock().expect("state").save_ui_density(&density)?;
+    Ok(parsed.as_str().into())
+}
+
+#[tauri::command]
 fn save_live_table_layout(
     state: State<Mutex<AppFacade>>,
     layout: LiveTableLayout,
@@ -1213,6 +1231,9 @@ pub fn run() {
             save_settings,
             save_ui_locale,
             save_ui_theme,
+            save_ui_font,
+            save_ui_font_size,
+            save_ui_density,
             save_live_table_layout,
             save_targets,
             test_controller,

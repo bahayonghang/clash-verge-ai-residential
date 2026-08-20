@@ -39,7 +39,10 @@ use crate::session::ControllerSession;
 use crate::storage::{
     AlertCommitSlice, CommitBundle, RecoveryFacade, StorageCoordinator, StorageError,
 };
-use crate::theme::{UiTheme, THEME_SETTING_KEY};
+use crate::theme::{
+    UiDensity, UiFont, UiFontSize, UiTheme, DENSITY_SETTING_KEY, FONT_SETTING_KEY,
+    FONT_SIZE_SETTING_KEY, THEME_SETTING_KEY,
+};
 use serde::Serialize;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
@@ -150,6 +153,9 @@ pub struct BootstrapDto {
     pub launch_mode: LaunchMode,
     pub ui_locale: UiLocale,
     pub ui_theme: UiTheme,
+    pub ui_font: UiFont,
+    pub ui_font_size: UiFontSize,
+    pub ui_density: UiDensity,
     pub live_table_layout: LiveTableLayout,
     pub log_dir: String,
 }
@@ -183,6 +189,9 @@ pub struct AppFacade {
     pub last_period_eval_utc: i64,
     pub ui_locale: UiLocale,
     pub ui_theme: UiTheme,
+    pub ui_font: UiFont,
+    pub ui_font_size: UiFontSize,
+    pub ui_density: UiDensity,
     pub live_table_layout: LiveTableLayout,
     last_logged_session: Option<SessionStatus>,
 }
@@ -216,6 +225,27 @@ impl AppFacade {
                 let ui_theme = UiTheme::parse(
                     storage
                         .get_setting(THEME_SETTING_KEY)
+                        .ok()
+                        .flatten()
+                        .as_deref(),
+                );
+                let ui_font = UiFont::parse(
+                    storage
+                        .get_setting(FONT_SETTING_KEY)
+                        .ok()
+                        .flatten()
+                        .as_deref(),
+                );
+                let ui_font_size = UiFontSize::parse(
+                    storage
+                        .get_setting(FONT_SIZE_SETTING_KEY)
+                        .ok()
+                        .flatten()
+                        .as_deref(),
+                );
+                let ui_density = UiDensity::parse(
+                    storage
+                        .get_setting(DENSITY_SETTING_KEY)
                         .ok()
                         .flatten()
                         .as_deref(),
@@ -271,6 +301,9 @@ impl AppFacade {
                     last_period_eval_utc: 0,
                     ui_locale,
                     ui_theme,
+                    ui_font,
+                    ui_font_size,
+                    ui_density,
                     live_table_layout,
                     last_logged_session: None,
                 }
@@ -314,6 +347,9 @@ impl AppFacade {
                     last_period_eval_utc: 0,
                     ui_locale: UiLocale::Zh,
                     ui_theme: UiTheme::Mocha,
+                    ui_font: UiFont::System,
+                    ui_font_size: UiFontSize::Md,
+                    ui_density: UiDensity::Comfortable,
                     live_table_layout: LiveTableLayout::default(),
                     last_logged_session: None,
                 }
@@ -345,6 +381,9 @@ impl AppFacade {
             launch_mode: self.desktop.launch_mode,
             ui_locale: self.ui_locale,
             ui_theme: self.ui_theme,
+            ui_font: self.ui_font,
+            ui_font_size: self.ui_font_size,
+            ui_density: self.ui_density,
             live_table_layout: self.live_table_layout.clone(),
             log_dir: app_log::dir().to_string_lossy().into_owned(),
         })
@@ -420,6 +459,39 @@ impl AppFacade {
         }
         self.ui_theme = theme;
         Ok(theme)
+    }
+
+    pub fn save_ui_font(&mut self, raw: &str) -> Result<UiFont, AppErrorDto> {
+        let font = UiFont::parse(Some(raw));
+        if let Some(storage) = &self.storage {
+            storage
+                .put_setting(FONT_SETTING_KEY, font.as_str())
+                .map_err(|_| self.err("storage", "error.theme", "action.check_disk", true))?;
+        }
+        self.ui_font = font;
+        Ok(font)
+    }
+
+    pub fn save_ui_font_size(&mut self, raw: &str) -> Result<UiFontSize, AppErrorDto> {
+        let size = UiFontSize::parse(Some(raw));
+        if let Some(storage) = &self.storage {
+            storage
+                .put_setting(FONT_SIZE_SETTING_KEY, size.as_str())
+                .map_err(|_| self.err("storage", "error.theme", "action.check_disk", true))?;
+        }
+        self.ui_font_size = size;
+        Ok(size)
+    }
+
+    pub fn save_ui_density(&mut self, raw: &str) -> Result<UiDensity, AppErrorDto> {
+        let density = UiDensity::parse(Some(raw));
+        if let Some(storage) = &self.storage {
+            storage
+                .put_setting(DENSITY_SETTING_KEY, density.as_str())
+                .map_err(|_| self.err("storage", "error.theme", "action.check_disk", true))?;
+        }
+        self.ui_density = density;
+        Ok(density)
     }
 
     pub fn save_live_table_layout(
@@ -1425,6 +1497,47 @@ mod c2_facade_contract_tests {
         drop(third);
         let fourth = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         assert_eq!(fourth.ui_theme, UiTheme::Mocha);
+    }
+
+    #[test]
+    fn ui_font_size_and_density_persist_and_fall_back() {
+        let dir = tempdir().expect("dir");
+        let mut first = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(first.ui_font, UiFont::System);
+        assert_eq!(first.ui_font_size, UiFontSize::Md);
+        assert_eq!(first.ui_density, UiDensity::Comfortable);
+        assert_eq!(first.save_ui_font("yahei").expect("font"), UiFont::Yahei);
+        assert_eq!(first.save_ui_font_size("sm").expect("size"), UiFontSize::Sm);
+        assert_eq!(
+            first.save_ui_density("compact").expect("density"),
+            UiDensity::Compact
+        );
+        drop(first);
+        let second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let boot = second.bootstrap().expect("boot");
+        assert_eq!(second.ui_font, UiFont::Yahei);
+        assert_eq!(boot.ui_font, UiFont::Yahei);
+        assert_eq!(boot.ui_font_size, UiFontSize::Sm);
+        assert_eq!(boot.ui_density, UiDensity::Compact);
+        drop(second);
+        let mut third = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(
+            third.save_ui_font("nope").expect("bad font"),
+            UiFont::System
+        );
+        assert_eq!(
+            third.save_ui_font_size("20").expect("bad size"),
+            UiFontSize::Md
+        );
+        assert_eq!(
+            third.save_ui_density("tight").expect("bad density"),
+            UiDensity::Comfortable
+        );
+        drop(third);
+        let fourth = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(fourth.ui_font, UiFont::System);
+        assert_eq!(fourth.ui_font_size, UiFontSize::Md);
+        assert_eq!(fourth.ui_density, UiDensity::Comfortable);
     }
 
     #[test]

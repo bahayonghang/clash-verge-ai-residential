@@ -94,7 +94,23 @@ import { reportPieSvg, reportTrendSvg } from "./format/report-svg";
 import { formatBytes, formatUtc, unknownOr } from "./format/units";
 import { healthAction, healthTitle, parseUiLocale, t, type UiLocale } from "./i18n";
 import { BRAND_MARK, ROUTE_ICONS } from "./nav-icons";
-import { applyTheme, parseUiTheme, type UiTheme } from "./theme";
+import {
+  applyDensity,
+  applyFont,
+  applyFontSize,
+  applyTheme,
+  parseUiDensity,
+  parseUiFont,
+  parseUiFontSize,
+  parseUiTheme,
+  UI_DENSITIES,
+  UI_FONT_SIZES,
+  UI_FONTS,
+  type UiDensity,
+  type UiFont,
+  type UiFontSize,
+  type UiTheme
+} from "./theme";
 import {
   ACTION_WIDTH,
   DATA_COLUMNS,
@@ -117,6 +133,9 @@ import { nextLiveSort, sortAria, sortMarker } from "./live-table-sort";
 
 let uiLocale: UiLocale = "zh";
 let uiTheme: UiTheme = "mocha";
+let uiFont: UiFont = "system";
+let uiFontSize: UiFontSize = "md";
+let uiDensity: UiDensity = "comfortable";
 /** The query currently applied to the Rust connection page. */
 let liveQuery: LiveConnectionQuery = defaultLiveQuery();
 /** Form-only state. Keystrokes must never mutate the applied query. */
@@ -208,6 +227,21 @@ function applyLocale(locale: UiLocale): void {
 function adoptTheme(theme: UiTheme): void {
   uiTheme = theme;
   applyTheme(theme);
+}
+
+function adoptFont(font: UiFont): void {
+  uiFont = font;
+  applyFont(font);
+}
+
+function adoptFontSize(size: UiFontSize): void {
+  uiFontSize = size;
+  applyFontSize(size);
+}
+
+function adoptDensity(density: UiDensity): void {
+  uiDensity = density;
+  applyDensity(density);
 }
 
 function localizeRoutes(routes: BootstrapDto["routes"]): BootstrapDto["routes"] {
@@ -844,6 +878,9 @@ function renderSettings(
     <section class="settings-card"><div class="settings-card-heading"><div><h2>${tx("settings.appearance.title")}</h2><p>${tx("settings.appearance.help")}</p></div></div>
       <div class="settings-option-row"><div><h3>${tx("settings.locale")}</h3><p>${tx("settings.locale_help")}</p></div><div class="segmented" role="group" aria-label="${tx("settings.locale")}"><button type="button" class="segment${uiLocale === "zh" ? " is-active" : ""}" data-settings-locale="zh">${tx("settings.locale.zh")}</button><button type="button" class="segment${uiLocale === "en" ? " is-active" : ""}" data-settings-locale="en">${tx("settings.locale.en")}</button></div></div>
       <div class="settings-option-row settings-theme-row"><div><h3>${tx("settings.theme")}</h3><p>${tx("settings.theme_help")}</p></div><div class="theme-grid">${(["latte", "frappe", "macchiato", "mocha"] as UiTheme[]).map((theme) => `<button type="button" class="theme-choice${uiTheme === theme ? " is-active" : ""}" data-settings-theme="${theme}"><span class="theme-swatch theme-${theme}"></span><span>${tx(`settings.theme.${theme}`)}</span>${uiTheme === theme ? `<span class="theme-check" aria-hidden="true">✓</span>` : ""}</button>`).join("")}</div></div>
+      <div class="settings-option-row"><div><h3>${tx("settings.font")}</h3><p>${tx("settings.font_help")}</p></div><div class="theme-grid font-grid">${UI_FONTS.map((font) => `<button type="button" class="theme-choice font-choice${uiFont === font ? " is-active" : ""}" data-settings-font="${font}" data-font="${font}"><span>${tx(`settings.font.${font}`)}</span>${uiFont === font ? `<span class="theme-check" aria-hidden="true">✓</span>` : ""}</button>`).join("")}</div></div>
+      <div class="settings-option-row"><div><h3>${tx("settings.font_size")}</h3><p>${tx("settings.font_size_help")}</p></div><div class="segmented" role="group" aria-label="${tx("settings.font_size")}">${UI_FONT_SIZES.map((size) => `<button type="button" class="segment${uiFontSize === size ? " is-active" : ""}" data-settings-font-size="${size}">${tx(`settings.font_size.${size}`)}</button>`).join("")}</div></div>
+      <div class="settings-option-row"><div><h3>${tx("settings.density")}</h3><p>${tx("settings.density_help")}</p></div><div class="segmented" role="group" aria-label="${tx("settings.density")}">${UI_DENSITIES.map((density) => `<button type="button" class="segment${uiDensity === density ? " is-active" : ""}" data-settings-density="${density}">${tx(`settings.density.${density}`)}</button>`).join("")}</div></div>
     </section>`;
   const dataPanel = `
     <section class="settings-card"><div class="settings-card-heading"><div><h2>${tx("settings.data")}</h2><p>${tx("settings.data_help")}</p></div></div>
@@ -1041,6 +1078,9 @@ function previewBootstrap(): BootstrapDto {
     launchMode: "interactive",
     uiLocale: "zh",
     uiTheme: "mocha",
+    uiFont: "system",
+    uiFontSize: "md",
+    uiDensity: "comfortable",
     liveTableLayout: defaultLiveTableLayout(),
     logDir: ""
   };
@@ -1190,6 +1230,9 @@ async function main(): Promise<void> {
   }
   applyLocale(parseUiLocale(boot.uiLocale));
   adoptTheme(parseUiTheme(boot.uiTheme));
+  adoptFont(parseUiFont(boot.uiFont));
+  adoptFontSize(parseUiFontSize(boot.uiFontSize));
+  adoptDensity(parseUiDensity(boot.uiDensity));
   liveTableLayout = parseLiveTableLayout(boot.liveTableLayout);
   settingsDraft = { address: boot.settings.address, targets: "家宽" };
 
@@ -1823,6 +1866,48 @@ async function main(): Promise<void> {
       } catch {
         adoptTheme(nextTheme);
         boot.uiTheme = nextTheme;
+      }
+      paint();
+      return;
+    }
+    const fontEl = raw.closest("[data-settings-font]");
+    if (fontEl instanceof HTMLElement && fontEl.dataset.settingsFont) {
+      const nextFont = parseUiFont(fontEl.dataset.settingsFont);
+      try {
+        const saved = await invokeCommand<string>("save_ui_font", { font: nextFont });
+        adoptFont(parseUiFont(saved));
+        boot.uiFont = uiFont;
+      } catch {
+        adoptFont(nextFont);
+        boot.uiFont = nextFont;
+      }
+      paint();
+      return;
+    }
+    const fontSizeEl = raw.closest("[data-settings-font-size]");
+    if (fontSizeEl instanceof HTMLElement && fontSizeEl.dataset.settingsFontSize) {
+      const nextSize = parseUiFontSize(fontSizeEl.dataset.settingsFontSize);
+      try {
+        const saved = await invokeCommand<string>("save_ui_font_size", { size: nextSize });
+        adoptFontSize(parseUiFontSize(saved));
+        boot.uiFontSize = uiFontSize;
+      } catch {
+        adoptFontSize(nextSize);
+        boot.uiFontSize = nextSize;
+      }
+      paint();
+      return;
+    }
+    const densityEl = raw.closest("[data-settings-density]");
+    if (densityEl instanceof HTMLElement && densityEl.dataset.settingsDensity) {
+      const nextDensity = parseUiDensity(densityEl.dataset.settingsDensity);
+      try {
+        const saved = await invokeCommand<string>("save_ui_density", { density: nextDensity });
+        adoptDensity(parseUiDensity(saved));
+        boot.uiDensity = uiDensity;
+      } catch {
+        adoptDensity(nextDensity);
+        boot.uiDensity = nextDensity;
       }
       paint();
       return;

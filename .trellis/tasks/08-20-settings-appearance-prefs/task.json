@@ -1,0 +1,28 @@
+{
+  "id": "settings-appearance-prefs",
+  "name": "settings-appearance-prefs",
+  "title": "设置页字体与紧凑密度",
+  "description": "在外观与语言分区加入字体、字号和 compact 密度，即时预览并写入本机设置键。",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-20",
+  "completedAt": null,
+  "branch": "feat/settings-appearance-prefs",
+  "base_branch": "dev",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "worktree_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.worktrees\\feat-settings-appearance-prefs"
+  }
+}

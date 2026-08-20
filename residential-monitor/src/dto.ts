@@ -1,4 +1,4 @@
-import type { UiTheme } from "./theme";
+import type { UiDensity, UiFont, UiFontSize, UiTheme } from "./theme";
 
 export const SCHEMA_VERSION = 1;
 
@@ -231,6 +231,9 @@ export interface BootstrapDto {
   launchMode: "interactive" | "background";
   uiLocale?: "zh" | "en";
   uiTheme?: UiTheme;
+  uiFont?: UiFont;
+  uiFontSize?: UiFontSize;
+  uiDensity?: UiDensity;
   liveTableLayout?: { widths: Record<string, number>; hidden: string[] };
   logDir?: string;
 }
