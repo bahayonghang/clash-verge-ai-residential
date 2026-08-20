@@ -1,6 +1,6 @@
 [package]
 name = "residential-monitor"
-version = "0.1.0"
+version = "0.2.0"
 description = "家宽流量监控"
 authors = ["lyh"]
 edition = "2021"
