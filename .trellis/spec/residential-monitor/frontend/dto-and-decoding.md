@@ -50,6 +50,52 @@
 #### Correct
 分字段展示；`null` 显示「未知」。用 Tauri Channel 订阅，再用 `query_live_connections` 填表。
 
+## Scenario: C2 Live Connection Query Page
+
+### 1. Scope / Trigger
+- Trigger: 实时页刷新、筛选应用、排序、bootstrap / `connectionDelta` 后补第一页。
+
+### 2. Signatures
+- `query_live_connections(query: ConnectionQuery) -> ConnectionPage`
+- `ConnectionPage { rows, nextCursor, matchedCount, sampleUtc, summary }`
+- `summary { topDownload, topUpload }`，每项为 `ConnectionHotspot | null`
+- `ConnectionHotspot { identity, label, host, process, destination, value }`
+
+### 3. Contracts
+- `rows`、`matchedCount`、`sampleUtc`、`summary` 是同一 hub 快照。前端一次提交，过期请求不得覆盖新状态。
+- `summary` 来自完整筛选 matched 集合，在 sort / cursor / `limit` 分页之前计算。不得用当前页 `rows` 补算 Top 1。
+- 热点排序：方向 `value` 降序，相同则 `identity` 升序。
+- 命中为空时 `topDownload` / `topUpload` 为 `null`，不写 `0`。
+- 热点字段只有 identity / 可脱敏 label / host / process / destination / value。禁止 `processPath` 或原始规则载荷。
+- `sampleUtc` 为安全整数或 `null`。缺字段、非整数或非法热点 → 解码失败。
+
+### 4. Validation & Error Matrix
+- 缺 `matchedCount` / `sampleUtc` / `summary` / `topDownload` / `topUpload` → 拒绝整页
+- `matchedCount` 或 `value` 不是 ≥0 安全整数 → 拒绝
+- `sampleUtc` 为 `1.5` 等非整数 → 拒绝
+- 热点非 `null` 但 `identity` / `label` 为空 → 拒绝
+- 旧响应只有 `rows` + `nextCursor` → 拒绝，表格可保留，卡片 fail closed
+
+### 5. Good/Base/Bad Cases
+- Good: `limit=1` 与 `limit=200` 的 `summary` 相同；cursor 翻页不改 summary
+- Base: 无匹配时 `matchedCount=0`，两个热点为 `null`
+- Bad: 前端把当前页 download 最大值当成全量 Top 1；缺口时把旧热点画成 0
+
+### 6. Tests Required
+- TS `live-session.test.ts`：合法快照、缺字段、null 热点、非法 value / sampleUtc
+- TS `live-hotspot.test.ts`：paused / gap / disconnect / `collectorRunning === null` / 未知 coverage 隐藏数值
+- Rust `connection_query_tests`：完整 matched 集合、identity tie-break、limit/cursor/sort 不改 summary、空匹配为 null、序列化不含 `processPath`
+
+### 7. Wrong vs Correct
+#### Wrong
+```ts
+const top = page.rows.reduce((best, row) => row.download > best.download ? row : best);
+```
+#### Correct
+```ts
+const page = decodeLiveConnectionPage(raw); // summary.topDownload 已由 Rust 选定
+```
+
 ## Scenario: C3 Report Commands
 
 ### 1. Scope / Trigger

@@ -12,6 +12,7 @@
 - C2 代码位于 `residential-monitor/src-tauri/src/c2/`。
 - 产品进程用 `c2/collector.rs` 约 1 Hz HTTP GET `/connections`。`test_controller` 只取一帧，不能代替循环。HTTP 期间不得持 `Mutex<AppFacade>`。
 - `Paused` / `Resumed` / `SleepGap` 发布时保留 `hub.rows()`。`Disconnected` 才允许清空。`session_status == Cancelled` 时跳过取帧；`reconnect_now` / `resume_collector` 必须离开 `Cancelled`，不得新开第二条循环。
+- `AppFacade::query` 必须经 `MonitorHub::query_snapshot` 一次锁定同时取出 rows 与 overview（含 `last_sample_utc`）。`query_connections_with_targets_at` 先过滤完整 matched 集合，再按 `(value desc, identity asc)` 选 `topDownload` / `topUpload`，然后才 sort / cursor / limit 分页。`limit` 与 cursor 不得改变 summary。空匹配热点为 `None`，不写 0。热点 DTO 不含 `process_path` 或原始规则。
 - Tauri `Channel` 只放在 `lib.rs` 订阅表，不进入 `AppFacade`。
 - 托盘 id `main`。Tauri 2 默认左键弹菜单，必须 `show_menu_on_left_click(false)`。左键 Up 与左键双击打开窗口，右键才是菜单。四态由 `c2::desktop::tray_chrome(collector_running, session, storage_ok)` 决定，资源是 `icons/tray-*.png`。窗口 `icon.png` 不随状态变。`just tdev` 重启后通知区才换图标。
 - C3 代码位于 `residential-monitor/src-tauri/src/c3/`。C3 只通过 `StorageCoordinator` / `RecoveryFacade` 访问 SQLite，不得另建 writer 或通用 Repository。`ReportArchiveService` 拥有 `report_archive` 读写与过期删除。
