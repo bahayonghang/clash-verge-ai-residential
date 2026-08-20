@@ -763,3 +763,41 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 26: 填充关于页身份信息并支持侧栏调宽
+
+**Date**: 2026-08-20
+**Task**: 填充关于页身份信息并支持侧栏调宽
+**Package**: residential-monitor
+**Branch**: `dev`
+
+### Summary
+
+进入关于分区自动加载仓库身份与发布事实；应用壳侧栏可拖动或键盘调整宽度并写入本机。
+
+### Main Changes
+
+- 进入关于自动 get_about，定义列表展示 AboutDto 与 MIT/平台/隐私静态行
+- 发布地址留在卡片内，open-releases 不再写入 errorZh
+- 侧栏 160-352px 可拖动/键盘调整，键 ui_sidebar_width，默认 220
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `aa35817` | (see git log) |
+
+### Testing
+
+- [OK] npm --prefix residential-monitor run typecheck/lint/test/build 通过
+- [OK] cargo test --lib --offline --locked 通过
+- [OK] Vite 预览核对关于失败态与默认 220px 侧栏；真实 Tauri WebView 未实机核对
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 在 just tdev 的 WebView 里核对关于自动加载、卡内 Releases URL 与侧栏拖动/重启恢复
