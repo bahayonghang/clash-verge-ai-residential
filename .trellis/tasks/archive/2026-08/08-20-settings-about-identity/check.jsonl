@@ -1,0 +1,3 @@
+{"file":".trellis/tasks/08-20-settings-about-identity/prd.md","reason":"验收自动加载、卡内 URL、signed 拒绝、空底消失。"}
+{"file":".trellis/tasks/08-20-settings-about-identity/design.md","reason":"复核定义列表、加载状态、open-releases 不再写 errorZh。"}
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"关于页不得把未签名候选标成 signed。"}
