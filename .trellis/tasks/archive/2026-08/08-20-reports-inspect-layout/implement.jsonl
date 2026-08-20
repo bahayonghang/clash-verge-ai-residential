@@ -1,0 +1,6 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Frontend checklist, vanilla TS, no UI framework"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "View state: reports order, same ReportResult, no frontend Top N, charts need tables"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "Channel kinds and when live query is required"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse live-table scroll restore instead of a new renderer"}
+{"file": ".trellis/tasks/08-20-reports-inspect-layout/research/report-paint-reset.md", "reason": "Root cause of scroll reset, details collapse, and inert SVG"}
