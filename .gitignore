@@ -34,3 +34,4 @@ residential-monitor/dist/
 residential-monitor/src-tauri/target/
 residential-monitor/bench-data/
 bench-data/
+.worktrees/
