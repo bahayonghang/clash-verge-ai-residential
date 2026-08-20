@@ -17,8 +17,13 @@ help:
 ci: monitor-check
     npm run ci
 
-# 子项目快速质量门：安装锁文件、前端检查、Rust 检查。不含 30 天库与 30 分钟峰值。
+# 以 residential-monitor/package.json 为准，写入 Tauri 安装包、Cargo 与 lockfile 版本。
+monitor-sync-version:
+    node scripts/sync-monitor-version.js
+
+# 子项目快速质量门：版本对齐、安装锁文件、前端检查、Rust 检查。不含 30 天库与 30 分钟峰值。
 monitor-check:
+    node scripts/sync-monitor-version.js --check
     npm --prefix residential-monitor ci
     npm --prefix residential-monitor run check
     cargo fmt --manifest-path residential-monitor/src-tauri/Cargo.toml --check
@@ -27,14 +32,14 @@ monitor-check:
     npm run check:secrets
 
 # 开发态桌面壳。
-monitor-dev:
+monitor-dev: monitor-sync-version
     npm --prefix residential-monitor run tauri:dev
 
 # 调试家宽监控 Tauri 应用：Vite 热更新 + Rust 开发态。
 tdev: monitor-dev
 
-# 生成 NSIS 安装包。不在本机执行安装。
-monitor-build:
+# 生成 NSIS 安装包。不在本机执行安装。构建前按 package.json 同步版本。
+monitor-build: monitor-sync-version
     npm --prefix residential-monitor run tauri:build
 
 # C5 自动硬化门：故障矩阵、并发 fixture、soak smoke、供应链。不含 30 天库、24 小时 soak、本机安装。
@@ -44,11 +49,12 @@ monitor-c5-auto:
     cargo run --quiet --manifest-path residential-monitor/src-tauri/Cargo.toml --bin monitor-bench -- c5-supply
 
 # 构建 NSIS 并静默安装到 current-user。不启动应用。会改本机安装态。
+# 构建前按 residential-monitor/package.json 同步 Tauri/Cargo 版本。
 # 安装前结束正在运行的 residential-monitor，避免 NSIS 覆盖被占用的文件。
 [windows]
 tinstall: monitor-build
     @$name = 'residential-monitor'; $procs = @(Get-Process -Name $name -ErrorAction SilentlyContinue); if ($procs.Count -gt 0) { Write-Host ("停止 {0} 个 {1} 进程。" -f $procs.Count, $name); $procs | Stop-Process -Force; $deadline = (Get-Date).AddSeconds(20); do { Start-Sleep -Milliseconds 250; $left = @(Get-Process -Name $name -ErrorAction SilentlyContinue) } while ($left.Count -gt 0 -and (Get-Date) -lt $deadline); if (@(Get-Process -Name $name -ErrorAction SilentlyContinue).Count -gt 0) { Write-Error "无法结束正在运行的 $name，安装会覆盖锁定文件。"; exit 1 } }
-    @$nsis = "residential-monitor\src-tauri\target\release\bundle\nsis"; $setup = Get-ChildItem -Path $nsis -Filter "*-setup.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if ($null -eq $setup) { Write-Error "未找到 NSIS 安装包。"; exit 1 }; Write-Host ("正在静默安装 {0}" -f $setup.Name); $p = Start-Process -FilePath $setup.FullName -ArgumentList "/S" -PassThru -Wait; if ($null -eq $p) { Write-Error "无法启动安装包。"; exit 1 }; if ($p.ExitCode -ne 0) { Write-Error ("安装失败，退出码 {0}。" -f $p.ExitCode); exit $p.ExitCode }; Write-Host "安装完成。"
+    @$nsis = "residential-monitor\src-tauri\target\release\bundle\nsis"; $ver = (Get-Content -Raw -Path "residential-monitor\package.json" | ConvertFrom-Json).version; if (-not $ver) { Write-Error "无法读取 residential-monitor/package.json 的 version。"; exit 1 }; $setup = Get-ChildItem -Path $nsis -Filter ("*_{0}_*-setup.exe" -f $ver) -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1; if ($null -eq $setup) { Write-Error ("未找到版本 {0} 的 NSIS 安装包。" -f $ver); exit 1 }; Write-Host ("正在静默安装 {0}" -f $setup.Name); $p = Start-Process -FilePath $setup.FullName -ArgumentList "/S" -PassThru -Wait; if ($null -eq $p) { Write-Error "无法启动安装包。"; exit 1 }; if ($p.ExitCode -ne 0) { Write-Error ("安装失败，退出码 {0}。" -f $p.ExitCode); exit $p.ExitCode }; Write-Host "安装完成。"
 
 # 家宽监控 v1 只提供 Windows 11 NSIS current-user 安装。
 [unix]
