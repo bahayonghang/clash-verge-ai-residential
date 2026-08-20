@@ -670,3 +670,39 @@
 ### Next Steps
 
 - 真实 Tauri WebView 重启后读回三项设置仍为 UNVERIFIED
+
+
+## Session 23: 分析报告页探查与排版
+
+**Date**: 2026-08-20
+**Task**: 分析报告页探查与排版
+**Package**: residential-monitor
+**Branch**: `dev`
+
+### Summary
+
+修复分析报告页被 Channel 增量冲掉滚动和 details 的问题，补齐图表探查，并收紧该页排版。
+
+### Main Changes
+
+- reports 页跳过无关键 paint，必要重绘写回滚动与 details
+- 扇形图与趋势柱可悬停、钉住，并高亮对应表行
+- 总量并入结果区，扇形图作为 Top N 色例
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `353e910` | (see git log) |
+
+### Testing
+
+- [OK] npm --prefix residential-monitor run typecheck/lint/test/build 通过
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 实机采集运行时核 Top N 滚动、details 展开和钉住探查
