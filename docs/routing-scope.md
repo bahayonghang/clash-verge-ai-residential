@@ -17,7 +17,7 @@ The residential link is reserved for core AI product traffic. A domain is not in
 | ChatGPT / OpenAI | ChatGPT 产品域名（整域后缀，含 `ws.chatgpt.com`）、五个官方 exact 主机（`chat.openai.com`、`android.chat.openai.com`、`desktop.chat.openai.com`、`ios.chat.openai.com`、`tcr9i.chat.openai.com`）、OpenAI 模型 API 后缀 `api.openai.com`（覆盖 Codex 官方的 `us.` / `eu.` 数据驻留前缀），以及上传或生成的用户内容 |
 | Gemini | Gemini Web, Google AI Studio product RPC/streaming hosts, Gemini Developer API |
 | Vertex AI / Agent Platform | `routing.vertex_ai_endpoints` 默认 `true`，一次控制 `aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com` 与区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$` |
-| Google Antigravity / Gemini Code Assist | 精确主机 `antigravity.google` 与产品专属 Code Assist/agent API |
+| Google Antigravity / Gemini Code Assist | 精确主机 `antigravity.google`、生产 Code Assist 主机 `cloudcode-pa.googleapis.com`，以及 Antigravity `language_server` 的 `--cloud_code_endpoint` 主机 `daily-cloudcode-pa.googleapis.com` |
 | Cursor | Chat/API, Tab, Agent, Cloud Agent/Bugbot API, authorize endpoint, SSO admin portal `adminportal42.cursor.sh`, Cloud Agent VM hosts, and product-specific authentication; `routing.cursor_core` is `true` by default. Repository indexing hosts `repo[0-9]+.cursor.sh` use the independent `routing.cursor_repository_indexing` switch, which defaults to `false` and falls back to the original Profile/airport upstream |
 | Grok Build | `routing.grok_core` 默认为 `true`。默认注入 `DOMAIN-SUFFIX,grok.com`（覆盖 `cli-chat-proxy.grok.com` 推理 API 与 `code.grok.com` 会话同步）、`auth.x.ai` OAuth 主机、`DOMAIN-SUFFIX,api.x.ai`（覆盖区域端点与 `mtls.api.x.ai`）。`routing.grok_web_assets = false` 时只替换 `grok.com` 后缀为三条精确主机：`grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`；`api.x.ai` 后缀仍注入 |
 
@@ -32,7 +32,7 @@ The residential link is reserved for core AI product traffic. A domain is not in
 - Vertex AI 端点与 Antigravity Enterprise：https://antigravity.google/docs/enterprise
 - Anthropic 入站网段：https://platform.claude.com/docs/en/api/ip-addresses.md
 
-Cursor 依据：官方企业网络配置文档列出了精确主机 `authenticate.cursor.sh`、`adminportal42.cursor.sh` 和 `*.cursorvm.com` 虚拟机主机，以及此前已覆盖的 API、Tab 和 Agent 端点。`api2.cursor.sh` 与 `authenticate.cursor.sh` 从 v5.10 起改为 `DOMAIN` 精确匹配。官方网络文档与本机 2026-08-17 Cursor 索引日志共同确认 `repo42.cursor.sh` 为仓库索引主机；`repo[0-9]+.cursor.sh` 是本项目的前向兼容策略，不是 Cursor 官方通配合同。默认 `routing.cursor_repository_indexing = false` 只让这些索引专属主机回落原 Profile，不阻止 Chat/Agent 发送代码上下文，也不能在 `disableHttp2` 或服务端强制 HTTP/1.1 把 RepositoryService 放到共享 `api2.cursor.sh` 时继续隔离索引。`api2.cursor.sh` 仍由 `routing.cursor_core` 控制。Privacy Mode 不会停止索引上传。Grok 依据：docs.x.ai/build/enterprise 把 `cli-chat-proxy.grok.com` 与 `auth.x.ai` 列为必需，把 `code.grok.com` 列为可选会话通道，把 `assets.grok.com` 标注为无功能影响。v5.7 依据：Claude Code 官方网络配置文档列出了 `mcp-proxy.anthropic.com` 和 `assets-proxy.anthropic.com`；Codex 官方配置参考记录了 `us.api.openai.com` 和 `eu.api.openai.com` 数据驻留前缀，因此 `api.openai.com` 的规则由精确匹配改为后缀匹配。v5.8 依据：OpenAI 官方 help 文章 9247338 明文列出上述五个 `chat.openai.com` 家族主机；`tcr9i.chat.openai.com` 在该表中无用途说明。不注入 `DOMAIN-SUFFIX,chat.openai.com`。真实 ChatGPT 桌面/iOS Connections 结果为 UNVERIFIED。v5.10 依据：`chatgpt.com` 保持整域后缀（`help.` / `status.` 等子域走家宽，记为已知取舍）；`claudemcpcontent.com` 保留后缀。
+Cursor 依据：官方企业网络配置文档列出了精确主机 `authenticate.cursor.sh`、`adminportal42.cursor.sh` 和 `*.cursorvm.com` 虚拟机主机，以及此前已覆盖的 API、Tab 和 Agent 端点。`api2.cursor.sh` 与 `authenticate.cursor.sh` 从 v5.10 起改为 `DOMAIN` 精确匹配。官方网络文档与本机 2026-08-17 Cursor 索引日志共同确认 `repo42.cursor.sh` 为仓库索引主机；`repo[0-9]+.cursor.sh` 是本项目的前向兼容策略，不是 Cursor 官方通配合同。默认 `routing.cursor_repository_indexing = false` 只让这些索引专属主机回落原 Profile，不阻止 Chat/Agent 发送代码上下文，也不能在 `disableHttp2` 或服务端强制 HTTP/1.1 把 RepositoryService 放到共享 `api2.cursor.sh` 时继续隔离索引。`api2.cursor.sh` 仍由 `routing.cursor_core` 控制。Privacy Mode 不会停止索引上传。Grok 依据：docs.x.ai/build/enterprise 把 `cli-chat-proxy.grok.com` 与 `auth.x.ai` 列为必需，把 `code.grok.com` 列为可选会话通道，把 `assets.grok.com` 标注为无功能影响。v5.7 依据：Claude Code 官方网络配置文档列出了 `mcp-proxy.anthropic.com` 和 `assets-proxy.anthropic.com`；Codex 官方配置参考记录了 `us.api.openai.com` 和 `eu.api.openai.com` 数据驻留前缀，因此 `api.openai.com` 的规则由精确匹配改为后缀匹配。v5.8 依据：OpenAI 官方 help 文章 9247338 明文列出上述五个 `chat.openai.com` 家族主机；`tcr9i.chat.openai.com` 在该表中无用途说明。不注入 `DOMAIN-SUFFIX,chat.openai.com`。真实 ChatGPT 桌面/iOS Connections 结果为 UNVERIFIED。v5.10 依据：`chatgpt.com` 保持整域后缀（`help.` / `status.` 等子域走家宽，记为已知取舍）；`claudemcpcontent.com` 保留后缀。v5.10.1 依据：本机 Antigravity IDE `language_server` 进程参数、`cloudcode.log` TLS 握手失败，以及 Clash Connections 将 `daily-cloudcode-pa.googleapis.com` 送到原 Profile 上游。该主机重新进入激活清单。`geminicloudassist.googleapis.com` 仍退出。
 
 已知取舍：`downloads.claude.ai`（安装程序和自动更新主机）位于 `claude.ai` 后缀下，因此也会经过住宅链路。若将其拆出，需要注入包含动态解析上游名称的规则，而当前基于精确字符串的托管规则清理模型无法安全清理此类规则。更新下载频率较低，剩余影响仅为占用住宅链路带宽。`chatgpt.com` 后缀同样覆盖 `help.`、`status.`、`ab.`、`events.` 等子域。
 
@@ -51,7 +51,7 @@ v5.10 起不再注入、但仍保留在 `allPossible*` 中供升级清理的主�
 
 - `clau.de`、`claudemcpclient.com`（无官方出处）
 - `a-api.anthropic.com`（官方 Desktop 清单用途为 Analytics events / 遥测。开启 `routing.anthropic_ip_fallback` 时，若该主机解析到 inbound CIDR，仍可能被 IP 规则命中）
-- `daily-cloudcode-pa.googleapis.com`、`geminicloudassist.googleapis.com`（无官方出处）
+- `geminicloudassist.googleapis.com`（Cloud Assist MCP，不是 Antigravity Agent 网关）
 
 收窄后不再匹配的主机：
 
@@ -66,7 +66,7 @@ v5.10 起不再注入、但仍保留在 `allPossible*` 中供升级清理的主�
 
 | 项 | 未验证的内容 |
 |---|---|
-| 5 条退出激活规则 | 是否有任一条实际承载会话或推理流量；退出后是否出现出口 IP 分裂 |
+| 4 条退出激活规则 | `clau.de`、`claudemcpclient.com`、`a-api.anthropic.com`、`geminicloudassist.googleapis.com` 是否有任一条实际承载会话或推理流量。`daily-cloudcode-pa.googleapis.com` 已在 v5.10.1 用本机进程参数与 Clash Connections 证实，并恢复激活 |
 | 三条 `alkali*` | AI Studio 网页是否实际请求这些 `clients6.google.com` 主机 |
 | `antigravity.google` 收窄 | Antigravity 客户端是否访问 `docs.` / `download.` 子域，以及断开后是否影响启动或更新提示 |
 | `adminportal42.cursor.sh` 收窄 | 企业 SSO 配置流程是否只使用编号 42 的主机 |

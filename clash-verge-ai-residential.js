@@ -2,10 +2,14 @@
 
 /**
  * Clash Verge Rev 全局扩展脚本
- * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.10.0
+ * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.10.1
  *
  * 数据路径：
  *   本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
+ *
+ * v5.10.1 重点：
+ *   - 恢复 daily-cloudcode-pa.googleapis.com。Antigravity language_server 把
+ *     --cloud_code_endpoint 设为该主机；v5.10.0 误判为无出处预发布端点。
  *
  * v5.10.0 重点：
  *   - 5 条无会话证据或官方遥测主机退出激活，仍留在 allPossible* 供升级清理。
@@ -51,7 +55,7 @@
 // 0. 脚本标识与保留名称
 // ============================================================
 
-const SCRIPT_VERSION = "5.10.0";
+const SCRIPT_VERSION = "5.10.1";
 const AI_GROUP = "AI-家宽";
 const HOME_PROXY_NAME = "家宽-SOCKS5";
 
@@ -231,6 +235,9 @@ const CORE_EXACT_DOMAINS = [
 
   // Antigravity / Gemini Code Assist / Gemini Developer API
   "cloudcode-pa.googleapis.com",
+  // Antigravity language_server 的 --cloud_code_endpoint；本机 Connections
+  // 与 TLS 握手失败证明该主机承载 Agent 会话，不是遥测。
+  "daily-cloudcode-pa.googleapis.com",
   "cloudaicompanion.googleapis.com",
   "generativelanguage.googleapis.com",
 
@@ -240,9 +247,8 @@ const CORE_EXACT_DOMAINS = [
 
 const RETIRED_CORE_EXACT_DOMAINS = [
   // v5.10 退出激活。a-api.anthropic.com 是官方 Desktop 遥测主机。
-  // daily-cloudcode 与 geminicloudassist 无官方出处。
+  // geminicloudassist 是 Cloud Assist MCP，不是 Antigravity Agent 网关。
   "a-api.anthropic.com",
-  "daily-cloudcode-pa.googleapis.com",
   "geminicloudassist.googleapis.com"
 ];
 

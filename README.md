@@ -9,7 +9,7 @@ Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Googl
 本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
 ```
 
-当前版本：`v5.10.0`。
+当前版本：`v5.10.1`。
 
 ## 核心边界
 

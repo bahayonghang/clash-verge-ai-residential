@@ -9,6 +9,16 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - Add sanitized real-profile integration fixtures.
 - Add automated domain-source freshness checks where upstream providers publish machine-readable inventories.
 
+## [5.10.1] - 2026-08-20
+
+### Fixed
+
+- Restored `daily-cloudcode-pa.googleapis.com` to the active residential catalog. Antigravity `language_server` sets `--cloud_code_endpoint` to this host. v5.10.0 retired the host as undocumented. Local logs show TLS handshake failures, and Clash Connections send the host to the original Profile upstream.
+
+### Changed
+
+- Default injected `AI-家宽` rule count is 45.
+
 ## [5.10.0] - 2026-08-19
 
 ### Added

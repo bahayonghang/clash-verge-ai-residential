@@ -266,7 +266,7 @@ const CURSOR_NEGATIVE_HOSTS = [
 // ---------------------------------------------------------------------------
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
-  assert.equal(SCRIPT_VERSION, "5.10.0");
+  assert.equal(SCRIPT_VERSION, "5.10.1");
   assert.equal(template["dialer-proxy"], "🚀节点选择");
 });
 
@@ -653,8 +653,19 @@ test("Gemini 核心产品、Developer API 与 Vertex AI 端点走家宽", () => 
     "aiplatform.us.rep.googleapis.com",
     "aiplatform.eu.rep.googleapis.com",
     "cloudaicompanion.googleapis.com",
-    "cloudcode-pa.googleapis.com"
+    "cloudcode-pa.googleapis.com",
+    "daily-cloudcode-pa.googleapis.com"
   ]);
+});
+
+test("Antigravity language_server 的 daily cloudcode 端点走家宽", () => {
+  const rules = buildInjectedRules();
+  assert.equal(
+    rules.includes(`DOMAIN,daily-cloudcode-pa.googleapis.com,${AI_GROUP}`),
+    true
+  );
+  assertAiRoute(rules, ["daily-cloudcode-pa.googleapis.com"]);
+  assertNoAiRoute(rules, ["daily-cloudcode-pa.sandbox.googleapis.com"]);
 });
 
 test("Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走家宽", () => {
@@ -917,7 +928,8 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "desktop.chat.openai.com",
     "ios.chat.openai.com",
     "tcr9i.chat.openai.com",
-    "antigravity.google"
+    "antigravity.google",
+    "daily-cloudcode-pa.googleapis.com"
   ]);
   assert.equal(rules.includes(`DOMAIN,antigravity.google,${AI_GROUP}`), true);
   assert.equal(rules.includes(`DOMAIN-SUFFIX,antigravity.google,${AI_GROUP}`), false);
@@ -1172,6 +1184,8 @@ test("AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名", ()
   assert.deepEqual(policy["authenticator.cursor.sh"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["antigravity.google"], RESIDENTIAL_DOH);
   assert.equal("+.antigravity.google" in policy, false);
+  assert.deepEqual(policy["daily-cloudcode-pa.googleapis.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["cloudcode-pa.googleapis.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.grok.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.chatgpt.com"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.api.openai.com"], RESIDENTIAL_DOH);
@@ -1262,9 +1276,9 @@ test("最终注入规则不存在重复项", () => {
   assert.equal(new Set(rules).size, rules.length);
 });
 
-test("默认注入 44 条 AI-家宽 规则", () => {
+test("默认注入 45 条 AI-家宽 规则", () => {
   const rules = buildInjectedRules().filter((rule) => rule.includes(AI_GROUP));
-  assert.equal(rules.length, 44);
+  assert.equal(rules.length, 45);
 });
 
 test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", () => {
@@ -1285,6 +1299,7 @@ test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", ()
     "adminportal42.cursor.sh",
     "api.cursor.com",
     "antigravity.google",
+    "daily-cloudcode-pa.googleapis.com",
     "aiplatform.us.rep.googleapis.com",
     "aiplatform.eu.rep.googleapis.com",
     "cloudaicompanion.googleapis.com",
@@ -1306,7 +1321,6 @@ test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", ()
     "clau.de",
     "claudemcpclient.com",
     "a-api.anthropic.com",
-    "daily-cloudcode-pa.googleapis.com",
     "geminicloudassist.googleapis.com",
     "adminportal0.cursor.sh",
     "adminportal999.cursor.sh",
@@ -1414,7 +1428,6 @@ test("退出激活主机不再出现 nameserver-policy 键", () => {
     "claudemcpclient.com",
     "a-api.anthropic.com",
     "+.a-api.anthropic.com",
-    "daily-cloudcode-pa.googleapis.com",
     "geminicloudassist.googleapis.com"
   ]) {
     assert.equal(key in policy, false, `DNS policy 不应包含退出激活键：${key}`);
