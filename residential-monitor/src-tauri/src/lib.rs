@@ -620,6 +620,11 @@ fn save_ui_density(state: State<Mutex<AppFacade>>, density: String) -> Result<St
 }
 
 #[tauri::command]
+fn save_ui_sidebar_width(state: State<Mutex<AppFacade>>, width: i32) -> Result<i32, AppErrorDto> {
+    state.lock().expect("state").save_ui_sidebar_width(width)
+}
+
+#[tauri::command]
 fn save_live_table_layout(
     state: State<Mutex<AppFacade>>,
     layout: LiveTableLayout,
@@ -1245,6 +1250,7 @@ pub fn run() {
             list_ui_fonts,
             save_ui_font_size,
             save_ui_density,
+            save_ui_sidebar_width,
             save_live_table_layout,
             save_targets,
             test_controller,

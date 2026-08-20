@@ -67,10 +67,21 @@ describe("decodeShellStatus", () => {
   it("接受未签名 about", () => {
     const decoded = decodeAbout({
       schemaVersion: 1,
+      productName: "家宽流量监控",
+      binaryName: "residential-monitor",
+      identifier: "io.github.bahayonghang.residential-monitor",
+      aumid: "io.github.bahayonghang.residential-monitor",
+      version: "0.1.0",
       releasesUrl: "https://github.com/bahayonghang/clash-verge-ai-residential/releases",
-      signed: false
+      signed: false,
+      updaterPlugin: false,
+      windowsService: false,
+      signatureNoteZh: "本候选未做 Authenticode 签名。"
     });
     expect(decoded.signed).toBe(false);
+    expect(decoded.updaterPlugin).toBe(false);
+    expect(decoded.windowsService).toBe(false);
+    expect(decoded.releasesUrl).toContain("/releases");
   });
 
   it("部分删除不得被解码成全部成功以外的字段缺失", () => {

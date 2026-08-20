@@ -125,6 +125,15 @@ import {
   type UiTheme
 } from "./theme";
 import {
+  SHELL_WIDTH_DEFAULT,
+  SHELL_WIDTH_MAX,
+  SHELL_WIDTH_MIN,
+  SHELL_WIDTH_STEP,
+  applyShellWidth,
+  clampUiSidebarWidth,
+  parseUiSidebarWidth
+} from "./shell-width";
+import {
   ACTION_WIDTH,
   DATA_COLUMNS,
   WIDTH_MAX,
@@ -164,6 +173,16 @@ let liveFilterStatus: "idle" | "applying" | "failed" = "idle";
 let liveRequestToken = 0;
 let liveTableLayout = defaultLiveTableLayout();
 let liveTableDragging = false;
+let shellWidth = SHELL_WIDTH_DEFAULT;
+let shellDragging = false;
+let shellKeyboardDirty = false;
+let shellResize: {
+  pointerId: number;
+  startX: number;
+  startW: number;
+  handle: HTMLElement;
+  changed: boolean;
+} | null = null;
 let liveColumnPanelOpen = false;
 let liveResize: {
   col: DataColumnId;
@@ -265,6 +284,11 @@ function adoptFontSize(size: UiFontSize): void {
 function adoptDensity(density: UiDensity): void {
   uiDensity = density;
   applyDensity(density);
+}
+
+function adoptShellWidth(width: number): void {
+  shellWidth = clampUiSidebarWidth(width);
+  applyShellWidth(shellWidth);
 }
 
 function localizeRoutes(routes: BootstrapDto["routes"]): BootstrapDto["routes"] {
@@ -932,28 +956,76 @@ function renderFontPicker(): string {
   </div>`;
 }
 
+function aboutRow(labelKey: string, valueHtml: string, valueClass = ""): string {
+  const klass = valueClass ? ` class="${valueClass}"` : "";
+  return `<dt>${tx(labelKey)}</dt><dd${klass}>${valueHtml}</dd>`;
+}
+
+function renderAboutBody(about: AboutDto | null, loading: boolean, error: string): string {
+  if (about) {
+    return `<dl class="about-list">
+      ${aboutRow("settings.about_label.product", escapeHtml(about.productName))}
+      ${aboutRow("settings.about_label.version", escapeHtml(about.version), "mono-value")}
+      ${aboutRow("settings.about_label.binary", escapeHtml(about.binaryName), "mono-value")}
+      ${aboutRow("settings.about_label.identifier", escapeHtml(about.identifier), "mono-value")}
+      ${aboutRow("settings.about_label.aumid", escapeHtml(about.aumid), "mono-value")}
+      ${aboutRow(
+        "settings.about_label.signature",
+        `${about.signed ? tx("settings.signed") : tx("settings.unsigned")}<p class="about-note">${escapeHtml(about.signatureNoteZh)}</p>`
+      )}
+      ${aboutRow(
+        "settings.about_label.updater",
+        about.updaterPlugin ? tx("settings.about_updater_on") : tx("settings.about_updater_off")
+      )}
+      ${aboutRow(
+        "settings.about_label.service",
+        about.windowsService ? tx("settings.about_service_on") : tx("settings.about_service_off")
+      )}
+      ${aboutRow("settings.about_label.license", tx("settings.about_license_value"))}
+      ${aboutRow("settings.about_label.platform", tx("settings.about_platform_value"))}
+      ${aboutRow("settings.about_label.privacy", tx("settings.about_privacy_value"))}
+      ${aboutRow(
+        "settings.about_label.releases",
+        `<span class="about-release-url">${escapeHtml(about.releasesUrl)}</span>`,
+        "about-release"
+      )}
+    </dl>`;
+  }
+  if (error && !loading) {
+    return `<p class="status" data-state="storage_failure" role="alert">${escapeHtml(error)}</p>`;
+  }
+  return `<p class="field-hint" role="status">${tx("settings.about_loading")}</p>`;
+}
+
+function selectAboutReleaseUrl(root: ParentNode): void {
+  const el = root.querySelector(".about-release-url");
+  if (!(el instanceof HTMLElement)) {
+    return;
+  }
+  el.scrollIntoView({ block: "nearest" });
+  const selection = window.getSelection();
+  if (!selection) {
+    return;
+  }
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
 function renderSettings(
   boot: BootstrapDto,
   overview: LiveOverview,
   about: AboutDto | null,
+  aboutLoading: boolean,
+  aboutError: string,
   deletePreview: DeletePreview | null,
   deleteReport: DeleteReport | null,
   probeStatus: string,
   probeState: string,
   collectorRunning: boolean | null
 ): string {
-  const aboutBlock = about
-    ? `<p>${fmt("settings.about_meta", {
-        version: escapeHtml(about.version),
-        identifier: escapeHtml(about.identifier),
-        aumid: escapeHtml(about.aumid)
-      })}</p>
-       <p>${fmt("settings.about_sign", {
-         state: about.signed ? tx("settings.signed") : tx("settings.unsigned"),
-         note: escapeHtml(about.signatureNoteZh)
-       })}</p>
-       <p>${fmt("settings.about_release", { url: escapeHtml(about.releasesUrl) })}</p>`
-    : `<p>${tx("settings.about_idle")}</p>`;
+  const aboutBlock = renderAboutBody(about, aboutLoading, aboutError);
   const deleteItems =
     deletePreview?.items
       .map(
@@ -1032,7 +1104,7 @@ function renderSettings(
     </section>`;
   const aboutPanel = `
     <section class="settings-card" id="about"><div class="settings-card-heading"><div><h2>${tx("settings.about")}</h2><p>${tx("settings.about_help")}</p></div></div>
-      <div class="about-body">${aboutBlock}</div><div class="actions"><button type="button" class="btn-secondary" id="load-about">${tx("settings.refresh_about")}</button><button type="button" class="btn-secondary" id="open-releases">${tx("settings.open_releases")}</button></div>
+      <div class="about-body">${aboutBlock}</div><div class="actions"><button type="button" class="btn-secondary" id="load-about"${aboutLoading ? " disabled" : ""}>${tx("settings.refresh_about")}</button><button type="button" class="btn-secondary" id="open-releases"${aboutLoading ? " disabled" : ""}>${tx("settings.open_releases")}</button></div>
     </section>`;
   const dangerPanel = `
     <section class="settings-card settings-danger"><div class="settings-card-heading"><div><h2>${tx("settings.delete_title")}</h2><p>${escapeHtml(deletePreview?.noteZh ?? tx("settings.delete_help"))}</p></div></div>
@@ -1223,6 +1295,7 @@ function previewBootstrap(): BootstrapDto {
     uiFont: "system",
     uiFontSize: "md",
     uiDensity: "comfortable",
+    uiSidebarWidth: SHELL_WIDTH_DEFAULT,
     liveTableLayout: defaultLiveTableLayout(),
     logDir: ""
   };
@@ -1284,6 +1357,8 @@ function renderApp(
   diagnostics: DiagnosticsSnapshot | null,
   notify: NotifyCapability | null,
   about: AboutDto | null,
+  aboutLoading: boolean,
+  aboutError: string,
   deletePreview: DeletePreview | null,
   deleteReport: DeleteReport | null,
   probeStatus: string,
@@ -1324,6 +1399,8 @@ function renderApp(
                 boot,
                 state.snapshot ?? boot.overview,
                 about,
+                aboutLoading,
+                aboutError,
                 deletePreview,
                 deleteReport,
                 probeStatus,
@@ -1348,6 +1425,7 @@ function renderApp(
           ? `<p class="shell-recovery">${tx("shell.recovery")}</p>`
           : `<nav class="nav" aria-label="${tx("nav.aria")}">${navHtml(route, boot.routes)}</nav>`
       }
+      <span id="shell-resize" class="shell-resize" data-shell-resize="1" role="separator" tabindex="0" aria-orientation="vertical" aria-label="${escapeHtml(tx("shell.resize"))}" aria-valuemin="${SHELL_WIDTH_MIN}" aria-valuemax="${SHELL_WIDTH_MAX}" aria-valuenow="${shellWidth}" aria-valuetext="${escapeHtml(fmt("shell.resize_value", { width: shellWidth }))}" aria-keyshortcuts="ArrowLeft ArrowRight Home End"></span>
     </aside>
     <main class="workspace" id="workspace" tabindex="-1">
       <div id="view">${body}</div>
@@ -1414,6 +1492,7 @@ async function main(): Promise<void> {
   adoptFont(parseUiFont(boot.uiFont));
   adoptFontSize(parseUiFontSize(boot.uiFontSize));
   adoptDensity(parseUiDensity(boot.uiDensity));
+  adoptShellWidth(parseUiSidebarWidth(boot.uiSidebarWidth));
   liveTableLayout = parseLiveTableLayout(boot.liveTableLayout);
   settingsDraft = { address: boot.settings.address, targets: "家宽" };
 
@@ -1429,6 +1508,9 @@ async function main(): Promise<void> {
   let diagnostics: DiagnosticsSnapshot | null = null;
   let notify: NotifyCapability | null = null;
   let about: AboutDto | null = null;
+  let aboutLoading = false;
+  let aboutLoaded = false;
+  let aboutError = "";
   let deletePreview: DeletePreview | null = null;
   let deleteReport: DeleteReport | null = null;
   let probeStatus = "";
@@ -1454,6 +1536,63 @@ async function main(): Promise<void> {
       /* 保持内存中的布局；控制台保留诊断信息。 */
       console.warn("无法保存实时连接表布局", error);
     }
+  };
+
+  const updateShellResizeAria = (): void => {
+    const handle = app.querySelector("[data-shell-resize]");
+    if (!(handle instanceof HTMLElement)) {
+      return;
+    }
+    handle.setAttribute("aria-valuenow", String(shellWidth));
+    handle.setAttribute("aria-valuetext", fmt("shell.resize_value", { width: shellWidth }));
+  };
+
+  const persistShellWidth = async (next: number): Promise<void> => {
+    adoptShellWidth(next);
+    updateShellResizeAria();
+    shellKeyboardDirty = false;
+    if (!isTauriRuntime()) {
+      return;
+    }
+    try {
+      adoptShellWidth(
+        parseUiSidebarWidth(await invokeCommand<number>("save_ui_sidebar_width", { width: shellWidth }))
+      );
+      updateShellResizeAria();
+    } catch (error) {
+      console.warn("无法保存侧栏宽度", error);
+    }
+  };
+
+  const commitShellKeyboard = (): void => {
+    if (!shellKeyboardDirty) {
+      return;
+    }
+    shellKeyboardDirty = false;
+    void persistShellWidth(shellWidth);
+  };
+
+  const finishShellResize = (commit: boolean): void => {
+    const resize = shellResize;
+    if (!resize) {
+      return;
+    }
+    shellResize = null;
+    shellDragging = false;
+    app.classList.remove("shell-resizing");
+    document.documentElement.classList.remove("shell-resizing");
+    if (resize.handle.hasPointerCapture(resize.pointerId)) {
+      resize.handle.releasePointerCapture(resize.pointerId);
+    }
+    if (!commit) {
+      adoptShellWidth(resize.startW);
+    }
+    if (commit && resize.changed) {
+      void persistShellWidth(shellWidth).then(paint);
+      return;
+    }
+    updateShellResizeAria();
+    paint();
   };
 
   const applyLiveTableWidth = (column: DataColumnId): void => {
@@ -1560,7 +1699,7 @@ async function main(): Promise<void> {
   };
 
   const paint = (): void => {
-    if (liveTableDragging) {
+    if (liveTableDragging || shellDragging) {
       return;
     }
     renderApp(
@@ -1578,6 +1717,8 @@ async function main(): Promise<void> {
       diagnostics,
       notify,
       about,
+      aboutLoading,
+      aboutError,
       deletePreview,
       deleteReport,
       probeStatus,
@@ -1592,6 +1733,44 @@ async function main(): Promise<void> {
     }
     if (route === "settings-data" && settingsSection === "appearance") {
       void loadAppearanceFonts();
+    }
+    if (route === "settings-data" && settingsSection === "about") {
+      void loadAbout(false);
+    }
+  };
+
+  const loadAbout = async (force: boolean): Promise<void> => {
+    if (aboutLoading) {
+      return;
+    }
+    if (!force && aboutLoaded) {
+      return;
+    }
+    aboutLoading = true;
+    if (force) {
+      about = null;
+      aboutError = "";
+      aboutLoaded = false;
+    }
+    paint();
+    try {
+      if (!isTauriRuntime()) {
+        about = null;
+        aboutError = tx("settings.about_fail");
+      } else {
+        about = decodeAbout(await invokeCommand("get_about"));
+        aboutError = "";
+      }
+    } catch (error) {
+      about = null;
+      const text = probeErrorText(error);
+      aboutError = text.messageZh || tx("settings.about_fail");
+    } finally {
+      aboutLoading = false;
+      aboutLoaded = true;
+      if (route === "settings-data" && settingsSection === "about") {
+        paint();
+      }
     }
   };
 
@@ -2098,12 +2277,33 @@ async function main(): Promise<void> {
 
   app.addEventListener("pointerdown", (event) => {
     const target = event.target;
-    if (
-      !(target instanceof HTMLElement) ||
-      target.dataset.colResize == null ||
-      !event.isPrimary ||
-      event.button !== 0
-    ) {
+    if (!(target instanceof HTMLElement) || !event.isPrimary || event.button !== 0) {
+      return;
+    }
+    if (target.dataset.shellResize != null) {
+      if (liveTableDragging) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      commitShellKeyboard();
+      shellDragging = true;
+      shellResize = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startW: shellWidth,
+        handle: target,
+        changed: false
+      };
+      app.classList.add("shell-resizing");
+      document.documentElement.classList.add("shell-resizing");
+      target.setPointerCapture(event.pointerId);
+      return;
+    }
+    if (target.dataset.colResize == null) {
+      return;
+    }
+    if (shellDragging) {
       return;
     }
     const column = target.dataset.colResize;
@@ -2127,6 +2327,13 @@ async function main(): Promise<void> {
   });
 
   window.addEventListener("pointermove", (event) => {
+    if (shellResize && event.pointerId === shellResize.pointerId) {
+      const next = clampUiSidebarWidth(shellResize.startW + (event.clientX - shellResize.startX));
+      shellResize.changed ||= next !== shellResize.startW;
+      adoptShellWidth(next);
+      updateShellResizeAria();
+      return;
+    }
     if (!liveResize || event.pointerId !== liveResize.pointerId) {
       return;
     }
@@ -2140,30 +2347,72 @@ async function main(): Promise<void> {
   });
 
   window.addEventListener("pointerup", (event) => {
+    if (shellResize?.pointerId === event.pointerId) {
+      finishShellResize(true);
+      return;
+    }
     if (liveResize?.pointerId === event.pointerId) {
       finishLiveResize(true);
     }
   });
 
   window.addEventListener("pointercancel", (event) => {
+    if (shellResize?.pointerId === event.pointerId) {
+      finishShellResize(false);
+      return;
+    }
     if (liveResize?.pointerId === event.pointerId) {
       finishLiveResize(false);
     }
   });
 
   app.addEventListener("lostpointercapture", (event) => {
+    if (shellResize?.pointerId === event.pointerId && event.target === shellResize.handle) {
+      finishShellResize(false);
+      return;
+    }
     if (liveResize?.pointerId === event.pointerId && event.target === liveResize.handle) {
       finishLiveResize(false);
     }
   });
 
   window.addEventListener("blur", () => {
+    finishShellResize(false);
     finishLiveResize(false);
+    commitShellKeyboard();
   });
 
   app.addEventListener("keydown", (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLElement) || target.dataset.colResize == null) {
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    if (target.dataset.shellResize != null) {
+      const step = event.shiftKey ? 32 : SHELL_WIDTH_STEP;
+      const next =
+        event.key === "ArrowLeft"
+          ? shellWidth - step
+          : event.key === "ArrowRight"
+            ? shellWidth + step
+            : event.key === "Home"
+              ? SHELL_WIDTH_MIN
+              : event.key === "End"
+                ? SHELL_WIDTH_MAX
+                : null;
+      if (next == null) {
+        return;
+      }
+      event.preventDefault();
+      const width = clampUiSidebarWidth(next);
+      if (width === shellWidth) {
+        return;
+      }
+      adoptShellWidth(width);
+      updateShellResizeAria();
+      shellKeyboardDirty = true;
+      return;
+    }
+    if (target.dataset.colResize == null) {
       return;
     }
     const column = target.dataset.colResize;
@@ -2193,6 +2442,20 @@ async function main(): Promise<void> {
     liveTableLayout = next;
     applyLiveTableWidth(column);
     void persistLayout(liveTableLayout).then(paint);
+  });
+
+  app.addEventListener("keyup", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.dataset.shellResize != null) {
+      commitShellKeyboard();
+    }
+  });
+
+  app.addEventListener("focusout", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.dataset.shellResize != null) {
+      commitShellKeyboard();
+    }
   });
 
   app.addEventListener("click", async (event) => {
@@ -2715,12 +2978,8 @@ async function main(): Promise<void> {
       }
     }
     if (target.id === "load-about") {
-      try {
-        about = decodeAbout(await invokeCommand("get_about"));
-        apply(state, "settings-data");
-      } catch {
-        apply({ ...state, errorZh: "无法读取关于信息。" });
-      }
+      await loadAbout(true);
+      return;
     }
     if (target.id === "open-log-dir") {
       try {
@@ -2730,12 +2989,11 @@ async function main(): Promise<void> {
       }
     }
     if (target.id === "open-releases") {
-      try {
-        const url = await invokeCommand<string>("open_releases");
-        apply({ ...state, errorZh: `发布地址：${url}` });
-      } catch {
-        apply({ ...state, errorZh: "无法读取发布地址。" });
+      if (!about) {
+        await loadAbout(true);
       }
+      selectAboutReleaseUrl(app);
+      return;
     }
     if (target.id === "preview-delete") {
       try {

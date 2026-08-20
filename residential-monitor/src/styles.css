@@ -296,13 +296,39 @@ select:focus-visible,
 }
 
 .shell {
-  width: 13.75rem;
-  flex: 0 0 13.75rem;
+  position: relative;
+  width: var(--shell-width, 220px);
+  flex: 0 0 var(--shell-width, 220px);
   background: var(--sidebar);
   color: var(--sidebar-text);
   display: flex;
   flex-direction: column;
   padding: 1.1rem 0.75rem 1rem;
+}
+
+.shell-resize {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  z-index: 2;
+  width: 10px;
+  height: 100%;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: ew-resize;
+}
+
+.shell-resize:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -1px;
+}
+
+.shell-resizing,
+.shell-resizing * {
+  cursor: ew-resize;
+  user-select: none;
 }
 
 .brand {
@@ -1860,8 +1886,67 @@ label.inline {
   margin-top: 1rem;
 }
 
+.about-body {
+  min-height: 0;
+}
+
 .about-body p {
   overflow-wrap: anywhere;
+}
+
+.about-list {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
+  align-content: start;
+  column-gap: 1.25rem;
+  row-gap: 0.15rem;
+  margin: 1.1rem 0 0;
+}
+
+.about-list dt {
+  padding-top: 0.55rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.about-list dd {
+  margin: 0;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--table-line) 62%, transparent);
+  overflow-wrap: anywhere;
+}
+
+.about-list dd.mono-value {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.about-note {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-family: var(--ui-font);
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.about-release {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+}
+
+.about-release-url {
+  user-select: text;
+  overflow-wrap: anywhere;
+}
+
+.settings-card#about {
+  display: flex;
+  flex-direction: column;
 }
 
 .delete-list {
@@ -1975,7 +2060,8 @@ label.inline {
 
   .settings-status-grid,
   .settings-form-grid,
-  .settings-option-row {
+  .settings-option-row,
+  .about-list {
     grid-template-columns: 1fr;
   }
 
@@ -2045,6 +2131,19 @@ html[data-density="compact"] .settings-option-row {
 html[data-density="compact"] .settings-nav-item {
   min-height: 40px;
   padding: 0.4rem 0.65rem;
+}
+
+html[data-density="compact"] .about-list {
+  margin-top: 0.75rem;
+  row-gap: 0.05rem;
+}
+
+html[data-density="compact"] .about-list dt {
+  padding-top: 0.35rem;
+}
+
+html[data-density="compact"] .about-list dd {
+  padding: 0.32rem 0;
 }
 
 html[data-density="compact"] .theme-choice,
@@ -2120,6 +2219,7 @@ html[data-density="compact"] .segment {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .shell,
   .settings-nav-item,
   .settings-option-row button,
   .theme-choice {

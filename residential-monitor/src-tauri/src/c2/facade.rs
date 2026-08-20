@@ -40,8 +40,9 @@ use crate::storage::{
     AlertCommitSlice, CommitBundle, RecoveryFacade, StorageCoordinator, StorageError,
 };
 use crate::theme::{
-    UiDensity, UiFont, UiFontSize, UiTheme, DENSITY_SETTING_KEY, FONT_SETTING_KEY,
-    FONT_SIZE_SETTING_KEY, THEME_SETTING_KEY,
+    clamp_sidebar_width, parse_sidebar_width, UiDensity, UiFont, UiFontSize, UiTheme,
+    DENSITY_SETTING_KEY, FONT_SETTING_KEY, FONT_SIZE_SETTING_KEY, SIDEBAR_WIDTH_DEFAULT,
+    SIDEBAR_WIDTH_SETTING_KEY, THEME_SETTING_KEY,
 };
 use serde::Serialize;
 use std::net::SocketAddr;
@@ -156,6 +157,7 @@ pub struct BootstrapDto {
     pub ui_font: UiFont,
     pub ui_font_size: UiFontSize,
     pub ui_density: UiDensity,
+    pub ui_sidebar_width: i32,
     pub live_table_layout: LiveTableLayout,
     pub log_dir: String,
 }
@@ -192,6 +194,7 @@ pub struct AppFacade {
     pub ui_font: UiFont,
     pub ui_font_size: UiFontSize,
     pub ui_density: UiDensity,
+    pub ui_sidebar_width: i32,
     pub live_table_layout: LiveTableLayout,
     last_logged_session: Option<SessionStatus>,
 }
@@ -250,6 +253,13 @@ impl AppFacade {
                         .flatten()
                         .as_deref(),
                 );
+                let ui_sidebar_width = parse_sidebar_width(
+                    storage
+                        .get_setting(SIDEBAR_WIDTH_SETTING_KEY)
+                        .ok()
+                        .flatten()
+                        .as_deref(),
+                );
                 let live_table_layout = parse_setting(
                     storage
                         .get_setting(LAYOUT_SETTING_KEY)
@@ -304,6 +314,7 @@ impl AppFacade {
                     ui_font,
                     ui_font_size,
                     ui_density,
+                    ui_sidebar_width,
                     live_table_layout,
                     last_logged_session: None,
                 }
@@ -350,6 +361,7 @@ impl AppFacade {
                     ui_font: UiFont::system(),
                     ui_font_size: UiFontSize::Md,
                     ui_density: UiDensity::Comfortable,
+                    ui_sidebar_width: SIDEBAR_WIDTH_DEFAULT,
                     live_table_layout: LiveTableLayout::default(),
                     last_logged_session: None,
                 }
@@ -384,6 +396,7 @@ impl AppFacade {
             ui_font: self.ui_font.clone(),
             ui_font_size: self.ui_font_size,
             ui_density: self.ui_density,
+            ui_sidebar_width: self.ui_sidebar_width,
             live_table_layout: self.live_table_layout.clone(),
             log_dir: app_log::dir().to_string_lossy().into_owned(),
         })
@@ -492,6 +505,17 @@ impl AppFacade {
         }
         self.ui_density = density;
         Ok(density)
+    }
+
+    pub fn save_ui_sidebar_width(&mut self, width: i32) -> Result<i32, AppErrorDto> {
+        let width = clamp_sidebar_width(width);
+        if let Some(storage) = &self.storage {
+            storage
+                .put_setting(SIDEBAR_WIDTH_SETTING_KEY, &width.to_string())
+                .map_err(|_| self.err("storage", "error.theme", "action.check_disk", true))?;
+        }
+        self.ui_sidebar_width = width;
+        Ok(width)
     }
 
     pub fn save_live_table_layout(
@@ -1545,6 +1569,55 @@ mod c2_facade_contract_tests {
         assert_eq!(fourth.ui_font.as_str(), "Microsoft YaHei");
         assert_eq!(fourth.ui_font_size, UiFontSize::Md);
         assert_eq!(fourth.ui_density, UiDensity::Comfortable);
+    }
+
+    #[test]
+    fn ui_sidebar_width_persists_and_falls_back() {
+        let dir = tempdir().expect("dir");
+        let mut first = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(first.ui_sidebar_width, 220);
+        assert_eq!(first.save_ui_sidebar_width(280).expect("save"), 280);
+        drop(first);
+        let second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(second.ui_sidebar_width, 280);
+        assert_eq!(second.bootstrap().expect("boot").ui_sidebar_width, 280);
+        drop(second);
+        let mut third = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(third.save_ui_sidebar_width(159).expect("low"), 160);
+        assert_eq!(third.save_ui_sidebar_width(400).expect("high"), 352);
+        drop(third);
+        let fourth = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(fourth.ui_sidebar_width, 352);
+        fourth
+            .storage
+            .as_ref()
+            .expect("storage")
+            .put_setting(crate::theme::SIDEBAR_WIDTH_SETTING_KEY, "nope")
+            .expect("put");
+        drop(fourth);
+        let fifth = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(fifth.ui_sidebar_width, 220);
+    }
+
+    #[test]
+    fn ui_sidebar_width_without_storage_stays_in_memory() {
+        let dir = tempdir().expect("dir");
+        let path = dir.path().join("monitor.sqlite3");
+        {
+            let connection = rusqlite::Connection::open(&path).expect("open");
+            connection
+                .execute_batch("pragma user_version = 99")
+                .expect("ver");
+        }
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(facade.branch, BootBranch::RecoveryOnly);
+        assert!(facade.storage.is_none());
+        assert_eq!(facade.save_ui_sidebar_width(280).expect("save"), 280);
+        assert_eq!(facade.ui_sidebar_width, 280);
+        drop(facade);
+        let second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(second.branch, BootBranch::RecoveryOnly);
+        assert_eq!(second.ui_sidebar_width, 220);
     }
 
     #[test]

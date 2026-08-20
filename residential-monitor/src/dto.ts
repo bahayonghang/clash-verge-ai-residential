@@ -234,6 +234,7 @@ export interface BootstrapDto {
   uiFont?: UiFont;
   uiFontSize?: UiFontSize;
   uiDensity?: UiDensity;
+  uiSidebarWidth?: number;
   liveTableLayout?: { widths: Record<string, number>; hidden: string[] };
   logDir?: string;
 }

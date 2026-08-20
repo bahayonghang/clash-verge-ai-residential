@@ -4,7 +4,7 @@
 - 每条 Channel 消息必须检查 `schemaVersion`、`kind` 和单调 `seq`。
 - 禁止把 mihomo 原始 JSON 或 SQL 行传到视图层。
 - 时间展示用用户本地时区；持久时间保持 UTC integer。
-- `BootstrapDto.uiLocale` 缺字段时按 `zh`。`BootstrapDto.uiTheme` 缺字段时按 `mocha`。`BootstrapDto.uiFont` 缺字段或含 CSS 元字符时按 `system`；合法值为 `system`、旧别名 `yahei` / `serif` / `mono`，或校验后的本机族名。`BootstrapDto.uiFontSize` 缺字段时按 `md`。`BootstrapDto.uiDensity` 缺字段时按 `comfortable`。`BootstrapDto.logDir` 缺字段时「打开日志目录」禁用，显示「日志目录未知」，不猜本机路径。`messageZh` 字段名保持不变，内容为当前语言。
+- `BootstrapDto.uiLocale` 缺字段时按 `zh`。`BootstrapDto.uiTheme` 缺字段时按 `mocha`。`BootstrapDto.uiFont` 缺字段或含 CSS 元字符时按 `system`；合法值为 `system`、旧别名 `yahei` / `serif` / `mono`，或校验后的本机族名。`BootstrapDto.uiFontSize` 缺字段时按 `md`。`BootstrapDto.uiDensity` 缺字段时按 `comfortable`。`BootstrapDto.uiSidebarWidth` 缺字段或非有限数字时按 `220`，并 clamp 到 160–352。`BootstrapDto.logDir` 缺字段时「打开日志目录」禁用，显示「日志目录未知」，不猜本机路径。`messageZh` 字段名保持不变，内容为当前语言。
 
 ## Scenario: list local UI fonts
 

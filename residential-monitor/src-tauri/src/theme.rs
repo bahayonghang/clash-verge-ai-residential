@@ -6,6 +6,10 @@ pub const THEME_SETTING_KEY: &str = "ui_theme";
 pub const FONT_SETTING_KEY: &str = "ui_font";
 pub const FONT_SIZE_SETTING_KEY: &str = "ui_font_size";
 pub const DENSITY_SETTING_KEY: &str = "ui_density";
+pub const SIDEBAR_WIDTH_SETTING_KEY: &str = "ui_sidebar_width";
+pub const SIDEBAR_WIDTH_DEFAULT: i32 = 220;
+pub const SIDEBAR_WIDTH_MIN: i32 = 160;
+pub const SIDEBAR_WIDTH_MAX: i32 = 352;
 
 const FONT_FAMILY_MAX_UNITS: usize = 31;
 
@@ -215,6 +219,24 @@ impl UiDensity {
     }
 }
 
+pub fn clamp_sidebar_width(value: i32) -> i32 {
+    value.clamp(SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX)
+}
+
+pub fn parse_sidebar_width(raw: Option<&str>) -> i32 {
+    let Some(text) = raw.map(str::trim).filter(|text| !text.is_empty()) else {
+        return SIDEBAR_WIDTH_DEFAULT;
+    };
+    let digits = text.strip_prefix('-').unwrap_or(text);
+    if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
+        return SIDEBAR_WIDTH_DEFAULT;
+    }
+    let Ok(value) = text.parse::<i64>() else {
+        return SIDEBAR_WIDTH_DEFAULT;
+    };
+    clamp_sidebar_width(value.clamp(i32::MIN as i64, i32::MAX as i64) as i32)
+}
+
 #[cfg(test)]
 mod theme_tests {
     use super::*;
@@ -255,6 +277,12 @@ mod theme_tests {
         assert_eq!(UiFontSize::parse(Some("sm")), UiFontSize::Sm);
         assert_eq!(UiDensity::parse(None), UiDensity::Comfortable);
         assert_eq!(UiDensity::parse(Some("tight")), UiDensity::Comfortable);
+        assert_eq!(parse_sidebar_width(None), SIDEBAR_WIDTH_DEFAULT);
+        assert_eq!(parse_sidebar_width(Some("280")), 280);
+        assert_eq!(parse_sidebar_width(Some("12.9")), SIDEBAR_WIDTH_DEFAULT);
+        assert_eq!(parse_sidebar_width(Some("159")), SIDEBAR_WIDTH_MIN);
+        assert_eq!(parse_sidebar_width(Some("353")), SIDEBAR_WIDTH_MAX);
+        assert_eq!(parse_sidebar_width(Some("nope")), SIDEBAR_WIDTH_DEFAULT);
         assert_eq!(UiDensity::parse(Some("compact")), UiDensity::Compact);
     }
 

@@ -7,6 +7,7 @@
 - `uiLocale` 为 `zh` 或 `en`，默认 `zh`。设置页切换后立即重绘 WebView。删除确认短语固定为 `删除全部本地数据`。
 - `uiTheme` 为 `latte`、`frappe`、`macchiato` 或 `mocha`，默认 `mocha`。设置页切换后立即换肤。值写入本机设置键 `ui_theme`，不进控制器 JSON。非法或缺失回落 Mocha。Recovery 无库时只改内存。
 - `uiFont` 为 `system`、旧别名 `yahei` / `serif` / `mono`，或一条通过校验的本机族名，默认 `system`。`uiFontSize` 为 `sm`、`md` 或 `lg`，默认 `md`。`uiDensity` 为 `comfortable` 或 `compact`，默认 `comfortable`。设置页切换后立即应用到 `document.documentElement` 的 `--ui-font`。分别写入本机设置键 `ui_font`、`ui_font_size`、`ui_density`，不进控制器 JSON。非法或缺失回落默认。Recovery 无库时只改内存。本机字体列表来自 `list_ui_fonts`，只留当前会话缓存，筛选键不得 `paint`。
+- `uiSidebarWidth` 为 160–352 的整数 CSS 像素，默认 220。写入本机键 `ui_sidebar_width`，不进控制器 JSON。拖动应用壳 `.shell` 右缘或键盘调整；拖动期间禁止整页 `paint`，并与实时表列宽拖动互斥。pointercancel / 失焦 / 捕获丢失回滚到开始宽度；松手成功才持久化一次。非法或缺失回落 220。Recovery 无库时只改内存。设置二级导航不提供独立宽度。
 - 不在前端实现分类、守恒、Top N 或导出统计。实时方向热点只渲染 `query_live_connections` 返回的 `summary`，不从当前页 rows 重算。
 - 缺口、未知和未归因差额必须单独展示，不能画成零。
 - 热点卡片 follow `liveHotspotStatus`：`collectorRunning === null`、未知 coverage、断连、pause/shutdown、`needResync` / frozen 隐藏方向数值和旧的 matched/sample，不得显示 0 或过期 current。`noMatch` 可显示 matched `0` 与采样时间，方向值仍为未知。
@@ -23,7 +24,7 @@
 - 报告图探查只读当前 `ReportResult`：悬停或键盘焦点显示名称、流量、份额；点击钉住；Escape 取消。禁止按探查改 grouping 或自动 `run_report`。
 - 自动档案列表可见约 8 行；类型筛选走 `list_report_archives.kind`。
 - 进入 `reports` 时 `list_report_archives`，优先展示最新成功日档案，否则最新成功小时档案。手动「运行报告」只更新当前会话 token，不写 `report_archive`。
-- C5 设置页可展示关于信息、删除预览 / 二次确认和用户主动 VACUUM。设置页与 Recovery 壳显示 `logDir` 并用 `open_log_dir` 打开目录；路径写入文本节点，不拼 `file://`。Recovery 不加删除入口。动态重绘后按元素 `id` 恢复焦点，支持选区的 input / textarea 再写回 `selectionStart` / `selectionEnd` / `selectionDirection`，`focus({ preventScroll: true })`。缺口、未知和能力过期仍显示「未知」，不画成零。
+- C5 设置页可展示关于信息、删除预览 / 二次确认和用户主动 VACUUM。进入关于分区时自动 `get_about` 并缓存于当前会话；刷新强制重拉。加载中、失败、成功三态，默认不再停在未加载空文案。发布地址只展示固定 GitHub Releases URL，显示在关于卡内等宽文本，不得写入 `errorZh`。许可证、平台和「数据只留本机 / 无遥测」用 i18n 静态行，不新增 AboutDto 字段。设置页与 Recovery 壳显示 `logDir` 并用 `open_log_dir` 打开目录；路径写入文本节点，不拼 `file://`。Recovery 不加删除入口。动态重绘后按元素 `id` 恢复焦点，支持选区的 input / textarea 再写回 `selectionStart` / `selectionEnd` / `selectionDirection`，`focus({ preventScroll: true })`。缺口、未知和能力过期仍显示「未知」，不画成零。
 - 设置页 TCP secret 默认保存到本机凭据并回填密码框（圆点）。显示/隐藏走独立按钮。密钥只写 `input.value`，不插进 `innerHTML`。
 - `AboutDto.signed === true` 时解码失败。发布地址只展示固定 GitHub Releases URL。
 
