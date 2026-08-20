@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"关于页 signed 解码、固定 Releases URL、设置 skip-paint、外观键不进控制器 JSON。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"Bootstrap 可选字段缺省回落；前端 fail-closed 解码。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"C5 拥有关于页；外观键 put_setting；AUMID 与 identifier 相同；不注册 updater。"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"关于模板不得出现 secret；WebView 无 opener/fs。"}
+{"file":".trellis/tasks/08-20-settings-about-sidebar/research/about-and-sidebar-evidence.md","reason":"空关于卡、AboutDto 已有字段、侧栏固定宽度与实时列宽复用锚点。"}
