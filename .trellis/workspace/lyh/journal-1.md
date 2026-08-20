@@ -631,3 +631,42 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 22: 设置页字体、字号与紧凑密度
+
+**Date**: 2026-08-20
+**Task**: 设置页字体、字号与紧凑密度
+**Package**: residential-monitor
+**Branch**: `dev`
+
+### Summary
+
+在外观与语言分区加入本机字体栈、三档字号和 compact 密度，即时预览并写入 ui_font / ui_font_size / ui_density；忽略 .worktrees。
+
+### Main Changes
+
+- 外观分区增加字体、字号、密度控件，选择后立即 apply 并 put_setting
+- BootstrapDto 增加 uiFont / uiFontSize / uiDensity，非法值回落 system/md/comfortable
+- compact 压缩留白，控件 min-height 保持 40px；.gitignore 忽略 .worktrees/
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d05b5bc` | (see git log) |
+| `690131d` | (see git log) |
+
+### Testing
+
+- [OK] npm --prefix residential-monitor typecheck/lint/test/build
+- [OK] cargo test --lib ui_font_size_and_density / font_size_and_density_fall_back
+- [OK] Vite 预览：中英外观、serif+lg+compact、420px 无水平溢出
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 真实 Tauri WebView 重启后读回三项设置仍为 UNVERIFIED

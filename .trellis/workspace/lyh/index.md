@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 21
+- **Total Sessions**: 22
 - **Last Active**: 2026-08-20
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~633 | Active |
+| `journal-1.md` | ~672 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 22 | 2026-08-20 | 设置页字体、字号与紧凑密度 | `d05b5bc`, `690131d` | `dev` |
 | 21 | 2026-08-20 | 实时连接筛选、列宽与热点摘要 | `7bc91ac`, `d1777e8` | `dev` |
 | 20 | 2026-08-20 | 自动连接与设置界面现代化 | `51d869f` | `dev` |
 | 19 | 2026-08-19 | 家宽监控本机日志与 tinstall 停进程 | `0b0295e`, `c325be1` | `dev` |
