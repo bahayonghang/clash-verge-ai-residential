@@ -43,6 +43,7 @@ tokio-tungstenite = "0.27"
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = [
   "Win32_Foundation",
+  "Win32_Graphics_Gdi",
   "Win32_Security_Credentials",
   "Win32_System_Memory",
   "Win32_System_Threading"

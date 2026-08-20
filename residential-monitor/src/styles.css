@@ -212,7 +212,8 @@ html[data-font-size="lg"] {
 }
 
 #app:has(.live-page),
-#app:has(.reports) {
+#app:has(.reports),
+#app:has(.settings-page) {
   height: 100vh;
   overflow: hidden;
 }
@@ -396,6 +397,10 @@ select:focus-visible,
 .workspace:has(.reports) {
   min-height: 0;
   overflow: hidden;
+}
+
+.workspace:has(.settings-page) {
+  min-height: 0;
 }
 
 .workspace:focus {
@@ -1389,11 +1394,12 @@ label.inline {
 .settings-page {
   width: min(100%, 76rem);
   margin: 0 auto;
-  padding: 0.35rem 0 1rem;
+  padding: 0.35rem 0 0.75rem;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  min-height: 0;
+  height: 100%;
 }
 
 .settings-header {
@@ -1401,7 +1407,7 @@ label.inline {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1.5rem;
-  padding: 0.65rem 0.2rem 1.4rem;
+  padding: 0.55rem 0.2rem 1rem;
   border-bottom: 1px solid color-mix(in srgb, var(--table-line) 72%, transparent);
 }
 
@@ -1450,10 +1456,12 @@ label.inline {
 .settings-layout {
   display: grid;
   grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr);
-  align-items: start;
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
   gap: clamp(1rem, 2.8vw, 2rem);
   padding-top: 1.25rem;
   flex: 1 1 auto;
+  min-height: 0;
 }
 
 .settings-nav {
@@ -1524,6 +1532,7 @@ label.inline {
 .settings-content {
   display: flex;
   min-width: 0;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 0.8rem;
   min-height: 0;
@@ -1536,6 +1545,11 @@ label.inline {
   border: 1px solid color-mix(in srgb, var(--table-line) 76%, transparent);
   border-radius: 14px;
   background: color-mix(in srgb, var(--card) 94%, var(--main));
+}
+
+.settings-card:last-child {
+  flex: 1 1 auto;
+  min-height: 100%;
 }
 
 .settings-card-hero {
@@ -1660,7 +1674,7 @@ label.inline {
   grid-template-columns: minmax(10rem, 0.55fr) minmax(0, 1.45fr);
   align-items: start;
   gap: 1.5rem;
-  padding: 1.2rem 0;
+  padding: 0.75rem 0;
   border-top: 1px solid color-mix(in srgb, var(--table-line) 72%, transparent);
 }
 
@@ -1739,6 +1753,78 @@ label.inline {
   margin-left: auto;
   color: var(--accent);
   font-weight: 700;
+}
+
+.font-picker {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+
+.font-picker-trigger,
+.font-picker-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  gap: 0.55rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--table-line);
+  background: var(--input-bg);
+  color: var(--ink);
+  text-align: left;
+}
+
+.font-picker-trigger:hover,
+.font-picker-option:hover {
+  border-color: var(--border);
+  background: var(--btn-secondary-hover);
+}
+
+.font-picker-option.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, var(--input-bg));
+}
+
+.font-picker-panel {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 0.3rem);
+  right: 0;
+  left: 0;
+  display: flex;
+  max-height: 18rem;
+  flex-direction: column;
+  padding: 0.35rem;
+  border: 1px solid var(--table-line);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.font-picker-panel[hidden] {
+  display: none;
+}
+
+.font-picker-filter {
+  width: 100%;
+  min-height: 40px;
+}
+
+.font-picker-list {
+  display: flex;
+  width: 100%;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  overflow: auto;
+  max-height: 14rem;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.font-picker-option span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .settings-resource {
@@ -1872,6 +1958,7 @@ label.inline {
 
   .settings-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .settings-nav {

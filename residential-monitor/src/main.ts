@@ -111,13 +111,14 @@ import {
   applyFont,
   applyFontSize,
   applyTheme,
+  fontStack,
+  isLegacyUiFont,
   parseUiDensity,
   parseUiFont,
   parseUiFontSize,
   parseUiTheme,
   UI_DENSITIES,
   UI_FONT_SIZES,
-  UI_FONTS,
   type UiDensity,
   type UiFont,
   type UiFontSize,
@@ -148,6 +149,12 @@ let uiTheme: UiTheme = "mocha";
 let uiFont: UiFont = "system";
 let uiFontSize: UiFontSize = "md";
 let uiDensity: UiDensity = "comfortable";
+let uiFontFamilies: string[] = [];
+let uiFontListError = "";
+let uiFontListLoaded = false;
+let uiFontListLoading = false;
+let fontPickerOpen = false;
+let fontPickerFilter = "";
 /** The query currently applied to the Rust connection page. */
 let liveQuery: LiveConnectionQuery = defaultLiveQuery();
 /** Form-only state. Keystrokes must never mutate the applied query. */
@@ -866,6 +873,65 @@ function renderReports(
   `;
 }
 
+function fontChoiceLabel(font: string): string {
+  return isLegacyUiFont(font) ? tx(`settings.font.${font}`) : font;
+}
+
+function fontChoiceList(): string[] {
+  const items: string[] = ["system"];
+  const seen = new Set(["system"]);
+  const add = (font: string): void => {
+    const key = font.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      items.push(font);
+    }
+  };
+  if (uiFont !== "system") {
+    add(uiFont);
+  }
+  for (const family of uiFontFamilies) {
+    add(family);
+  }
+  return items;
+}
+
+function visibleFontChoices(): string[] {
+  const query = fontPickerFilter.trim().toLowerCase();
+  return fontChoiceList().filter((font) => {
+    if (!query) {
+      return true;
+    }
+    return font.toLowerCase().includes(query) || fontChoiceLabel(font).toLowerCase().includes(query);
+  });
+}
+
+function fontOptionMarkup(fonts: string[]): string {
+  return fonts
+    .map((font) => {
+      const label = fontChoiceLabel(font);
+      const active = font === uiFont ? " is-active" : "";
+      return `<button type="button" role="option" class="font-picker-option${active}" data-settings-font="${escapeHtml(font)}" aria-selected="${font === uiFont ? "true" : "false"}" style="font-family:${escapeHtml(fontStack(font))}"><span>${escapeHtml(label)}</span>${font === uiFont ? `<span class="theme-check" aria-hidden="true">✓</span>` : ""}</button>`;
+    })
+    .join("");
+}
+
+function renderFontPicker(): string {
+  const status = uiFontListError
+    ? `<p class="field-hint" role="status">${escapeHtml(uiFontListError)}</p>`
+    : !uiFontListLoaded && isTauriRuntime()
+      ? `<p class="field-hint" role="status">${tx("settings.font_list_loading")}</p>`
+      : "";
+  return `<div class="font-picker">
+    <button type="button" class="font-picker-trigger" id="font-picker-trigger" data-font-picker="toggle" aria-haspopup="listbox" aria-expanded="${fontPickerOpen ? "true" : "false"}" aria-controls="font-picker-list" style="font-family:${escapeHtml(fontStack(uiFont))}"><span>${escapeHtml(fontChoiceLabel(uiFont))}</span></button>
+    ${status}
+    <div class="font-picker-panel" id="font-picker-panel"${fontPickerOpen ? "" : " hidden"}>
+      <input id="font-picker-filter" type="search" autocomplete="off" placeholder="${tx("settings.font_search")}" aria-label="${tx("settings.font_search")}" value="${escapeHtml(fontPickerFilter)}" />
+      <div role="listbox" id="font-picker-list" aria-label="${tx("settings.font")}">${fontOptionMarkup(visibleFontChoices())}</div>
+    </div>
+  </div>`;
+}
+
 function renderSettings(
   boot: BootstrapDto,
   overview: LiveOverview,
@@ -954,7 +1020,7 @@ function renderSettings(
     <section class="settings-card"><div class="settings-card-heading"><div><h2>${tx("settings.appearance.title")}</h2><p>${tx("settings.appearance.help")}</p></div></div>
       <div class="settings-option-row"><div><h3>${tx("settings.locale")}</h3><p>${tx("settings.locale_help")}</p></div><div class="segmented" role="group" aria-label="${tx("settings.locale")}"><button type="button" class="segment${uiLocale === "zh" ? " is-active" : ""}" data-settings-locale="zh">${tx("settings.locale.zh")}</button><button type="button" class="segment${uiLocale === "en" ? " is-active" : ""}" data-settings-locale="en">${tx("settings.locale.en")}</button></div></div>
       <div class="settings-option-row settings-theme-row"><div><h3>${tx("settings.theme")}</h3><p>${tx("settings.theme_help")}</p></div><div class="theme-grid">${(["latte", "frappe", "macchiato", "mocha"] as UiTheme[]).map((theme) => `<button type="button" class="theme-choice${uiTheme === theme ? " is-active" : ""}" data-settings-theme="${theme}"><span class="theme-swatch theme-${theme}"></span><span>${tx(`settings.theme.${theme}`)}</span>${uiTheme === theme ? `<span class="theme-check" aria-hidden="true">✓</span>` : ""}</button>`).join("")}</div></div>
-      <div class="settings-option-row"><div><h3>${tx("settings.font")}</h3><p>${tx("settings.font_help")}</p></div><div class="theme-grid font-grid">${UI_FONTS.map((font) => `<button type="button" class="theme-choice font-choice${uiFont === font ? " is-active" : ""}" data-settings-font="${font}" data-font="${font}"><span>${tx(`settings.font.${font}`)}</span>${uiFont === font ? `<span class="theme-check" aria-hidden="true">✓</span>` : ""}</button>`).join("")}</div></div>
+      <div class="settings-option-row"><div><h3>${tx("settings.font")}</h3><p>${tx("settings.font_help")}</p></div>${renderFontPicker()}</div>
       <div class="settings-option-row"><div><h3>${tx("settings.font_size")}</h3><p>${tx("settings.font_size_help")}</p></div><div class="segmented" role="group" aria-label="${tx("settings.font_size")}">${UI_FONT_SIZES.map((size) => `<button type="button" class="segment${uiFontSize === size ? " is-active" : ""}" data-settings-font-size="${size}">${tx(`settings.font_size.${size}`)}</button>`).join("")}</div></div>
       <div class="settings-option-row"><div><h3>${tx("settings.density")}</h3><p>${tx("settings.density_help")}</p></div><div class="segmented" role="group" aria-label="${tx("settings.density")}">${UI_DENSITIES.map((density) => `<button type="button" class="segment${uiDensity === density ? " is-active" : ""}" data-settings-density="${density}">${tx(`settings.density.${density}`)}</button>`).join("")}</div></div>
     </section>`;
@@ -1502,6 +1568,36 @@ async function main(): Promise<void> {
     if (route === "reports") {
       applyInspect(app);
     }
+    if (route === "settings-data" && settingsSection === "appearance") {
+      void loadAppearanceFonts();
+    }
+  };
+
+  const loadAppearanceFonts = async (): Promise<void> => {
+    if (uiFontListLoaded || uiFontListLoading || !isTauriRuntime()) {
+      if (!isTauriRuntime()) {
+        uiFontListLoaded = true;
+      }
+      return;
+    }
+    uiFontListLoading = true;
+    try {
+      const names = await invokeCommand<unknown>("list_ui_fonts");
+      uiFontFamilies = Array.isArray(names)
+        ? names.filter((name): name is string => typeof name === "string" && parseUiFont(name) === name)
+        : [];
+      uiFontListError = "";
+      uiFontListLoaded = true;
+    } catch (error) {
+      const text = probeErrorText(error);
+      uiFontListError = text.messageZh || tx("settings.font_list_failed");
+      uiFontListLoaded = true;
+    } finally {
+      uiFontListLoading = false;
+      if (route === "settings-data" && settingsSection === "appearance") {
+        paint();
+      }
+    }
   };
 
   const loadSettingsSecret = async (): Promise<void> => {
@@ -1732,6 +1828,13 @@ async function main(): Promise<void> {
     if (target instanceof HTMLInputElement && target.id === "targets") {
       settingsDraft = { ...settingsDraft, targets: target.value };
     }
+    if (target instanceof HTMLInputElement && target.id === "font-picker-filter") {
+      fontPickerFilter = target.value;
+      const list = app.querySelector("#font-picker-list");
+      if (list instanceof HTMLElement) {
+        list.innerHTML = fontOptionMarkup(visibleFontChoices());
+      }
+    }
     if (target instanceof HTMLInputElement && target.dataset.filterValue != null) {
       const index = Number(target.dataset.filterValue);
       const clauses = liveFilterDraft.clauses.map((clause, item) =>
@@ -1808,6 +1911,17 @@ async function main(): Promise<void> {
         toggleInspectPin(hit.getAttribute("data-inspect"));
         return;
       }
+    }
+    if (fontPickerOpen && event.key === "Escape") {
+      event.preventDefault();
+      fontPickerOpen = false;
+      fontPickerFilter = "";
+      paint();
+      const trigger = app.querySelector("#font-picker-trigger");
+      if (trigger instanceof HTMLElement) {
+        trigger.focus();
+      }
+      return;
     }
     if (!(target instanceof HTMLElement) || target.closest(".live-filter-editor") == null) {
       return;
@@ -2082,6 +2196,33 @@ async function main(): Promise<void> {
         return;
       }
     }
+    if (fontPickerOpen && raw.closest(".font-picker") == null) {
+      fontPickerOpen = false;
+      fontPickerFilter = "";
+      if (
+        raw.closest(
+          "[data-settings-section], [data-settings-locale], [data-settings-theme], [data-settings-font], [data-settings-font-size], [data-settings-density], [data-route]"
+        ) == null
+      ) {
+        paint();
+        return;
+      }
+    }
+    const pickerToggle = raw.closest("[data-font-picker]");
+    if (pickerToggle) {
+      fontPickerOpen = !fontPickerOpen;
+      if (!fontPickerOpen) {
+        fontPickerFilter = "";
+      }
+      paint();
+      if (fontPickerOpen) {
+        const filter = app.querySelector("#font-picker-filter");
+        if (filter instanceof HTMLInputElement) {
+          filter.focus();
+        }
+      }
+      return;
+    }
     const sectionEl = raw.closest("[data-settings-section]");
     if (sectionEl instanceof HTMLElement && sectionEl.dataset.settingsSection) {
       const nextSection = sectionEl.dataset.settingsSection;
@@ -2092,6 +2233,13 @@ async function main(): Promise<void> {
         nextSection === "about" ||
         nextSection === "danger"
       ) {
+        if (nextSection !== "appearance") {
+          fontPickerOpen = false;
+          fontPickerFilter = "";
+        } else if (settingsSection !== "appearance" && uiFontListError) {
+          uiFontListLoaded = false;
+          uiFontListError = "";
+        }
         settingsSection = nextSection;
         paint();
       }
@@ -2132,6 +2280,8 @@ async function main(): Promise<void> {
     const fontEl = raw.closest("[data-settings-font]");
     if (fontEl instanceof HTMLElement && fontEl.dataset.settingsFont) {
       const nextFont = parseUiFont(fontEl.dataset.settingsFont);
+      fontPickerOpen = false;
+      fontPickerFilter = "";
       try {
         const saved = await invokeCommand<string>("save_ui_font", { font: nextFont });
         adoptFont(parseUiFont(saved));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseUiDensity, parseUiFont, parseUiFontSize, parseUiTheme } from "./theme";
+import { fontStack, parseUiDensity, parseUiFont, parseUiFontSize, parseUiTheme } from "./theme";
 
 describe("parseUiTheme", () => {
   it("accepts the four flavors and falls back to mocha", () => {
@@ -16,13 +16,19 @@ describe("parseUiTheme", () => {
 });
 
 describe("appearance prefs", () => {
-  it("parses font stacks and falls back to system", () => {
+  it("parses font stacks, families, and injection attempts", () => {
     expect(parseUiFont("system")).toBe("system");
     expect(parseUiFont("yahei")).toBe("yahei");
     expect(parseUiFont("serif")).toBe("serif");
     expect(parseUiFont("mono")).toBe("mono");
-    expect(parseUiFont("Comic Sans")).toBe("system");
+    expect(parseUiFont("Comic Sans")).toBe("Comic Sans");
+    expect(parseUiFont("Microsoft YaHei")).toBe("Microsoft YaHei");
+    expect(parseUiFont('foo";color:red')).toBe("system");
+    expect(parseUiFont("@SimSun")).toBe("system");
+    expect(parseUiFont("a".repeat(32))).toBe("system");
     expect(parseUiFont(undefined)).toBe("system");
+    expect(fontStack("system")).toContain("Segoe UI");
+    expect(fontStack("Microsoft YaHei")).toBe('"Microsoft YaHei", sans-serif');
   });
 
   it("parses font sizes and falls back to md", () => {

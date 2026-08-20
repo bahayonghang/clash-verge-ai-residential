@@ -4,7 +4,7 @@
 - 本机日志由 `app_log` 拥有，目录为 `%LOCALAPPDATA%\{identifier}\logs`，不复用 `data_dir`。`RESIDENTIAL_MONITOR_LOG_DIR` 可覆盖。启动时在 `AppFacade::boot` 之前 `init`。写入失败不得中断采集。`open_log_dir` 只打开该目录，不授 WebView `fs` / opener。
 - 错误对前端只暴露稳定码和当前语言的下一步动作，详情脱敏。JSON 字段仍叫 `messageZh`。
 - 界面语言键 `ui_locale`（`zh`/`en`）走 `put_setting`，不进控制器 JSON。`identity::PRODUCT_NAME` 与删除确认短语不随语言改。
-- 外观键 `ui_theme`、`ui_font`、`ui_font_size`、`ui_density` 与实时表列布局键 `live_table_layout` 同样走 `put_setting`，不进控制器 JSON。非法值回落默认。
+- 外观键 `ui_theme`、`ui_font`、`ui_font_size`、`ui_density` 与实时表列布局键 `live_table_layout` 同样走 `put_setting`，不进控制器 JSON。非法值回落默认。`ui_font` 存 `system`、旧别名或校验后的本机族名。本机族名由 `list_ui_fonts` 经 GDI 枚举，失败键为 `error.font_list`。
 - HTTP 使用成熟实现，不手写完整 HTTP/1.1 解析器。
 - TCP 只接受 loopback。named pipe 不发送 secret。
 - C0 候选 schema 不得复制为 C1 正式 migration。

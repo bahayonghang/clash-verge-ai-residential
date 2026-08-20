@@ -4,7 +4,40 @@
 - 每条 Channel 消息必须检查 `schemaVersion`、`kind` 和单调 `seq`。
 - 禁止把 mihomo 原始 JSON 或 SQL 行传到视图层。
 - 时间展示用用户本地时区；持久时间保持 UTC integer。
-- `BootstrapDto.uiLocale` 缺字段时按 `zh`。`BootstrapDto.uiTheme` 缺字段时按 `mocha`。`BootstrapDto.uiFont` 缺字段时按 `system`。`BootstrapDto.uiFontSize` 缺字段时按 `md`。`BootstrapDto.uiDensity` 缺字段时按 `comfortable`。`BootstrapDto.logDir` 缺字段时「打开日志目录」禁用，显示「日志目录未知」，不猜本机路径。`messageZh` 字段名保持不变，内容为当前语言。
+- `BootstrapDto.uiLocale` 缺字段时按 `zh`。`BootstrapDto.uiTheme` 缺字段时按 `mocha`。`BootstrapDto.uiFont` 缺字段或含 CSS 元字符时按 `system`；合法值为 `system`、旧别名 `yahei` / `serif` / `mono`，或校验后的本机族名。`BootstrapDto.uiFontSize` 缺字段时按 `md`。`BootstrapDto.uiDensity` 缺字段时按 `comfortable`。`BootstrapDto.logDir` 缺字段时「打开日志目录」禁用，显示「日志目录未知」，不猜本机路径。`messageZh` 字段名保持不变，内容为当前语言。
+
+## Scenario: list local UI fonts
+
+### 1. Scope / Trigger
+- Trigger: 外观分区首次绘制、或上次列表失败后再次进入外观。
+
+### 2. Signatures
+- `list_ui_fonts() -> string[]`
+- `save_ui_font(font: string) -> string`
+
+### 3. Contracts
+- 列表是本机族名，Windows GDI 枚举，跳过 `@` 竖排面和空名，大小写不敏感去重。
+- 不进 `BootstrapDto`。结果只留当前会话缓存。
+- `save_ui_font` 返回规范化字符串：`system`、旧别名，或通过校验的族名。
+
+### 4. Validation & Error Matrix
+- 族名含 `" ' ; { } < > \\`、控制字符、`@` 前缀或 UTF-16 超过 31 码元 → 存 `system`
+- GDI 失败 → `error.font_list` / `action.retry`，前端仍可设回系统默认
+
+### 5. Good/Base/Bad Cases
+- Good: 选 `Microsoft YaHei`，`--ui-font` 立即换栈，重启后恢复
+- Base: 非 Tauri 预览只有 `system` 哨兵
+- Bad: 把未校验字符串写进 stylesheet 或 `data-*`
+
+### 6. Tests Required
+- TS `parseUiFont`：合法族名、旧别名、注入串、过长、`@` 前缀
+- Rust `UiFont::parse` 与 `save_ui_font` round-trip；Windows 上 `list_installed_families` 非空且无 `@`
+
+### 7. Wrong vs Correct
+#### Wrong
+四档按钮写死 `yahei` / `serif` / `mono`，未知值一律丢弃。
+#### Correct
+`system` 哨兵 + 校验后的本机族名；旧四档继续映射原栈。
 
 ## Scenario: C2 Monitor Channel
 

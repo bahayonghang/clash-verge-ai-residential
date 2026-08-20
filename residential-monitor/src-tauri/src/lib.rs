@@ -594,7 +594,17 @@ fn save_ui_theme(state: State<Mutex<AppFacade>>, theme: String) -> Result<String
 #[tauri::command]
 fn save_ui_font(state: State<Mutex<AppFacade>>, font: String) -> Result<String, AppErrorDto> {
     let parsed = state.lock().expect("state").save_ui_font(&font)?;
-    Ok(parsed.as_str().into())
+    Ok(parsed.as_str().to_string())
+}
+
+#[tauri::command]
+fn list_ui_fonts(state: State<Mutex<AppFacade>>) -> Result<Vec<String>, AppErrorDto> {
+    crate::theme::list_installed_families().map_err(|_| {
+        state
+            .lock()
+            .expect("state")
+            .err("io", "error.font_list", "action.retry", true)
+    })
 }
 
 #[tauri::command]
@@ -1232,6 +1242,7 @@ pub fn run() {
             save_ui_locale,
             save_ui_theme,
             save_ui_font,
+            list_ui_fonts,
             save_ui_font_size,
             save_ui_density,
             save_live_table_layout,
