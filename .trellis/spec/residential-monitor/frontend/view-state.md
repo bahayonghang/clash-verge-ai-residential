@@ -19,10 +19,11 @@
 - 分析报告主区顺序：工具条、状态、总量、趋势图+表、Top N 扇形图+表、页尾自动档案。总量与图在同一结果区内，不单独占一张空卡。
 - Top N 扇形图分母为 `totals.download`。其余 = 总量 − 排名下行，仅正差额同时出现在图和表，不写回 `ReportResult`，不进导出。
 - `route === "reports"` 时 `connectionDelta` / `healthChanged` / `summaryChanged` / `alertChanged` 不得整页 `paint`，除非 `errorZh` 相对上次绘制已变。必要重绘写回 Top N / 趋势 / 档案表滚动、`details.report-notes` 展开和钉住探查。实时表仍用 `.live-table-wrap` 恢复滚动。
+- `route === "settings-data"` 时 `connectionDelta` / `summaryChanged` / `alertChanged` 不得整页 `paint`，除非 `errorZh` 相对上次绘制已变。`healthChanged` 与 `bootstrap` 仍重绘。跳过时一并跳过该次 `refreshLivePage()`。进入连接分区（含从其他路由进入且当前分区为连接）时补一次 `refreshLivePage()`；停留设置页期间 `collectorRunning` 停在上次 tray 值。必要重绘写回 `.workspace` 与 `[data-report-scroll]`（字体列表 `font-picker-list`）。
 - 报告图探查只读当前 `ReportResult`：悬停或键盘焦点显示名称、流量、份额；点击钉住；Escape 取消。禁止按探查改 grouping 或自动 `run_report`。
 - 自动档案列表可见约 8 行；类型筛选走 `list_report_archives.kind`。
 - 进入 `reports` 时 `list_report_archives`，优先展示最新成功日档案，否则最新成功小时档案。手动「运行报告」只更新当前会话 token，不写 `report_archive`。
-- C5 设置页可展示关于信息、删除预览 / 二次确认和用户主动 VACUUM。设置页与 Recovery 壳显示 `logDir` 并用 `open_log_dir` 打开目录；路径写入文本节点，不拼 `file://`。Recovery 不加删除入口。动态重绘后按元素 `id` 恢复焦点。缺口、未知和能力过期仍显示「未知」，不画成零。
+- C5 设置页可展示关于信息、删除预览 / 二次确认和用户主动 VACUUM。设置页与 Recovery 壳显示 `logDir` 并用 `open_log_dir` 打开目录；路径写入文本节点，不拼 `file://`。Recovery 不加删除入口。动态重绘后按元素 `id` 恢复焦点，支持选区的 input / textarea 再写回 `selectionStart` / `selectionEnd` / `selectionDirection`，`focus({ preventScroll: true })`。缺口、未知和能力过期仍显示「未知」，不画成零。
 - 设置页 TCP secret 默认保存到本机凭据并回填密码框（圆点）。显示/隐藏走独立按钮。密钥只写 `input.value`，不插进 `innerHTML`。
 - `AboutDto.signed === true` 时解码失败。发布地址只展示固定 GitHub Releases URL。
 
@@ -31,6 +32,6 @@
 - `settingsSection` is a view-only session value: `appearance`, `connection`, `data`, `about`, or `danger`; the default is `connection`. It must not become a new top-level route or a persisted controller setting.
 - `settingsDraft.address` and `settingsDraft.targets` hold unsaved form text across section switches and dynamic paints. On save, read the draft through the existing `save_settings` / `save_targets` commands; Rust remains the validation authority.
 - The secret is never part of the settings render string. `secretFieldMarkup` creates the password control and `applySecretField` writes only `input.value`; show/hide remains a separate button.
-- The connection section renders `state.snapshot ?? boot.overview` for health and uses `tray_summary.collector_running` for collector status. A `test_controller` result is explicitly a single-frame probe; `reconnect_now` is the continuous-monitoring recovery action.
+- The connection section renders `state.snapshot ?? boot.overview` for health and uses `tray_summary.collector_running` for collector status. Entering the connection section refreshes tray once; staying on settings does not refresh collector status on `connectionDelta`. A `test_controller` result is explicitly a single-frame probe; `reconnect_now` is the continuous-monitoring recovery action.
 - Locale, theme, font, font size, and density controls persist immediately through `save_ui_locale` / `save_ui_theme` / `save_ui_font` / `save_ui_font_size` / `save_ui_density`, then localize routes and repaint. Font choices come from a searchable local-family list plus the `system` sentinel. The family list is a session cache from `list_ui_fonts`; filter keystrokes must not `paint`. Settings section buttons expose `aria-current="page"`; narrow layouts use a horizontally scrollable secondary nav without changing top-level routes.
 - Settings workspace fill: `#app:has(.settings-page)` uses `height: 100vh`. `.settings-layout` must set `grid-template-rows: minmax(0, 1fr)` (narrow: `auto minmax(0, 1fr)`). Flex on `.settings-page` alone leaves the implicit grid row as `auto`, so the card shrink-wraps and `--main` shows below. The last `.settings-card` uses `min-height: 100%`.

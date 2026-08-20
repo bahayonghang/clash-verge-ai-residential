@@ -7,6 +7,8 @@ const SKIP_REPORT_PAINT_KINDS = new Set([
   "alertChanged"
 ]);
 
+const SKIP_SETTINGS_PAINT_KINDS = new Set(["connectionDelta", "summaryChanged", "alertChanged"]);
+
 export type ReportInspectModel =
   | {
       surface: "pie";
@@ -51,19 +53,22 @@ export function inspectKeysMatch(left: string, right: string): boolean {
   return left === right || inspectGroup(left) === inspectGroup(right);
 }
 
-export function shouldSkipReportPaint(
+export function shouldSkipRoutinePaint(
   route: string,
   messageKind: string,
   errorZh: string | null,
   paintedErrorZh: string | null
 ): boolean {
-  if (route !== "reports") {
-    return false;
-  }
   if (errorZh !== paintedErrorZh) {
     return false;
   }
-  return SKIP_REPORT_PAINT_KINDS.has(messageKind);
+  if (route === "reports") {
+    return SKIP_REPORT_PAINT_KINDS.has(messageKind);
+  }
+  if (route === "settings-data") {
+    return SKIP_SETTINGS_PAINT_KINDS.has(messageKind);
+  }
+  return false;
 }
 
 export function reportInspectModel(

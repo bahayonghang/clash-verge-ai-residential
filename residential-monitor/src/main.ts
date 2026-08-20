@@ -97,7 +97,7 @@ import {
   rankingInspectKey,
   readReportScroll,
   reportInspectModel,
-  shouldSkipReportPaint,
+  shouldSkipRoutinePaint,
   trendInspectKey,
   writeReportScroll,
   type ReportInspectModel
@@ -926,8 +926,8 @@ function renderFontPicker(): string {
     <button type="button" class="font-picker-trigger" id="font-picker-trigger" data-font-picker="toggle" aria-haspopup="listbox" aria-expanded="${fontPickerOpen ? "true" : "false"}" aria-controls="font-picker-list" style="font-family:${escapeHtml(fontStack(uiFont))}"><span>${escapeHtml(fontChoiceLabel(uiFont))}</span></button>
     ${status}
     <div class="font-picker-panel" id="font-picker-panel"${fontPickerOpen ? "" : " hidden"}>
-      <input id="font-picker-filter" type="search" autocomplete="off" placeholder="${tx("settings.font_search")}" aria-label="${tx("settings.font_search")}" value="${escapeHtml(fontPickerFilter)}" />
-      <div role="listbox" id="font-picker-list" aria-label="${tx("settings.font")}">${fontOptionMarkup(visibleFontChoices())}</div>
+      <input class="font-picker-filter" id="font-picker-filter" type="search" autocomplete="off" placeholder="${tx("settings.font_search")}" aria-label="${tx("settings.font_search")}" value="${escapeHtml(fontPickerFilter)}" />
+      <div class="font-picker-list" role="listbox" id="font-picker-list" data-report-scroll="font-picker-list" aria-label="${tx("settings.font")}">${fontOptionMarkup(visibleFontChoices())}</div>
     </div>
   </div>`;
 }
@@ -1291,7 +1291,16 @@ function renderApp(
   livePage: LiveConnectionPage | null,
   collectorRunning: boolean | null
 ): void {
-  const focusedId = document.activeElement instanceof HTMLElement ? document.activeElement.id : "";
+  const active = document.activeElement;
+  const focusedId = active instanceof HTMLElement ? active.id : "";
+  const selectionStart =
+    active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement ? active.selectionStart : null;
+  const selectionEnd =
+    active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement ? active.selectionEnd : null;
+  const selectionDirection =
+    active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement
+      ? active.selectionDirection
+      : undefined;
   const wrap = root.querySelector(".live-table-wrap");
   const scrollTop = wrap instanceof HTMLElement ? wrap.scrollTop : 0;
   const scrollLeft = wrap instanceof HTMLElement ? wrap.scrollLeft : 0;
@@ -1346,7 +1355,18 @@ function renderApp(
     </main>
   `;
   if (focusedId) {
-    document.getElementById(focusedId)?.focus();
+    const focused = document.getElementById(focusedId);
+    focused?.focus({ preventScroll: true });
+    if (
+      selectionStart !== null &&
+      (focused instanceof HTMLInputElement || focused instanceof HTMLTextAreaElement)
+    ) {
+      try {
+        focused.setSelectionRange(selectionStart, selectionEnd ?? selectionStart, selectionDirection ?? "none");
+      } catch {
+        /* type=number 等不支持选区 */
+      }
+    }
   }
   const logPath = root.querySelector("#log-dir-path");
   if (logPath instanceof HTMLElement) {
@@ -1357,8 +1377,10 @@ function renderApp(
     nextWrap.scrollTop = scrollTop;
     nextWrap.scrollLeft = scrollLeft;
   }
-  if (route === "reports") {
+  if (route === "reports" || route === "settings-data") {
     writeReportScroll(root, reportScroll);
+  }
+  if (route === "reports") {
     if (reportInspectPinned && !inspectKeyExists(root, reportInspectPinned)) {
       reportInspectPinned = null;
     }
@@ -1701,7 +1723,7 @@ async function main(): Promise<void> {
           resyncInFlight = false;
         }
       }
-      if (shouldSkipReportPaint(route, message.kind, state.errorZh, paintedErrorZh)) {
+      if (shouldSkipRoutinePaint(route, message.kind, state.errorZh, paintedErrorZh)) {
         return;
       }
       if (message.kind === "bootstrap" || message.kind === "connectionDelta" || route === "live") {
@@ -2240,7 +2262,11 @@ async function main(): Promise<void> {
           uiFontListLoaded = false;
           uiFontListError = "";
         }
+        const enteringConnection = nextSection === "connection" && settingsSection !== "connection";
         settingsSection = nextSection;
+        if (enteringConnection) {
+          await refreshLivePage();
+        }
         paint();
       }
       return;
@@ -2354,6 +2380,9 @@ async function main(): Promise<void> {
       apply(state, nextRoute);
       if (nextRoute === "settings-data") {
         await loadSettingsSecret();
+        if (settingsSection === "connection") {
+          await refreshLivePage();
+        }
         paint();
       }
       if (nextRoute === "live") {
