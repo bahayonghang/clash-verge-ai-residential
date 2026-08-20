@@ -742,3 +742,24 @@
 ### Next Steps
 
 - 在 just tdev 的 WebView 里核对本机字体列表、搜索与重启恢复
+
+
+## Session 25: 修复设置页字体选择器重绘打断
+
+**Date**: 2026-08-20
+**Task**: 修复设置页字体选择器重绘打断
+**Branch**: `feat/settings-system-fonts-layout`
+
+### Summary
+
+规划按审阅结论修订后实施：字体列表补 class 与滚动标记；settings-data 跳过 connectionDelta/summaryChanged/alertChanged；重绘恢复选区与滚动；进入连接分区补拉 tray。just ci 通过。Vite 预览核对 class 与 sm/md 限高。采集运行、输入法与长列表滚动待实机验收。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b32e605` | (see git log) |
+
+### Status
+
+[OK] **Completed**
