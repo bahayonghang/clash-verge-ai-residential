@@ -609,3 +609,25 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 21: 实时连接筛选、列宽与热点摘要
+
+**Date**: 2026-08-20
+**Task**: 实时连接筛选、列宽与热点摘要
+**Branch**: `dev`
+
+### Summary
+
+完成实时连接界面优化：draft/applied 筛选、colgroup 像素列宽、后端完整 matched 集合热点摘要；fail-closed 隐藏暂停/缺口旧值。前端 check 99 tests、cargo test workspace、Vite 1200x800/800 预览与 axe 0 violations。真实 C2/Tauri WebView 未验证。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7bc91ac` | (see git log) |
+| `d1777e8` | (see git log) |
+
+### Status
+
+[OK] **Completed**
