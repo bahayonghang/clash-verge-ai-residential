@@ -635,8 +635,13 @@ impl AppFacade {
     }
 
     pub fn query(&self, query: &ConnectionQuery) -> ConnectionPage {
-        let rows = self.hub.rows();
-        crate::c2::query::query_connections_with_targets(&rows, query, self.engine.targets())
+        let (rows, overview) = self.hub.query_snapshot();
+        crate::c2::query::query_connections_with_targets_at(
+            &rows,
+            query,
+            self.engine.targets(),
+            overview.last_sample_utc,
+        )
     }
 
     pub fn accept_close(&mut self, identity: String, request_id: String) -> CloseState {
@@ -1671,6 +1676,26 @@ mod c2_close_control_tests {
         assert_eq!(
             facade.closes.mark_of("0:missing"),
             Some(CloseMark::Accepted)
+        );
+    }
+
+    #[test]
+    fn query_returns_rows_and_sample_time_from_one_hub_snapshot() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.ingest_snapshot(snap(&["keep"]), 123, 123);
+
+        let page = facade.query(&ConnectionQuery::default());
+
+        assert_eq!(page.sample_utc, Some(123));
+        assert_eq!(page.matched_count, 1);
+        assert_eq!(page.rows[0].connection_id, "keep");
+        assert_eq!(
+            page.summary
+                .top_download
+                .as_ref()
+                .map(|item| item.identity.as_str()),
+            Some("0:keep")
         );
     }
 }

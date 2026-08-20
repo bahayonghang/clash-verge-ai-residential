@@ -101,16 +101,18 @@ export function defaultLiveTableLayout(): LiveTableLayout {
   return sanitizeLiveTableLayout({ widths: {}, hidden: [] });
 }
 
-export function sanitizeLiveTableLayout(input: LiveTableLayout): LiveTableLayout {
+export function sanitizeLiveTableLayout(input: Partial<LiveTableLayout> | LiveTableLayout): LiveTableLayout {
   const widths: Record<string, number> = {};
+  const inputWidths = input.widths && typeof input.widths === "object" ? input.widths : {};
   for (const column of DATA_COLUMNS) {
-    const raw = input.widths[column];
+    const raw = inputWidths[column];
     const value = typeof raw === "number" && Number.isFinite(raw) ? raw : DEFAULT_WIDTH[column];
     widths[column] = Math.min(WIDTH_MAX, Math.max(MIN_WIDTH[column], Math.round(value)));
   }
   const hidden: string[] = [];
   const seen = new Set<string>();
-  for (const column of input.hidden) {
+  const inputHidden = Array.isArray(input.hidden) ? input.hidden : [];
+  for (const column of inputHidden) {
     if (!isDataColumn(column) || seen.has(column)) {
       continue;
     }

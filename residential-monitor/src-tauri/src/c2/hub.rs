@@ -380,6 +380,15 @@ impl MonitorHub {
             .collect()
     }
 
+    /// 在同一把 hub 锁下取出列表与概览，避免 rows 与 sampleUtc 来自不同采集 tick。
+    pub fn query_snapshot(&self) -> (Vec<LiveConnectionView>, LiveOverview) {
+        let guard = self.inner.lock().expect("hub");
+        (
+            guard.rows.values().cloned().collect(),
+            guard.snapshot.clone(),
+        )
+    }
+
     pub fn row(&self, identity: &str) -> Option<LiveConnectionView> {
         self.inner.lock().expect("hub").rows.get(identity).cloned()
     }

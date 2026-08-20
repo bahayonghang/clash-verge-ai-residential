@@ -15,7 +15,6 @@ import {
   type DeletePreview,
   type DeleteReport,
   type DiagnosticsSnapshot,
-  type LiveConnectionView,
   type LiveOverview,
   type NotifyCapability,
   type ReportArchivePage,
@@ -45,9 +44,31 @@ import {
   queryLiveConnections,
   resyncMonitor,
   subscribeMonitor,
+  type ConnectionHotspot,
+  type LiveConnectionPage,
   type LiveConnectionQuery,
   type LiveFilterClause
 } from "./ipc/live-session";
+import {
+  canShowHotspotSnapshotFacts,
+  canShowHotspotValue,
+  hotspotDisplayDetail,
+  hotspotDisplayLabel,
+  liveHotspotStatus,
+  type LiveHotspotStatus
+} from "./format/live-hotspot";
+import {
+  appendLiveFilterClause,
+  applyLiveFilterDraft as applyLiveFilterState,
+  clearLiveFilterClauses,
+  cloneLiveFilter,
+  filterEditorKeyAction,
+  isCurrentLiveRequest,
+  nextLiveRequestToken,
+  removeLiveFilterClause,
+  shouldApplyFilterEditorOnBlur,
+  type LiveFilterState
+} from "./live-filter-workspace";
 import { applySecretField, secretFieldMarkup } from "./ipc/secret-field";
 import {
   emptyMonitorState,
@@ -77,11 +98,13 @@ import { applyTheme, parseUiTheme, type UiTheme } from "./theme";
 import {
   ACTION_WIDTH,
   DATA_COLUMNS,
+  WIDTH_MAX,
   columnLabelKey,
   columnWidth,
   defaultLiveTableLayout,
   isDataColumn,
   isNumericColumn,
+  minWidth,
   parseLiveTableLayout,
   setColumnHidden,
   setColumnWidth,
@@ -94,11 +117,25 @@ import { nextLiveSort, sortAria, sortMarker } from "./live-table-sort";
 
 let uiLocale: UiLocale = "zh";
 let uiTheme: UiTheme = "mocha";
+/** The query currently applied to the Rust connection page. */
 let liveQuery: LiveConnectionQuery = defaultLiveQuery();
+/** Form-only state. Keystrokes must never mutate the applied query. */
+let liveFilterDraft: LiveFilterState = cloneLiveFilter(liveQuery.filter);
+let liveFilterEditor: number | null = null;
+let liveFilterStatus: "idle" | "applying" | "failed" = "idle";
+let liveRequestToken = 0;
 let liveTableLayout = defaultLiveTableLayout();
 let liveTableDragging = false;
 let liveColumnPanelOpen = false;
-let liveResize: { col: DataColumnId; startX: number; startW: number } | null = null;
+let liveResize: {
+  col: DataColumnId;
+  pointerId: number;
+  startX: number;
+  startW: number;
+  startLayout: LiveTableLayout;
+  handle: HTMLElement;
+  changed: boolean;
+} | null = null;
 let reportForm: ReportForm = defaultReportForm();
 let archiveKindFilter: ArchiveKindFilter = "all";
 
@@ -252,10 +289,11 @@ function renderOverview(overview: LiveOverview): string {
 
 function renderLive(
   state: MonitorState,
-  rows: LiveConnectionView[],
+  livePage: LiveConnectionPage | null,
   address: string,
   collectorRunning: boolean | null
 ): string {
+  const rows = livePage?.rows ?? [];
   const snapshot = state.snapshot;
   const session = snapshot?.health.session ?? "no_data";
   const health = healthOf(session);
@@ -308,39 +346,95 @@ function renderLive(
         : "";
   const pauseNote =
     collectorRunning === false ? `<p>${tx("live.paused")}</p>` : "";
-  const clauseHtml = liveQuery.filter.clauses
+  const appliedClauses = liveQuery.filter.clauses;
+  const appliedClauseHtml = appliedClauses
     .map((clause, index) => {
+      const unit = clause.unit ? ` ${tx(unitLabelKey(clause.field, clause.unit))}` : "";
+      const value = clause.value.trim() || tx("common.none");
+      const label = `${tx(`live.filter.field.${clause.field}`)} ${tx(`live.filter.${clause.mode}`)} ${value}${unit}`;
+      return `<li class="live-filter-chip">
+        <span>${escapeHtml(label)}</span>
+        <button type="button" class="btn-secondary" data-filter-edit="${index}" aria-label="${escapeHtml(`${tx("live.filter.edit")} ${label}`)}">${tx("live.filter.edit")}</button>
+        <button type="button" class="btn-secondary" data-filter-remove="${index}" aria-label="${escapeHtml(`${tx("live.filter.remove")} ${label}`)}">${tx("live.filter.remove")}</button>
+      </li>`;
+    })
+    .join("");
+  const editorClause =
+    liveFilterEditor !== null ? liveFilterDraft.clauses[liveFilterEditor] : undefined;
+  const clauseEditorHtml = editorClause
+    ? (() => {
+        const index = liveFilterEditor as number;
       const fields = FILTER_FIELDS.map(
         (field) =>
-          `<option value="${field}" ${clause.field === field ? "selected" : ""}>${tx(`live.filter.field.${field}`)}</option>`
+          `<option value="${field}" ${editorClause.field === field ? "selected" : ""}>${tx(`live.filter.field.${field}`)}</option>`
       ).join("");
-      const numeric = isNumericFilterField(clause.field);
+      const numeric = isNumericFilterField(editorClause.field);
       const modes = numeric
         ? NUMERIC_MODES.map(
             (mode) =>
-              `<option value="${mode}" ${clause.mode === mode ? "selected" : ""}>${tx(`live.filter.${mode}`)}</option>`
+              `<option value="${mode}" ${editorClause.mode === mode ? "selected" : ""}>${tx(`live.filter.${mode}`)}</option>`
           ).join("")
-        : `<option value="contains" ${clause.mode === "contains" ? "selected" : ""}>${tx("live.filter.contains")}</option>
-          <option value="exact" ${clause.mode === "exact" ? "selected" : ""}>${tx("live.filter.exact")}</option>`;
-      const unit = clause.unit ?? defaultFilterUnit(clause.field);
+        : `<option value="contains" ${editorClause.mode === "contains" ? "selected" : ""}>${tx("live.filter.contains")}</option>
+          <option value="exact" ${editorClause.mode === "exact" ? "selected" : ""}>${tx("live.filter.exact")}</option>`;
+      const unit = editorClause.unit ?? defaultFilterUnit(editorClause.field);
       const valueControl = numeric
-        ? `<input type="number" min="0" step="any" data-filter-value="${index}" value="${clause.value.replaceAll('"', "&quot;")}" />
-          <select data-filter-unit="${index}">
-            ${unitsForField(clause.field)
+        ? `<label class="live-filter-control">${tx("live.filter.value")}
+            <input id="live-filter-value-${index}" type="number" min="0" step="any" data-filter-value="${index}" value="${escapeHtml(editorClause.value)}" />
+          </label>
+          <label class="live-filter-control">${tx("live.filter.unit")}
+          <select id="live-filter-unit-${index}" data-filter-unit="${index}">
+            ${unitsForField(editorClause.field)
               .map(
                 (item) =>
-                  `<option value="${item}" ${unit === item ? "selected" : ""}>${tx(unitLabelKey(clause.field, item))}</option>`
+                  `<option value="${item}" ${unit === item ? "selected" : ""}>${tx(unitLabelKey(editorClause.field, item))}</option>`
               )
               .join("")}
-          </select>`
-        : `<input data-filter-value="${index}" value="${clause.value.replaceAll('"', "&quot;")}" />`;
-      return `<div class="filter-row">
-        <select data-filter-field="${index}">${fields}</select>
-        <select data-filter-mode="${index}">${modes}</select>
+          </select>
+          </label>`
+        : `<label class="live-filter-control live-filter-value">${tx("live.filter.value")}
+            <input id="live-filter-value-${index}" data-filter-value="${index}" value="${escapeHtml(editorClause.value)}" />
+          </label>`;
+      return `<div class="live-filter-editor" data-filter-editor="${index}">
+        <p>${tx("live.filter.draft")}</p>
+        <label class="live-filter-control">${tx("live.filter.field")}
+          <select id="live-filter-field-${index}" data-filter-field="${index}">${fields}</select>
+        </label>
+        <label class="live-filter-control">${tx("live.filter.mode")}
+          <select id="live-filter-mode-${index}" data-filter-mode="${index}">${modes}</select>
+        </label>
         ${valueControl}
-        <button type="button" class="btn-secondary" data-filter-remove="${index}">${tx("live.filter.remove")}</button>
+        <div class="live-filter-editor-actions">
+          <button type="button" id="live-filter-apply">${tx("live.filter.apply")}</button>
+          <button type="button" class="btn-secondary" id="live-filter-cancel">${tx("live.filter.cancel")}</button>
+        </div>
       </div>`;
-    })
+      })()
+    : "";
+  const hasActiveFilter = liveQuery.filter.residentialOnly || appliedClauses.length > 0;
+  const filterStatus =
+    liveFilterStatus === "applying"
+      ? tx("live.filter.applying")
+      : liveFilterStatus === "failed"
+        ? tx("live.filter.failed")
+        : hasActiveFilter && livePage?.matchedCount === 0 && kind === "connectedEmpty"
+          ? tx("live.filter.no_match")
+          : fmt("live.filter.current_page", { count: rows.length });
+  const hotspotStatus = liveHotspotStatus({
+    page: livePage,
+    address,
+    session,
+    collectorRunning,
+    coverageKind: snapshot?.coverageKind ?? null,
+    coverageReason: snapshot?.coverageReason ?? null,
+    needResync: state.needResync,
+    frozen: state.frozen
+  });
+  const hotspotCards = [
+    { direction: "download", hotspot: livePage?.summary.topDownload ?? null },
+    { direction: "upload", hotspot: livePage?.summary.topUpload ?? null }
+  ] as const;
+  const hotspotHtml = hotspotCards
+    .map(({ direction, hotspot }) => renderLiveHotspotCard(direction, hotspot, livePage, hotspotStatus))
     .join("");
   return `
     <section class="live-page">
@@ -349,9 +443,15 @@ function renderLive(
         <p class="live-sample">${fmt("live.last_sample", { time: formatUtc(snapshot?.lastSampleUtc ?? null, tx("common.no_sample")) })}</p>
         ${pauseNote}
         ${action}
-        <div class="live-filter-bar">
-          <label class="inline"><input type="checkbox" id="live-residential" ${liveQuery.filter.residentialOnly ? "checked" : ""} /> ${tx("live.filter.residential")}</label>
-          <button type="button" class="btn-secondary" id="live-add-clause" ${liveQuery.filter.clauses.length >= 8 ? "disabled" : ""}>${tx("live.filter.add")}</button>
+        <section class="live-filter-workspace" aria-labelledby="live-filter-title">
+          <div class="live-filter-bar">
+            <div>
+              <h2 id="live-filter-title">${tx("live.filter.title")}</h2>
+              <p class="live-filter-applied">${fmt("live.filter.applied_count", { count: appliedClauses.length })}</p>
+            </div>
+            <label class="inline live-filter-toggle"><input type="checkbox" id="live-residential" ${liveFilterDraft.residentialOnly ? "checked" : ""} /> ${tx("live.filter.residential")}</label>
+            <button type="button" class="btn-secondary" id="live-add-clause" ${liveFilterDraft.clauses.length >= 8 ? "disabled" : ""}>${tx("live.filter.add")}</button>
+            <button type="button" class="btn-secondary" id="live-filter-clear" ${appliedClauses.length === 0 ? "disabled" : ""}>${tx("live.filter.clear")}</button>
           <div class="live-columns">
             <button type="button" class="btn-secondary" id="live-columns">${tx("live.columns")}</button>
             ${
@@ -367,11 +467,27 @@ function renderLive(
                 : ""
             }
           </div>
-        </div>
-        ${clauseHtml ? `<div class="filter-clauses">${clauseHtml}</div>` : ""}
+          </div>
+          <p class="live-filter-status" data-state="${liveFilterStatus}" role="status" aria-live="polite">${filterStatus}</p>
+          <div class="live-filter-applied-list">
+            <h3>${tx("live.filter.applied_heading")}</h3>
+            ${appliedClauseHtml ? `<ul>${appliedClauseHtml}</ul>` : `<p>${tx("live.filter.empty")}</p>`}
+          </div>
+          ${clauseEditorHtml}
+        </section>
       </header>
-      <div class="live-table-wrap">
-      <table class="data live-table" style="width:${tablePixelWidth(liveTableLayout)}px">
+      <section class="live-hotspot-summary" aria-labelledby="live-hotspot-title">
+        <div class="live-hotspot-summary-heading">
+          <div>
+            <h2 id="live-hotspot-title">${tx("live.hotspot.title")}</h2>
+            <p>${tx("live.hotspot.scope")}</p>
+          </div>
+          <p class="live-hotspot-status" data-state="${hotspotStatus}" role="status" aria-live="polite">${tx(`live.hotspot.status.${hotspotStatus}`)}</p>
+        </div>
+        <div class="live-hotspot-cards">${hotspotHtml}</div>
+      </section>
+      <div class="live-table-wrap" tabindex="0" role="region" aria-label="${tx("live.table")}">
+      <table class="data live-table" style="width:${tablePixelWidth(liveTableLayout)}px;min-width:${tablePixelWidth(liveTableLayout)}px">
         <colgroup>
           ${visible
             .map(
@@ -387,7 +503,9 @@ function renderLive(
               const num = isNumericColumn(column) ? " class=\"num\"" : "";
               const current = { sortField: liveQuery.sortField, descending: liveQuery.descending };
               const aria = sortAria(column, current);
-              return `<th data-col="${column}"${num}><button type="button" class="live-sort" data-sort="${column}" aria-sort="${aria}">${tx(columnLabelKey(column))}${sortMarker(column, current)}</button><span class="live-col-resize" data-col-resize="${column}"></span></th>`;
+              const width = columnWidth(liveTableLayout, column);
+              const columnLabel = tx(columnLabelKey(column));
+              return `<th data-col="${column}"${num} aria-sort="${aria}"><button type="button" class="live-sort" data-sort="${column}">${columnLabel}${sortMarker(column, current)}</button><span class="live-col-resize" data-col-resize="${column}" role="separator" tabindex="0" aria-orientation="vertical" aria-label="${escapeHtml(fmt("live.resize", { column: columnLabel }))}" aria-valuemin="${minWidth(column)}" aria-valuemax="${WIDTH_MAX}" aria-valuenow="${width}" aria-valuetext="${width}px" aria-keyshortcuts="ArrowLeft ArrowRight Home End"></span></th>`;
             })
             .join("")}
           <th data-col="action">${tx("live.col.action")}</th>
@@ -397,6 +515,39 @@ function renderLive(
       </div>
     </section>
   `;
+}
+
+function renderLiveHotspotCard(
+  direction: "download" | "upload",
+  hotspot: ConnectionHotspot | null,
+  livePage: LiveConnectionPage | null,
+  status: LiveHotspotStatus
+): string {
+  const unknown = unknownLabel();
+  const usable = canShowHotspotValue(status) && hotspot !== null;
+  const showFacts = canShowHotspotSnapshotFacts(status);
+  const value = usable && hotspot ? formatBytes(hotspot.value, unknown) : unknown;
+  const identityHtml =
+    usable && hotspot
+      ? `<p class="live-hotspot-label">${escapeHtml(hotspotDisplayLabel(hotspot, unknown))}</p>
+    <p class="live-hotspot-detail">${escapeHtml(hotspotDisplayDetail(hotspot, unknown))}</p>`
+      : "";
+  const metaHtml = showFacts
+    ? `<dl class="live-hotspot-meta">
+      <div><dt>${tx("live.hotspot.matched")}</dt><dd>${livePage === null ? unknown : String(livePage.matchedCount)}</dd></div>
+      <div><dt>${tx("live.hotspot.sample")}</dt><dd>${escapeHtml(formatUtc(livePage?.sampleUtc ?? null, tx("common.no_sample")))}</dd></div>
+      <div><dt>${tx("live.hotspot.state")}</dt><dd>${tx(`live.hotspot.status.${status}`)}</dd></div>
+    </dl>`
+    : "";
+  return `<article class="live-hotspot-card" data-state="${status}">
+    <div class="live-hotspot-card-heading">
+      <h3>${tx(`live.hotspot.${direction}`)}</h3>
+      <span class="live-hotspot-direction">${tx(`live.hotspot.direction.${direction}`)}</span>
+    </div>
+    ${identityHtml}
+    <p class="live-hotspot-value">${value}</p>
+    ${metaHtml}
+  </article>`;
 }
 
 function defaultReportQuery(): ReportQuery {
@@ -434,7 +585,12 @@ function archiveStatusLabel(status: string): string {
 }
 
 function escapeHtml(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function optionHtml(value: string, current: string, label: string): string {
@@ -950,7 +1106,7 @@ function renderApp(
   deleteReport: DeleteReport | null,
   probeStatus: string,
   probeState: string,
-  liveRows: LiveConnectionView[],
+  livePage: LiveConnectionPage | null,
   collectorRunning: boolean | null
 ): void {
   const focusedId = document.activeElement instanceof HTMLElement ? document.activeElement.id : "";
@@ -963,7 +1119,7 @@ function renderApp(
       : route === "overview"
         ? renderOverview(state.snapshot ?? boot.overview)
         : route === "live"
-          ? renderLive(state, liveRows, boot.settings.address, collectorRunning)
+          ? renderLive(state, livePage, boot.settings.address, collectorRunning)
           : route === "settings-data"
             ? renderSettings(
                 boot,
@@ -1053,7 +1209,7 @@ async function main(): Promise<void> {
   let deleteReport: DeleteReport | null = null;
   let probeStatus = "";
   let probeState = "";
-  let liveRows: LiveConnectionView[] = [];
+  let livePage: LiveConnectionPage | null = null;
   let collectorRunning: boolean | null = null;
   let resyncInFlight = false;
   let settingsSecret = "";
@@ -1069,9 +1225,44 @@ async function main(): Promise<void> {
       liveTableLayout = parseLiveTableLayout(
         await invokeCommand("save_live_table_layout", { layout: liveTableLayout })
       );
-    } catch {
-      /* 保持内存中的布局 */
+    } catch (error) {
+      /* 保持内存中的布局；控制台保留诊断信息。 */
+      console.warn("无法保存实时连接表布局", error);
     }
+  };
+
+  const applyLiveTableWidth = (column: DataColumnId): void => {
+    const colEl = app.querySelector(`col[data-col="${column}"]`);
+    if (colEl instanceof HTMLTableColElement) {
+      colEl.style.width = `${columnWidth(liveTableLayout, column)}px`;
+    }
+    const table = app.querySelector("table.live-table");
+    if (table instanceof HTMLTableElement) {
+      const width = `${tablePixelWidth(liveTableLayout)}px`;
+      table.style.width = width;
+      table.style.minWidth = width;
+    }
+  };
+
+  const finishLiveResize = (commit: boolean): void => {
+    const resize = liveResize;
+    if (!resize) {
+      return;
+    }
+    liveResize = null;
+    liveTableDragging = false;
+    app.classList.remove("live-table-resizing");
+    if (resize.handle.hasPointerCapture(resize.pointerId)) {
+      resize.handle.releasePointerCapture(resize.pointerId);
+    }
+    if (!commit) {
+      liveTableLayout = resize.startLayout;
+    }
+    if (commit && resize.changed) {
+      void persistLayout(liveTableLayout).then(paint);
+      return;
+    }
+    paint();
   };
 
   const paint = (): void => {
@@ -1097,7 +1288,7 @@ async function main(): Promise<void> {
       deleteReport,
       probeStatus,
       probeState,
-      liveRows,
+      livePage,
       collectorRunning
     );
     applySecretField(app, settingsSecret, settingsSecretVisible, uiLocale);
@@ -1122,8 +1313,15 @@ async function main(): Promise<void> {
   };
 
   const refreshLivePage = async (): Promise<void> => {
+    const requestToken = nextLiveRequestToken(liveRequestToken);
+    liveRequestToken = requestToken;
     if (!isTauriRuntime()) {
-      liveRows = [];
+      if (isCurrentLiveRequest(requestToken, liveRequestToken)) {
+        livePage = null;
+        if (liveFilterStatus === "applying") {
+          liveFilterStatus = "idle";
+        }
+      }
       return;
     }
     try {
@@ -1134,16 +1332,49 @@ async function main(): Promise<void> {
           clauses: liveQuery.filter.clauses.map(toQueryClause)
         }
       });
-      liveRows = page.rows;
+      if (!isCurrentLiveRequest(requestToken, liveRequestToken)) {
+        return;
+      }
+      livePage = page;
+      if (liveFilterStatus === "applying") {
+        liveFilterStatus = "idle";
+      }
     } catch {
-      liveRows = [];
+      if (!isCurrentLiveRequest(requestToken, liveRequestToken)) {
+        return;
+      }
+      livePage = null;
+      if (liveFilterStatus === "applying") {
+        liveFilterStatus = "failed";
+      }
     }
     try {
       const tray = await fetchTraySummary();
-      collectorRunning = tray.collectorRunning;
+      if (isCurrentLiveRequest(requestToken, liveRequestToken)) {
+        collectorRunning = tray.collectorRunning;
+      }
     } catch {
-      collectorRunning = null;
+      if (isCurrentLiveRequest(requestToken, liveRequestToken)) {
+        collectorRunning = null;
+      }
     }
+  };
+
+  const applyLiveFilterDraft = async (): Promise<void> => {
+    liveQuery = applyLiveFilterState(liveQuery, liveFilterDraft);
+    liveFilterDraft = cloneLiveFilter(liveQuery.filter);
+    liveFilterEditor = null;
+    liveFilterStatus = "applying";
+    paint();
+    await refreshLivePage();
+    paint();
+  };
+
+  const cancelLiveFilterDraft = (): void => {
+    liveFilterDraft = cloneLiveFilter(liveQuery.filter);
+    liveFilterEditor = null;
+    liveFilterStatus = "idle";
+    paint();
   };
 
   const onMonitorRaw = (raw: unknown): void => {
@@ -1280,11 +1511,53 @@ async function main(): Promise<void> {
     }
     if (target instanceof HTMLInputElement && target.dataset.filterValue != null) {
       const index = Number(target.dataset.filterValue);
-      const clauses = liveQuery.filter.clauses.map((clause, item) =>
+      const clauses = liveFilterDraft.clauses.map((clause, item) =>
         item === index ? { ...clause, value: target.value } : clause
       );
-      liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
+      liveFilterDraft = { ...liveFilterDraft, clauses };
     }
+  });
+
+  app.addEventListener("keydown", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || target.closest(".live-filter-editor") == null) {
+      return;
+    }
+    const action = filterEditorKeyAction(event.key, target instanceof HTMLTextAreaElement);
+    if (action === "cancel") {
+      event.preventDefault();
+      cancelLiveFilterDraft();
+      return;
+    }
+    if (action === "apply") {
+      event.preventDefault();
+      void applyLiveFilterDraft();
+    }
+  });
+
+  app.addEventListener("focusout", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    const editor = target.closest(".live-filter-editor");
+    if (!(editor instanceof HTMLElement) || editor.dataset.filterEditor == null) {
+      return;
+    }
+    const editorIndex = Number(editor.dataset.filterEditor);
+    window.setTimeout(() => {
+      const active = document.activeElement;
+      if (
+        shouldApplyFilterEditorOnBlur({
+          editorConnected: editor.isConnected,
+          focusInsideEditor: active instanceof Node && editor.contains(active),
+          editorIndex,
+          openEditor: liveFilterEditor
+        })
+      ) {
+        void applyLiveFilterDraft();
+      }
+    });
   });
 
   app.addEventListener("change", async (event) => {
@@ -1298,51 +1571,34 @@ async function main(): Promise<void> {
       return;
     }
     if (target instanceof HTMLInputElement && target.id === "live-residential") {
-      liveQuery = {
-        ...liveQuery,
-        filter: { ...liveQuery.filter, residentialOnly: target.checked }
-      };
-      await refreshLivePage();
-      paint();
+      liveFilterDraft = { ...liveFilterDraft, residentialOnly: target.checked };
+      await applyLiveFilterDraft();
       return;
     }
     if (target instanceof HTMLSelectElement && target.dataset.filterField != null) {
       const index = Number(target.dataset.filterField);
-      const clauses = liveQuery.filter.clauses.map((clause, item) =>
+      const clauses = liveFilterDraft.clauses.map((clause, item) =>
         item === index ? clauseForField(target.value) : clause
       );
-      liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
-      await refreshLivePage();
+      liveFilterDraft = { ...liveFilterDraft, clauses };
       paint();
       return;
     }
     if (target instanceof HTMLSelectElement && target.dataset.filterUnit != null) {
       const index = Number(target.dataset.filterUnit);
-      const clauses = liveQuery.filter.clauses.map((clause, item) =>
+      const clauses = liveFilterDraft.clauses.map((clause, item) =>
         item === index ? { ...clause, unit: target.value } : clause
       );
-      liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
-      await refreshLivePage();
+      liveFilterDraft = { ...liveFilterDraft, clauses };
       paint();
       return;
     }
     if (target instanceof HTMLSelectElement && target.dataset.filterMode != null) {
       const index = Number(target.dataset.filterMode);
-      const clauses = liveQuery.filter.clauses.map((clause, item) =>
+      const clauses = liveFilterDraft.clauses.map((clause, item) =>
         item === index ? { ...clause, mode: target.value as LiveFilterClause["mode"] } : clause
       );
-      liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
-      await refreshLivePage();
-      paint();
-      return;
-    }
-    if (target instanceof HTMLInputElement && target.dataset.filterValue != null) {
-      const index = Number(target.dataset.filterValue);
-      const clauses = liveQuery.filter.clauses.map((clause, item) =>
-        item === index ? { ...clause, value: target.value } : clause
-      );
-      liveQuery = { ...liveQuery, filter: { ...liveQuery.filter, clauses } };
-      await refreshLivePage();
+      liveFilterDraft = { ...liveFilterDraft, clauses };
       paint();
       return;
     }
@@ -1417,7 +1673,12 @@ async function main(): Promise<void> {
 
   app.addEventListener("pointerdown", (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLElement) || target.dataset.colResize == null) {
+    if (
+      !(target instanceof HTMLElement) ||
+      target.dataset.colResize == null ||
+      !event.isPrimary ||
+      event.button !== 0
+    ) {
       return;
     }
     const column = target.dataset.colResize;
@@ -1429,13 +1690,19 @@ async function main(): Promise<void> {
     liveTableDragging = true;
     liveResize = {
       col: column,
+      pointerId: event.pointerId,
       startX: event.clientX,
-      startW: columnWidth(liveTableLayout, column)
+      startW: columnWidth(liveTableLayout, column),
+      startLayout: { widths: { ...liveTableLayout.widths }, hidden: [...liveTableLayout.hidden] },
+      handle: target,
+      changed: false
     };
+    app.classList.add("live-table-resizing");
+    target.setPointerCapture(event.pointerId);
   });
 
   window.addEventListener("pointermove", (event) => {
-    if (!liveResize) {
+    if (!liveResize || event.pointerId !== liveResize.pointerId) {
       return;
     }
     liveTableLayout = setColumnWidth(
@@ -1443,23 +1710,64 @@ async function main(): Promise<void> {
       liveResize.col,
       liveResize.startW + (event.clientX - liveResize.startX)
     );
-    const colEl = document.querySelector(`col[data-col="${liveResize.col}"]`);
-    if (colEl instanceof HTMLElement) {
-      colEl.style.width = `${columnWidth(liveTableLayout, liveResize.col)}px`;
-    }
-    const table = document.querySelector("table.live-table");
-    if (table instanceof HTMLElement) {
-      table.style.width = `${tablePixelWidth(liveTableLayout)}px`;
+    liveResize.changed ||= columnWidth(liveTableLayout, liveResize.col) !== liveResize.startW;
+    applyLiveTableWidth(liveResize.col);
+  });
+
+  window.addEventListener("pointerup", (event) => {
+    if (liveResize?.pointerId === event.pointerId) {
+      finishLiveResize(true);
     }
   });
 
-  window.addEventListener("pointerup", () => {
-    if (!liveResize) {
+  window.addEventListener("pointercancel", (event) => {
+    if (liveResize?.pointerId === event.pointerId) {
+      finishLiveResize(false);
+    }
+  });
+
+  app.addEventListener("lostpointercapture", (event) => {
+    if (liveResize?.pointerId === event.pointerId && event.target === liveResize.handle) {
+      finishLiveResize(false);
+    }
+  });
+
+  window.addEventListener("blur", () => {
+    finishLiveResize(false);
+  });
+
+  app.addEventListener("keydown", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || target.dataset.colResize == null) {
       return;
     }
-    liveResize = null;
-    liveTableDragging = false;
-    void persistLayout(liveTableLayout).then(() => paint());
+    const column = target.dataset.colResize;
+    if (!isDataColumn(column)) {
+      return;
+    }
+    const step = event.shiftKey ? 32 : 8;
+    const current = columnWidth(liveTableLayout, column);
+    const width =
+      event.key === "ArrowLeft"
+        ? current - step
+        : event.key === "ArrowRight"
+          ? current + step
+          : event.key === "Home"
+            ? minWidth(column)
+            : event.key === "End"
+              ? WIDTH_MAX
+              : null;
+    if (width == null) {
+      return;
+    }
+    event.preventDefault();
+    const next = setColumnWidth(liveTableLayout, column, width);
+    if (columnWidth(next, column) === current) {
+      return;
+    }
+    liveTableLayout = next;
+    applyLiveTableWidth(column);
+    void persistLayout(liveTableLayout).then(paint);
   });
 
   app.addEventListener("click", async (event) => {
@@ -1594,13 +1902,35 @@ async function main(): Promise<void> {
       applySecretField(app, settingsSecret, settingsSecretVisible, uiLocale);
       return;
     }
+    if (target.id === "live-filter-apply") {
+      await applyLiveFilterDraft();
+      return;
+    }
+    if (target.id === "live-filter-cancel") {
+      cancelLiveFilterDraft();
+      return;
+    }
+    if (target.id === "live-filter-clear") {
+      liveFilterDraft = clearLiveFilterClauses(liveFilterDraft);
+      await applyLiveFilterDraft();
+      return;
+    }
     if (target.id === "live-add-clause") {
-      if (liveQuery.filter.clauses.length < 8) {
+      if (liveFilterDraft.clauses.length < 8) {
         const next: LiveFilterClause = { field: "host", mode: "contains", value: "" };
-        liveQuery = {
-          ...liveQuery,
-          filter: { ...liveQuery.filter, clauses: [...liveQuery.filter.clauses, next] }
-        };
+        liveFilterDraft = appendLiveFilterClause(liveFilterDraft, next);
+        liveFilterEditor = liveFilterDraft.clauses.length - 1;
+        paint();
+      }
+      return;
+    }
+    const edit = target.dataset.filterEdit;
+    if (edit != null) {
+      const index = Number(edit);
+      if (Number.isInteger(index) && index >= 0 && index < liveQuery.filter.clauses.length) {
+        liveFilterDraft = cloneLiveFilter(liveQuery.filter);
+        liveFilterEditor = index;
+        liveFilterStatus = "idle";
         paint();
       }
       return;
@@ -1608,15 +1938,8 @@ async function main(): Promise<void> {
     const remove = target.dataset.filterRemove;
     if (remove != null) {
       const index = Number(remove);
-      liveQuery = {
-        ...liveQuery,
-        filter: {
-          ...liveQuery.filter,
-          clauses: liveQuery.filter.clauses.filter((_, item) => item !== index)
-        }
-      };
-      await refreshLivePage();
-      paint();
+      liveFilterDraft = removeLiveFilterClause(liveQuery.filter, index);
+      await applyLiveFilterDraft();
       return;
     }
     if (target.id === "save-settings") {

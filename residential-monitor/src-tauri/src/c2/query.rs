@@ -61,6 +61,27 @@ impl Default for ConnectionQuery {
 pub struct ConnectionPage {
     pub rows: Vec<LiveConnectionView>,
     pub next_cursor: Option<ConnectionCursor>,
+    pub matched_count: u32,
+    pub sample_utc: Option<i64>,
+    pub summary: ConnectionSummary,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectionSummary {
+    pub top_download: Option<ConnectionHotspot>,
+    pub top_upload: Option<ConnectionHotspot>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectionHotspot {
+    pub identity: String,
+    pub label: String,
+    pub host: Option<String>,
+    pub process: Option<String>,
+    pub destination: Option<String>,
+    pub value: u64,
 }
 
 pub fn sanitize_limit(limit: u32) -> u32 {
@@ -341,7 +362,7 @@ fn sort_key(row: &LiveConnectionView, field: &str) -> String {
 }
 
 pub fn query_connections(rows: &[LiveConnectionView], query: &ConnectionQuery) -> ConnectionPage {
-    query_connections_with_targets(rows, query, &[])
+    query_connections_with_targets_at(rows, query, &[], None)
 }
 
 pub fn query_connections_with_targets(
@@ -349,11 +370,25 @@ pub fn query_connections_with_targets(
     query: &ConnectionQuery,
     targets: &[String],
 ) -> ConnectionPage {
+    query_connections_with_targets_at(rows, query, targets, None)
+}
+
+pub fn query_connections_with_targets_at(
+    rows: &[LiveConnectionView],
+    query: &ConnectionQuery,
+    targets: &[String],
+    sample_utc: Option<i64>,
+) -> ConnectionPage {
     let limit = sanitize_limit(query.limit) as usize;
     let mut matched: Vec<&LiveConnectionView> = rows
         .iter()
         .filter(|row| matches_filter(row, &query.filter, targets))
         .collect();
+    let matched_count = u32::try_from(matched.len()).unwrap_or(u32::MAX);
+    let summary = ConnectionSummary {
+        top_download: hotspot(&matched, |row| row.download),
+        top_upload: hotspot(&matched, |row| row.upload),
+    };
     matched.sort_by(|left, right| {
         cmp_slots(
             &sort_slot(left, &query.sort_field),
@@ -396,7 +431,47 @@ pub fn query_connections_with_targets(
     ConnectionPage {
         rows: page,
         next_cursor,
+        matched_count,
+        sample_utc,
+        summary,
     }
+}
+
+fn hotspot(
+    rows: &[&LiveConnectionView],
+    value: impl Fn(&LiveConnectionView) -> u64,
+) -> Option<ConnectionHotspot> {
+    rows.iter()
+        .min_by(|left, right| {
+            value(right)
+                .cmp(&value(left))
+                .then_with(|| left.identity.cmp(&right.identity))
+        })
+        .map(|row| ConnectionHotspot {
+            identity: row.identity.clone(),
+            label: hotspot_label(row),
+            host: row.host.clone(),
+            process: row.process_name.clone(),
+            destination: join_endpoint(
+                row.destination_ip.as_deref(),
+                row.destination_port.as_deref(),
+            ),
+            value: value(row),
+        })
+}
+
+fn hotspot_label(row: &LiveConnectionView) -> String {
+    let destination = join_endpoint(
+        row.destination_ip.as_deref(),
+        row.destination_port.as_deref(),
+    );
+    row.host
+        .as_deref()
+        .filter(|item| !item.is_empty())
+        .or_else(|| row.process_name.as_deref().filter(|item| !item.is_empty()))
+        .or(destination.as_deref())
+        .unwrap_or(&row.identity)
+        .to_string()
 }
 
 #[cfg(test)]
@@ -665,5 +740,138 @@ mod connection_query_tests {
             },
         );
         assert_eq!(page.rows.len(), 1);
+    }
+
+    #[test]
+    fn hotspots_use_complete_filtered_set_with_identity_tie_breaks() {
+        let mut alpha = row("alpha", "alpha.test");
+        alpha.download = 90;
+        alpha.upload = 40;
+        let mut beta = row("beta", "beta.test");
+        beta.download = 120;
+        beta.upload = 80;
+        let mut gamma = row("gamma", "gamma.test");
+        gamma.download = 120;
+        gamma.upload = 80;
+        gamma.process_name = Some("worker.exe".into());
+        gamma.destination_ip = Some("203.0.113.9".into());
+        gamma.destination_port = Some("443".into());
+        let mut ignored = row("ignored", "ignored.test");
+        ignored.download = 999;
+        ignored.upload = 999;
+
+        let query = ConnectionQuery {
+            filter: ConnectionFilter {
+                host: Some(".test".into()),
+                clauses: vec![FilterClause {
+                    field: "host".into(),
+                    mode: "contains".into(),
+                    value: "a.test".into(),
+                }],
+                ..ConnectionFilter::default()
+            },
+            limit: 1,
+            ..ConnectionQuery::default()
+        };
+        let rows = [ignored, gamma, beta, alpha];
+        let first = query_connections_with_targets_at(&rows, &query, &[], Some(123));
+        let expanded = query_connections_with_targets_at(
+            &rows,
+            &ConnectionQuery {
+                limit: 200,
+                ..query.clone()
+            },
+            &[],
+            Some(123),
+        );
+        let cursor_page = query_connections_with_targets_at(
+            &rows,
+            &ConnectionQuery {
+                cursor: first.next_cursor.clone(),
+                ..query.clone()
+            },
+            &[],
+            Some(123),
+        );
+
+        assert_eq!(first.rows.len(), 1);
+        assert_eq!(first.matched_count, 3);
+        assert_eq!(first.sample_utc, Some(123));
+        assert_eq!(
+            first
+                .summary
+                .top_download
+                .as_ref()
+                .map(|item| item.identity.as_str()),
+            Some("0:beta")
+        );
+        assert_eq!(
+            first
+                .summary
+                .top_upload
+                .as_ref()
+                .map(|item| item.identity.as_str()),
+            Some("0:beta")
+        );
+        assert_eq!(first.summary, expanded.summary);
+        assert_eq!(first.summary, cursor_page.summary);
+        let sorted = query_connections_with_targets_at(
+            &rows,
+            &ConnectionQuery {
+                sort_field: "download".into(),
+                descending: true,
+                limit: 1,
+                filter: query.filter.clone(),
+                ..ConnectionQuery::default()
+            },
+            &[],
+            Some(123),
+        );
+        assert_eq!(first.summary, sorted.summary);
+    }
+
+    #[test]
+    fn hotspot_label_uses_safe_display_fallbacks() {
+        let mut process = row("process", "");
+        process.host = None;
+        process.process_name = Some("worker.exe".into());
+        process.process_path = Some("C:\\secret\\worker.exe".into());
+        let mut destination = row("destination", "");
+        destination.host = None;
+        destination.destination_ip = Some("203.0.113.9".into());
+        destination.destination_port = Some("443".into());
+        let mut identity = row("identity", "");
+        identity.host = None;
+
+        assert_eq!(hotspot_label(&process), "worker.exe");
+        assert_eq!(hotspot_label(&destination), "203.0.113.9:443");
+        assert_eq!(hotspot_label(&identity), "0:identity");
+        let item = hotspot(&[&process], |row| row.upload).expect("hotspot");
+        assert_eq!(item.process.as_deref(), Some("worker.exe"));
+        assert_ne!(item.label, "C:\\secret\\worker.exe");
+        let json = serde_json::to_value(&item).expect("json");
+        assert_eq!(json.get("processPath"), None);
+        assert_eq!(json.get("rulePayload"), None);
+        assert_eq!(
+            json.get("process").and_then(|value| value.as_str()),
+            Some("worker.exe")
+        );
+    }
+
+    #[test]
+    fn empty_match_has_null_hotspots_instead_of_zero() {
+        let page = query_connections(
+            &[row("a", "a.test")],
+            &ConnectionQuery {
+                filter: ConnectionFilter {
+                    host: Some("missing".into()),
+                    ..ConnectionFilter::default()
+                },
+                ..ConnectionQuery::default()
+            },
+        );
+        assert_eq!(page.matched_count, 0);
+        assert!(page.summary.top_download.is_none());
+        assert!(page.summary.top_upload.is_none());
     }
 }

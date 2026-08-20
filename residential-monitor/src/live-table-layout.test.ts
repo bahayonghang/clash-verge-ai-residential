@@ -45,6 +45,35 @@ describe("live table layout", () => {
     expect(parseLiveTableLayout("bad")).toEqual(defaultLiveTableLayout());
   });
 
+  it("falls back safely for malformed layout fields", () => {
+    expect(sanitizeLiveTableLayout({ widths: undefined, hidden: undefined })).toEqual(
+      defaultLiveTableLayout()
+    );
+    expect(parseLiveTableLayout({ widths: null, hidden: { nope: true } })).toEqual(
+      defaultLiveTableLayout()
+    );
+  });
+
+  it("clamps a resized column without changing other widths", () => {
+    const original = defaultLiveTableLayout();
+    const resized = setColumnWidth(original, "host", 999);
+    expect(resized.widths.host).toBe(640);
+    expect(resized.widths.download).toBe(original.widths.download);
+  });
+
+  it("changes the table pixel width by only the resized visible column delta", () => {
+    const original = defaultLiveTableLayout();
+    const resized = setColumnWidth(original, "host", original.widths.host + 37);
+    expect(tablePixelWidth(resized)).toBe(tablePixelWidth(original) + 37);
+    expect(resized.widths.upload).toBe(original.widths.upload);
+  });
+
+  it("excludes hidden columns from the fixed table pixel width", () => {
+    const original = defaultLiveTableLayout();
+    const hidden = setColumnHidden(original, "host", true);
+    expect(tablePixelWidth(hidden)).toBe(tablePixelWidth(original) - original.widths.host);
+  });
+
   it("adds action width into the table pixel total", () => {
     const layout = setColumnWidth(defaultLiveTableLayout(), "host", 200);
     expect(tablePixelWidth(layout)).toBeGreaterThan(200);

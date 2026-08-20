@@ -162,6 +162,11 @@ body {
   min-height: 100vh;
 }
 
+#app:has(.live-page) {
+  height: 100vh;
+  overflow: hidden;
+}
+
 h1,
 h2,
 h3 {
@@ -335,6 +340,11 @@ select:focus-visible,
   flex-direction: column;
 }
 
+.workspace:has(.live-page) {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .workspace:focus {
   outline: none;
 }
@@ -342,6 +352,13 @@ select:focus-visible,
 #view {
   flex: 1 0 auto;
   min-height: 0;
+}
+
+#view:has(.live-page) {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .panel {
@@ -423,13 +440,17 @@ select:focus-visible,
 .live-page {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 2.6rem);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
   background: var(--card);
   border-radius: 12px;
   padding: 0.95rem 1.1rem;
 }
 
 .live-toolbar {
+  position: relative;
+  z-index: 6;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -447,6 +468,15 @@ select:focus-visible,
   align-self: flex-start;
 }
 
+.live-filter-workspace {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--input-bg);
+}
+
 .live-filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -454,33 +484,290 @@ select:focus-visible,
   gap: 0.55rem 0.75rem;
 }
 
-.filter-clauses {
+.live-filter-bar h2,
+.live-filter-bar p,
+.live-filter-applied-list h3,
+.live-filter-applied-list p,
+.live-filter-editor p {
+  margin: 0;
+}
+
+.live-filter-bar h2 {
+  font-size: 0.95rem;
+}
+
+.live-filter-applied {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.live-filter-toggle {
+  font-weight: 600;
+}
+
+.live-filter-status {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.live-filter-status[data-state="applying"] {
+  color: var(--accent);
+}
+
+.live-filter-status[data-state="failed"] {
+  color: var(--danger);
+}
+
+.live-filter-applied-list {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 }
 
+.live-filter-applied-list h3 {
+  font-size: 0.9rem;
+}
+
+.live-filter-applied-list ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.live-filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.32rem 0.38rem 0.32rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.live-filter-chip > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-filter-chip button {
+  flex: 0 0 auto;
+  padding: 0.2rem 0.42rem;
+}
+
+.live-filter-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem;
+  padding: 0.65rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.live-filter-editor > p {
+  flex: 1 0 100%;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.live-filter-control {
+  display: grid;
+  flex: 1 1 8rem;
+  gap: 0.25rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.live-filter-control select,
+.live-filter-control input {
+  min-width: 0;
+}
+
+.live-filter-value {
+  flex-basis: 12rem;
+}
+
+.live-filter-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.live-hotspot-summary {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 0.65rem;
+  margin-bottom: 0.8rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--input-bg);
+}
+
+.live-hotspot-summary-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.live-hotspot-summary-heading h2,
+.live-hotspot-summary-heading p {
+  margin: 0;
+}
+
+.live-hotspot-summary-heading h2 {
+  font-size: 0.98rem;
+}
+
+.live-hotspot-summary-heading p {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.live-hotspot-status {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.live-hotspot-status[data-state="ready"] {
+  color: var(--ok);
+}
+
+.live-hotspot-status[data-state="gap"],
+.live-hotspot-status[data-state="paused"] {
+  color: var(--danger);
+}
+
+.live-hotspot-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.live-hotspot-card {
+  display: grid;
+  min-width: 0;
+  gap: 0.35rem;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.live-hotspot-card-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.live-hotspot-card h3,
+.live-hotspot-card p {
+  margin: 0;
+}
+
+.live-hotspot-card h3 {
+  font-size: 0.9rem;
+}
+
+.live-hotspot-direction {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.live-hotspot-label {
+  overflow: hidden;
+  color: var(--ink);
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-hotspot-detail {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-hotspot-value {
+  color: var(--muted);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.live-hotspot-card[data-state="ready"] .live-hotspot-value {
+  color: var(--ok);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.live-hotspot-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.live-hotspot-meta div {
+  min-width: 0;
+}
+
+.live-hotspot-meta dt,
+.live-hotspot-meta dd {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-hotspot-meta dd {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
 .live-table-wrap {
+  position: relative;
+  z-index: 0;
   flex: 1;
+  min-width: 0;
   min-height: 12rem;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .live-columns {
   position: relative;
+  z-index: 5;
 }
 
 .live-columns-panel {
   position: absolute;
-  left: 0;
+  left: auto;
+  right: 0;
   top: calc(100% + 0.35rem);
   min-width: 12rem;
+  max-height: min(32rem, calc(100vh - 6rem));
+  overflow-y: auto;
   padding: 0.55rem 0.7rem;
   background: var(--input-bg);
   color: var(--ink);
   border: 1px solid var(--border);
   border-radius: 8px;
-  z-index: 4;
+  z-index: 6;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -521,9 +808,11 @@ select:focus-visible,
   padding: 0.25rem 0.55rem;
 }
 
-.live-table {
+table.live-table.data {
   table-layout: fixed;
   border-collapse: collapse;
+  width: auto;
+  max-width: none;
 }
 
 .live-table th,
@@ -549,9 +838,37 @@ select:focus-visible,
   position: absolute;
   top: 0;
   right: 0;
-  width: 6px;
+  width: 10px;
   height: 100%;
   cursor: col-resize;
+  touch-action: none;
+}
+
+.live-col-resize::after {
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  left: 4px;
+  width: 2px;
+  border-radius: 999px;
+  background: transparent;
+  content: "";
+}
+
+.live-col-resize:hover::after,
+.live-col-resize:focus-visible::after {
+  background: var(--accent);
+}
+
+.live-col-resize:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.live-table-resizing,
+.live-table-resizing * {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .live-sort {
@@ -568,23 +885,6 @@ select:focus-visible,
   font: inherit;
   text-align: inherit;
   cursor: pointer;
-}
-
-.filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: center;
-}
-
-.filter-row input {
-  flex: 1 1 10rem;
-  min-width: 8rem;
-}
-
-.filter-row input[type="number"] {
-  flex: 0 1 8rem;
-  min-width: 6rem;
 }
 
 .status {
@@ -1329,7 +1629,58 @@ label.inline {
   }
 }
 
+@media (max-width: 56rem) {
+  .live-hotspot-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 42rem) {
+  .live-page {
+    padding: 0.7rem;
+  }
+
+  .live-filter-bar,
+  .live-filter-editor {
+    align-items: stretch;
+  }
+
+  .live-filter-bar > div:first-child,
+  .live-filter-toggle,
+  .live-filter-bar > button,
+  .live-columns,
+  .live-filter-control,
+  .live-filter-editor-actions {
+    flex: 1 0 100%;
+  }
+
+  .live-filter-chip {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .live-columns-panel {
+    left: 0;
+    right: auto;
+  }
+
+  .live-hotspot-summary-heading {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .live-hotspot-status {
+    text-align: left;
+  }
+
+  .live-hotspot-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .live-hotspot-meta {
+    grid-template-columns: 1fr;
+  }
+
   .caliber-grid {
     grid-template-columns: 1fr;
   }
