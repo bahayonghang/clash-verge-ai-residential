@@ -2,7 +2,7 @@ import type { ReportQuery } from "../dto";
 import { unknownOr } from "./units";
 
 export type ReportPreset = "hour" | "day" | "7" | "30" | "month";
-export type ArchiveKindFilter = "all" | "hour" | "day";
+export type ArchiveKindFilter = "all" | "hour" | "day" | "manual";
 export type WindowSource = "preset" | "archive";
 
 export interface ReportForm {
@@ -66,7 +66,7 @@ export function isReportPreset(value: string): value is ReportPreset {
 }
 
 export function isArchiveKindFilter(value: string): value is ArchiveKindFilter {
-  return value === "all" || value === "hour" || value === "day";
+  return value === "all" || value === "hour" || value === "day" || value === "manual";
 }
 
 export function presetFromSpan(span: number): ReportPreset | null {

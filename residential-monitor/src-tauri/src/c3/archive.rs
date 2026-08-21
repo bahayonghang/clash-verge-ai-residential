@@ -17,6 +17,7 @@ use std::sync::Arc;
 
 pub const ARCHIVE_DTO_VERSION: u32 = 1;
 pub const ARCHIVE_HOUR_RETAIN_DAYS: i64 = 30;
+pub const ARCHIVE_MANUAL_RETAIN_DAYS: i64 = 7;
 pub const ARCHIVE_LIST_DEFAULT: u32 = 50;
 pub const ARCHIVE_LIST_MAX: u32 = 50;
 
@@ -25,6 +26,7 @@ pub const ARCHIVE_LIST_MAX: u32 = 50;
 pub enum ArchiveKind {
     Hour,
     Day,
+    Manual,
 }
 
 impl ArchiveKind {
@@ -32,6 +34,7 @@ impl ArchiveKind {
         match self {
             Self::Hour => "hour",
             Self::Day => "day",
+            Self::Manual => "manual",
         }
     }
 
@@ -39,6 +42,7 @@ impl ArchiveKind {
         match raw {
             "hour" => Ok(Self::Hour),
             "day" => Ok(Self::Day),
+            "manual" => Ok(Self::Manual),
             _ => Err(ReportError::InvalidQuery("archive kind")),
         }
     }
@@ -47,6 +51,7 @@ impl ArchiveKind {
         match self {
             Self::Hour => Granularity::Hour,
             Self::Day => Granularity::Day,
+            Self::Manual => Granularity::Hour,
         }
     }
 }
@@ -94,12 +99,14 @@ impl ReportArchiveService {
     pub fn purge_expired(connection: &Connection, now_utc: i64) -> Result<u64, ReportError> {
         let hour_cut = now_utc.saturating_sub(ARCHIVE_HOUR_RETAIN_DAYS * 86_400);
         let day_cut = now_utc.saturating_sub(DIMENSION_RETAIN_DAYS * 86_400);
+        let manual_cut = now_utc.saturating_sub(ARCHIVE_MANUAL_RETAIN_DAYS * 86_400);
         let n = connection
             .execute(
                 "delete from report_archive
                   where (kind = 'hour' and range_end_utc < ?1)
-                     or (kind = 'day' and range_end_utc < ?2)",
-                params![hour_cut, day_cut],
+                     or (kind = 'day' and range_end_utc < ?2)
+                     or (kind = 'manual' and generated_utc < ?3)",
+                params![hour_cut, day_cut, manual_cut],
             )
             .map_err(map_sqlite)?;
         Ok(n as u64)
@@ -152,9 +159,28 @@ impl ReportArchiveService {
         now_utc: i64,
     ) -> Result<(), ReportError> {
         match outcome {
-            Ok(result) => persist_ok(connection, job, result, now_utc),
+            Ok(result) => persist_ok(connection, job, result, now_utc, false),
             Err(error) => persist_failed(connection, job, &error, now_utc),
         }
+    }
+
+    pub fn persist_manual(
+        connection: &Connection,
+        result: ReportResult,
+        now_utc: i64,
+    ) -> Result<(), ReportError> {
+        let query = result.query_echo.clone();
+        let fingerprint = query_fingerprint(&query);
+        let job = ArchiveJob {
+            kind: ArchiveKind::Manual,
+            range_start_utc: query.range_start_utc,
+            range_end_utc: query.range_end_utc,
+            query,
+            fingerprint,
+        };
+        persist_ok(connection, &job, result, now_utc, true)?;
+        let _ = Self::purge_expired(connection, now_utc);
+        Ok(())
     }
 
     pub fn list(
@@ -259,8 +285,9 @@ fn persist_ok(
     job: &ArchiveJob,
     mut result: ReportResult,
     now_utc: i64,
+    overwrite_ok: bool,
 ) -> Result<(), ReportError> {
-    if existing_ok(connection, job)? {
+    if !overwrite_ok && existing_ok(connection, job)? {
         return Ok(());
     }
     result.report_snapshot_token.clear();
@@ -985,5 +1012,78 @@ mod archive_service_tests {
         .expect("p2");
         assert_eq!(second.items.len(), 1);
         assert_eq!(second.next, None);
+    }
+
+    #[test]
+    fn persist_manual_overwrites_same_window() {
+        let dir = tempdir().expect("dir");
+        let coordinator = StorageCoordinator::open(&dir.path().join("a.sqlite3")).expect("open");
+        let now = 20 * 86_400;
+        let mut first = dummy_ok(
+            default_auto_report_query(Granularity::Hour, now - 3_600, now),
+            now,
+        );
+        first.query_echo.grouping = DimensionKind::Rule;
+        ReportArchiveService::persist_manual(coordinator.connection(), first, now).expect("first");
+        let page = ReportArchiveService::list(coordinator.connection(), Some("manual"), None, None)
+            .expect("list");
+        assert_eq!(page.items.len(), 1);
+        assert_eq!(page.items[0].kind, ArchiveKind::Manual);
+        assert_eq!(page.items[0].grouping, "rule");
+        let archive_id = page.items[0].archive_id.clone();
+        let mut second = dummy_ok(
+            default_auto_report_query(Granularity::Hour, now - 3_600, now),
+            now + 1,
+        );
+        second.query_echo.grouping = DimensionKind::Rule;
+        second.totals.download = 77;
+        ReportArchiveService::persist_manual(coordinator.connection(), second, now + 1)
+            .expect("overwrite");
+        let page = ReportArchiveService::list(coordinator.connection(), Some("manual"), None, None)
+            .expect("list2");
+        assert_eq!(page.items.len(), 1);
+        assert_eq!(page.items[0].archive_id, archive_id);
+        assert_eq!(page.items[0].totals_download, Some(77));
+    }
+
+    #[test]
+    fn persist_manual_does_not_block_auto_jobs() {
+        let dir = tempdir().expect("dir");
+        let coordinator = StorageCoordinator::open(&dir.path().join("a.sqlite3")).expect("open");
+        let now = chrono::Utc::now().timestamp();
+        let (start, end) = closed_local_hour_bounds("local", now).expect("hour");
+        let result = dummy_ok(
+            default_auto_report_query(Granularity::Hour, start, end),
+            now,
+        );
+        ReportArchiveService::persist_manual(coordinator.connection(), result, now)
+            .expect("manual");
+        let job = ReportArchiveService::next_job(coordinator.connection(), now)
+            .expect("job")
+            .expect("auto hour");
+        assert_eq!(job.kind, ArchiveKind::Hour);
+        assert_eq!(job.range_start_utc, start);
+    }
+
+    #[test]
+    fn purge_expired_manual_by_generated_utc() {
+        let dir = tempdir().expect("dir");
+        let coordinator = StorageCoordinator::open(&dir.path().join("a.sqlite3")).expect("open");
+        let now = 20 * 86_400;
+        let old = dummy_ok(
+            default_auto_report_query(Granularity::Hour, now - 3_600, now),
+            now - 8 * 86_400,
+        );
+        ReportArchiveService::persist_manual(coordinator.connection(), old, now - 8 * 86_400)
+            .expect("old");
+        let live = dummy_ok(
+            default_auto_report_query(Granularity::Hour, now - 7_200, now - 3_600),
+            now,
+        );
+        ReportArchiveService::persist_manual(coordinator.connection(), live, now).expect("live");
+        let page = ReportArchiveService::list(coordinator.connection(), Some("manual"), None, None)
+            .expect("list");
+        assert_eq!(page.items.len(), 1);
+        assert_eq!(page.items[0].generated_utc, now);
     }
 }

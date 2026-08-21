@@ -123,9 +123,27 @@ export function finishReportRequest(
   return { ...state, loading: false, errorZh: outcome.errorZh };
 }
 
-export async function runReport(query: ReportQuery): Promise<ReportResult> {
-  const raw = await invoke<unknown>("run_report", { query });
+export async function runReport(
+  query: ReportQuery,
+  persistManual = false
+): Promise<ReportResult> {
+  const raw = await invoke<unknown>("run_report", { query, persistManual });
   return decodeReportResult(raw);
+}
+
+export async function releaseReportToken(token: string | null | undefined): Promise<void> {
+  if (!token || !isTauriRuntime()) {
+    return;
+  }
+  try {
+    await invoke("release_report", { token });
+  } catch {
+    /* 释放失败不覆盖查询错误 */
+  }
+}
+
+export function shouldReleaseAbandoned(cancelled: boolean, seq: number, currentSeq: number): boolean {
+  return cancelled || seq !== currentSeq;
 }
 
 export function useReport(input: UseReportInput): UseReportResult {
@@ -133,6 +151,7 @@ export function useReport(input: UseReportInput): UseReportResult {
   const [loading, setLoading] = useState(false);
   const [errorZh, setErrorZh] = useState<string | null>(null);
   const seqRef = useRef(0);
+  const tokenRef = useRef<string | null>(null);
   const enabled = input.enabled !== false;
   const startUtc = snapMsToMinute(input.timeRange.startUtc);
   const endUtc = snapMsToMinute(input.timeRange.endUtc);
@@ -165,15 +184,21 @@ export function useReport(input: UseReportInput): UseReportResult {
     let cancelled = false;
     void runReport(query)
       .then((next) => {
-        if (cancelled || seq !== seqRef.current) {
+        if (shouldReleaseAbandoned(cancelled, seq, seqRef.current)) {
+          void releaseReportToken(next.reportSnapshotToken);
           return;
         }
+        const previous = tokenRef.current;
+        tokenRef.current = next.reportSnapshotToken;
         setResult(next);
         setErrorZh(null);
         setLoading(false);
+        if (previous && previous !== next.reportSnapshotToken) {
+          void releaseReportToken(previous);
+        }
       })
       .catch((caught: unknown) => {
-        if (cancelled || seq !== seqRef.current) {
+        if (shouldReleaseAbandoned(cancelled, seq, seqRef.current)) {
           return;
         }
         setErrorZh(invokeErrorZh(caught, t("zh", "report.fail")));
@@ -183,6 +208,23 @@ export function useReport(input: UseReportInput): UseReportResult {
       cancelled = true;
     };
   }, [enabled, query]);
+
+  useEffect(() => {
+    if (enabled) {
+      return;
+    }
+    const token = tokenRef.current;
+    tokenRef.current = null;
+    void releaseReportToken(token);
+  }, [enabled]);
+
+  useEffect(() => {
+    return () => {
+      const token = tokenRef.current;
+      tokenRef.current = null;
+      void releaseReportToken(token);
+    };
+  }, []);
 
   return { result, loading, errorZh };
 }

@@ -110,4 +110,22 @@ describe("排行条形图能力说明", () => {
     expect(html).toContain("data-capability-note");
     expect(html).toContain("精确 Top N 不可用");
   });
+
+  it("配额错误进 alert，不进能力说明", () => {
+    const html = renderToStaticMarkup(
+      <RankBarCard
+        locale="zh"
+        title="规则"
+        kind="rule"
+        result={null}
+        loading={false}
+        errorZh="报告快照配额已满。"
+        topN={20}
+        onTopNChange={() => undefined}
+      />
+    );
+    expect(html).toContain("role=\"alert\"");
+    expect(html).toContain("报告快照配额已满。");
+    expect(html).not.toContain("data-capability-note");
+  });
 });

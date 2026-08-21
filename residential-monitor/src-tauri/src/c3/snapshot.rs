@@ -17,6 +17,7 @@ pub struct SnapshotRecord {
     pub data_version: u64,
     pub created_utc: i64,
     pub expires_utc: i64,
+    pub last_access_utc: i64,
     pub bytes: u64,
     pub checksum: String,
     pub spool_path: Option<PathBuf>,
@@ -89,11 +90,15 @@ impl ReportSnapshotStore {
         if bytes > MAX_TOKEN_BYTES {
             return Err(ReportError::QuotaExceeded("single token too large"));
         }
-        if self.total_bytes.saturating_add(bytes) > MAX_SPOOL_BYTES {
-            return Err(ReportError::QuotaExceeded("spool quota"));
+        let fingerprint = query_fingerprint(query);
+        if let Some(token) = self.live_token_for(&fingerprint, now_utc) {
+            return self.replace_token(&token, result, encoded, bytes, now_utc, fingerprint);
         }
-        if self.items.len() >= MAX_ACTIVE_TOKENS {
-            return Err(ReportError::QuotaExceeded("active token count"));
+        self.evict_lru_until_fits(bytes);
+        if self.items.len() >= MAX_ACTIVE_TOKENS
+            || self.total_bytes.saturating_add(bytes) > MAX_SPOOL_BYTES
+        {
+            return Err(ReportError::QuotaExceeded("spool quota"));
         }
         let token = new_token();
         let checksum = hex::encode(Sha256::digest(&encoded));
@@ -102,11 +107,12 @@ impl ReportSnapshotStore {
         result.report_snapshot_token = token.clone();
         let record = SnapshotRecord {
             token: token.clone(),
-            fingerprint: query_fingerprint(query),
+            fingerprint,
             schema_version: result.schema_version,
             data_version: result.data_version,
             created_utc: now_utc,
             expires_utc: now_utc + TOKEN_TTL_SECS as i64,
+            last_access_utc: now_utc,
             bytes,
             checksum,
             spool_path: Some(spool_path),
@@ -117,15 +123,78 @@ impl ReportSnapshotStore {
         Ok(result)
     }
 
-    pub fn get(&self, token: &str, now_utc: i64) -> Result<&ReportResult, ReportError> {
+    pub fn get(&mut self, token: &str, now_utc: i64) -> Result<&ReportResult, ReportError> {
         let item = self
             .items
-            .get(token)
+            .get_mut(token)
             .ok_or(ReportError::TokenExpired("missing"))?;
         if item.expires_utc <= now_utc {
             return Err(ReportError::TokenExpired("ttl"));
         }
+        item.last_access_utc = now_utc;
         Ok(&item.result)
+    }
+
+    fn live_token_for(&self, fingerprint: &str, now_utc: i64) -> Option<String> {
+        self.items
+            .values()
+            .find(|item| item.fingerprint == fingerprint && item.expires_utc > now_utc)
+            .map(|item| item.token.clone())
+    }
+
+    fn replace_token(
+        &mut self,
+        token: &str,
+        mut result: ReportResult,
+        encoded: Vec<u8>,
+        bytes: u64,
+        now_utc: i64,
+        fingerprint: String,
+    ) -> Result<ReportResult, ReportError> {
+        let Some(existing) = self.items.get(token) else {
+            return Err(ReportError::TokenExpired("missing"));
+        };
+        let spool_path = existing
+            .spool_path
+            .clone()
+            .unwrap_or_else(|| self.spool_dir.join(format!("{token}.json")));
+        let old_bytes = existing.bytes;
+        let created_utc = existing.created_utc;
+        std::fs::write(&spool_path, &encoded).map_err(|_| ReportError::Failed("spool write"))?;
+        self.total_bytes = self
+            .total_bytes
+            .saturating_sub(old_bytes)
+            .saturating_add(bytes);
+        result.report_snapshot_token = token.to_string();
+        if let Some(record) = self.items.get_mut(token) {
+            record.fingerprint = fingerprint;
+            record.schema_version = result.schema_version;
+            record.data_version = result.data_version;
+            record.created_utc = created_utc;
+            record.expires_utc = now_utc + TOKEN_TTL_SECS as i64;
+            record.last_access_utc = now_utc;
+            record.bytes = bytes;
+            record.checksum = hex::encode(Sha256::digest(&encoded));
+            record.spool_path = Some(spool_path);
+            record.result = result.clone();
+        }
+        Ok(result)
+    }
+
+    fn evict_lru_until_fits(&mut self, extra_bytes: u64) {
+        while self.items.len() >= MAX_ACTIVE_TOKENS
+            || self.total_bytes.saturating_add(extra_bytes) > MAX_SPOOL_BYTES
+        {
+            let victim = self
+                .items
+                .values()
+                .min_by_key(|item| (item.last_access_utc, item.created_utc, item.token.as_str()))
+                .map(|item| item.token.clone());
+            let Some(token) = victim else {
+                break;
+            };
+            self.release(&token);
+        }
     }
 
     pub fn release(&mut self, token: &str) -> bool {
@@ -162,28 +231,77 @@ mod snapshot_store_tests {
     use super::*;
     use crate::c3::query::{empty_result, plan_capability, ReportQuery};
 
-    #[test]
-    fn rejects_open_transaction_and_quota() {
-        let dir = tempfile::tempdir().expect("dir");
-        let mut store = ReportSnapshotStore::open(dir.path());
-        let query = ReportQuery::default();
+    fn sample(range_start: i64) -> (ReportQuery, ReportResult) {
+        let mut query = ReportQuery::default();
+        query.range_start_utc = range_start;
+        query.range_end_utc = range_start + 10;
         let plan = plan_capability(&query, 4_000, 30).expect("plan");
         let result = empty_result(query.clone(), &plan, 1);
-        let error = store
-            .insert(&query, result.clone(), 100, true)
-            .expect_err("txn");
+        (query, result)
+    }
+
+    #[test]
+    fn rejects_open_transaction() {
+        let dir = tempfile::tempdir().expect("dir");
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let (query, result) = sample(0);
+        let error = store.insert(&query, result, 100, true).expect_err("txn");
         assert_eq!(error.code(), "storage_failure");
+    }
+
+    #[test]
+    fn reuses_unexpired_fingerprint() {
+        let dir = tempfile::tempdir().expect("dir");
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let (query, result) = sample(0);
+        let first = store.insert(&query, result, 100, false).expect("first");
+        let plan = plan_capability(&query, 4_000, 30).expect("plan");
+        let mut newer = empty_result(query.clone(), &plan, 2);
+        newer.data_version = 2;
+        let second = store.insert(&query, newer, 110, false).expect("reuse");
+        assert_eq!(first.report_snapshot_token, second.report_snapshot_token);
+        assert_eq!(store.active_count(), 1);
+        assert_eq!(second.data_version, 2);
+    }
+
+    #[test]
+    fn ninth_insert_evicts_oldest_access() {
+        let dir = tempfile::tempdir().expect("dir");
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let mut tokens = Vec::new();
         for index in 0..MAX_ACTIVE_TOKENS {
-            let mut query = ReportQuery::default();
-            query.range_start_utc = i64::from(index as u32) * 10;
-            query.range_end_utc = query.range_start_utc + 10;
-            let plan = plan_capability(&query, 4_000, 30).expect("plan");
-            store
-                .insert(&query, empty_result(query.clone(), &plan, 1), 100, false)
-                .expect("insert");
+            let (query, result) = sample(i64::from(index as u32) * 10);
+            let stored = store.insert(&query, result, 100, false).expect("insert");
+            tokens.push(stored.report_snapshot_token);
         }
-        let extra = store.insert(&query, result, 100, false).expect_err("quota");
-        assert_eq!(extra.code(), "quota_exceeded");
+        store
+            .get(&tokens[0], 101)
+            .expect("pin oldest-created as newest access");
+        let (query, result) = sample(9_000);
+        let extra = store.insert(&query, result, 102, false).expect("lru");
+        assert_eq!(store.active_count(), MAX_ACTIVE_TOKENS);
+        assert!(store.get(&tokens[0], 102).is_ok());
+        assert!(store.get(&extra.report_snapshot_token, 102).is_ok());
+        let missing = tokens
+            .iter()
+            .skip(1)
+            .filter(|token| store.get(token, 102).is_err())
+            .count();
+        assert_eq!(missing, 1);
+    }
+
+    #[test]
+    fn rejects_single_token_over_max_bytes() {
+        let dir = tempfile::tempdir().expect("dir");
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let (mut query, mut result) = sample(0);
+        result.policy_metadata.note_zh = "x".repeat((MAX_TOKEN_BYTES as usize) + 8);
+        query.range_start_utc = 1;
+        let error = store
+            .insert(&query, result, 100, false)
+            .expect_err("too large");
+        assert_eq!(error.code(), "quota_exceeded");
+        assert_eq!(store.active_count(), 0);
     }
 
     #[test]

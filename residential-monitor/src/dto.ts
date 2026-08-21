@@ -833,7 +833,7 @@ export function decodeReportResult(value: unknown): ReportResult {
   return decoded;
 }
 
-export type ReportArchiveKind = "hour" | "day";
+export type ReportArchiveKind = "hour" | "day" | "manual";
 
 export interface ReportArchiveSummary {
   archiveId: string;
@@ -863,7 +863,7 @@ function decodeReportArchiveSummary(value: unknown): ReportArchiveSummary {
   if (
     !isRecord(value) ||
     typeof value.archiveId !== "string" ||
-    (value.kind !== "hour" && value.kind !== "day") ||
+    (value.kind !== "hour" && value.kind !== "day" && value.kind !== "manual") ||
     typeof value.status !== "string" ||
     typeof value.rangeStartUtc !== "number" ||
     typeof value.rangeEndUtc !== "number"

@@ -6,6 +6,7 @@ import {
   finishReportRequest,
   granularityForTimeRange,
   granularityForTrendPreset,
+  shouldReleaseAbandoned,
   snapTimeRangeToMinute,
   type ReportViewState
 } from "./use-report";
@@ -163,5 +164,11 @@ describe("报告请求竞态", () => {
     const next = finishReportRequest(beginReportRequest(loaded), 2, { ok: true, result: second });
     expect(next.result?.drilldownCapability.crossDimension).toBe(false);
     expect(next.result?.drilldownCapability.noteZh).toContain("跨维下钻");
+  });
+
+  it("取消或过期序号要释放已返回的 token", () => {
+    expect(shouldReleaseAbandoned(true, 1, 1)).toBe(true);
+    expect(shouldReleaseAbandoned(false, 1, 2)).toBe(true);
+    expect(shouldReleaseAbandoned(false, 2, 2)).toBe(false);
   });
 });

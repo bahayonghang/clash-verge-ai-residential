@@ -39,7 +39,7 @@ export function RankBarCard({
   const exactTopN = result?.drilldownCapability.exactTopN !== false;
   const noteZh = resolvedCapabilityNote(
     locale,
-    errorZh ?? result?.drilldownCapability.noteZh,
+    result?.drilldownCapability.noteZh,
     "dimension.exact_top_n_off"
   );
   const data =
@@ -80,7 +80,12 @@ export function RankBarCard({
         </div>
       }
     >
-      {!exactTopN || (errorZh && !result) ? <CapabilityNote locale={locale} noteZh={noteZh} /> : null}
+      {!exactTopN ? <CapabilityNote locale={locale} noteZh={noteZh} /> : null}
+      {errorZh ? (
+        <p className="text-sm text-destructive" role="alert">
+          {errorZh}
+        </p>
+      ) : null}
       <AttributionQualityNote locale={locale} result={result} />
       {exactTopN ? (
         <RankBar

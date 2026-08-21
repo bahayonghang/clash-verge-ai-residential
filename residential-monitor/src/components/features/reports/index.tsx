@@ -18,7 +18,7 @@ import { TrendCard } from "./trend-card";
 
 function sourceLine(locale: UiLocale, source: ReportSource): string {
   if (source === "manual") {
-    return t(locale, "report.archive.kind.manual");
+    return t(locale, "report.archive.source.manual");
   }
   if (source === "auto-day") {
     return t(locale, "report.archive.kind.day");

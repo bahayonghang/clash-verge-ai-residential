@@ -250,4 +250,21 @@ describe("decodeShellStatus", () => {
     expect(decoded.items[0]?.archiveId).toBe("a1");
     expect(decoded.next).toBe("1|a1");
   });
+
+  it("接受手动档案 kind", () => {
+    const decoded = decodeReportArchivePage({
+      schemaVersion: 1,
+      items: [
+        {
+          archiveId: "m1",
+          kind: "manual",
+          status: "ok",
+          rangeStartUtc: 1,
+          rangeEndUtc: 2
+        }
+      ],
+      next: null
+    });
+    expect(decoded.items[0]?.kind).toBe("manual");
+  });
 });

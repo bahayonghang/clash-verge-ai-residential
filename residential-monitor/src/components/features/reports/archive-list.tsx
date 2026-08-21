@@ -6,7 +6,13 @@ import { cn } from "../../../lib/utils";
 import { fieldClass, labelClass } from "../form-styles";
 
 function kindLabel(locale: UiLocale, kind: string): string {
-  return kind === "day" ? t(locale, "report.archive.kind.day") : t(locale, "report.archive.kind.hour");
+  if (kind === "day") {
+    return t(locale, "report.archive.kind.day");
+  }
+  if (kind === "manual") {
+    return t(locale, "report.archive.kind.saved");
+  }
+  return t(locale, "report.archive.kind.hour");
 }
 
 function statusLabel(locale: UiLocale, status: string): string {
@@ -44,6 +50,7 @@ export function ArchiveList({
           <option value="all">{t(locale, "report.archive.filter.all")}</option>
           <option value="day">{t(locale, "report.archive.kind.day")}</option>
           <option value="hour">{t(locale, "report.archive.kind.hour")}</option>
+          <option value="manual">{t(locale, "report.archive.kind.saved")}</option>
         </select>
       </label>
       <div className="max-h-56 overflow-auto rounded-md border">

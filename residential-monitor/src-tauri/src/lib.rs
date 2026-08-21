@@ -682,8 +682,12 @@ fn get_recovery_status(state: State<Mutex<AppFacade>>) -> Result<RecoveryStatus,
 fn run_report(
     state: State<Mutex<AppFacade>>,
     query: ReportQuery,
+    persist_manual: Option<bool>,
 ) -> Result<ReportResult, AppErrorDto> {
-    state.lock().expect("state").run_report(query)
+    state
+        .lock()
+        .expect("state")
+        .run_report(query, persist_manual.unwrap_or(false))
 }
 
 #[tauri::command]

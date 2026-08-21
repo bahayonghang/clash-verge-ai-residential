@@ -1125,7 +1125,11 @@ impl AppFacade {
         .map_err(map_report)
     }
 
-    pub fn run_report(&mut self, query: ReportQuery) -> Result<ReportResult, AppErrorDto> {
+    pub fn run_report(
+        &mut self,
+        query: ReportQuery,
+        persist_manual: bool,
+    ) -> Result<ReportResult, AppErrorDto> {
         let path = self
             .storage
             .as_ref()
@@ -1134,7 +1138,7 @@ impl AppFacade {
             .to_path_buf();
         let now = chrono::Utc::now().timestamp();
         let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        crate::c3::ReportService::run(
+        let result = crate::c3::ReportService::run(
             &path,
             &mut self.snapshots,
             query,
@@ -1143,10 +1147,16 @@ impl AppFacade {
             &cancel,
             None,
         )
-        .map_err(map_report)
+        .map_err(map_report)?;
+        if persist_manual {
+            let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
+            ReportArchiveService::persist_manual(storage.connection(), result.clone(), now)
+                .map_err(map_report)?;
+        }
+        Ok(result)
     }
 
-    pub fn get_report(&self, token: &str) -> Result<ReportResult, AppErrorDto> {
+    pub fn get_report(&mut self, token: &str) -> Result<ReportResult, AppErrorDto> {
         let now = chrono::Utc::now().timestamp();
         self.snapshots.get(token, now).cloned().map_err(map_report)
     }
@@ -1185,7 +1195,7 @@ impl AppFacade {
     }
 
     pub fn preview_export(
-        &self,
+        &mut self,
         token: &str,
         spec: &ExportSpec,
     ) -> Result<ExportPreview, AppErrorDto> {
@@ -1194,7 +1204,7 @@ impl AppFacade {
     }
 
     pub fn export_report(
-        &self,
+        &mut self,
         token: &str,
         spec: &ExportSpec,
         dest: &Path,

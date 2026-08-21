@@ -46,4 +46,49 @@ describe("pickLatestArchive", () => {
       })?.archiveId
     ).toBe("d1");
   });
+
+  it("不把手动行当成进页默认档案", () => {
+    expect(
+      pickLatestArchive({
+        schemaVersion: 1,
+        items: [
+          {
+            archiveId: "m1",
+            kind: "manual",
+            rangeStartUtc: 9,
+            rangeEndUtc: 10,
+            displayTimezone: "local",
+            grouping: "rule",
+            status: "ok",
+            generatedUtc: 9,
+            dataVersion: null,
+            coverageStatus: null,
+            totalsUpload: null,
+            totalsDownload: 9,
+            connectionCount: null,
+            errorCode: null,
+            noteZh: null
+          },
+          {
+            archiveId: "h1",
+            kind: "hour",
+            rangeStartUtc: 1,
+            rangeEndUtc: 2,
+            displayTimezone: "local",
+            grouping: "host",
+            status: "ok",
+            generatedUtc: 1,
+            dataVersion: null,
+            coverageStatus: null,
+            totalsUpload: null,
+            totalsDownload: 1,
+            connectionCount: null,
+            errorCode: null,
+            noteZh: null
+          }
+        ],
+        next: null
+      })?.archiveId
+    ).toBe("h1");
+  });
 });
