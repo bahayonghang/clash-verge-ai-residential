@@ -28,6 +28,8 @@ describe("ui locale catalogs", () => {
   it("product display name follows the approved English copy", () => {
     expect(t("en", "product.display_name")).toBe("Residential Traffic Monitor");
     expect(t("en", "product.slogan")).toContain("Observed lower bound, not a bill");
+    expect(t("en", "product.slogan_sidebar")).toBe("Observed lower bound, not a bill.");
     expect(t("zh", "product.display_name")).toBe("家宽流量监控");
+    expect(t("zh", "product.slogan_sidebar")).toContain("观测下界");
   });
 });

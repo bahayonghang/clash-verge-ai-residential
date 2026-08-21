@@ -1,6 +1,7 @@
 export const ZH: Record<string, string> = {
   "product.display_name": "家宽流量监控",
   "product.slogan": "观测下界，不是账单。secret 不会出现在此页面。",
+  "product.slogan_sidebar": "观测下界，不是账单。",
   "route.overview": "概览",
   "route.live": "实时连接",
   "route.residential": "家宽",

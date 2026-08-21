@@ -318,6 +318,7 @@
 .shell-nav-item {
   padding-top: var(--nav-item-py);
   padding-bottom: var(--nav-item-py);
+  white-space: nowrap;
 }
 
 [data-slot="card"] {

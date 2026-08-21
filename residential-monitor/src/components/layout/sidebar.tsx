@@ -85,6 +85,22 @@ export function ShellResizeHandle({
   );
 }
 
+function BrandTitle({ locale }: { locale: UiLocale }) {
+  if (locale === "en") {
+    return (
+      <h1 data-brand="en-stack" className="min-w-0 text-[1.05rem] leading-tight font-bold">
+        <span className="block">Residential</span>
+        <span className="block">Traffic Monitor</span>
+      </h1>
+    );
+  }
+  return (
+    <h1 className="min-w-0 text-[1.05rem] leading-tight font-bold">
+      {t(locale, "product.display_name")}
+    </h1>
+  );
+}
+
 export function Sidebar({
   locale,
   route,
@@ -129,15 +145,23 @@ export function Sidebar({
         }
       }}
     >
-      <div className="flex items-start gap-3 border-b border-sidebar-border p-6">
-        <img src={BRAND_MARK} alt="" width={56} height={56} className="size-14 rounded-xl object-cover" />
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl leading-tight font-bold">{t(locale, "product.display_name")}</h1>
-            <StatusDot session={healthSession} label={healthLabel} />
+      <div className="flex items-start gap-3 border-b border-sidebar-border p-4">
+        <img
+          src={BRAND_MARK}
+          alt=""
+          width={56}
+          height={56}
+          className="size-14 shrink-0 rounded-xl object-cover"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-2">
+            <BrandTitle locale={locale} />
+            <span className="mt-1 shrink-0">
+              <StatusDot session={healthSession} label={healthLabel} />
+            </span>
           </div>
-          <p className="mt-0.5 min-h-8 text-xs leading-4 text-muted-foreground/80">
-            {t(locale, "product.slogan")}
+          <p className="mt-1 line-clamp-3 break-words text-[11px] leading-4 text-muted-foreground/80">
+            {t(locale, "product.slogan_sidebar")}
           </p>
         </div>
       </div>
@@ -156,14 +180,14 @@ export function Sidebar({
                 data-route={id}
                 aria-current={current ? "page" : undefined}
                 className={cn(
-                  "shell-nav-item flex w-full items-center gap-3 rounded-xl px-4 text-sm font-medium transition-colors",
+                  "shell-nav-item flex w-full items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors",
                   current
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 )}
               >
-                <Icon className="h-5 w-5" />
-                {t(locale, `route.${id}`)}
+                <Icon className="h-5 w-5 shrink-0" />
+                <span className="min-w-0 truncate">{t(locale, `route.${id}`)}</span>
               </button>
             );
           })}
@@ -173,25 +197,25 @@ export function Sidebar({
       <div className="mt-auto space-y-1 border-t border-sidebar-border p-4" aria-label={t(locale, "nav.bottom")}>
         <button
           type="button"
-          className="shell-nav-item flex w-full items-center gap-3 rounded-xl px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="shell-nav-item flex w-full items-center gap-3 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           onClick={() => setAboutOpen(true)}
         >
-          <Info className="h-5 w-5" />
-          {t(locale, "nav.about")}
+          <Info className="h-5 w-5 shrink-0" />
+          <span className="min-w-0 truncate">{t(locale, "nav.about")}</span>
         </button>
         <button
           type="button"
           data-route="settings-data"
           aria-current={route === "settings-data" ? "page" : undefined}
           className={cn(
-            "shell-nav-item flex w-full items-center gap-3 rounded-xl px-4 text-sm font-medium transition-colors",
+            "shell-nav-item flex w-full items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors",
             route === "settings-data"
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:bg-secondary hover:text-foreground"
           )}
         >
-          <Settings className="h-5 w-5" />
-          {t(locale, "route.settings-data")}
+          <Settings className="h-5 w-5 shrink-0" />
+          <span className="min-w-0 truncate">{t(locale, "route.settings-data")}</span>
         </button>
       </div>
 

@@ -1,6 +1,7 @@
 export const EN: Record<string, string> = {
   "product.display_name": "Residential Traffic Monitor",
   "product.slogan": "Observed lower bound, not a bill. The secret does not appear on this page.",
+  "product.slogan_sidebar": "Observed lower bound, not a bill.",
   "route.overview": "Overview",
   "route.live": "Live connections",
   "route.residential": "Residential",
