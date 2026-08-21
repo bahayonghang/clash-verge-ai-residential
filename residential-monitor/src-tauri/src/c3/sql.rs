@@ -312,8 +312,12 @@ pub fn filter_clause(filters: &ReportFilters) -> (String, Vec<String>) {
     let mut fragment = String::new();
     let mut params = Vec::new();
     if let Some(value) = &filters.host {
-        fragment.push_str(" and s.host = ?");
-        params.push(value.clone());
+        if value == UNKNOWN_IDENTITY {
+            fragment.push_str(" and coalesce(s.host, '') = ''");
+        } else {
+            fragment.push_str(" and s.host = ?");
+            params.push(value.clone());
+        }
     }
     if let Some(value) = &filters.process {
         fragment.push_str(" and a.process_id = (select dimension_id from dimension_dict where dimension_kind = 'process' and value = ?)");
@@ -390,6 +394,10 @@ fn append_dim_identity(
     let Some(value) = value else {
         return;
     };
+    if value == UNKNOWN_IDENTITY && kind == "host" {
+        fragment.push_str(" and h.dimension_id = 0");
+        return;
+    }
     match kind {
         "host" => fragment.push_str(" and h.dimension_id = (select dimension_id from dimension_dict where dimension_kind = 'host' and value = ?)"),
         "process" => fragment.push_str(" and h.dimension_id = (select dimension_id from dimension_dict where dimension_kind = 'process' and value = ?)"),
@@ -455,6 +463,28 @@ mod sql_corpus_tests {
         assert!(fragment.contains("s.host = ?"));
         assert!(!fragment.contains("drop table"));
         assert_eq!(params, vec!["'; drop table x --"]);
+    }
+
+    #[test]
+    fn unknown_host_filter_matches_empty_host_without_binding_sentinel() {
+        let filters = ReportFilters {
+            host: Some(UNKNOWN_IDENTITY.into()),
+            ..ReportFilters::default()
+        };
+        let (fragment, params) = filter_clause(&filters);
+        assert!(fragment.contains("coalesce(s.host, '') = ''"));
+        assert!(!fragment.contains("s.host = ?"));
+        assert!(params.is_empty());
+        let mut dim = String::new();
+        let mut dim_params = Vec::new();
+        append_dim_identity(
+            &mut dim,
+            &mut dim_params,
+            "host",
+            Some(&UNKNOWN_IDENTITY.to_string()),
+        );
+        assert_eq!(dim, " and h.dimension_id = 0");
+        assert!(dim_params.is_empty());
     }
 
     #[test]

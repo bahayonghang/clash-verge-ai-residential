@@ -50,7 +50,10 @@ export function DimensionPage({
     () => (selected ? filtersForDrilldown(kind, selected.identity) : undefined),
     [kind, selected]
   );
-  const canDrill = parent.result?.drilldownCapability.crossDimension === true && selected !== null;
+  const canDrill =
+    parent.result?.drilldownCapability.crossDimension === true &&
+    selected !== null &&
+    (!isUnknownIdentity(selected.identity) || kind === "host");
   const drill = useReport({
     grouping: targetKind,
     timeRange,
@@ -85,7 +88,7 @@ export function DimensionPage({
         errorZh={parent.errorZh}
         selectedIdentity={selected?.identity ?? null}
         onSelect={(identity, label) => {
-          if (isUnknownIdentity(identity)) {
+          if (isUnknownIdentity(identity) && kind !== "host") {
             return;
           }
           setSelected({ identity, label });

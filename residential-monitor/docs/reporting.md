@@ -5,7 +5,8 @@
 - 空区间总量可以为 0。缺口、未知和能力不支持不得写成 0。
 - 30 天 raw 支持组合过滤和下钻。13 个月精确层只支持单维。更老的 core daily 只保留总量、历史主分类和 coverage。
 - `granularity` 合法值为 `minute1` / `minute2` / `minute5` / `minute10` / `hour` / `day` / `month`。分钟档只在 raw 保留期内可用，不升粒度。
-- 排名 `identity` 为 `__unknown__` 表示维度值缺失，`label` 为「未知」。该行留在排名中，不参与下钻。
+- 主机 identity 优先级为 `metadata.host` → `sniffHost` → 目的 IP，写入 `connection_session.host`。三者都空时排名 `identity` 为 `__unknown__`，`label` 为「未知」。
+- `filters.host` 为 `__unknown__` 时匹配空 host，不把哨兵当域名绑定。主机页可对未知行下钻到规则 / 链路 / 进程。其它维度的未知行不参与下钻。
 - 自动 DELETE 保持关闭，直到守恒门通过。
 
 ## 自动小时 / 日档案

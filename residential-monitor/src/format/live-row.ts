@@ -64,7 +64,7 @@ export function displayLiveRow(row: LiveConnectionView, locale: UiLocale, unknow
   type: string;
 } {
   return {
-    host: joinHostPort(row.host, row.destinationPort) ?? unknown,
+    host: joinHostPort(row.host ?? row.destinationIp, row.destinationPort) ?? unknown,
     download: formatBytes(row.download, unknown),
     upload: formatBytes(row.upload, unknown),
     dlSpeed: formatRate(row.rateDownload, unknown),

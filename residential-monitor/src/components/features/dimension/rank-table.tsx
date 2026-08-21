@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReportResult } from "../../../dto";
-import { isUnknownIdentity, rankDisplayLabel, rankingShare, type DimensionKind } from "../../../format/rank";
+import {
+  formatRankLabel,
+  isUnknownIdentity,
+  rankDisplayLabel,
+  rankingShare,
+  type DimensionKind
+} from "../../../format/rank";
 import { formatBytes } from "../../../format/units";
 import { t, type UiLocale } from "../../../i18n";
 import { cn } from "../../../lib/utils";
@@ -135,10 +141,10 @@ export function RankTable({
               </tr>
             ) : (
               visible.map((row, index) => {
-                const label = rankDisplayLabel(row.identity, row.label, unknown);
+                const label = formatRankLabel(row.identity, row.label, unknown);
                 const unknownRow = isUnknownIdentity(row.identity);
                 const share = rankingShare(row.download, totals?.download ?? 0);
-                const canDrill = crossDimension && !unknownRow;
+                const canDrill = crossDimension && (!unknownRow || kind === "host");
                 return (
                   <tr
                     key={row.identity}

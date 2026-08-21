@@ -8,6 +8,7 @@ use std::net::IpAddr;
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ConnectionMeta {
     pub host: Option<String>,
+    pub sniff_host: Option<String>,
     pub source_ip: Option<String>,
     pub destination_ip: Option<String>,
     pub source_port: Option<String>,
@@ -135,6 +136,7 @@ fn normalize_connection(value: &Value) -> Option<ConnectionFact> {
         provider_chains: as_string_list(object.get("providerChains")),
         meta: ConnectionMeta {
             host: text_field(&metadata, "host"),
+            sniff_host: text_field(&metadata, "sniffHost"),
             source_ip: text_field(&metadata, "sourceIP"),
             destination_ip: text_field(&metadata, "destinationIP"),
             source_port: text_field(&metadata, "sourcePort"),
@@ -216,6 +218,34 @@ mod controller_model_tests {
         assert_eq!(connections.len(), 2);
         assert_eq!(connections[0].id, "b");
         assert_eq!(connections[1].id, "a");
+    }
+
+    #[test]
+    fn controller_model_reads_sniff_host_when_host_empty() {
+        let raw = json!({
+            "uploadTotal": 1,
+            "downloadTotal": 1,
+            "connections": [{
+                "id": "s",
+                "upload": 1,
+                "download": 1,
+                "metadata": {"sniffHost": "sniff.example", "destinationIP": "9.9.9.9"}
+            }]
+        });
+        let ControllerInput::Snapshot { connections, .. } =
+            normalize_snapshot(&raw, 1, 1).expect("normalize")
+        else {
+            panic!("snapshot");
+        };
+        assert_eq!(connections[0].meta.host, None);
+        assert_eq!(
+            connections[0].meta.sniff_host.as_deref(),
+            Some("sniff.example")
+        );
+        assert_eq!(
+            connections[0].meta.destination_ip.as_deref(),
+            Some("9.9.9.9")
+        );
     }
 }
 

@@ -1,5 +1,5 @@
 import type { ReportResult } from "../../../dto";
-import { rankDisplayLabel, rankingTraffic, TOP_N_OPTIONS, type TopNOption } from "../../../format/rank";
+import { formatRankLabel, rankingTraffic, TOP_N_OPTIONS, type TopNOption } from "../../../format/rank";
 import { formatBytes } from "../../../format/units";
 import { t, type UiLocale } from "../../../i18n";
 import { cn } from "../../../lib/utils";
@@ -35,7 +35,7 @@ export function RankBarCard({
   const data =
     result && exactTopN
       ? result.rankings.map((row) => ({
-          label: rankDisplayLabel(row.identity, row.label, unknown),
+          label: formatRankLabel(row.identity, row.label, unknown),
           value: rankingTraffic(row)
         }))
       : [];

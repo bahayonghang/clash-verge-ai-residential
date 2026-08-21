@@ -1,5 +1,5 @@
 import type { ReportResult } from "../../../dto";
-import { drilldownTargets, rankDisplayLabel, rankingTraffic, type DimensionKind } from "../../../format/rank";
+import { drilldownTargets, formatRankLabel, rankingTraffic, type DimensionKind } from "../../../format/rank";
 import { formatBytes } from "../../../format/units";
 import { t, type UiLocale } from "../../../i18n";
 import { cn, formatTemplate } from "../../../lib/utils";
@@ -48,7 +48,7 @@ export function DrilldownPanel({
   const barData =
     drillResult && exactTopN
       ? drillResult.rankings.map((row) => ({
-          label: rankDisplayLabel(row.identity, row.label, unknown),
+          label: formatRankLabel(row.identity, row.label, unknown),
           value: rankingTraffic(row)
         }))
       : [];

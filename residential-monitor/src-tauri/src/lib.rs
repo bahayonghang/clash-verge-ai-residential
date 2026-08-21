@@ -17,6 +17,7 @@ pub mod live_table_layout;
 pub mod redact;
 pub mod residential;
 pub mod session;
+pub mod session_host;
 pub mod sqlite_probe;
 pub mod storage;
 pub mod theme;

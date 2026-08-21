@@ -93,7 +93,9 @@ describe("下钻面板由 drilldownCapability 驱动", () => {
     expect(filters.rule).toBe("sql-rule-key");
     expect(filters.rule).not.toContain("(");
     const unknownFilters = filtersForDrilldown("host", UNKNOWN_RANK_IDENTITY);
-    expect(unknownFilters.host).toBeNull();
+    expect(unknownFilters.host).toBe(UNKNOWN_RANK_IDENTITY);
+    const processUnknown = filtersForDrilldown("process", UNKNOWN_RANK_IDENTITY);
+    expect(processUnknown.process).toBeNull();
   });
 
   it("crossDimension 为 false 且 noteZh 为空时仍显示能力说明", () => {

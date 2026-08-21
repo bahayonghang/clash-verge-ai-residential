@@ -68,7 +68,7 @@ function report(over: Partial<ReportResult> = {}): ReportResult {
 }
 
 describe("排名表未知行与能力", () => {
-  it("identity 为 __unknown__ 时按未知渲染且无下钻入口", () => {
+  it("主机维 __unknown__ 可下钻检查组成", () => {
     const html = renderToStaticMarkup(
       <RankTable
         locale="zh"
@@ -83,6 +83,22 @@ describe("排名表未知行与能力", () => {
     expect(html).toContain(`data-identity="${UNKNOWN_RANK_IDENTITY}"`);
     expect(html).toContain('data-unknown="1"');
     expect(html).toContain("未知");
+    expect(html).toMatch(/data-unknown="1"[\s\S]*data-drill="1"/);
+    expect(html).not.toContain("未知行不能下钻");
+  });
+
+  it("非主机维 __unknown__ 无下钻入口", () => {
+    const html = renderToStaticMarkup(
+      <RankTable
+        locale="zh"
+        kind="process"
+        result={report()}
+        loading={false}
+        errorZh={null}
+        selectedIdentity={null}
+        onSelect={() => undefined}
+      />
+    );
     expect(html).toMatch(/data-unknown="1"[\s\S]*data-drill="0"/);
     expect(html).toContain("未知行不能下钻");
   });

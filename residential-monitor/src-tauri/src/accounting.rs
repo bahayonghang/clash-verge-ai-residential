@@ -93,7 +93,11 @@ impl AccountingEngine {
                     duration_ms: None,
                     primary,
                     tags,
-                    host: connection.meta.host.clone(),
+                    host: crate::session_host::resolve_host_identity(
+                        connection.meta.host.as_deref(),
+                        connection.meta.sniff_host.as_deref(),
+                        connection.meta.destination_ip.as_deref(),
+                    ),
                     source_ip: connection.meta.source_ip.clone(),
                     destination_ip: connection.meta.destination_ip.clone(),
                     process_name: connection.meta.process_name.clone(),
@@ -322,6 +326,37 @@ fn empty_known_zero() -> AccountingBatch {
 mod accounting_replay_tests {
     use super::*;
     use crate::controller::{ConnectionFact, ConnectionMeta};
+
+    #[test]
+    fn project_live_resolves_sniff_host_and_destination_ip() {
+        let engine = AccountingEngine::new();
+        let sniff = ConnectionFact {
+            id: "s".into(),
+            upload: 1,
+            download: 1,
+            chains: Vec::new(),
+            provider_chains: Vec::new(),
+            meta: ConnectionMeta {
+                sniff_host: Some("sniff.example".into()),
+                destination_ip: Some("1.1.1.1".into()),
+                ..ConnectionMeta::default()
+            },
+        };
+        let ip_only = ConnectionFact {
+            id: "i".into(),
+            upload: 1,
+            download: 1,
+            chains: Vec::new(),
+            provider_chains: Vec::new(),
+            meta: ConnectionMeta {
+                destination_ip: Some("8.8.8.8".into()),
+                ..ConnectionMeta::default()
+            },
+        };
+        let rows = engine.project_live(&[sniff, ip_only]);
+        assert_eq!(rows[0].host.as_deref(), Some("sniff.example"));
+        assert_eq!(rows[1].host.as_deref(), Some("8.8.8.8"));
+    }
 
     fn fact(id: &str, up: u64, down: u64, chains: &[&str]) -> ConnectionFact {
         ConnectionFact {

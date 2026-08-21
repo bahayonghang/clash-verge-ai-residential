@@ -38,6 +38,11 @@ describe("live-row display", () => {
     expect(formatType("Tun", "tcp")).toBe("Tun(tcp)");
   });
 
+  it("falls back to destination IP when host is empty", () => {
+    const view = displayLiveRow(row({ host: null, destinationIp: "8.8.8.8", destinationPort: "443" }), "zh", "未知");
+    expect(view.host).toBe("8.8.8.8:443");
+  });
+
   it("keeps unknown for missing rate and does not write 0 B/s", () => {
     const view = displayLiveRow(row({ rateDownload: null, rateUpload: null }), "zh", "未知");
     expect(view.dlSpeed).toBe("未知");

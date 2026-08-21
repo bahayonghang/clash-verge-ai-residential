@@ -574,14 +574,21 @@ fn ensure_session_on(
     utc: i64,
     host: Option<&str>,
 ) -> Result<i64, StorageError> {
-    if let Some(existing) = connection
+    if let Some((existing, stored)) = connection
         .query_row(
-            "select session_pk from connection_session where epoch_id = ?1 and connection_id = ?2",
+            "select session_pk, host from connection_session where epoch_id = ?1 and connection_id = ?2",
             params![epoch, connection_id],
-            |row| row.get(0),
+            |row| Ok((row.get::<_, i64>(0)?, row.get::<_, Option<String>>(1)?)),
         )
         .optional()?
     {
+        let next = crate::session_host::prefer_host_identity(stored.as_deref(), host);
+        if next.as_deref() != stored.as_deref() {
+            connection.execute(
+                "update connection_session set host = ?1 where session_pk = ?2",
+                params![next, existing],
+            )?;
+        }
         return Ok(existing);
     }
     connection.execute(
@@ -1446,5 +1453,56 @@ mod recovery_bad_backup_tests {
         assert!(RecoveryFacade::open(&path)
             .validate_candidate(&path)
             .is_err());
+    }
+}
+
+#[cfg(test)]
+mod storage_host_identity_tests {
+    use super::*;
+    use crate::c2::hub::LiveConnectionView;
+    use tempfile::tempdir;
+
+    fn live(id: &str, host: Option<&str>) -> LiveConnectionView {
+        LiveConnectionView {
+            identity: format!("1:{id}"),
+            connection_id: id.into(),
+            epoch: 1,
+            host: host.map(str::to_string),
+            ..LiveConnectionView::default()
+        }
+    }
+
+    fn host_of(coordinator: &StorageCoordinator, id: &str) -> Option<String> {
+        coordinator
+            .connection()
+            .query_row(
+                "select host from connection_session where epoch_id = 1 and connection_id = ?1",
+                [id],
+                |row| row.get(0),
+            )
+            .expect("host")
+    }
+
+    #[test]
+    fn persist_upgrades_empty_and_ip_host_but_not_domain() {
+        let dir = tempdir().expect("tempdir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("host.sqlite3")).expect("open");
+        coordinator
+            .persist_live_facts(&[], &[live("a", None)], &[], 100)
+            .expect("empty");
+        assert_eq!(host_of(&coordinator, "a"), None);
+        coordinator
+            .persist_live_facts(&[], &[live("a", Some("1.1.1.1"))], &[], 101)
+            .expect("ip");
+        assert_eq!(host_of(&coordinator, "a").as_deref(), Some("1.1.1.1"));
+        coordinator
+            .persist_live_facts(&[], &[live("a", Some("a.test"))], &[], 102)
+            .expect("domain");
+        assert_eq!(host_of(&coordinator, "a").as_deref(), Some("a.test"));
+        coordinator
+            .persist_live_facts(&[], &[live("a", Some("8.8.8.8"))], &[], 103)
+            .expect("no downgrade");
+        assert_eq!(host_of(&coordinator, "a").as_deref(), Some("a.test"));
     }
 }

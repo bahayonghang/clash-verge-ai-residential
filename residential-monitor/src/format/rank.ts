@@ -23,6 +23,37 @@ export function rankDisplayLabel(identity: string, label: string, unknown: strin
   return label.length > 0 ? label : unknown;
 }
 
+export function looksLikeIp(value: string): boolean {
+  const trimmed = value.trim().replace(/^\[/, "").replace(/\]$/, "");
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(trimmed)) {
+    return trimmed.split(".").every((part) => {
+      const n = Number(part);
+      return Number.isInteger(n) && n >= 0 && n <= 255;
+    });
+  }
+  return trimmed.includes(":") && /^[0-9a-fA-F:]+$/.test(trimmed);
+}
+
+export function formatRankLabel(identity: string, label: string, unknown: string): string {
+  const text = rankDisplayLabel(identity, label, unknown);
+  if (!isUnknownIdentity(identity) && looksLikeIp(identity)) {
+    return `${text}  IP`;
+  }
+  return text;
+}
+
+export function ellipsizeLabel(label: string, maxChars: number): string {
+  if (maxChars < 2 || label.length <= maxChars) {
+    return label;
+  }
+  return `…${label.slice(-(maxChars - 1))}`;
+}
+
+export function rankAxisWidth(labels: string[]): number {
+  const longest = labels.reduce((max, label) => Math.max(max, label.length), 0);
+  return Math.min(220, Math.max(96, longest * 7 + 12));
+}
+
 export function rankingTraffic(row: { upload: number; download: number }): number {
   return row.upload + row.download;
 }
@@ -49,6 +80,9 @@ export function filtersForDrilldown(
   base: ReportFilters = emptyReportFilters()
 ): ReportFilters {
   if (isUnknownIdentity(identity)) {
+    if (kind === "host") {
+      return { ...base, host: identity };
+    }
     return { ...base };
   }
   return { ...base, [kind]: identity };

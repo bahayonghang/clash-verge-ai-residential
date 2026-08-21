@@ -916,6 +916,37 @@ mod dimension_capability_tests {
     }
 
     #[test]
+    fn host_rank_uses_destination_ip_and_keeps_empty_unknown() {
+        let (_dir, coordinator, mut store) = setup();
+        coordinator
+            .connection()
+            .execute_batch(
+                "
+                insert or ignore into connection_session(session_pk, epoch_id, connection_id, started_utc, host)
+                values (4, 1, 'ip-only', 700, '8.8.8.8'), (5, 1, 'empty', 800, null);
+                insert or ignore into connection_minute(utc_minute, session_pk, upload, download)
+                values (12, 4, 1, 40), (12, 5, 2, 80);
+                ",
+            )
+            .expect("seed ip/unknown");
+        let mut query = base_query();
+        query.grouping = DimensionKind::Host;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        let ids: Vec<_> = result
+            .rankings
+            .iter()
+            .map(|row| row.identity.as_str())
+            .collect();
+        assert!(ids.contains(&"8.8.8.8"));
+        assert!(ids.contains(&UNKNOWN_IDENTITY));
+        let mut filtered = base_query();
+        filtered.grouping = DimensionKind::Rule;
+        filtered.filters.host = Some(UNKNOWN_IDENTITY.into());
+        let unknown = run_now(&coordinator, &mut store, filtered, 3_600);
+        assert!(unknown.totals.download >= 80);
+    }
+
+    #[test]
     fn named_sql_matches_grouping() {
         let (_dir, coordinator, mut store) = setup();
         let mut query = base_query();

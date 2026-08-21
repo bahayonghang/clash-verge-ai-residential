@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+import { ellipsizeLabel, rankAxisWidth } from "../../format/rank";
 import { t, type UiLocale } from "../../i18n";
 import { cn } from "../../lib/utils";
 import { Skeleton } from "../ui/skeleton";
@@ -66,6 +67,8 @@ export function RankBar({
 }) {
   const height = Math.max(200, Math.min(480, data.length * 28 + 48));
   const formatValue = valueFormatter ?? String;
+  const axisWidth = rankAxisWidth(data.map((item) => item.label));
+  const maxChars = Math.max(8, Math.floor((axisWidth - 12) / 7));
 
   if (loading && data.length === 0) {
     return (
@@ -99,10 +102,12 @@ export function RankBar({
           <YAxis
             type="category"
             dataKey="label"
-            width={120}
+            width={axisWidth}
             axisLine={false}
             tickLine={false}
+            interval={0}
             tick={{ fontSize: 11, fill: "#888888" }}
+            tickFormatter={(value: string | number) => ellipsizeLabel(String(value), maxChars)}
           />
           <Tooltip
             formatter={(value) => formatValue(typeof value === "number" ? value : Number(value ?? 0))}
