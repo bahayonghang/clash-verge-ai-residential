@@ -14,7 +14,7 @@ The residential link is reserved for core AI product traffic. A domain is not in
 | Product | Included traffic |
 |---|---|
 | Claude / Anthropic | Claude 产品域名、Messages API、`mcp-proxy.anthropic.com` MCP 连接器代理、`assets-proxy.anthropic.com` 资源代理、`claudemcpcontent.com` MCP Apps widget 隔离域、`claudeusercontent.com` 会话内容，以及官方入站 IP 回退 |
-| ChatGPT / OpenAI | ChatGPT 产品域名（整域后缀，含 `ws.chatgpt.com`）、五个官方 exact 主机（`chat.openai.com`、`android.chat.openai.com`、`desktop.chat.openai.com`、`ios.chat.openai.com`、`tcr9i.chat.openai.com`）、OpenAI 模型 API 后缀 `api.openai.com`（覆盖 Codex 官方的 `us.` / `eu.` 数据驻留前缀），以及上传或生成的用户内容 |
+| ChatGPT / OpenAI | ChatGPT 产品域名（整域后缀，含 `ws.chatgpt.com`）、五个官方 exact 主机（`chat.openai.com`、`android.chat.openai.com`、`desktop.chat.openai.com`、`ios.chat.openai.com`、`tcr9i.chat.openai.com`）、OpenAI 模型 API 后缀 `api.openai.com`（覆盖 Codex 官方的 `us.` / `eu.` 数据驻留前缀），以及上传或生成的用户内容。可选的 `routing.openai_auth` 只增加 `auth.openai.com` 有界后缀与 `auth0.openai.com` 精确主机；`routing.openai_web_assets` 独立增加 `oaistatic.com` 后缀；二者默认关闭 |
 | Gemini | Gemini Web, Google AI Studio product RPC/streaming hosts, Gemini Developer API |
 | Vertex AI / Agent Platform | `routing.vertex_ai_endpoints` 默认 `true`，一次控制 `aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com` 与区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$` |
 | Google Antigravity / Gemini Code Assist | 精确主机 `antigravity.google`、生产 Code Assist 主机 `cloudcode-pa.googleapis.com`，以及 Antigravity `language_server` 的 `--cloud_code_endpoint` 主机 `daily-cloudcode-pa.googleapis.com` |
@@ -44,6 +44,7 @@ The following classes stay on the original Profile route:
 - Grok Build third-party analytics (`api.mixpanel.com`), the `x.ai` install script/privacy endpoints, and the shared `storage.googleapis.com` backend for codebase uploads.
 - YouTube, Maps, Google Search, Google Fonts, Gstatic, advertising, analytics, and other generic Google services.
 - OpenAI/Claude customer support, telemetry, feature flags, fraud prevention, payment, and other shared third-party infrastructure.
+- OpenAI 第一方登录主机与 `oaistatic.com` 网页资源默认也留在原 Profile；分别显式开启 `routing.openai_auth`、`routing.openai_web_assets` 后才进入家宽，且不会因此开启共享第三方依赖。
 - Public DoH/DoT, generic STUN/TURN, and broad UDP port captures.
 - Process-wide routing for Cursor, Grok, Claude, ChatGPT, and Antigravity.
 
@@ -74,6 +75,7 @@ v5.10 起不再注入、但仍保留在 `allPossible*` 中供升级清理的主�
 | `grok_web_assets = false` | Grok 网页版在该模式下是否出现认证或资源加载的出口分裂 |
 | `claude.com` 精确枚举 | 完整登录重定向链命中的 `*.claude.com` 主机集合 |
 | `tcr9i.chat.openai.com` | 官方清单成员，用途未公开 |
+| OpenAI 认证与网页资源开关 | Node 回归只证明 `auth.openai.com`、`auth0.openai.com` 与 `oaistatic.com` 的规则和 DNS 开关合同；实际登录重定向、Cloudflare/SSO/支持依赖、Ubuntu Clash 宿主执行及是否保持单一出口仍需脱敏 Connections 补证 |
 
 ## Acceptance rule for new domains
 
@@ -86,7 +88,11 @@ A new domain should be added only when all conditions hold:
 
 ## Authentication exit split
 
-Shared login hosts remain on the original Profile by default. In particular, `auth.openai.com` and `accounts.google.com` are not added to the residential route, while core chat/model traffic uses the residential exit. Strict risk-control systems can therefore observe different login and model-traffic IPs and may request additional verification. This is an intentional narrow-scope trade-off, not a reason to add either shared authentication domain without evidence.
+认证流量默认仍保留在原 Profile。OpenAI 的 `routing.openai_auth = false` 时，`auth.openai.com`、其 `setup.auth.openai.com` 等子域以及精确主机 `auth0.openai.com` 不进入家宽，而 ChatGPT 核心会话和模型流量继续使用家宽；`routing.openai_web_assets = false` 时，`oaistatic.com` 也留在原 Profile。这种默认分裂是有意的 AI-only 边界。
+
+需要降低 OpenAI 第一方认证与核心流量的出口分裂时，可显式设置 `routing.openai_auth = true`。该开关只增加 `DOMAIN-SUFFIX,auth.openai.com` 与 `DOMAIN,auth0.openai.com`，不添加 `DOMAIN-SUFFIX,openai.com`，也不会联动 `routing.openai_web_assets` 或 `routing.openai_shared_dependencies`。因此 WorkOS、Intercom、Stripe、Cloudflare Challenge、Sentry、Datadog 等第三方跳转或依赖仍可能使用机场出口；开启该开关不等于证明整条登录链同出口，也不能保证减少平台验证。`oaistatic.com` 如确需同出口，应另行开启 `routing.openai_web_assets`。
+
+Google 仍采用独立且范围更广的 `routing.antigravity_google_auth`。默认关闭时 `accounts.google.com` 等共享 Google 登录入口留在机场；开启会影响使用同一账号体系的其他 Google 产品，不因 OpenAI 开关而改变。
 
 ## Managed-rule ownership after v5.5
 

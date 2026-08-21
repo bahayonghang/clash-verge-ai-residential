@@ -70,6 +70,8 @@ test -e clash-verge-ai-residential.local.toml || \
 | --- | --- | --- | --- | --- |
 | `routing.openai_shared_dependencies` | `ROUTE_OPENAI_SHARED_DEPENDENCIES` | `false` | 路由 OpenAI 的 WorkOS、客服、遥测、支付等共享依赖。 | 会扩大到非模型流量。 |
 | `routing.openai_core` | `ROUTE_OPENAI_CORE` | `true` | 路由 ChatGPT 产品、OpenAI 模型 API 和用户上传/生成内容。 | 关闭后 GPT 流量改走机场上游。 |
+| `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `false` | 路由第一方登录主机 `auth.openai.com`（含其子域）和精确主机 `auth0.openai.com`。 | 与核心流量、网页资源和共享第三方依赖相互独立；不会匹配整个 `openai.com`。 |
+| `routing.openai_web_assets` | `ROUTE_OPENAI_WEB_ASSETS` | `false` | 路由 `oaistatic.com` 网页静态资源后缀。 | 与第一方登录及共享第三方依赖独立；仅在页面资源确需同出口时开启。 |
 | `routing.claude_shared_dependencies` | `ROUTE_CLAUDE_SHARED_DEPENDENCIES` | `false` | 路由 Claude 的统计、客服、风控等共享依赖。 | 会扩大到非模型流量。 |
 | `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `false` | 路由 Antigravity 使用的共享 Google 登录入口。 | 影响其他 Google 产品的认证流量。 |
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | 路由 Service Usage、Resource Manager、IAM、API Hub 等项目 API。 | 属于项目配置而非推理。 |
@@ -121,6 +123,12 @@ node scripts/sync-local-config.js
 ![Clash Verge Rev 的 Profiles 页面与 Global Extend Script 入口](../assets/clash-verge-rev-global-extend-script.png)
 
 `just sync` 仍作为兼容别名保留，但新文档和自动生成文件均使用 `just render-local`。
+
+### 从 Windows 复制到 Ubuntu
+
+可以把 Windows 上由 `just render-local` 生成的 `clash-verge-ai-residential.local.js` 直接复制到 Ubuntu 的 Clash Verge Rev Global Extend Script；脚本本身不包含 Windows 路径、Shell 命令或操作系统分支。生成的 `.local.js` 已嵌入 TOML 中的住宅代理地址与认证凭据，本身也是敏感文件；应通过受信通道传输、限制读权限，且不得提交到仓库、上传到公开网盘或在日志中展示。复制已渲染的 `.local.js` 后无需也不应再复制本地 TOML，但这并不降低 `.local.js` 自身的凭据保护要求。
+
+Ubuntu 的 Profile 仍必须能唯一解析脚本中的 `dialer-proxy` 名称，并提供可达的机场节点、UDP 能力和兼容的 Clash Verge/Mihomo 脚本环境。仓库的 Windows/Ubuntu Node 测试只验证语法、渲染与规则合同；复制后是否能在 Ubuntu 宿主执行、以及登录与模型请求是否命中同一出口，必须用脱敏 Connections 记录人工确认，目前为 **UNVERIFIED**。
 
 同步会在写入前拒绝以下配置：未知或重复的表/键、非布尔开关、缺少代理字段、无效 TOML 字符串、非 SOCKS5 类型、端口超出范围、空上游名称，或 `name` 与模板保留名称不一致。每个开关必须在公开模板中恰好匹配一个布尔常量声明，否则也会在写入前失败。错误会直接显示字段或行号，且不会留下半成品；修正 TOML 后重新运行即可。
 

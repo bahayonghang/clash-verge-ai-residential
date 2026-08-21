@@ -97,6 +97,8 @@ test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚�
     assert.match(output, /const ROUTE_CURSOR_CORE = true;/);
     assert.match(output, /const ROUTE_CURSOR_REPOSITORY_INDEXING = false;/);
     assert.match(output, /const ROUTE_GROK_CORE = true;/);
+    assert.match(output, /const ROUTE_OPENAI_AUTH = false;/);
+    assert.match(output, /const ROUTE_OPENAI_WEB_ASSETS = false;/);
     assert.doesNotMatch(output, /server: "xxx"/);
     assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
 
@@ -104,6 +106,8 @@ test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚�
     assert.equal(result.addedKeys.includes("routing.cursor_core"), true);
     assert.equal(result.addedKeys.includes("routing.cursor_repository_indexing"), true);
     assert.equal(result.addedKeys.includes("routing.grok_core"), true);
+    assert.equal(result.addedKeys.includes("routing.openai_auth"), true);
+    assert.equal(result.addedKeys.includes("routing.openai_web_assets"), true);
     assert.equal(result.addedKeys.includes("routing.grok_web_assets"), true);
     assert.equal(result.addedKeys.includes("routing.vertex_ai_endpoints"), true);
     assert.equal(result.addedKeys.includes("runtime.enable_domain_sniffer"), true);
@@ -432,6 +436,83 @@ openai_core = false
   });
 });
 
+test("本地 openai_auth = true 只启用第一方认证，网页资源与共享依赖保持关闭", () => {
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    const originalTemplate = fs.readFileSync(templatePath, "utf8");
+    const source = `${validHomeProxyToml}
+[routing]
+openai_auth = true
+`;
+    fs.writeFileSync(configPath, source, "utf8");
+
+    const result = syncLocalConfig({ templatePath, configPath, outputPath });
+    assert.equal(result.addedKeys.includes("routing.openai_auth"), false);
+    assert.equal(result.addedKeys.includes("routing.openai_web_assets"), true);
+
+    const output = fs.readFileSync(outputPath, "utf8");
+    assert.match(output, /const ROUTE_OPENAI_AUTH = true;/);
+    assert.match(output, /const ROUTE_OPENAI_WEB_ASSETS = false;/);
+    assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
+
+    const probeSource = [
+      '"use strict";',
+      "const script = require(process.argv[1]);",
+      "process.stdout.write(JSON.stringify({",
+      "  openaiAuth: script.constants.ROUTE_OPENAI_AUTH,",
+      "  openaiWebAssets: script.constants.ROUTE_OPENAI_WEB_ASSETS,",
+      "  aiGroup: script.constants.AI_GROUP,",
+      "  residentialDoh: script.constants.RESIDENTIAL_DOH,",
+      "  rules: script.buildInjectedRules(),",
+      "  policy: script.buildNameserverPolicy({})",
+      "}));"
+    ].join("\n");
+    const probe = JSON.parse(childProcess.execFileSync(
+      process.execPath,
+      ["-e", probeSource, outputPath],
+      { encoding: "utf8" }
+    ));
+    const publicScript = require(templatePath);
+
+    assert.equal(publicScript.constants.ROUTE_OPENAI_AUTH, false);
+    assert.equal(publicScript.constants.ROUTE_OPENAI_WEB_ASSETS, false);
+    assert.equal(probe.openaiAuth, true);
+    assert.equal(probe.openaiWebAssets, false);
+    for (const host of [
+      "auth.openai.com",
+      "setup.auth.openai.com",
+      "tenant.auth.openai.com",
+      "auth0.openai.com"
+    ]) {
+      assert.equal(
+        ruleMatchesHost(probe.rules, host, probe.aiGroup),
+        true,
+        `认证主机应走家宽：${host}`
+      );
+    }
+    for (const host of [
+      "oaistatic.com",
+      "cdn.oaistatic.com",
+      "www.openai.com",
+      "child.auth0.openai.com",
+      "oaistatsig.com",
+      "intercom.io",
+      "challenges.cloudflare.com"
+    ]) {
+      assert.equal(
+        ruleMatchesHost(probe.rules, host, probe.aiGroup),
+        false,
+        `认证开关不应扩大到：${host}`
+      );
+    }
+    assert.deepEqual(probe.policy["+.auth.openai.com"], probe.residentialDoh);
+    assert.deepEqual(probe.policy["auth0.openai.com"], probe.residentialDoh);
+    assert.equal("+.auth0.openai.com" in probe.policy, false);
+    assert.equal("+.oaistatic.com" in probe.policy, false);
+  });
+});
+
 test("同步前会拒绝不完整或不安全的代理配置", () => {
   const incompleteToml = validHomeProxyToml.replace("port = 1080\n", "");
   assert.throws(
@@ -619,6 +700,8 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
 
     assert.equal(result.addedKeys.includes("routing.grok_core"), true);
     assert.equal(result.addedKeys.includes("routing.grok_web_assets"), true);
+    assert.equal(result.addedKeys.includes("routing.openai_auth"), true);
+    assert.equal(result.addedKeys.includes("routing.openai_web_assets"), true);
     assert.equal(result.addedKeys.includes("routing.vertex_ai_endpoints"), true);
     assert.equal(result.addedKeys.includes("routing.public_encrypted_dns"), true);
     assert.equal(result.addedKeys.includes("runtime.enable_domain_sniffer"), true);
@@ -635,6 +718,8 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
 
     const reparsed = parseLocalToml(completed);
     assert.equal(reparsed.routing.openai_core, false, "用户已有值不应被覆盖");
+    assert.equal(reparsed.routing.openai_auth, false);
+    assert.equal(reparsed.routing.openai_web_assets, false);
     assert.equal(reparsed.routing.cursor_core, true, "用户已有值不应被覆盖");
     assert.equal(reparsed.routing.cursor_repository_indexing, false);
     assert.equal(reparsed.routing.grok_core, true);
@@ -648,12 +733,16 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
       completed.indexOf("[runtime]")
     );
     assert.match(routingBlock, /^openai_core = false$/m);
+    assert.match(routingBlock, /^openai_auth = false$/m);
+    assert.match(routingBlock, /^openai_web_assets = false$/m);
     assert.match(routingBlock, /^grok_core = true$/m);
     assert.match(completed, /\[runtime\]\r?\nallow_final_rule_upstream_fallback = true/);
 
     const output = fs.readFileSync(outputPath, "utf8");
     assert.match(output, /const ROUTE_GROK_CORE = true;/);
     assert.match(output, /const ROUTE_OPENAI_CORE = false;/);
+    assert.match(output, /const ROUTE_OPENAI_AUTH = false;/);
+    assert.match(output, /const ROUTE_OPENAI_WEB_ASSETS = false;/);
     assert.match(output, /const ENABLE_TUN_STRICT_ROUTE = false;/);
   });
 });

@@ -24,6 +24,8 @@ const REQUIRED_KEYS = [
 const SWITCH_CONFIG_FIELDS = Object.freeze([
   { table: "routing", key: "openai_shared_dependencies", constant: "ROUTE_OPENAI_SHARED_DEPENDENCIES", type: "boolean" },
   { table: "routing", key: "openai_core", constant: "ROUTE_OPENAI_CORE", type: "boolean" },
+  { table: "routing", key: "openai_auth", constant: "ROUTE_OPENAI_AUTH", type: "boolean" },
+  { table: "routing", key: "openai_web_assets", constant: "ROUTE_OPENAI_WEB_ASSETS", type: "boolean" },
   { table: "routing", key: "claude_shared_dependencies", constant: "ROUTE_CLAUDE_SHARED_DEPENDENCIES", type: "boolean" },
   { table: "routing", key: "antigravity_google_auth", constant: "ROUTE_ANTIGRAVITY_GOOGLE_AUTH", type: "boolean" },
   { table: "routing", key: "antigravity_project_apis", constant: "ROUTE_ANTIGRAVITY_PROJECT_APIS", type: "boolean" },

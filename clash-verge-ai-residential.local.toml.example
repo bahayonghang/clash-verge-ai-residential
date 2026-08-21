@@ -17,6 +17,11 @@ dialer-proxy = "🚀节点选择"
 
 # OpenAI / ChatGPT 的核心产品流量：ChatGPT 网页、模型 API 及用户上传、生成内容。
 openai_core = true
+# OpenAI 第一方登录：auth.openai.com（含 setup 子域）与 auth0.openai.com。
+# 默认关闭；按需与 ChatGPT 核心流量统一到家宽，不会开启共享第三方依赖。
+openai_auth = false
+# ChatGPT 网页静态资源 oaistatic.com；与登录、核心流量及共享第三方依赖独立。
+openai_web_assets = false
 # OpenAI 使用的共享第三方依赖：WorkOS、Intercom、Sentry、Datadog、Stripe 等。
 # 它们不是模型推理服务，开启后会把相应共享服务也路由至家宽。
 openai_shared_dependencies = false

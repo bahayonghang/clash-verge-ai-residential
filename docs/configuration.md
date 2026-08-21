@@ -48,6 +48,8 @@ The optional `[routing]` and `[runtime]` TOML tables accept partial overrides. D
 | --- | --- | --- | --- | --- |
 | `routing.openai_shared_dependencies` | `ROUTE_OPENAI_SHARED_DEPENDENCIES` | `false` | Routes OpenAI shared identity, support, telemetry, and payment dependencies. | Expands beyond model traffic. |
 | `routing.openai_core` | `ROUTE_OPENAI_CORE` | `true` | Routes the ChatGPT product, the OpenAI model API, and uploaded/generated user content. | When disabled, GPT traffic falls through to the airport upstream. |
+| `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `false` | Routes the bounded first-party login hosts `auth.openai.com` (including its children) and exact `auth0.openai.com`. | Independent from OpenAI core, web assets, and shared third-party dependencies; does not route the broad `openai.com` suffix. |
+| `routing.openai_web_assets` | `ROUTE_OPENAI_WEB_ASSETS` | `false` | Routes the `oaistatic.com` web-asset suffix. | Independent from OpenAI authentication and shared dependencies; enable only when the page needs the residential exit for these assets. |
 | `routing.claude_shared_dependencies` | `ROUTE_CLAUDE_SHARED_DEPENDENCIES` | `false` | Routes Claude analytics, support, risk-control, and other shared dependencies. | Expands beyond model traffic. |
 | `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `false` | Routes the shared Google authentication entry used by Antigravity. | Can affect authentication for other Google products. |
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | Routes project-management APIs such as Service Usage, Resource Manager, IAM, and API Hub. | These are project configuration rather than inference. |

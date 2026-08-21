@@ -2,10 +2,15 @@
 
 /**
  * Clash Verge Rev 全局扩展脚本
- * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.10.1
+ * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.11.0
  *
  * 数据路径：
  *   本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
+ *
+ * v5.11.0 重点：
+ *   - 新增独立的 OpenAI 第一方认证与网页静态资源开关，公开默认均关闭。
+ *   - 认证只覆盖 auth.openai.com 后缀与 auth0.openai.com 精确主机；
+ *     oaistatic.com 由独立开关控制，不扩大到整个 openai.com。
  *
  * v5.10.1 重点：
  *   - 恢复 daily-cloudcode-pa.googleapis.com。Antigravity language_server 把
@@ -55,7 +60,7 @@
 // 0. 脚本标识与保留名称
 // ============================================================
 
-const SCRIPT_VERSION = "5.10.1";
+const SCRIPT_VERSION = "5.11.0";
 const AI_GROUP = "AI-家宽";
 const HOME_PROXY_NAME = "家宽-SOCKS5";
 
@@ -127,6 +132,12 @@ const ROUTE_OPENAI_SHARED_DEPENDENCIES = false;
 
 // ChatGPT 产品、OpenAI 模型 API 与用户上传/生成内容；默认走家宽，可在本地 TOML 关闭。
 const ROUTE_OPENAI_CORE = true;
+
+// OpenAI 第一方登录主机；默认保留在机场出口，按需与核心流量统一到家宽。
+const ROUTE_OPENAI_AUTH = false;
+
+// ChatGPT 网页静态资源；与第一方认证及共享第三方依赖独立，默认不走家宽。
+const ROUTE_OPENAI_WEB_ASSETS = false;
 
 // Claude 的统计、客服、风控与共享第三方依赖默认不走家宽。
 const ROUTE_CLAUDE_SHARED_DEPENDENCIES = false;
@@ -260,6 +271,21 @@ const OPENAI_CORE_EXACT_DOMAINS = [
   "desktop.chat.openai.com",
   "ios.chat.openai.com",
   "tcr9i.chat.openai.com"
+];
+
+// 第一方登录主机。auth.openai.com 使用有界后缀以覆盖 setup.auth.openai.com；
+// auth0.openai.com 是同级主机，使用精确规则，禁止扩大为 openai.com 后缀。
+const OPENAI_AUTH_SUFFIX_DOMAINS = [
+  "auth.openai.com"
+];
+
+const OPENAI_AUTH_EXACT_DOMAINS = [
+  "auth0.openai.com"
+];
+
+// 网页静态资源与认证独立，避免认证开关静默扩大页面资源流量。
+const OPENAI_WEB_ASSET_SUFFIX_DOMAINS = [
+  "oaistatic.com"
 ];
 
 // Gemini Web / AI Studio：只保留产品入口，不纳入共享 Google 服务清单。
@@ -1193,6 +1219,8 @@ function activeSuffixDomains() {
   return uniqueStrings([
     ...CORE_SUFFIX_DOMAINS,
     ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_SUFFIX_DOMAINS : []),
+    ...(ROUTE_OPENAI_AUTH ? OPENAI_AUTH_SUFFIX_DOMAINS : []),
+    ...(ROUTE_OPENAI_WEB_ASSETS ? OPENAI_WEB_ASSET_SUFFIX_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_SUFFIX_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_SUFFIX_DOMAINS : []),
     ...grokActiveSuffixDomains(),
@@ -1208,6 +1236,7 @@ function activeExactDomains() {
   return uniqueStrings([
     ...CORE_EXACT_DOMAINS,
     ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_EXACT_DOMAINS : []),
+    ...(ROUTE_OPENAI_AUTH ? OPENAI_AUTH_EXACT_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_EXACT_DOMAINS : []),
     ...(ROUTE_VERTEX_AI_ENDPOINTS ? VERTEX_AI_EXACT_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_EXACT_DOMAINS : []),
@@ -1237,6 +1266,8 @@ function allPossibleSuffixDomains() {
     ...CORE_SUFFIX_DOMAINS,
     ...RETIRED_CORE_SUFFIX_DOMAINS,
     ...OPENAI_CORE_SUFFIX_DOMAINS,
+    ...OPENAI_AUTH_SUFFIX_DOMAINS,
+    ...OPENAI_WEB_ASSET_SUFFIX_DOMAINS,
     // 从不注入 DOMAIN-SUFFIX,chat.openai.com；仅清理误注入的 suffix 规则与 +.chat.openai.com。
     "chat.openai.com",
     ...GEMINI_WEB_SUFFIX_DOMAINS,
@@ -1258,6 +1289,7 @@ function allPossibleExactDomains() {
     ...CORE_EXACT_DOMAINS,
     ...RETIRED_CORE_EXACT_DOMAINS,
     ...OPENAI_CORE_EXACT_DOMAINS,
+    ...OPENAI_AUTH_EXACT_DOMAINS,
     // v5.6 曾以 exact 形式注入 api.openai.com；保留以清理旧版托管规则。
     "api.openai.com",
     ...GEMINI_WEB_EXACT_DOMAINS,
@@ -1730,8 +1762,13 @@ if (typeof module !== "undefined" && module.exports) {
       PRIVATE_DNS,
       PRESERVE_UNMANAGED_NAMESERVER_POLICY,
       ROUTE_OPENAI_CORE,
+      ROUTE_OPENAI_AUTH,
+      ROUTE_OPENAI_WEB_ASSETS,
       OPENAI_CORE_SUFFIX_DOMAINS,
       OPENAI_CORE_EXACT_DOMAINS,
+      OPENAI_AUTH_SUFFIX_DOMAINS,
+      OPENAI_AUTH_EXACT_DOMAINS,
+      OPENAI_WEB_ASSET_SUFFIX_DOMAINS,
       ROUTE_GEMINI_WEB_CORE,
       ROUTE_VERTEX_AI_ENDPOINTS,
       ROUTE_CURSOR_CORE,

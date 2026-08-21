@@ -37,6 +37,8 @@ const {
   ROUTE_GROK_CORE,
   ROUTE_GROK_WEB_ASSETS,
   ROUTE_CURSOR_PROCESS_FALLBACK,
+  ROUTE_OPENAI_AUTH,
+  ROUTE_OPENAI_WEB_ASSETS,
   GEMINI_WEB_SUFFIX_DOMAINS,
   GEMINI_WEB_EXACT_DOMAINS,
   VERTEX_AI_EXACT_DOMAINS,
@@ -47,20 +49,27 @@ const {
   GROK_SUFFIX_DOMAINS,
   GROK_STRICT_EXACT_DOMAINS,
   GROK_EXACT_DOMAINS,
-  OPENAI_CORE_EXACT_DOMAINS
+  OPENAI_CORE_EXACT_DOMAINS,
+  OPENAI_AUTH_SUFFIX_DOMAINS,
+  OPENAI_AUTH_EXACT_DOMAINS,
+  OPENAI_WEB_ASSET_SUFFIX_DOMAINS
 } = constants;
 
-function quietMain(config, profileName) {
+function quietMainWith(scriptModule, config, profileName) {
   const originalInfo = console.info;
   const originalWarn = console.warn;
   console.info = () => {};
   console.warn = () => {};
   try {
-    return main(config, profileName);
+    return scriptModule.main(config, profileName);
   } finally {
     console.info = originalInfo;
     console.warn = originalWarn;
   }
+}
+
+function quietMain(config, profileName) {
+  return quietMainWith(script, config, profileName);
 }
 
 function captureMain(config, profileName) {
@@ -227,6 +236,13 @@ function withPatchedVertexAiEndpoints(enabled, fn) {
   withPatchedSwitches({ ROUTE_VERTEX_AI_ENDPOINTS: enabled }, fn);
 }
 
+function withPatchedOpenAiSwitches(openaiAuth, openaiWebAssets, fn) {
+  withPatchedSwitches({
+    ROUTE_OPENAI_AUTH: openaiAuth,
+    ROUTE_OPENAI_WEB_ASSETS: openaiWebAssets
+  }, fn);
+}
+
 const CURSOR_CORE_HOSTS = [
   "api2.cursor.sh",
   "api3.cursor.sh",
@@ -266,7 +282,7 @@ const CURSOR_NEGATIVE_HOSTS = [
 // ---------------------------------------------------------------------------
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
-  assert.equal(SCRIPT_VERSION, "5.10.1");
+  assert.equal(SCRIPT_VERSION, "5.11.0");
   assert.equal(template["dialer-proxy"], "🚀节点选择");
 });
 
@@ -956,6 +972,155 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
   assert.equal(rules.includes(`DOMAIN-SUFFIX,openai.com,${AI_GROUP}`), false);
 });
 
+test("OpenAI 第一方认证与网页资源开关默认关闭且可独立组合", () => {
+  assert.equal(ROUTE_OPENAI_AUTH, false);
+  assert.equal(ROUTE_OPENAI_WEB_ASSETS, false);
+  assert.deepEqual(OPENAI_AUTH_SUFFIX_DOMAINS, ["auth.openai.com"]);
+  assert.deepEqual(OPENAI_AUTH_EXACT_DOMAINS, ["auth0.openai.com"]);
+  assert.deepEqual(OPENAI_WEB_ASSET_SUFFIX_DOMAINS, ["oaistatic.com"]);
+
+  const authHosts = [
+    "auth.openai.com",
+    "setup.auth.openai.com",
+    "tenant.auth.openai.com",
+    "auth0.openai.com"
+  ];
+  const assetHosts = ["oaistatic.com", "cdn.oaistatic.com"];
+  const alwaysExcluded = [
+    "www.openai.com",
+    "login.openai.com",
+    "child.auth0.openai.com",
+    "oaistatsig.com",
+    "intercom.io",
+    "challenges.cloudflare.com"
+  ];
+  const cases = [
+    { auth: false, assets: false },
+    { auth: true, assets: false },
+    { auth: false, assets: true },
+    { auth: true, assets: true }
+  ];
+
+  for (const item of cases) {
+    withPatchedOpenAiSwitches(item.auth, item.assets, (patched) => {
+      const rules = patched.buildInjectedRules();
+      const policy = patched.buildNameserverPolicy({});
+      const target = patched.constants.AI_GROUP;
+      const label = `auth=${item.auth}, assets=${item.assets}`;
+
+      for (const host of authHosts) {
+        assert.equal(
+          ruleMatchesHost(rules, host, target),
+          item.auth,
+          `${label} 时认证主机状态错误：${host}`
+        );
+      }
+      for (const host of assetHosts) {
+        assert.equal(
+          ruleMatchesHost(rules, host, target),
+          item.assets,
+          `${label} 时网页资源主机状态错误：${host}`
+        );
+      }
+      for (const host of alwaysExcluded) {
+        assert.equal(
+          ruleMatchesHost(rules, host, target),
+          false,
+          `${label} 时相邻或共享主机不应走家宽：${host}`
+        );
+      }
+
+      assert.equal("+.auth.openai.com" in policy, item.auth);
+      assert.equal("auth0.openai.com" in policy, item.auth);
+      assert.equal("+.auth0.openai.com" in policy, false);
+      assert.equal("+.oaistatic.com" in policy, item.assets);
+      assert.equal(rules.includes(`DOMAIN-SUFFIX,openai.com,${target}`), false);
+      assert.equal(new Set(rules).size, rules.length);
+
+      if (item.auth && item.assets) {
+        const config = configFixture({
+          proxies: [airportNode("HK")],
+          groups: [group("🚀节点选择", ["HK"])],
+          rules: ["MATCH,🚀节点选择"]
+        });
+        quietMainWith(patched, config, "赔钱机场");
+        const firstRules = structuredClone(config.rules);
+        const firstPolicy = structuredClone(config.dns["nameserver-policy"]);
+        quietMainWith(patched, config, "赔钱机场");
+        assert.deepEqual(config.rules, firstRules);
+        assert.deepEqual(config.dns["nameserver-policy"], firstPolicy);
+      }
+    });
+  }
+});
+
+test("OpenAI 开关分别由开启切换为关闭时清理规则与 DNS，并保留用户自写规则", () => {
+  const customAiRule = `DOMAIN,login.openai.com,${AI_GROUP}`;
+  const cases = [
+    {
+      authEnabledAfter: false,
+      assetsEnabledAfter: true
+    },
+    {
+      authEnabledAfter: true,
+      assetsEnabledAfter: false
+    }
+  ];
+
+  for (const item of cases) {
+    const config = configFixture({
+      proxies: [airportNode("HK")],
+      groups: [group("🚀节点选择", ["HK"])],
+      rules: [customAiRule, "MATCH,🚀节点选择"]
+    });
+
+    withPatchedOpenAiSwitches(true, true, (enabled) => {
+      quietMainWith(enabled, config, "赔钱机场");
+    });
+    assert.equal(ruleMatchesHost(config.rules, "auth.openai.com"), true);
+    assert.equal(ruleMatchesHost(config.rules, "auth0.openai.com"), true);
+    assert.equal(ruleMatchesHost(config.rules, "oaistatic.com"), true);
+    assert.equal("+.auth.openai.com" in config.dns["nameserver-policy"], true);
+    assert.equal("auth0.openai.com" in config.dns["nameserver-policy"], true);
+    assert.equal("+.oaistatic.com" in config.dns["nameserver-policy"], true);
+
+    withPatchedOpenAiSwitches(
+      item.authEnabledAfter,
+      item.assetsEnabledAfter,
+      (disabled) => {
+        quietMainWith(disabled, config, "赔钱机场");
+      }
+    );
+
+    assert.equal(
+      ruleMatchesHost(config.rules, "auth.openai.com"),
+      item.authEnabledAfter
+    );
+    assert.equal(
+      ruleMatchesHost(config.rules, "auth0.openai.com"),
+      item.authEnabledAfter
+    );
+    assert.equal(
+      ruleMatchesHost(config.rules, "oaistatic.com"),
+      item.assetsEnabledAfter
+    );
+    assert.equal(
+      "+.auth.openai.com" in config.dns["nameserver-policy"],
+      item.authEnabledAfter
+    );
+    assert.equal(
+      "auth0.openai.com" in config.dns["nameserver-policy"],
+      item.authEnabledAfter
+    );
+    assert.equal(
+      "+.oaistatic.com" in config.dns["nameserver-policy"],
+      item.assetsEnabledAfter
+    );
+    assert.equal(config.rules.includes(customAiRule), true);
+    assert.equal(new Set(config.rules).size, config.rules.length);
+  }
+});
+
 // ---------------------------------------------------------------------------
 // 当前托管规则与幂等
 // ---------------------------------------------------------------------------
@@ -969,6 +1134,9 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
     `DOMAIN,api.openai.com,${AI_GROUP}`,
     `DOMAIN,chat.openai.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,chat.openai.com,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,auth.openai.com,${AI_GROUP}`,
+    `DOMAIN,auth0.openai.com,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,oaistatic.com,${AI_GROUP}`,
     `DOMAIN,auth.x.ai,${AI_GROUP}`,
     `DOMAIN,api.x.ai,${AI_GROUP}`,
     `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
@@ -991,6 +1159,7 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
     `DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`,
     `DOMAIN,www.youtube.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,example-user-rule.com,${AI_GROUP}`,
+    `DOMAIN,login.openai.com,${AI_GROUP}`,
     "MATCH,🚀节点选择"
   ];
   const cleaned = cleanExistingManagedRules([
@@ -1193,6 +1362,9 @@ test("AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名", ()
     assert.deepEqual(policy[host], RESIDENTIAL_DOH);
   }
   assert.equal("+.chat.openai.com" in policy, false);
+  assert.equal("+.auth.openai.com" in policy, false);
+  assert.equal("auth0.openai.com" in policy, false);
+  assert.equal("+.oaistatic.com" in policy, false);
 
   for (const key of [
     "www.youtube.com",

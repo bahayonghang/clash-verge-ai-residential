@@ -32,6 +32,19 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - Add sanitized real-profile integration fixtures.
 - Add automated domain-source freshness checks where upstream providers publish machine-readable inventories.
 
+## [5.11.0] - 2026-08-21
+
+### Added
+
+- New independent `routing.openai_auth` switch (default `false`) for the bounded `auth.openai.com` suffix and exact `auth0.openai.com` host.
+- New independent `routing.openai_web_assets` switch (default `false`) for the `oaistatic.com` suffix.
+- Local TOML rendering, missing-key completion, managed cleanup, DNS policy, tests, and switch documentation now cover both controls.
+
+### Notes
+
+- Neither switch enables OpenAI shared WorkOS, Intercom, Stripe, Cloudflare Challenge, Sentry, or Datadog dependencies, and no broad `openai.com` suffix is added.
+- A rendered `.local.js` can be copied from Windows to Ubuntu when the target Profile exposes the same resolvable upstream name and capabilities. The rendered file embeds the residential endpoint and credentials, so it must be transferred through a trusted channel and protected as a secret. Actual Ubuntu Clash host execution and end-to-end ChatGPT login behavior remain UNVERIFIED without sanitized Connections evidence.
+
 ## [5.10.1] - 2026-08-20
 
 ### Fixed
