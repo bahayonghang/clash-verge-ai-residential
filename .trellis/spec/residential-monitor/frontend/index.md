@@ -6,7 +6,14 @@ React 19 + Tailwind v4 + Vite 桌面壳。`components/**` 不得直接 `invoke`�
 
 - 读 `dto-and-decoding.md`：Channel / Command 载荷在边界解码。
 - 读 `view-state.md`：前端只保存视图选择和 DTO 缓存。
+- 改侧栏、图表悬停或排名表头时读根目录 `DESIGN.md` 的 Navigation / Data table，以及下面 Surfaces。
 - 禁止 `window.__TAURI__`、eval、远程 URL 和 CDN。
+
+## Surfaces
+
+- 暗色三档 `--popover` 必须高于 `--card`。Recharts 默认 Tooltip 和 Radix 浮层都吃 `--popover`；同色时暗色读数消失。图表悬停用 `components/charts/chart-hover.tsx` 的 `ChartHover`。禁止只改 `contentStyle` 背景、留下英文系列名 `value :`。
+- 业务导航色井用 `color-mix(in srgb, var(--nav-tint) 18%, transparent)`。禁止把 `"15"` 拼到 CSS 变量上（只对 hex 生效）。选中项仍是 `--primary` 整行白图标。关于 / 设置无色井。
+- 可排序排名表走 `components/common/sortable-th.tsx`（lucide 方向图标 + `aria-sort`）。默认排序列进入页面时就要带着图标。实时表 Unicode 三角不迁到这套表头。
 
 ## Quality Check
 
