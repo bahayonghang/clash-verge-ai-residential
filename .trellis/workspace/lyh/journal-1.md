@@ -801,3 +801,41 @@
 ### Next Steps
 
 - 在 just tdev 的 WebView 里核对关于自动加载、卡内 Releases URL 与侧栏拖动/重启恢复
+
+
+## Session 27: neko UI 重构实施与收口
+
+**Date**: 2026-08-21
+**Task**: neko UI 重构实施与收口
+**Package**: residential-monitor
+**Branch**: `refactor/neko-ui-port`
+
+### Summary
+
+在 refactor/neko-ui-port 上完成 08-21-neko-ui-refactor 及其六个子任务：React 壳、C3 维度查询、十段页面移植、家宽独立页与父任务收口。just monitor-check 通过。未测 GUI 实拍与 monitor-bench 五维体积。
+
+### Main Changes
+
+- 入口改为 React 19 + Tailwind v4，删除 main.ts 与 styles.css
+- C3 增加分钟粒度、last_chain_hop、filters、五维物化与 __unknown__ 排名行
+- 十段路由与 residential_share 落地，家宽双口径收敛到一个模块
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `718e8d7` | (see git log) |
+| `3f0a856` | (see git log) |
+
+### Testing
+
+- [OK] just monitor-check；前端 178 测、cargo test 259 通过
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 在 Tauri 窗口做四主题实拍与能力降级检查
+- 补测 monitor-bench 五维物化体积后一次性合入 main
