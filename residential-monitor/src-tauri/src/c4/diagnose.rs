@@ -31,6 +31,7 @@ pub struct DiagnosticsSnapshot {
     pub alert_active: u32,
     pub outbox_backlog: u32,
     pub recent_redacted_error_classes: Vec<String>,
+    pub metadata_coverage: crate::controller::MetadataCoverage,
 }
 
 impl DiagnosticsSnapshot {
@@ -45,6 +46,7 @@ pub fn collect(
     session: SessionStatus,
     last_frame_utc: Option<i64>,
     coverage_summary: &str,
+    metadata_coverage: crate::controller::MetadataCoverage,
 ) -> Result<DiagnosticsSnapshot, StorageError> {
     let user_version: i32 =
         coordinator
@@ -79,6 +81,7 @@ pub fn collect(
         alert_active: active as u32,
         outbox_backlog: outbox::backlog(coordinator)?,
         recent_redacted_error_classes: errors,
+        metadata_coverage,
     })
 }
 
@@ -124,8 +127,14 @@ mod diagnose_tests {
     fn diagnostics_omit_secret_and_full_host() {
         let dir = tempdir().expect("dir");
         let coordinator = StorageCoordinator::open(&dir.path().join("d.sqlite3")).expect("open");
-        let snap =
-            collect(&coordinator, SessionStatus::Connected, Some(10), "covered").expect("collect");
+        let snap = collect(
+            &coordinator,
+            SessionStatus::Connected,
+            Some(10),
+            "covered",
+            crate::controller::MetadataCoverage::default(),
+        )
+        .expect("collect");
         assert_eq!(snap.sqlite_user_version, crate::c0_contract::SCHEMA_VERSION);
         assert!(!snap.contains_secret());
         let encoded = serde_json::to_string(&snap).expect("json");

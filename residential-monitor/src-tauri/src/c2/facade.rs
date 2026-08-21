@@ -8,6 +8,7 @@ use crate::c2::contract::SCHEMA_VERSION;
 use crate::c2::desktop::{DesktopRuntime, FakeAutostart, InstanceClaim, LaunchMode, ShutdownPhase};
 use crate::c2::hub::{
     health_from, session_status_name, LiveOverview, MonitorHub, MonitorStreamMessage,
+    ObservationPhase,
 };
 use crate::c2::query::{ConnectionPage, ConnectionQuery};
 use crate::c2::settings::{
@@ -38,7 +39,7 @@ use crate::live_table_layout::{
 };
 use crate::session::ControllerSession;
 use crate::storage::{
-    AlertCommitSlice, CommitBundle, RecoveryFacade, StorageCoordinator, StorageError,
+    AlertCommitSlice, CommitBundle, CommitOutcome, RecoveryFacade, StorageCoordinator, StorageError,
 };
 use crate::theme::{
     clamp_sidebar_width, parse_sidebar_width, UiDensity, UiFont, UiFontSize, UiTheme,
@@ -46,6 +47,7 @@ use crate::theme::{
     SIDEBAR_WIDTH_SETTING_KEY, THEME_SETTING_KEY,
 };
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -142,6 +144,21 @@ pub fn status_action_zh(status: SessionStatus) -> &'static str {
     status_action(status, UiLocale::Zh)
 }
 
+fn storage_error_class(error: &StorageError) -> &'static str {
+    match error {
+        StorageError::Sqlite(_) => "sqlite",
+        StorageError::Closed(_) => "closed",
+    }
+}
+
+fn slice_fingerprint(slice: &AlertCommitSlice, monotonic_ms: u64) -> Result<String, ()> {
+    let encoded = serde_json::to_vec(slice).map_err(|_| ())?;
+    let mut digest = Sha256::new();
+    digest.update(monotonic_ms.to_le_bytes());
+    digest.update(encoded);
+    Ok(hex::encode(digest.finalize()))
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BootstrapDto {
@@ -188,7 +205,9 @@ pub struct AppFacade {
     pub notify: FakeNotificationSink,
     pub writer_epoch: u64,
     pub bundle_seq: u64,
+    controller_epoch_ready: bool,
     pub last_frame_utc: Option<i64>,
+    pub metadata_coverage: crate::controller::MetadataCoverage,
     pub last_period_eval_utc: i64,
     pub ui_locale: UiLocale,
     pub ui_theme: UiTheme,
@@ -206,13 +225,25 @@ impl AppFacade {
         let db_path = data_dir.join("monitor.sqlite3");
         let desktop = DesktopRuntime::start(args, claim);
         match StorageCoordinator::open(&db_path) {
-            Ok(storage) => {
+            Ok(mut storage) => {
                 app_log::emit(
                     Level::Info,
                     "storage_open",
                     serde_json::json!({ "class": "ok" }),
                 );
-                let settings = storage
+                let writer_epoch = match storage.reserve_writer_epoch() {
+                    Ok(value) => value,
+                    Err(error) => {
+                        app_log::emit(
+                            Level::Error,
+                            "writer_epoch_reserve",
+                            serde_json::json!({ "class": storage_error_class(&error) }),
+                        );
+                        drop(storage);
+                        return Self::recovery_only(desktop, data_dir, db_path);
+                    }
+                };
+                let settings: ControllerSettings = storage
                     .get_setting("controller")
                     .ok()
                     .flatten()
@@ -283,10 +314,14 @@ impl AppFacade {
                         alerts.restore_instance(instance);
                     }
                 }
+                let hub = MonitorHub::new();
+                if settings.address.trim().is_empty() {
+                    hub.set_observation_phase(ObservationPhase::Unconfigured);
+                }
                 Self {
                     branch: BootBranch::NormalReady,
                     desktop,
-                    hub: MonitorHub::new(),
+                    hub,
                     engine,
                     recovery: RecoveryFacade::open(&db_path),
                     storage: Some(storage),
@@ -306,9 +341,11 @@ impl AppFacade {
                     raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
                     alerts,
                     notify: FakeNotificationSink::default(),
-                    writer_epoch: 1,
+                    writer_epoch,
                     bundle_seq: 1,
+                    controller_epoch_ready: false,
                     last_frame_utc: None,
+                    metadata_coverage: crate::controller::MetadataCoverage::default(),
                     last_period_eval_utc: 0,
                     ui_locale,
                     ui_theme,
@@ -330,43 +367,51 @@ impl AppFacade {
                     "storage_open",
                     serde_json::json!({ "class": class }),
                 );
-                Self {
-                    branch: BootBranch::RecoveryOnly,
-                    desktop,
-                    hub: MonitorHub::new(),
-                    engine: AccountingEngine::new(),
-                    storage: None,
-                    recovery: RecoveryFacade::open(&db_path),
-                    settings: ControllerSettings::default(),
-                    wizard: WizardState::default(),
-                    wizard_complete: false,
-                    workflow: SettingsWorkflow::new(FakeCredentialStore::new(), false),
-                    closes: CloseRegistry::new(),
-                    operations: OperationRegistry::new(),
-                    dialog: FakeFileDialog::default(),
-                    autostart: FakeAutostart::new(),
-                    session: ControllerSession::new(String::new()),
-                    data_dir: data_dir.clone(),
-                    session_status: SessionStatus::EndpointMissing,
-                    snapshots: ReportSnapshotStore::open(&data_dir),
-                    space: SpaceBudget::unlimited(),
-                    raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
-                    alerts: AlertEngine::new(),
-                    notify: FakeNotificationSink::default(),
-                    writer_epoch: 1,
-                    bundle_seq: 1,
-                    last_frame_utc: None,
-                    last_period_eval_utc: 0,
-                    ui_locale: UiLocale::Zh,
-                    ui_theme: UiTheme::Mocha,
-                    ui_font: UiFont::system(),
-                    ui_font_size: UiFontSize::Md,
-                    ui_density: UiDensity::Comfortable,
-                    ui_sidebar_width: SIDEBAR_WIDTH_DEFAULT,
-                    live_table_layout: LiveTableLayout::default(),
-                    last_logged_session: None,
-                }
+                Self::recovery_only(desktop, data_dir, db_path)
             }
+        }
+    }
+
+    fn recovery_only(desktop: DesktopRuntime, data_dir: PathBuf, db_path: PathBuf) -> Self {
+        let hub = MonitorHub::new();
+        hub.set_observation_phase(ObservationPhase::Unconfigured);
+        Self {
+            branch: BootBranch::RecoveryOnly,
+            desktop,
+            hub,
+            engine: AccountingEngine::new(),
+            storage: None,
+            recovery: RecoveryFacade::open(&db_path),
+            settings: ControllerSettings::default(),
+            wizard: WizardState::default(),
+            wizard_complete: false,
+            workflow: SettingsWorkflow::new(FakeCredentialStore::new(), false),
+            closes: CloseRegistry::new(),
+            operations: OperationRegistry::new(),
+            dialog: FakeFileDialog::default(),
+            autostart: FakeAutostart::new(),
+            session: ControllerSession::new(String::new()),
+            data_dir: data_dir.clone(),
+            session_status: SessionStatus::EndpointMissing,
+            snapshots: ReportSnapshotStore::open(&data_dir),
+            space: SpaceBudget::unlimited(),
+            raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
+            alerts: AlertEngine::new(),
+            notify: FakeNotificationSink::default(),
+            writer_epoch: 0,
+            bundle_seq: 1,
+            controller_epoch_ready: false,
+            last_frame_utc: None,
+            metadata_coverage: crate::controller::MetadataCoverage::default(),
+            last_period_eval_utc: 0,
+            ui_locale: UiLocale::Zh,
+            ui_theme: UiTheme::Mocha,
+            ui_font: UiFont::system(),
+            ui_font_size: UiFontSize::Md,
+            ui_density: UiDensity::Comfortable,
+            ui_sidebar_width: SIDEBAR_WIDTH_DEFAULT,
+            live_table_layout: LiveTableLayout::default(),
+            last_logged_session: None,
         }
     }
 
@@ -573,22 +618,35 @@ impl AppFacade {
 
     pub fn apply_lifecycle(&mut self, input: ControllerInput) -> Option<MonitorStreamMessage> {
         let utc = chrono::Utc::now().timestamp();
+        if matches!(
+            &input,
+            ControllerInput::Restarted { .. } | ControllerInput::Disconnected { .. }
+        ) {
+            self.controller_epoch_ready = false;
+        }
         let keep_rows = retain_live_rows(&input);
         let batch = self.engine.apply(input, 0, utc);
-        let health = health_from(
+        let live = if keep_rows {
+            self.hub.rows()
+        } else {
+            Vec::new()
+        };
+        let commit_error = self.commit_eval(&batch, &live, utc, 0);
+        let mut health = health_from(
             self.session_status,
             self.storage
                 .as_ref()
                 .and_then(|item| item.health().ok())
                 .as_ref(),
         );
-        let live = if keep_rows {
-            self.hub.rows()
-        } else {
-            Vec::new()
-        };
-        self.commit_eval(&batch, &live, utc, 0);
-        self.hub.publish(&batch, live, health, utc).ok().flatten()
+        if let Some(reason) = commit_error {
+            health.storage_ok = false;
+            health.storage_reason = Some(reason.into());
+        }
+        self.hub
+            .publish_lifecycle(&batch, keep_rows, health, utc)
+            .ok()
+            .flatten()
     }
 
     pub fn ingest_snapshot(
@@ -598,11 +656,58 @@ impl AppFacade {
         mono: u64,
     ) -> Option<MonitorStreamMessage> {
         if let ControllerInput::Snapshot {
-            ref connections, ..
+            upload_total,
+            download_total,
+            connections,
+            ..
         } = input
         {
-            let live = self.engine.project_live(connections);
-            let batch = self.engine.apply(input, mono, utc);
+            self.metadata_coverage =
+                crate::controller::MetadataCoverage::from_connections(&connections);
+            let needs_generation = !self.controller_epoch_ready
+                || self.session_status != SessionStatus::Connected
+                || self.engine.snapshot_requires_new_generation(
+                    &connections,
+                    upload_total,
+                    download_total,
+                );
+            if needs_generation {
+                let epoch = match self
+                    .storage
+                    .as_mut()
+                    .map(|storage| storage.reserve_controller_epoch("collector-http"))
+                {
+                    Some(Ok(epoch)) => epoch,
+                    Some(Err(error)) => {
+                        let class = storage_error_class(&error);
+                        app_log::emit(
+                            Level::Error,
+                            "controller_epoch_reserve",
+                            serde_json::json!({ "class": class }),
+                        );
+                        let mut health = health_from(
+                            self.session_status,
+                            self.storage
+                                .as_ref()
+                                .and_then(|item| item.health().ok())
+                                .as_ref(),
+                        );
+                        health.storage_ok = false;
+                        health.storage_reason = Some(format!("controller_epoch_{class}"));
+                        return Some(self.hub.publish_health(health, utc));
+                    }
+                    None => return None,
+                };
+                self.engine.reset_epoch(epoch);
+                self.controller_epoch_ready = true;
+            }
+            let (batch, live) = self.engine.apply_snapshot_and_project(
+                connections,
+                upload_total,
+                download_total,
+                mono,
+                utc,
+            );
             let removed: Vec<String> = {
                 let current: std::collections::HashSet<_> =
                     live.iter().map(|row| row.identity.clone()).collect();
@@ -616,16 +721,20 @@ impl AppFacade {
             for identity in removed {
                 let _ = self.closes.on_remove(&identity);
             }
-            let health = health_from(
+            self.session_status = SessionStatus::Connected;
+            self.log_session_change(SessionStatus::Connected);
+            let commit_error = self.commit_eval(&batch, &live, utc, utc as u64);
+            let mut health = health_from(
                 SessionStatus::Connected,
                 self.storage
                     .as_ref()
                     .and_then(|item| item.health().ok())
                     .as_ref(),
             );
-            self.session_status = SessionStatus::Connected;
-            self.log_session_change(SessionStatus::Connected);
-            self.commit_eval(&batch, &live, utc, utc as u64);
+            if let Some(reason) = commit_error {
+                health.storage_ok = false;
+                health.storage_reason = Some(reason.into());
+            }
             self.hub.publish(&batch, live, health, utc).ok().flatten()
         } else {
             self.apply_lifecycle(input)
@@ -638,10 +747,8 @@ impl AppFacade {
         live: &[crate::c2::hub::LiveConnectionView],
         utc: i64,
         mono: u64,
-    ) {
-        if self.storage.is_none() {
-            return;
-        }
+    ) -> Option<&'static str> {
+        self.storage.as_ref()?;
         let data_version = self
             .storage
             .as_ref()
@@ -705,29 +812,67 @@ impl AppFacade {
             utc,
             writes,
         };
+        let payload = match slice_fingerprint(&slice, mono) {
+            Ok(payload) => payload,
+            Err(()) => {
+                app_log::emit(
+                    Level::Error,
+                    "commit_fingerprint",
+                    serde_json::json!({ "class": "serialize" }),
+                );
+                return Some("commit_serialize");
+            }
+        };
+        let bundle = CommitBundle { payload, ..bundle };
         let outcome = self
             .storage
             .as_mut()
-            .and_then(|storage| storage.commit_alert_bundle(&bundle, &slice).ok());
-        if matches!(
-            outcome,
-            Some(
+            .map(|storage| storage.commit_alert_bundle(&bundle, &slice));
+        match outcome {
+            Some(Ok(
                 crate::storage::CommitOutcome::Applied(_)
-                    | crate::storage::CommitOutcome::Duplicate(_)
-            )
-        ) {
-            self.bundle_seq = self.bundle_seq.saturating_add(1);
-            self.last_frame_utc = Some(utc);
-            let token = format!("lease-{}", self.bundle_seq);
-            if let Some(storage) = self.storage.as_mut() {
-                let _ = crate::c4::outbox::scan_once(
-                    storage,
-                    &mut self.notify,
-                    utc,
-                    &token,
-                    self.ui_locale,
-                );
+                | crate::storage::CommitOutcome::Duplicate(_),
+            )) => {
+                self.bundle_seq = self.bundle_seq.saturating_add(1);
+                self.last_frame_utc = Some(utc);
+                let token = format!("lease-{}", self.bundle_seq);
+                if let Some(storage) = self.storage.as_mut() {
+                    let _ = crate::c4::outbox::scan_once(
+                        storage,
+                        &mut self.notify,
+                        utc,
+                        &token,
+                        self.ui_locale,
+                    );
+                }
+                None
             }
+            Some(Ok(crate::storage::CommitOutcome::PayloadMismatch)) => {
+                app_log::emit(
+                    Level::Error,
+                    "commit_bundle",
+                    serde_json::json!({ "class": "payload_mismatch" }),
+                );
+                Some("payload_mismatch")
+            }
+            Some(Ok(crate::storage::CommitOutcome::RetryWindowExpired)) => {
+                app_log::emit(
+                    Level::Error,
+                    "commit_bundle",
+                    serde_json::json!({ "class": "retry_window_expired" }),
+                );
+                Some("retry_window_expired")
+            }
+            Some(Err(error)) => {
+                let class = storage_error_class(&error);
+                app_log::emit(
+                    Level::Error,
+                    "commit_bundle",
+                    serde_json::json!({ "class": class }),
+                );
+                Some(class)
+            }
+            None => None,
         }
     }
 
@@ -1137,19 +1282,73 @@ impl AppFacade {
                 true,
             )
         })?;
-        if !writes.instances.is_empty() || !writes.events.is_empty() {
-            let bundle = CommitBundle {
-                writer_epoch: self.writer_epoch,
-                bundle_seq: self.bundle_seq,
-                payload: String::new(),
-            };
+        if !writes.instances.is_empty() || !writes.events.is_empty() || !writes.outbox.is_empty() {
             let slice = AlertCommitSlice {
                 utc: now,
                 writes,
                 ..AlertCommitSlice::default()
             };
-            if storage.commit_alert_bundle(&bundle, &slice).is_ok() {
-                self.bundle_seq = self.bundle_seq.saturating_add(1);
+            let payload = slice_fingerprint(&slice, 0).map_err(|()| {
+                localized_error(
+                    locale,
+                    "commit_serialize",
+                    "error.alert_write",
+                    "action.check_disk",
+                    true,
+                )
+            })?;
+            let bundle = CommitBundle {
+                writer_epoch: self.writer_epoch,
+                bundle_seq: self.bundle_seq,
+                payload,
+            };
+            match storage.commit_alert_bundle(&bundle, &slice) {
+                Ok(CommitOutcome::Applied(_) | CommitOutcome::Duplicate(_)) => {
+                    self.bundle_seq = self.bundle_seq.saturating_add(1);
+                }
+                Ok(CommitOutcome::PayloadMismatch) => {
+                    app_log::emit(
+                        Level::Error,
+                        "alert_rule_commit",
+                        serde_json::json!({ "class": "payload_mismatch" }),
+                    );
+                    return Err(localized_error(
+                        locale,
+                        "payload_mismatch",
+                        "error.alert_write",
+                        "action.check_disk",
+                        false,
+                    ));
+                }
+                Ok(CommitOutcome::RetryWindowExpired) => {
+                    app_log::emit(
+                        Level::Error,
+                        "alert_rule_commit",
+                        serde_json::json!({ "class": "retry_window_expired" }),
+                    );
+                    return Err(localized_error(
+                        locale,
+                        "retry_window_expired",
+                        "error.alert_write",
+                        "action.check_disk",
+                        false,
+                    ));
+                }
+                Err(error) => {
+                    let class = storage_error_class(&error);
+                    app_log::emit(
+                        Level::Error,
+                        "alert_rule_commit",
+                        serde_json::json!({ "class": class }),
+                    );
+                    return Err(localized_error(
+                        locale,
+                        "storage",
+                        "error.alert_write",
+                        "action.check_disk",
+                        true,
+                    ));
+                }
             }
         }
         app_log::emit(Level::Info, "alert_rule", serde_json::json!({ "ok": true }));
@@ -1246,15 +1445,21 @@ impl AppFacade {
             .overview()
             .coverage_kind
             .unwrap_or_else(|| "unknown".into());
-        crate::c4::diagnose::collect(storage, self.session_status, self.last_frame_utc, &coverage)
-            .map_err(|_| {
-                self.err(
-                    "diagnostics",
-                    "error.diagnostics",
-                    "action.retry_later",
-                    true,
-                )
-            })
+        crate::c4::diagnose::collect(
+            storage,
+            self.session_status,
+            self.last_frame_utc,
+            &coverage,
+            self.metadata_coverage.clone(),
+        )
+        .map_err(|_| {
+            self.err(
+                "diagnostics",
+                "error.diagnostics",
+                "action.retry_later",
+                true,
+            )
+        })
     }
 
     pub fn export_diagnostics(&self, dest: &std::path::Path) -> Result<String, AppErrorDto> {
@@ -1408,9 +1613,13 @@ impl AppFacade {
 }
 
 fn retain_live_rows(input: &ControllerInput) -> bool {
-    matches!(
+    !matches!(
         input,
-        ControllerInput::Paused | ControllerInput::Resumed | ControllerInput::SleepGap { .. }
+        ControllerInput::Restarted { .. }
+            | ControllerInput::Shutdown
+            | ControllerInput::Disconnected {
+                reason: SessionStatus::Cancelled | SessionStatus::CoreRestarted
+            }
     )
 }
 
@@ -1509,6 +1718,186 @@ mod c2_facade_contract_tests {
             ]
         );
         let _ = LiveProjection::new();
+    }
+
+    fn snapshot(id: &str) -> ControllerInput {
+        ControllerInput::Snapshot {
+            received_monotonic_ms: 1,
+            received_utc: 1,
+            upload_total: 10,
+            download_total: 20,
+            connections: vec![crate::controller::ConnectionFact {
+                id: id.into(),
+                upload: 1,
+                download: 2,
+                chains: vec!["DIRECT".into()],
+                provider_chains: Vec::new(),
+                meta: crate::controller::ConnectionMeta {
+                    host: Some("a.test".into()),
+                    ..crate::controller::ConnectionMeta::default()
+                },
+            }],
+        }
+    }
+
+    #[test]
+    fn reboot_reserves_new_receipt_and_controller_generation_before_first_frame() {
+        let dir = tempdir().expect("dir");
+        let mut first = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let first_writer = first.writer_epoch;
+        first.ingest_snapshot(snapshot("same-id"), 1, 1);
+        let first_watermark = first
+            .storage
+            .as_ref()
+            .expect("storage")
+            .watermark()
+            .expect("watermark");
+        assert_eq!(first_watermark, 1);
+        drop(first);
+
+        let mut second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert!(second.writer_epoch > first_writer);
+        second.ingest_snapshot(snapshot("same-id"), 2, 2);
+        let storage = second.storage.as_ref().expect("storage");
+        assert_eq!(storage.watermark().expect("watermark"), 2);
+        let epochs: i64 = storage
+            .connection()
+            .query_row(
+                "select count(distinct epoch_id) from connection_session where connection_id='same-id'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("epochs");
+        assert_eq!(epochs, 2);
+    }
+
+    #[test]
+    fn receipt_payload_mismatch_is_visible_in_live_health() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let conflicting = CommitBundle {
+            writer_epoch: facade.writer_epoch,
+            bundle_seq: facade.bundle_seq,
+            payload: "different-frame".into(),
+        };
+        facade
+            .storage
+            .as_mut()
+            .expect("storage")
+            .commit_alert_bundle(&conflicting, &AlertCommitSlice::default())
+            .expect("seed conflicting receipt");
+
+        facade.ingest_snapshot(snapshot("same-id"), 1, 1);
+
+        let health = facade.hub.overview().health;
+        assert!(!health.storage_ok);
+        assert_eq!(health.storage_reason.as_deref(), Some("payload_mismatch"));
+        assert_eq!(facade.bundle_seq, 1);
+    }
+
+    #[test]
+    fn transient_decode_failure_keeps_rows_and_last_sample_until_reconnect() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.ingest_snapshot(snapshot("same-id"), 100, 100);
+        assert_eq!(facade.hub.row_count(), 1);
+        assert_eq!(facade.hub.overview().last_sample_utc, Some(100));
+
+        facade.apply_probe_err(SessionStatus::ProtocolIncompatible);
+
+        assert_eq!(facade.hub.row_count(), 1);
+        assert_eq!(facade.hub.overview().last_sample_utc, Some(100));
+        assert_eq!(
+            facade.hub.overview().observation_phase,
+            ObservationPhase::DecodeFailed
+        );
+        let before: i64 = facade
+            .storage
+            .as_ref()
+            .expect("storage")
+            .connection()
+            .query_row("select count(*) from controller_epoch", [], |row| {
+                row.get(0)
+            })
+            .expect("controller epochs");
+        assert_eq!(before, 1);
+
+        facade.ingest_snapshot(snapshot("same-id"), 101, 101);
+        let after: i64 = facade
+            .storage
+            .as_ref()
+            .expect("storage")
+            .connection()
+            .query_row("select count(*) from controller_epoch", [], |row| {
+                row.get(0)
+            })
+            .expect("controller epochs");
+        assert_eq!(after, 2);
+        assert_eq!(facade.hub.row_count(), 1);
+        assert_eq!(facade.hub.overview().last_sample_utc, Some(101));
+    }
+
+    #[test]
+    fn controller_epoch_reservation_failure_updates_live_health() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade
+            .storage
+            .as_ref()
+            .expect("storage")
+            .connection()
+            .execute(
+                "insert into controller_epoch(epoch_id, core_identity) values (?1, 'max')",
+                [i64::MAX],
+            )
+            .expect("seed max controller epoch");
+
+        let message = facade.ingest_snapshot(snapshot("same-id"), 1, 1);
+
+        assert!(matches!(
+            message,
+            Some(MonitorStreamMessage::HealthChanged { .. })
+        ));
+        let health = facade.hub.overview().health;
+        assert!(!health.storage_ok);
+        assert_eq!(
+            health.storage_reason.as_deref(),
+            Some("controller_epoch_closed")
+        );
+        assert!(!facade.controller_epoch_ready);
+    }
+
+    #[test]
+    fn explicit_restart_reserves_durable_generation_on_next_frame() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.ingest_snapshot(snapshot("reused"), 1, 1);
+        facade.apply_lifecycle(ControllerInput::Restarted {
+            old_identity: "old".into(),
+            new_identity: "new".into(),
+        });
+        assert_eq!(
+            facade.hub.overview().observation_phase,
+            ObservationPhase::ResyncRequired
+        );
+        facade.ingest_snapshot(snapshot("reused"), 2, 2);
+        let storage = facade.storage.as_ref().expect("storage");
+        let generations: i64 = storage
+            .connection()
+            .query_row("select count(*) from controller_epoch", [], |row| {
+                row.get(0)
+            })
+            .expect("generations");
+        let sessions: i64 = storage
+            .connection()
+            .query_row(
+                "select count(*) from connection_session where connection_id='reused'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("sessions");
+        assert_eq!(generations, 2);
+        assert_eq!(sessions, 2);
     }
 
     #[test]
@@ -1912,7 +2301,7 @@ mod c2_close_control_tests {
                 .top_download
                 .as_ref()
                 .map(|item| item.identity.as_str()),
-            Some("0:keep")
+            Some(page.rows[0].identity.as_str())
         );
     }
 }

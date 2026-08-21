@@ -155,7 +155,7 @@ pub struct OutboxIntent {
     pub created_utc: i64,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct AlertWriteSet {
     pub instances: Vec<AlertInstance>,
     pub events: Vec<AlertEvent>,

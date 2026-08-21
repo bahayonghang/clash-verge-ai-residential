@@ -22,6 +22,15 @@ pub fn last_chain_hop(chain_key: Option<&str>) -> Option<String> {
     }
 }
 
+/// Chain 维度的 identity。与 Rule 分组不同，合法单跳链必须保留自身。
+pub fn chain_identity(chain_key: Option<&str>) -> Option<String> {
+    chain_key?
+        .split('>')
+        .map(str::trim)
+        .rfind(|part| !part.is_empty())
+        .map(str::to_string)
+}
+
 /// 与 neko `buildRuleName` 等价，仅用于单测与展示。
 ///
 /// - `chains.len() > 1` 且最后一跳非空 → 最后一跳
@@ -71,6 +80,17 @@ pub fn register_last_chain_hop(connection: &Connection) -> rusqlite::Result<()> 
             let input: Option<String> = ctx.get(0)?;
             Ok(last_chain_hop(input.as_deref()))
         },
+    )?;
+    connection.create_scalar_function(
+        "chain_identity",
+        1,
+        FunctionFlags::SQLITE_UTF8
+            | FunctionFlags::SQLITE_DETERMINISTIC
+            | FunctionFlags::SQLITE_INNOCUOUS,
+        |ctx| {
+            let input: Option<String> = ctx.get(0)?;
+            Ok(chain_identity(input.as_deref()))
+        },
     )
 }
 
@@ -114,6 +134,16 @@ mod rule_name_tests {
     }
 
     #[test]
+    fn chain_identity_preserves_single_hop_and_uses_last_nonempty_hop() {
+        assert_eq!(chain_identity(None), None);
+        assert_eq!(chain_identity(Some("  ")), None);
+        assert_eq!(chain_identity(Some(" DIRECT ")).as_deref(), Some("DIRECT"));
+        assert_eq!(chain_identity(Some(" ProxyA ")).as_deref(), Some("ProxyA"));
+        assert_eq!(chain_identity(Some("node>group")).as_deref(), Some("group"));
+        assert_eq!(chain_identity(Some("node>  ")).as_deref(), Some("node"));
+    }
+
+    #[test]
     fn storage_coordinator_connection_can_execute_last_chain_hop() {
         let dir = tempdir().expect("dir");
         let coordinator = StorageCoordinator::open(&dir.path().join("fn.sqlite3")).expect("open");
@@ -129,5 +159,9 @@ mod rule_name_tests {
             })
             .expect("reader scalar");
         assert_eq!(hop.as_deref(), Some("家宽"));
+        let direct: Option<String> = reader
+            .query_row("select chain_identity('DIRECT')", [], |row| row.get(0))
+            .expect("chain scalar");
+        assert_eq!(direct.as_deref(), Some("DIRECT"));
     }
 }

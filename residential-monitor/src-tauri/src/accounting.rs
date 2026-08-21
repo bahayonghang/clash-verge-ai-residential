@@ -1,9 +1,10 @@
 //! 无 I/O 的核算状态机。
 
-use crate::controller::{ConnectionFact, ControllerInput};
-use std::collections::HashMap;
+use crate::c0_contract::STRING_LIMIT;
+use crate::controller::{ConnectionFact, ConnectionMeta, ControllerInput};
+use std::collections::{HashMap, HashSet};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct MinuteFact {
     pub session_key: String,
     pub utc_minute: i64,
@@ -13,7 +14,7 @@ pub struct MinuteFact {
     pub tags: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct CoverageChange {
     pub kind: &'static str,
     pub reason: &'static str,
@@ -35,17 +36,22 @@ pub struct AccountingBatch {
 
 #[derive(Debug, Clone)]
 struct SessionAcc {
+    connection_id: String,
     last_upload: u64,
     last_download: u64,
     last_mono: u64,
     last_utc: i64,
     seen: bool,
+    meta: ConnectionMeta,
+    chains: Vec<String>,
+    provider_chains: Vec<String>,
 }
 
 #[derive(Debug, Default)]
 pub struct AccountingEngine {
     epoch: u64,
     sessions: HashMap<String, SessionAcc>,
+    retired_ids: HashSet<String>,
     last_meter_up: Option<u64>,
     last_meter_down: Option<u64>,
     targets: Vec<String>,
@@ -64,6 +70,43 @@ impl AccountingEngine {
 
     pub fn current_epoch(&self) -> u64 {
         self.epoch
+    }
+
+    pub fn reset_epoch(&mut self, epoch: u64) {
+        self.epoch = epoch;
+        self.sessions.clear();
+        self.retired_ids.clear();
+        self.last_meter_up = None;
+        self.last_meter_down = None;
+    }
+
+    pub fn snapshot_requires_new_generation(
+        &self,
+        connections: &[ConnectionFact],
+        upload_total: u64,
+        download_total: u64,
+    ) -> bool {
+        if self.last_meter_up.is_some_and(|value| upload_total < value)
+            || self
+                .last_meter_down
+                .is_some_and(|value| download_total < value)
+        {
+            return true;
+        }
+        connections.iter().any(|connection| {
+            if self.retired_ids.contains(&connection.id) {
+                return true;
+            }
+            let key = format!("{}:{}", self.epoch, connection.id);
+            self.sessions.get(&key).is_some_and(|session| {
+                connection.upload < session.last_upload
+                    || connection.download < session.last_download
+                    || start_changed(
+                        session.meta.start.as_deref(),
+                        connection.meta.start.as_deref(),
+                    )
+            })
+        })
     }
 
     pub fn policy_version(&self) -> u32 {
@@ -100,7 +143,10 @@ impl AccountingEngine {
                     ),
                     source_ip: connection.meta.source_ip.clone(),
                     destination_ip: connection.meta.destination_ip.clone(),
-                    process_name: connection.meta.process_name.clone(),
+                    process_name: resolve_process_identity(
+                        connection.meta.process_name.as_deref(),
+                        connection.meta.process_path.as_deref(),
+                    ),
                     process_path: connection.meta.process_path.clone(),
                     network: connection.meta.network.clone(),
                     inbound: connection.meta.inbound.clone(),
@@ -115,6 +161,20 @@ impl AccountingEngine {
             .collect()
     }
 
+    pub fn apply_snapshot_and_project(
+        &mut self,
+        connections: Vec<ConnectionFact>,
+        upload_total: u64,
+        download_total: u64,
+        monotonic_ms: u64,
+        utc: i64,
+    ) -> (AccountingBatch, Vec<crate::c2::hub::LiveConnectionView>) {
+        let canonical = self.canonicalize(connections, monotonic_ms, utc);
+        let live = self.project_live(&canonical);
+        let batch = self.apply_snapshot(canonical, upload_total, download_total, monotonic_ms, utc);
+        (batch, live)
+    }
+
     pub fn apply(
         &mut self,
         input: ControllerInput,
@@ -127,12 +187,18 @@ impl AccountingEngine {
                 download_total,
                 connections,
                 ..
-            } => self.apply_snapshot(connections, upload_total, download_total, monotonic_ms, utc),
+            } => {
+                self.apply_snapshot_and_project(
+                    connections,
+                    upload_total,
+                    download_total,
+                    monotonic_ms,
+                    utc,
+                )
+                .0
+            }
             ControllerInput::Restarted { .. } => {
-                self.epoch += 1;
-                self.sessions.clear();
-                self.last_meter_up = None;
-                self.last_meter_down = None;
+                self.reset_epoch(self.epoch.saturating_add(1));
                 AccountingBatch {
                     facts: Vec::new(),
                     coverage: vec![CoverageChange {
@@ -185,6 +251,42 @@ impl AccountingEngine {
         }
     }
 
+    fn canonicalize(
+        &mut self,
+        connections: Vec<ConnectionFact>,
+        monotonic_ms: u64,
+        utc: i64,
+    ) -> Vec<ConnectionFact> {
+        connections
+            .into_iter()
+            .map(|mut connection| {
+                let key = format!("{}:{}", self.epoch, connection.id);
+                let entry = self.sessions.entry(key).or_insert_with(|| SessionAcc {
+                    connection_id: connection.id.clone(),
+                    last_upload: connection.upload,
+                    last_download: connection.download,
+                    last_mono: monotonic_ms,
+                    last_utc: utc,
+                    seen: false,
+                    meta: ConnectionMeta::default(),
+                    chains: Vec::new(),
+                    provider_chains: Vec::new(),
+                });
+                merge_meta(&mut entry.meta, &connection.meta);
+                if !connection.chains.is_empty() {
+                    entry.chains = connection.chains.clone();
+                }
+                if !connection.provider_chains.is_empty() {
+                    entry.provider_chains = connection.provider_chains.clone();
+                }
+                connection.meta = entry.meta.clone();
+                connection.chains = entry.chains.clone();
+                connection.provider_chains = entry.provider_chains.clone();
+                connection
+            })
+            .collect()
+    }
+
     fn apply_snapshot(
         &mut self,
         connections: Vec<ConnectionFact>,
@@ -198,18 +300,21 @@ impl AccountingEngine {
         let mut attributed_down = 0_u64;
         let mut facts = Vec::new();
         let utc_minute = utc.div_euclid(60);
-        let seen: std::collections::HashSet<String> =
-            connections.iter().map(|item| item.id.clone()).collect();
+        let seen: HashSet<String> = connections.iter().map(|item| item.id.clone()).collect();
 
         for connection in connections {
             let key = format!("{}:{}", self.epoch, connection.id);
             let (tags, primary) = classify(&self.targets, &connection.chains);
             let entry = self.sessions.entry(key.clone()).or_insert(SessionAcc {
+                connection_id: connection.id.clone(),
                 last_upload: connection.upload,
                 last_download: connection.download,
                 last_mono: monotonic_ms,
                 last_utc: utc,
                 seen: false,
+                meta: connection.meta.clone(),
+                chains: connection.chains.clone(),
+                provider_chains: connection.provider_chains.clone(),
             });
             if !entry.seen {
                 entry.seen = true;
@@ -243,8 +348,15 @@ impl AccountingEngine {
             });
         }
 
+        let retired: Vec<String> = self
+            .sessions
+            .values()
+            .filter(|session| !seen.contains(&session.connection_id))
+            .map(|session| session.connection_id.clone())
+            .collect();
+        self.retired_ids.extend(retired);
         self.sessions
-            .retain(|key, _| seen.contains(key.rsplit_once(':').map(|(_, id)| id).unwrap_or(key)));
+            .retain(|_, session| seen.contains(&session.connection_id));
 
         let meter_up = if first_meter {
             None
@@ -282,6 +394,56 @@ impl AccountingEngine {
             over_download: over_down,
         }
     }
+}
+
+fn start_changed(stored: Option<&str>, incoming: Option<&str>) -> bool {
+    matches!((stored, incoming), (Some(left), Some(right)) if left != right)
+}
+
+fn merge_optional(stored: &mut Option<String>, incoming: &Option<String>) {
+    if let Some(value) = incoming
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        *stored = Some(value.to_string());
+    }
+}
+
+fn merge_meta(stored: &mut ConnectionMeta, incoming: &ConnectionMeta) {
+    merge_optional(&mut stored.host, &incoming.host);
+    merge_optional(&mut stored.sniff_host, &incoming.sniff_host);
+    merge_optional(&mut stored.source_ip, &incoming.source_ip);
+    merge_optional(&mut stored.destination_ip, &incoming.destination_ip);
+    merge_optional(&mut stored.source_port, &incoming.source_port);
+    merge_optional(&mut stored.destination_port, &incoming.destination_port);
+    merge_optional(&mut stored.process_name, &incoming.process_name);
+    merge_optional(&mut stored.process_path, &incoming.process_path);
+    merge_optional(&mut stored.network, &incoming.network);
+    merge_optional(&mut stored.inbound, &incoming.inbound);
+    merge_optional(&mut stored.start, &incoming.start);
+    merge_optional(&mut stored.rule, &incoming.rule);
+    merge_optional(&mut stored.rule_payload, &incoming.rule_payload);
+}
+
+pub fn process_basename(path: &str) -> Option<String> {
+    let path = path.trim();
+    if path.is_empty() || path.chars().count() > STRING_LIMIT || path.ends_with(['/', '\\']) {
+        return None;
+    }
+    path.rsplit(['/', '\\'])
+        .next()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
+}
+
+pub fn resolve_process_identity(process: Option<&str>, path: Option<&str>) -> Option<String> {
+    process
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
+        .or_else(|| path.and_then(process_basename))
 }
 
 fn classify(targets: &[String], chains: &[String]) -> (Vec<String>, Option<String>) {
@@ -418,6 +580,110 @@ mod accounting_replay_tests {
         let gone = engine.apply(snap(10, 10, vec![]), 2, 60);
         assert!(gone.facts.is_empty());
         assert_eq!(gone.attributed_upload, Some(0));
+    }
+
+    #[test]
+    fn canonical_metadata_enriches_and_does_not_downgrade_on_empty_frame() {
+        let mut engine = AccountingEngine::new();
+        engine.reset_epoch(7);
+        let mut rich = fact("a", 10, 10, &["DIRECT"]);
+        rich.meta.host = Some("explicit.test".into());
+        rich.meta.sniff_host = Some("sniff.test".into());
+        rich.meta.process_name = Some("browser.exe".into());
+        rich.meta.process_path = Some("C:\\Apps\\browser.exe".into());
+        rich.meta.rule = Some("IPCIDR".into());
+        let (_, first) = engine.apply_snapshot_and_project(vec![rich], 10, 10, 1, 60);
+        assert_eq!(first[0].host.as_deref(), Some("explicit.test"));
+        assert_eq!(first[0].process_name.as_deref(), Some("browser.exe"));
+        assert_eq!(first[0].chains, vec!["DIRECT"]);
+
+        let empty = ConnectionFact {
+            id: "a".into(),
+            upload: 15,
+            download: 12,
+            chains: Vec::new(),
+            provider_chains: Vec::new(),
+            meta: ConnectionMeta::default(),
+        };
+        let (batch, second) = engine.apply_snapshot_and_project(vec![empty], 15, 12, 2, 61);
+        assert_eq!(batch.facts[0].upload, 5);
+        assert_eq!(second[0].host.as_deref(), Some("explicit.test"));
+        assert_eq!(second[0].process_name.as_deref(), Some("browser.exe"));
+        assert_eq!(second[0].chains, vec!["DIRECT"]);
+        assert_eq!(second[0].rule.as_deref(), Some("IPCIDR"));
+    }
+
+    #[test]
+    fn canonical_metadata_enriches_at_zero_delta_and_isolated_by_epoch() {
+        let mut engine = AccountingEngine::new();
+        engine.reset_epoch(7);
+        let mut initial = fact("a", 10, 10, &[]);
+        initial.meta.host = None;
+        initial.meta.destination_ip = Some("203.0.113.7".into());
+        initial.meta.process_path = Some("C:\\Apps\\fallback.exe".into());
+        let (_, first) = engine.apply_snapshot_and_project(vec![initial], 10, 10, 1, 60);
+        assert_eq!(first[0].host.as_deref(), Some("203.0.113.7"));
+        assert_eq!(first[0].process_name.as_deref(), Some("fallback.exe"));
+
+        let mut sniff = fact("a", 10, 10, &["DIRECT"]);
+        sniff.meta.host = None;
+        sniff.meta.sniff_host = Some("sniff.test".into());
+        sniff.meta.process_name = Some("direct.exe".into());
+        let (zero_delta, second) = engine.apply_snapshot_and_project(vec![sniff], 10, 10, 2, 61);
+        assert!(zero_delta.facts.is_empty());
+        assert_eq!(second[0].host.as_deref(), Some("sniff.test"));
+        assert_eq!(second[0].process_name.as_deref(), Some("direct.exe"));
+        assert_eq!(second[0].chains, vec!["DIRECT"]);
+
+        let mut explicit = fact("a", 10, 10, &[]);
+        explicit.meta.host = Some("explicit.test".into());
+        let (_, third) = engine.apply_snapshot_and_project(vec![explicit], 10, 10, 3, 62);
+        assert_eq!(third[0].host.as_deref(), Some("explicit.test"));
+        assert_eq!(third[0].process_name.as_deref(), Some("direct.exe"));
+        assert_eq!(third[0].chains, vec!["DIRECT"]);
+
+        engine.reset_epoch(8);
+        let mut new_generation = fact("a", 1, 1, &[]);
+        new_generation.meta.host = None;
+        let (_, isolated) = engine.apply_snapshot_and_project(vec![new_generation], 1, 1, 4, 63);
+        assert_eq!(isolated[0].host, None);
+        assert_eq!(isolated[0].process_name, None);
+        assert!(isolated[0].chains.is_empty());
+    }
+
+    #[test]
+    fn process_identity_uses_safe_cross_platform_basename() {
+        assert_eq!(
+            resolve_process_identity(None, Some("C:\\Program Files\\Browser\\browser.exe"))
+                .as_deref(),
+            Some("browser.exe")
+        );
+        assert_eq!(
+            resolve_process_identity(None, Some("/usr/bin/curl")).as_deref(),
+            Some("curl")
+        );
+        assert_eq!(resolve_process_identity(None, Some("C:\\Apps\\")), None);
+        assert_eq!(resolve_process_identity(None, Some("/usr/bin/")), None);
+        assert_eq!(
+            resolve_process_identity(Some("direct.exe"), Some("C:\\path\\fallback.exe")).as_deref(),
+            Some("direct.exe")
+        );
+        assert_eq!(
+            resolve_process_identity(None, Some(&"x".repeat(STRING_LIMIT + 1))),
+            None
+        );
+    }
+
+    #[test]
+    fn retired_id_and_counter_reset_require_new_generation() {
+        let mut engine = AccountingEngine::new();
+        engine.reset_epoch(1);
+        engine.apply(snap(10, 10, vec![fact("a", 10, 10, &[])]), 1, 60);
+        assert!(engine.snapshot_requires_new_generation(&[fact("a", 9, 10, &[])], 9, 10));
+        engine.apply(snap(10, 10, vec![]), 2, 61);
+        assert!(engine.snapshot_requires_new_generation(&[fact("a", 1, 1, &[])], 11, 11));
+        engine.reset_epoch(2);
+        assert!(!engine.snapshot_requires_new_generation(&[fact("a", 1, 1, &[])], 11, 11));
     }
 }
 

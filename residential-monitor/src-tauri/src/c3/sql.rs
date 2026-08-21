@@ -87,7 +87,7 @@ select coalesce(last_chain_hop(a.chain_key), (select value from dimension_dict w
 ";
 
 pub const RANK_RAW_CHAIN: &str = "
-select coalesce(last_chain_hop(a.chain_key), '__unknown__'),
+select coalesce(chain_identity(a.chain_key), '__unknown__'),
        coalesce(sum(m.upload), 0), coalesce(sum(m.download), 0),
        count(distinct m.session_pk), count(distinct m.utc_minute) * 60
   from connection_minute m
@@ -95,7 +95,7 @@ select coalesce(last_chain_hop(a.chain_key), '__unknown__'),
   left join connection_session_attr a on a.session_pk = m.session_pk
  where m.utc_minute >= ? and m.utc_minute < ?
  {filters}
- group by last_chain_hop(a.chain_key)
+ group by chain_identity(a.chain_key)
  order by sum(m.download) desc, 1 asc
  limit ?
 ";
@@ -334,7 +334,7 @@ pub fn filter_clause(filters: &ReportFilters) -> (String, Vec<String>) {
         params.push(value.clone());
     }
     if let Some(value) = &filters.chain {
-        fragment.push_str(" and last_chain_hop(a.chain_key) = ?");
+        fragment.push_str(" and chain_identity(a.chain_key) = ?");
         params.push(value.clone());
     }
     if let Some(value) = &filters.category {

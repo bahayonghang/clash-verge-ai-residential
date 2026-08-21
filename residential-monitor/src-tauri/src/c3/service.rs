@@ -2,9 +2,9 @@
 
 use crate::c3::query::{
     decode_cursor, empty_result, encode_cursor, plan_capability, plan_capability_ex,
-    validate_query, CoverageSlice, DataTier, DimensionKind, PolicyMetadata, RankingRow,
-    ReportError, ReportQuery, ReportResult, ReportTotals, SeriesPoint, SessionRow, TargetPolicy,
-    HOURLY_DIM_V2_LAYER, UNKNOWN_LABEL_ZH,
+    validate_query, AttributionQuality, CoverageSlice, DataTier, DimensionKind, PolicyMetadata,
+    RankingRow, ReportError, ReportQuery, ReportResult, ReportTotals, SeriesPoint, SessionRow,
+    TargetPolicy, HOURLY_DIM_V2_LAYER, UNKNOWN_LABEL_ZH,
 };
 use crate::c3::snapshot::ReportSnapshotStore;
 use crate::c3::sql::{
@@ -154,6 +154,17 @@ fn build_result(
             query.range_end_utc,
         )?,
     }
+    result.attribution_quality = load_attribution_quality(connection, query, &result)?;
+    if result.attribution_quality.known_upload + result.attribution_quality.missing_upload
+        != result.totals.upload
+        || result.attribution_quality.known_download + result.attribution_quality.missing_download
+            != result.totals.download
+        || result.attribution_quality.known_connections
+            + result.attribution_quality.missing_connections
+            != result.totals.connection_count
+    {
+        return Err(ReportError::Failed("attribution conservation"));
+    }
     if result.coverage.slices.iter().any(|item| item.kind == "gap") {
         result.coverage.status = "partial".into();
     } else if result.totals.upload == 0
@@ -167,6 +178,126 @@ fn build_result(
         result.coverage.status = "covered".into();
     }
     Ok(result)
+}
+
+fn load_attribution_quality(
+    connection: &Connection,
+    query: &ReportQuery,
+    result: &ReportResult,
+) -> Result<AttributionQuality, ReportError> {
+    match result.data_tier {
+        DataTier::Raw => load_raw_attribution_quality(connection, query),
+        DataTier::HourlyDimension | DataTier::DailyDimension => {
+            load_dimension_attribution_quality(connection, query, result.data_tier)
+        }
+        DataTier::DailyCore => Ok(AttributionQuality::unavailable(&result.totals)),
+    }
+}
+
+fn load_raw_attribution_quality(
+    connection: &Connection,
+    query: &ReportQuery,
+) -> Result<AttributionQuality, ReportError> {
+    let missing = match query.grouping {
+        DimensionKind::Host => "coalesce(s.host, '') = ''",
+        DimensionKind::Process => "a.process_id is null or not exists (select 1 from dimension_dict q where q.dimension_kind='process' and q.dimension_id=a.process_id)",
+        DimensionKind::Rule => "0",
+        DimensionKind::Chain => "chain_identity(a.chain_key) is null",
+        DimensionKind::Network => "a.network_id is null or not exists (select 1 from dimension_dict q where q.dimension_kind='network' and q.dimension_id=a.network_id)",
+        DimensionKind::Category => "a.primary_category_id is null or not exists (select 1 from dimension_dict q where q.dimension_kind='category' and q.dimension_id=a.primary_category_id)",
+    };
+    let (fragment, filter_params) = filter_clause(&query.filters);
+    let sql = format!(
+        "select
+            coalesce(sum(case when not ({missing}) then m.upload else 0 end), 0),
+            coalesce(sum(case when not ({missing}) then m.download else 0 end), 0),
+            coalesce(sum(case when ({missing}) then m.upload else 0 end), 0),
+            coalesce(sum(case when ({missing}) then m.download else 0 end), 0),
+            count(distinct case when not ({missing}) then m.session_pk end),
+            count(distinct case when ({missing}) then m.session_pk end)
+         from connection_minute m
+         join connection_session s on s.session_pk=m.session_pk
+         left join connection_session_attr a on a.session_pk=m.session_pk
+         where m.utc_minute >= ? and m.utc_minute < ? {fragment}"
+    );
+    let params = merge_sql_params(
+        [
+            Value::from(query.range_start_utc.div_euclid(60)),
+            Value::from(query.range_end_utc.div_euclid(60)),
+        ],
+        &filter_params,
+        [],
+    );
+    load_quality_row(connection, &sql, &params)
+}
+
+fn load_dimension_attribution_quality(
+    connection: &Connection,
+    query: &ReportQuery,
+    tier: DataTier,
+) -> Result<AttributionQuality, ReportError> {
+    let table = match tier {
+        DataTier::HourlyDimension => "traffic_hourly_dimension",
+        DataTier::DailyDimension => "traffic_daily_dimension",
+        _ => return Err(ReportError::Failed("attribution tier")),
+    };
+    let time_column = match tier {
+        DataTier::HourlyDimension => "utc_hour",
+        DataTier::DailyDimension => "utc_day",
+        _ => return Err(ReportError::Failed("attribution tier")),
+    };
+    let kind = if query.grouping == DimensionKind::Category {
+        "host"
+    } else {
+        dimension_kind_sql_layer(query.grouping)
+    };
+    let missing = if query.grouping == DimensionKind::Category {
+        "h.category_id = 0"
+    } else {
+        "h.dimension_id = 0"
+    };
+    let (fragment, filter_params) = dimension_filter_clause(&query.filters, query.grouping);
+    let sql = format!(
+        "select
+            coalesce(sum(case when not ({missing}) then h.upload else 0 end), 0),
+            coalesce(sum(case when not ({missing}) then h.download else 0 end), 0),
+            coalesce(sum(case when ({missing}) then h.upload else 0 end), 0),
+            coalesce(sum(case when ({missing}) then h.download else 0 end), 0),
+            coalesce(sum(case when not ({missing}) then h.connection_count else 0 end), 0),
+            coalesce(sum(case when ({missing}) then h.connection_count else 0 end), 0)
+         from {table} h
+         where h.{time_column} >= ? and h.{time_column} < ?
+           and h.dimension_kind = ? {fragment}"
+    );
+    let params = merge_sql_params(
+        [
+            Value::from(query.range_start_utc),
+            Value::from(query.range_end_utc),
+            Value::Text(kind.into()),
+        ],
+        &filter_params,
+        [],
+    );
+    load_quality_row(connection, &sql, &params)
+}
+
+fn load_quality_row(
+    connection: &Connection,
+    sql: &str,
+    params: &[Value],
+) -> Result<AttributionQuality, ReportError> {
+    connection
+        .query_row(sql, params_from_iter(params.iter()), |row| {
+            Ok(AttributionQuality::from_parts(
+                row.get(0)?,
+                row.get(1)?,
+                row.get(2)?,
+                row.get(3)?,
+                row.get(4)?,
+                row.get(5)?,
+            ))
+        })
+        .map_err(map_sqlite)
 }
 
 fn fill_raw(
@@ -1021,6 +1152,94 @@ mod dimension_capability_tests {
         assert!(ids.contains(&"家宽"));
         assert!(!ids.contains(&"RuleSet"));
         assert!(!ids.contains(&"Match"));
+    }
+
+    #[test]
+    fn single_hop_direct_chain_keeps_raw_rule_identity() {
+        let (_dir, coordinator, mut store) = setup();
+        coordinator
+            .connection()
+            .execute_batch(
+                "insert or ignore into dimension_dict(dimension_kind, dimension_id, value)
+                 values ('rule', 2, 'IPCIDR(10.0.0.0/8)');
+                 update connection_session_attr set rule_id = 2 where session_pk in (1, 2);",
+            )
+            .expect("seed IPCIDR");
+        let mut query = base_query();
+        query.grouping = DimensionKind::Rule;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        let ipc = result
+            .rankings
+            .iter()
+            .find(|row| row.identity == "IPCIDR(10.0.0.0/8)")
+            .expect("raw rule fallback");
+        assert_eq!((ipc.upload, ipc.download), (30, 90));
+    }
+
+    #[test]
+    fn attribution_quality_is_exact_and_independent_of_top_n() {
+        let (_dir, coordinator, mut store) = setup();
+        coordinator
+            .connection()
+            .execute(
+                "update connection_session_attr set process_id = null where session_pk = 2",
+                [],
+            )
+            .expect("one process missing");
+        let mut small_query = base_query();
+        small_query.grouping = DimensionKind::Process;
+        small_query.top_n = 1;
+        let small = run_now(&coordinator, &mut store, small_query, 3_600);
+        let mut large_query = base_query();
+        large_query.grouping = DimensionKind::Process;
+        large_query.top_n = 100;
+        let large = run_now(&coordinator, &mut store, large_query, 3_600);
+        assert_eq!(small.attribution_quality, large.attribution_quality);
+        assert_eq!(
+            small.attribution_quality.status,
+            crate::c3::query::AttributionStatus::Partial
+        );
+        assert_eq!(
+            (
+                small.attribution_quality.known_upload,
+                small.attribution_quality.known_download,
+                small.attribution_quality.missing_upload,
+                small.attribution_quality.missing_download,
+                small.attribution_quality.known_connections,
+                small.attribution_quality.missing_connections,
+            ),
+            (15, 45, 20, 60, 2, 1)
+        );
+        assert_eq!(
+            small.attribution_quality.known_upload + small.attribution_quality.missing_upload,
+            small.totals.upload
+        );
+        assert_eq!(
+            small.attribution_quality.known_download + small.attribution_quality.missing_download,
+            small.totals.download
+        );
+
+        coordinator
+            .connection()
+            .execute("update connection_session_attr set process_id = null", [])
+            .expect("all process missing");
+        let mut unavailable_query = base_query();
+        unavailable_query.grouping = DimensionKind::Process;
+        let unavailable = run_now(&coordinator, &mut store, unavailable_query, 3_600);
+        assert_eq!(
+            unavailable.attribution_quality.status,
+            crate::c3::query::AttributionStatus::Unavailable
+        );
+        assert_eq!(unavailable.attribution_quality.known_upload, 0);
+        assert_eq!(unavailable.attribution_quality.known_download, 0);
+        assert_eq!(
+            unavailable.attribution_quality.missing_upload,
+            unavailable.totals.upload
+        );
+        assert_eq!(
+            unavailable.attribution_quality.missing_download,
+            unavailable.totals.download
+        );
     }
 
     #[test]

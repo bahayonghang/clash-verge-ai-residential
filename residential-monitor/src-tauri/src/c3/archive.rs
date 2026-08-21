@@ -233,11 +233,12 @@ impl ReportArchiveService {
             return Err(ReportError::Failed("archive failed"));
         }
         let json = json.ok_or(ReportError::Failed("archive json missing"))?;
-        let result: ReportResult =
+        let mut result: ReportResult =
             serde_json::from_str(&json).map_err(|_| ReportError::Failed("archive json"))?;
         if result.schema_version != REPORT_DTO_VERSION {
             return Err(ReportError::Failed("archive schema"));
         }
+        result.reconcile_legacy_attribution_quality();
         Ok(result)
     }
 
@@ -594,7 +595,8 @@ pub fn run_one_archive_job(
 mod archive_service_tests {
     use super::*;
     use crate::c3::query::{
-        empty_result, CapabilityPlan, DataTier, DrilldownCapability, TargetPolicy,
+        empty_result, AttributionStatus, CapabilityPlan, DataTier, DrilldownCapability,
+        TargetPolicy,
     };
     use crate::storage::StorageCoordinator;
     use tempfile::tempdir;
@@ -780,6 +782,56 @@ mod archive_service_tests {
         assert_eq!(decoded.totals.download, 22);
         assert_eq!(decoded.coverage.status, "covered");
         assert!(decoded.report_snapshot_token.is_empty());
+    }
+
+    #[test]
+    fn legacy_frozen_result_without_attribution_quality_stays_loadable() {
+        let dir = tempdir().expect("dir");
+        let coordinator = StorageCoordinator::open(&dir.path().join("a.sqlite3")).expect("open");
+        let now = 20 * 86_400;
+        let job = job_at(ArchiveKind::Hour, now - 7_200, now - 3_600);
+        ReportArchiveService::persist_outcome(
+            coordinator.connection(),
+            &job,
+            Ok(dummy_ok(job.query.clone(), now)),
+            now,
+        )
+        .expect("insert");
+        let page =
+            ReportArchiveService::list(coordinator.connection(), None, None, None).expect("list");
+        let archive_id = &page.items[0].archive_id;
+        let json: String = coordinator
+            .connection()
+            .query_row(
+                "select result_json from report_archive where archive_id = ?1",
+                [archive_id],
+                |row| row.get(0),
+            )
+            .expect("json");
+        let mut legacy: serde_json::Value = serde_json::from_str(&json).expect("decode");
+        legacy
+            .as_object_mut()
+            .expect("object")
+            .remove("attributionQuality");
+        coordinator
+            .connection()
+            .execute(
+                "update report_archive set result_json = ?1 where archive_id = ?2",
+                params![serde_json::to_string(&legacy).expect("encode"), archive_id],
+            )
+            .expect("downgrade fixture");
+
+        let loaded = ReportArchiveService::load_frozen(coordinator.connection(), archive_id)
+            .expect("legacy archive");
+        assert_eq!(
+            loaded.attribution_quality.status,
+            AttributionStatus::Unavailable
+        );
+        assert_eq!(loaded.attribution_quality.known_upload, 0);
+        assert_eq!(loaded.attribution_quality.known_download, 0);
+        assert_eq!(loaded.attribution_quality.missing_upload, 11);
+        assert_eq!(loaded.attribution_quality.missing_download, 22);
+        assert_eq!(loaded.attribution_quality.missing_connections, 3);
     }
 
     #[test]

@@ -335,6 +335,72 @@ pub struct CoverageView {
     pub slices: Vec<CoverageSlice>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum AttributionStatus {
+    Complete,
+    Partial,
+    #[default]
+    Unavailable,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AttributionQuality {
+    pub known_upload: i64,
+    pub known_download: i64,
+    pub missing_upload: i64,
+    pub missing_download: i64,
+    pub known_connections: i64,
+    pub missing_connections: i64,
+    pub status: AttributionStatus,
+}
+
+impl Default for AttributionQuality {
+    fn default() -> Self {
+        Self::from_parts(0, 0, 0, 0, 0, 0)
+    }
+}
+
+impl AttributionQuality {
+    pub fn from_parts(
+        known_upload: i64,
+        known_download: i64,
+        missing_upload: i64,
+        missing_download: i64,
+        known_connections: i64,
+        missing_connections: i64,
+    ) -> Self {
+        let has_known = known_upload > 0 || known_download > 0 || known_connections > 0;
+        let has_missing = missing_upload > 0 || missing_download > 0 || missing_connections > 0;
+        let status = match (has_known, has_missing) {
+            (_, false) => AttributionStatus::Complete,
+            (false, true) => AttributionStatus::Unavailable,
+            (true, true) => AttributionStatus::Partial,
+        };
+        Self {
+            known_upload,
+            known_download,
+            missing_upload,
+            missing_download,
+            known_connections,
+            missing_connections,
+            status,
+        }
+    }
+
+    pub fn unavailable(totals: &ReportTotals) -> Self {
+        Self::from_parts(
+            0,
+            0,
+            totals.upload,
+            totals.download,
+            0,
+            totals.connection_count,
+        )
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DrilldownCapability {
@@ -365,6 +431,8 @@ pub struct ReportResult {
     pub rankings: Vec<RankingRow>,
     pub sessions: Vec<SessionRow>,
     pub coverage: CoverageView,
+    #[serde(default)]
+    pub attribution_quality: AttributionQuality,
     pub drilldown_capability: DrilldownCapability,
     pub policy_metadata: PolicyMetadata,
     pub data_tier: DataTier,
@@ -372,6 +440,25 @@ pub struct ReportResult {
     pub next_cursor: Option<String>,
     pub unit: String,
     pub generated_utc: i64,
+}
+
+impl ReportResult {
+    pub fn reconcile_legacy_attribution_quality(&mut self) {
+        let quality = &self.attribution_quality;
+        let is_default = quality.known_upload == 0
+            && quality.known_download == 0
+            && quality.missing_upload == 0
+            && quality.missing_download == 0
+            && quality.known_connections == 0
+            && quality.missing_connections == 0;
+        if is_default
+            && (self.totals.upload != 0
+                || self.totals.download != 0
+                || self.totals.connection_count != 0)
+        {
+            self.attribution_quality = AttributionQuality::unavailable(&self.totals);
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -805,6 +892,7 @@ pub fn empty_result(query: ReportQuery, plan: &CapabilityPlan, data_version: u64
             gap_sec: 0,
             slices: Vec::new(),
         },
+        attribution_quality: AttributionQuality::default(),
         drilldown_capability: plan.drilldown.clone(),
         policy_metadata: PolicyMetadata {
             target_policy: TargetPolicy::Historical,
@@ -827,6 +915,25 @@ pub fn empty_result(query: ReportQuery, plan: &CapabilityPlan, data_version: u64
 #[allow(clippy::field_reassign_with_default)]
 mod query_contract_tests {
     use super::*;
+
+    #[test]
+    fn empty_attribution_quality_is_complete_but_legacy_traffic_is_unavailable() {
+        let empty = AttributionQuality::default();
+        assert_eq!(empty.status, AttributionStatus::Complete);
+
+        let query = ReportQuery::default();
+        let plan = plan_capability(&query, 0, RAW_RETAIN_DAYS_DEFAULT).expect("plan");
+        let mut legacy = empty_result(query, &plan, 1);
+        legacy.totals.upload = 10;
+        legacy.totals.connection_count = 1;
+        legacy.reconcile_legacy_attribution_quality();
+        assert_eq!(
+            legacy.attribution_quality.status,
+            AttributionStatus::Unavailable
+        );
+        assert_eq!(legacy.attribution_quality.missing_upload, 10);
+        assert_eq!(legacy.attribution_quality.missing_connections, 1);
+    }
 
     #[test]
     fn rejects_sql_shaped_cursor_and_bad_range() {

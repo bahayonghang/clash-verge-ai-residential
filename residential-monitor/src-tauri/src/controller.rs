@@ -5,6 +5,57 @@ use crate::credential::Secret;
 use serde_json::{Map, Value};
 use std::net::IpAddr;
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MetadataCoverage {
+    pub connections: u64,
+    pub host_present: u64,
+    pub sniff_host_only: u64,
+    pub destination_ip_only: u64,
+    pub host_absent: u64,
+    pub process_present: u64,
+    pub process_path_only: u64,
+    pub process_absent: u64,
+    pub chains_present: u64,
+    pub provider_chains_only: u64,
+    pub chains_absent: u64,
+}
+
+impl MetadataCoverage {
+    pub fn from_connections(connections: &[ConnectionFact]) -> Self {
+        let mut coverage = Self {
+            connections: connections.len() as u64,
+            ..Self::default()
+        };
+        for connection in connections {
+            if connection.meta.host.is_some() {
+                coverage.host_present += 1;
+            } else if connection.meta.sniff_host.is_some() {
+                coverage.sniff_host_only += 1;
+            } else if connection.meta.destination_ip.is_some() {
+                coverage.destination_ip_only += 1;
+            } else {
+                coverage.host_absent += 1;
+            }
+            if connection.meta.process_name.is_some() {
+                coverage.process_present += 1;
+            } else if connection.meta.process_path.is_some() {
+                coverage.process_path_only += 1;
+            } else {
+                coverage.process_absent += 1;
+            }
+            if !connection.chains.is_empty() {
+                coverage.chains_present += 1;
+            } else if !connection.provider_chains.is_empty() {
+                coverage.provider_chains_only += 1;
+            } else {
+                coverage.chains_absent += 1;
+            }
+        }
+        coverage
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ConnectionMeta {
     pub host: Option<String>,
@@ -85,6 +136,7 @@ pub fn reject_non_loopback_ip(addr: IpAddr) -> Result<(), SessionStatus> {
 }
 
 pub fn truncate_string(value: &str) -> Option<String> {
+    let value = value.trim();
     if value.is_empty() {
         return None;
     }
@@ -101,15 +153,25 @@ pub fn normalize_snapshot(
         return Err(SessionStatus::ProtocolIncompatible);
     }
     let object = raw.as_object().ok_or(SessionStatus::ProtocolIncompatible)?;
-    let upload_total = as_u64(object.get("uploadTotal")).unwrap_or(0);
-    let download_total = as_u64(object.get("downloadTotal")).unwrap_or(0);
-    let mut connections = Vec::new();
-    if let Some(Value::Array(items)) = object.get("connections") {
-        for item in items {
-            if let Some(fact) = normalize_connection(item) {
-                connections.push(fact);
-            }
-        }
+    let upload_total =
+        as_u64(object.get("uploadTotal")).ok_or(SessionStatus::ProtocolIncompatible)?;
+    let download_total =
+        as_u64(object.get("downloadTotal")).ok_or(SessionStatus::ProtocolIncompatible)?;
+    let items = object
+        .get("connections")
+        .and_then(Value::as_array)
+        .ok_or(SessionStatus::ProtocolIncompatible)?;
+    let connections = items
+        .iter()
+        .map(normalize_connection)
+        .collect::<Option<Vec<_>>>()
+        .ok_or(SessionStatus::ProtocolIncompatible)?;
+    let mut ids = std::collections::HashSet::with_capacity(connections.len());
+    if connections
+        .iter()
+        .any(|connection| !ids.insert(connection.id.as_str()))
+    {
+        return Err(SessionStatus::ProtocolIncompatible);
     }
     Ok(ControllerInput::Snapshot {
         received_monotonic_ms,
@@ -122,16 +184,16 @@ pub fn normalize_snapshot(
 
 fn normalize_connection(value: &Value) -> Option<ConnectionFact> {
     let object = value.as_object()?;
-    let id = object.get("id")?.as_str().filter(|text| !text.is_empty())?;
+    let id = object.get("id")?.as_str().and_then(bounded_string)?;
     let metadata = object
         .get("metadata")
         .and_then(Value::as_object)
         .cloned()
         .unwrap_or_default();
     Some(ConnectionFact {
-        id: id.to_string(),
-        upload: as_u64(object.get("upload")).unwrap_or(0),
-        download: as_u64(object.get("download")).unwrap_or(0),
+        id,
+        upload: as_u64(object.get("upload"))?,
+        download: as_u64(object.get("download"))?,
         chains: as_string_list(object.get("chains")),
         provider_chains: as_string_list(object.get("providerChains")),
         meta: ConnectionMeta {
@@ -142,7 +204,7 @@ fn normalize_connection(value: &Value) -> Option<ConnectionFact> {
             source_port: text_field(&metadata, "sourcePort"),
             destination_port: text_field(&metadata, "destinationPort"),
             process_name: text_field(&metadata, "process"),
-            process_path: text_field(&metadata, "processPath"),
+            process_path: bounded_text_field(&metadata, "processPath"),
             network: text_field(&metadata, "network"),
             inbound: text_field(&metadata, "type"),
             start: object
@@ -161,11 +223,29 @@ fn normalize_connection(value: &Value) -> Option<ConnectionFact> {
     })
 }
 
+fn bounded_string(value: &str) -> Option<String> {
+    let value = value.trim();
+    if value.is_empty() || value.chars().count() > STRING_LIMIT {
+        None
+    } else {
+        Some(value.to_string())
+    }
+}
+
 fn text_field(object: &Map<String, Value>, key: &str) -> Option<String> {
     object
         .get(key)
         .and_then(Value::as_str)
         .and_then(truncate_string)
+}
+
+fn bounded_text_field(object: &Map<String, Value>, key: &str) -> Option<String> {
+    let value = object.get(key)?.as_str()?.trim();
+    if value.is_empty() || value.chars().count() > STRING_LIMIT {
+        None
+    } else {
+        Some(value.to_string())
+    }
 }
 
 fn as_u64(value: Option<&Value>) -> Option<u64> {
@@ -262,6 +342,164 @@ mod controller_normalizer_tests {
             normalize_snapshot(&raw, 1, 1).unwrap_err(),
             SessionStatus::ProtocolIncompatible
         );
+    }
+
+    #[test]
+    fn controller_normalizer_rejects_incomplete_root_frame() {
+        for raw in [
+            json!({"downloadTotal": 0, "connections": []}),
+            json!({"uploadTotal": 0, "connections": []}),
+            json!({"uploadTotal": 0, "downloadTotal": 0}),
+            json!({"uploadTotal": "0", "downloadTotal": 0, "connections": []}),
+            json!({"uploadTotal": 0, "downloadTotal": 0, "connections": {}}),
+        ] {
+            assert_eq!(
+                normalize_snapshot(&raw, 1, 1),
+                Err(SessionStatus::ProtocolIncompatible)
+            );
+        }
+    }
+
+    #[test]
+    fn controller_normalizer_trims_metadata_and_chain_elements() {
+        let raw = json!({
+            "uploadTotal": 0,
+            "downloadTotal": 0,
+            "connections": [{
+                "id": "  a  ",
+                "upload": 0,
+                "download": 0,
+                "chains": [" ", " DIRECT ", ""],
+                "metadata": {"host": "  example.test  ", "process": "  "}
+            }]
+        });
+        let ControllerInput::Snapshot { connections, .. } =
+            normalize_snapshot(&raw, 1, 1).expect("normalize")
+        else {
+            panic!("snapshot")
+        };
+        assert_eq!(connections[0].id, "a");
+        assert_eq!(connections[0].chains, vec!["DIRECT"]);
+        assert_eq!(connections[0].meta.host.as_deref(), Some("example.test"));
+        assert_eq!(connections[0].meta.process_name, None);
+    }
+
+    #[test]
+    fn controller_normalizer_rejects_frames_with_invalid_connection_rows() {
+        let raw = json!({
+            "uploadTotal": 0,
+            "downloadTotal": 0,
+            "connections": [
+                {"id": "missing", "download": 0},
+                {"id": "wrong", "upload": "0", "download": 0},
+                {"id": "ok", "upload": 0, "download": 0}
+            ]
+        });
+        assert_eq!(
+            normalize_snapshot(&raw, 1, 1),
+            Err(SessionStatus::ProtocolIncompatible)
+        );
+
+        let overlong_id = json!({
+            "uploadTotal": 0,
+            "downloadTotal": 0,
+            "connections": [{
+                "id": "x".repeat(STRING_LIMIT + 1),
+                "upload": 0,
+                "download": 0
+            }]
+        });
+        assert_eq!(
+            normalize_snapshot(&overlong_id, 1, 1),
+            Err(SessionStatus::ProtocolIncompatible)
+        );
+
+        let duplicate_id = json!({
+            "uploadTotal": 0,
+            "downloadTotal": 0,
+            "connections": [
+                {"id": "same", "upload": 0, "download": 0},
+                {"id": "same", "upload": 0, "download": 0}
+            ]
+        });
+        assert_eq!(
+            normalize_snapshot(&duplicate_id, 1, 1),
+            Err(SessionStatus::ProtocolIncompatible)
+        );
+    }
+
+    #[test]
+    fn overlong_process_path_stays_missing_instead_of_becoming_a_truncated_name() {
+        let raw = json!({
+            "uploadTotal": 0,
+            "downloadTotal": 0,
+            "connections": [{
+                "id": "path",
+                "upload": 0,
+                "download": 0,
+                "metadata": {"processPath": format!("C:\\\\{}\\\\app.exe", "x".repeat(STRING_LIMIT))}
+            }]
+        });
+        let ControllerInput::Snapshot { connections, .. } =
+            normalize_snapshot(&raw, 1, 1).expect("normalize")
+        else {
+            panic!("snapshot")
+        };
+
+        assert_eq!(connections[0].meta.process_path, None);
+    }
+
+    #[test]
+    fn metadata_coverage_reports_presence_without_values() {
+        let raw = json!({
+            "uploadTotal": 0,
+            "downloadTotal": 0,
+            "connections": [
+                {
+                    "id": "complete",
+                    "upload": 0,
+                    "download": 0,
+                    "chains": ["DIRECT"],
+                    "metadata": {"host": "private.example", "process": "private.exe"}
+                },
+                {
+                    "id": "fallbacks",
+                    "upload": 0,
+                    "download": 0,
+                    "providerChains": ["provider-private"],
+                    "metadata": {"sniffHost": "sniff.private", "processPath": "C:\\private\\app.exe"}
+                },
+                {
+                    "id": "ip-only",
+                    "upload": 0,
+                    "download": 0,
+                    "metadata": {"destinationIP": "203.0.113.7"}
+                },
+                {"id": "absent", "upload": 0, "download": 0}
+            ]
+        });
+        let ControllerInput::Snapshot { connections, .. } =
+            normalize_snapshot(&raw, 1, 1).expect("normalize")
+        else {
+            panic!("snapshot")
+        };
+
+        let coverage = MetadataCoverage::from_connections(&connections);
+        assert_eq!(coverage.connections, 4);
+        assert_eq!(coverage.host_present, 1);
+        assert_eq!(coverage.sniff_host_only, 1);
+        assert_eq!(coverage.destination_ip_only, 1);
+        assert_eq!(coverage.host_absent, 1);
+        assert_eq!(coverage.process_present, 1);
+        assert_eq!(coverage.process_path_only, 1);
+        assert_eq!(coverage.process_absent, 2);
+        assert_eq!(coverage.chains_present, 1);
+        assert_eq!(coverage.provider_chains_only, 1);
+        assert_eq!(coverage.chains_absent, 2);
+
+        let encoded = serde_json::to_string(&coverage).expect("coverage json");
+        assert!(!encoded.contains("private"));
+        assert!(!encoded.contains("203.0.113.7"));
     }
 }
 

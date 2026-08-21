@@ -13,7 +13,7 @@ use crate::c4::types::AlertWriteSet;
 pub const MIGRATION_CHECKSUM: &str = "c1-core-v1";
 use crate::sqlite_probe::{apply_required_pragmas, open_bundled};
 use rusqlite::backup::Backup;
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -42,7 +42,7 @@ pub struct CommitBundle {
     pub payload: String,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize)]
 pub struct AlertCommitSlice {
     pub facts: Vec<crate::accounting::MinuteFact>,
     pub coverage: Vec<crate::accounting::CoverageChange>,
@@ -449,6 +449,58 @@ impl StorageCoordinator {
         self.prepare_count
     }
 
+    pub fn reserve_writer_epoch(&mut self) -> Result<u64, StorageError> {
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let highest: i64 = transaction.query_row(
+            "select max(value) from (
+                select coalesce(max(writer_epoch), 0) as value from bundle_epoch
+                union all
+                select coalesce(max(writer_epoch), 0) as value from committed_bundle
+             )",
+            [],
+            |row| row.get(0),
+        )?;
+        let next = highest
+            .checked_add(1)
+            .filter(|value| *value > 0)
+            .ok_or_else(|| StorageError::Closed("writer epoch exhausted".into()))?;
+        let watermark: i64 = transaction.query_row(
+            "select watermark from data_version where id = 1",
+            [],
+            |row| row.get(0),
+        )?;
+        transaction.execute(
+            "insert into bundle_epoch(writer_epoch, highest_contiguous_seq, durable_watermark)
+             values (?1, 0, ?2)",
+            params![next, watermark],
+        )?;
+        transaction.commit()?;
+        Ok(next as u64)
+    }
+
+    pub fn reserve_controller_epoch(&mut self, core_identity: &str) -> Result<u64, StorageError> {
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let highest: i64 = transaction.query_row(
+            "select coalesce(max(epoch_id), 0) from controller_epoch",
+            [],
+            |row| row.get(0),
+        )?;
+        let next = highest
+            .checked_add(1)
+            .filter(|value| *value > 0)
+            .ok_or_else(|| StorageError::Closed("controller epoch exhausted".into()))?;
+        transaction.execute(
+            "insert into controller_epoch(epoch_id, core_identity) values (?1, ?2)",
+            params![next, core_identity],
+        )?;
+        transaction.commit()?;
+        Ok(next as u64)
+    }
+
     pub fn health(&self) -> Result<StorageHealth, StorageError> {
         Ok(StorageHealth {
             ok: true,
@@ -540,11 +592,17 @@ fn persist_slice(connection: &Connection, slice: &AlertCommitSlice) -> Result<()
         let (epoch, id) = split_identity(&row.identity);
         let session_pk = ensure_session_on(connection, epoch, id, slice.utc, row.host.as_deref())?;
         intern_and_attr(connection, session_pk, row, slice.utc)?;
-        for (position, node) in row.chains.iter().enumerate() {
+        if !row.chains.is_empty() {
             connection.execute(
-                "insert or ignore into connection_chain(session_pk, position, node) values (?1, ?2, ?3)",
-                params![session_pk, position as i64, node],
+                "delete from connection_chain where session_pk = ?1",
+                [session_pk],
             )?;
+            for (position, node) in row.chains.iter().enumerate() {
+                connection.execute(
+                    "insert into connection_chain(session_pk, position, node) values (?1, ?2, ?3)",
+                    params![session_pk, position as i64, node],
+                )?;
+            }
         }
     }
     for fact in &slice.facts {
@@ -611,8 +669,8 @@ impl StorageCoordinator {
                 session_pk, host_id, process_id, rule_id, network_id, chain_key,
                 policy_version, primary_category_id, started_utc, ended_utc
             ) values
-                (1, 1, 1, null, 1, '家宽', 1, 1, 1200, null),
-                (2, 2, 1, null, 1, '家宽', 1, 1, 1800, null);
+                (1, 1, 1, null, 1, 'DIRECT', 1, 1, 1200, null),
+                (2, 2, 1, null, 1, 'DIRECT', 1, 1, 1800, null);
             insert or ignore into connection_minute(utc_minute, session_pk, upload, download)
             values (20, 1, 10, 30), (40, 2, 20, 60);
             insert or ignore into coverage_interval(interval_id, kind, reason, started_utc, ended_utc)
@@ -642,7 +700,12 @@ fn intern_and_attr(
     row: &crate::c2::hub::LiveConnectionView,
     utc: i64,
 ) -> Result<(), StorageError> {
-    let host_id = intern_dim(connection, "host", row.host.as_deref())?;
+    let canonical_host: Option<String> = connection.query_row(
+        "select host from connection_session where session_pk = ?1",
+        [session_pk],
+        |result| result.get(0),
+    )?;
+    let host_id = intern_dim(connection, "host", canonical_host.as_deref())?;
     let process_id = intern_dim(connection, "process", row.process_name.as_deref())?;
     let rule_id = intern_dim(connection, "rule", row.rule.as_deref())?;
     let network_id = intern_dim(connection, "network", row.network.as_deref())?;
@@ -658,11 +721,11 @@ fn intern_and_attr(
             policy_version, primary_category_id, started_utc, ended_utc
          ) values (?1, ?2, ?3, ?4, ?5, ?6, 0, ?7, ?8, null)
          on conflict(session_pk) do update set
-            host_id = excluded.host_id,
-            process_id = excluded.process_id,
-            rule_id = excluded.rule_id,
-            network_id = excluded.network_id,
-            chain_key = excluded.chain_key,
+            host_id = coalesce(excluded.host_id, connection_session_attr.host_id),
+            process_id = coalesce(excluded.process_id, connection_session_attr.process_id),
+            rule_id = coalesce(excluded.rule_id, connection_session_attr.rule_id),
+            network_id = coalesce(excluded.network_id, connection_session_attr.network_id),
+            chain_key = coalesce(excluded.chain_key, connection_session_attr.chain_key),
             primary_category_id = excluded.primary_category_id",
         params![
             session_pk,
@@ -683,7 +746,7 @@ fn intern_dim(
     kind: &str,
     value: Option<&str>,
 ) -> Result<Option<i64>, StorageError> {
-    let Some(value) = value else {
+    let Some(value) = value.map(str::trim).filter(|value| !value.is_empty()) else {
         return Ok(None);
     };
     if value == UNKNOWN_IDENTITY {
@@ -1504,5 +1567,220 @@ mod storage_host_identity_tests {
             .persist_live_facts(&[], &[live("a", Some("8.8.8.8"))], &[], 103)
             .expect("no downgrade");
         assert_eq!(host_of(&coordinator, "a").as_deref(), Some("a.test"));
+    }
+}
+
+#[cfg(test)]
+mod storage_attribution_lifecycle_tests {
+    use super::*;
+    use crate::c2::hub::LiveConnectionView;
+    use tempfile::tempdir;
+
+    #[test]
+    fn writer_and_controller_epochs_are_durable_and_monotonic() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("epoch.sqlite3");
+        let mut first = StorageCoordinator::open(&path).expect("open");
+        assert_eq!(first.reserve_writer_epoch().expect("writer 1"), 1);
+        assert_eq!(first.reserve_writer_epoch().expect("writer 2"), 2);
+        assert_eq!(
+            first
+                .reserve_controller_epoch("collector-http")
+                .expect("controller 1"),
+            1
+        );
+        drop(first);
+
+        let mut second = StorageCoordinator::open(&path).expect("reopen");
+        assert_eq!(second.reserve_writer_epoch().expect("writer 3"), 3);
+        assert_eq!(
+            second
+                .reserve_controller_epoch("collector-http")
+                .expect("controller 2"),
+            2
+        );
+    }
+
+    #[test]
+    fn concurrent_epoch_reservations_are_unique() {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("epoch-race.sqlite3");
+        drop(StorageCoordinator::open(&path).expect("initialize"));
+        let barrier = Arc::new(std::sync::Barrier::new(4));
+        let handles: Vec<_> = (0..4)
+            .map(|_| {
+                let barrier = barrier.clone();
+                let path = path.clone();
+                std::thread::spawn(move || {
+                    let mut coordinator = StorageCoordinator::open(&path).expect("open");
+                    barrier.wait();
+                    let writer = coordinator.reserve_writer_epoch().expect("writer");
+                    let controller = coordinator
+                        .reserve_controller_epoch("collector-http")
+                        .expect("controller");
+                    (writer, controller)
+                })
+            })
+            .collect();
+        let mut writers = Vec::new();
+        let mut controllers = Vec::new();
+        for handle in handles {
+            let (writer, controller) = handle.join().expect("join");
+            writers.push(writer);
+            controllers.push(controller);
+        }
+        writers.sort_unstable();
+        controllers.sort_unstable();
+        assert_eq!(writers, vec![1, 2, 3, 4]);
+        assert_eq!(controllers, vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn writer_epoch_exhaustion_fails_closed() {
+        let dir = tempdir().expect("tempdir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("epoch-overflow.sqlite3")).expect("open");
+        coordinator
+            .connection()
+            .execute(
+                "insert into bundle_epoch(writer_epoch, highest_contiguous_seq, durable_watermark)
+                 values (?1, 0, 0)",
+                [i64::MAX],
+            )
+            .expect("seed max epoch");
+
+        let error = coordinator.reserve_writer_epoch().unwrap_err();
+        assert!(
+            matches!(error, StorageError::Closed(message) if message == "writer epoch exhausted")
+        );
+    }
+
+    fn rich_row() -> LiveConnectionView {
+        LiveConnectionView {
+            identity: "1:a".into(),
+            connection_id: "a".into(),
+            epoch: 1,
+            host: Some("a.test".into()),
+            process_name: Some("browser.exe".into()),
+            rule: Some("IPCIDR".into()),
+            network: Some("tcp".into()),
+            chains: vec!["node".into(), "Proxy".into()],
+            ..LiveConnectionView::default()
+        }
+    }
+
+    #[test]
+    fn empty_metadata_does_not_erase_attr_and_chain_replacement_is_atomic() {
+        let dir = tempdir().expect("tempdir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("attr.sqlite3")).expect("open");
+        coordinator
+            .persist_live_facts(&[], &[rich_row()], &[], 100)
+            .expect("rich");
+        let empty = LiveConnectionView {
+            identity: "1:a".into(),
+            connection_id: "a".into(),
+            epoch: 1,
+            ..LiveConnectionView::default()
+        };
+        coordinator
+            .persist_live_facts(&[], &[empty], &[], 101)
+            .expect("empty");
+        type StoredAttribution = (
+            Option<String>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+        );
+        let values: StoredAttribution =
+            coordinator
+                .connection()
+                .query_row(
+                    "select h.value, p.value, r.value, n.value, a.chain_key
+                       from connection_session_attr a
+                       left join dimension_dict h on h.dimension_kind='host' and h.dimension_id=a.host_id
+                       left join dimension_dict p on p.dimension_kind='process' and p.dimension_id=a.process_id
+                       left join dimension_dict r on r.dimension_kind='rule' and r.dimension_id=a.rule_id
+                       left join dimension_dict n on n.dimension_kind='network' and n.dimension_id=a.network_id",
+                    [],
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
+                )
+                .expect("attr");
+        assert_eq!(
+            values,
+            (
+                Some("a.test".into()),
+                Some("browser.exe".into()),
+                Some("IPCIDR".into()),
+                Some("tcp".into()),
+                Some("node>Proxy".into())
+            )
+        );
+
+        let changed = LiveConnectionView {
+            chains: vec!["DIRECT".into()],
+            ..rich_row()
+        };
+        coordinator
+            .persist_live_facts(&[], &[changed], &[], 102)
+            .expect("changed");
+        let nodes: Vec<String> = {
+            let mut statement = coordinator
+                .connection()
+                .prepare("select node from connection_chain order by position")
+                .expect("prepare");
+            statement
+                .query_map([], |row| row.get(0))
+                .expect("query")
+                .collect::<Result<_, _>>()
+                .expect("rows")
+        };
+        assert_eq!(nodes, vec!["DIRECT"]);
+    }
+
+    #[test]
+    fn late_metadata_enriches_existing_raw_minutes_for_the_same_session() {
+        let dir = tempdir().expect("tempdir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("late-metadata.sqlite3")).expect("open");
+        let empty = LiveConnectionView {
+            identity: "1:a".into(),
+            connection_id: "a".into(),
+            epoch: 1,
+            ..LiveConnectionView::default()
+        };
+        let fact = crate::accounting::MinuteFact {
+            session_key: "1:a".into(),
+            utc_minute: 1,
+            upload: 7,
+            download: 11,
+            primary: None,
+            tags: Vec::new(),
+        };
+        coordinator
+            .persist_live_facts(&[fact], &[empty], &[], 60)
+            .expect("initial raw");
+        coordinator
+            .persist_live_facts(&[], &[rich_row()], &[], 61)
+            .expect("late metadata");
+
+        let enriched: (Option<String>, Option<String>, i64, i64) = coordinator
+            .connection()
+            .query_row(
+                "select h.value, p.value, m.upload, m.download
+                   from connection_minute m
+                   join connection_session s on s.session_pk=m.session_pk
+                   join connection_session_attr a on a.session_pk=s.session_pk
+                   left join dimension_dict h on h.dimension_kind='host' and h.dimension_id=a.host_id
+                   left join dimension_dict p on p.dimension_kind='process' and p.dimension_id=a.process_id",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .expect("enriched raw");
+        assert_eq!(
+            enriched,
+            (Some("a.test".into()), Some("browser.exe".into()), 7, 11)
+        );
     }
 }

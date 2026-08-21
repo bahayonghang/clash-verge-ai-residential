@@ -49,6 +49,7 @@ pub struct HealthView {
 #[serde(rename_all = "camelCase")]
 pub struct LiveOverview {
     pub schema_version: u32,
+    pub observation_phase: ObservationPhase,
     pub meter_upload: Option<u64>,
     pub meter_download: Option<u64>,
     pub attributed_upload: Option<u64>,
@@ -66,6 +67,19 @@ pub struct LiveOverview {
     pub coverage_kind: Option<String>,
     pub coverage_reason: Option<String>,
     pub health: HealthView,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ObservationPhase {
+    Unconfigured,
+    Connecting,
+    BaselinePending,
+    Current,
+    Paused,
+    Disconnected,
+    ResyncRequired,
+    DecodeFailed,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -90,6 +104,7 @@ pub enum MonitorStreamMessage {
         #[serde(rename = "subscriptionId")]
         subscription_id: u64,
         seq: u64,
+        snapshot: LiveOverview,
         upserts: Vec<LiveConnectionView>,
         removes: Vec<String>,
         #[serde(rename = "backendTime")]
@@ -229,6 +244,10 @@ impl MonitorHub {
         self.inner.lock().expect("hub").serialize_ui = enabled;
     }
 
+    pub fn set_observation_phase(&self, phase: ObservationPhase) {
+        self.inner.lock().expect("hub").snapshot.observation_phase = phase;
+    }
+
     pub fn subscribe(&self) -> MonitorStreamMessage {
         let c1 = self.live.subscribe();
         let base_seq = match c1 {
@@ -318,7 +337,7 @@ impl MonitorHub {
             let _ = id;
         }
         guard.rows = next;
-        guard.snapshot = overview_from(batch, &guard.rows, health, utc);
+        guard.snapshot = overview_from(batch, &guard.rows, health, Some(utc));
         if !guard.serialize_ui || guard.active.is_empty() {
             let _ = guard.coalescer.take();
             return Ok(None);
@@ -329,6 +348,49 @@ impl MonitorHub {
             schema_version: SCHEMA_VERSION,
             subscription_id,
             seq,
+            snapshot: guard.snapshot.clone(),
+            upserts,
+            removes,
+            backend_time: utc,
+        }))
+    }
+
+    /// Publish a lifecycle/health transition without pretending it was a new
+    /// controller sample. Retained rows keep their previous rates and sample
+    /// time; terminal transitions may explicitly clear them.
+    pub fn publish_lifecycle(
+        &self,
+        batch: &AccountingBatch,
+        retain_rows: bool,
+        health: HealthView,
+        utc: i64,
+    ) -> Result<Option<MonitorStreamMessage>, CoalesceOverflow> {
+        let seq = self.live.apply_receipt(utc as u64);
+        let mut guard = self.inner.lock().expect("hub");
+        if !retain_rows {
+            let removed: Vec<String> = guard.rows.keys().cloned().collect();
+            for identity in removed {
+                guard
+                    .coalescer
+                    .push(PendingOp::Remove(identity))
+                    .map_err(|_| CoalesceOverflow)?;
+            }
+            guard.rows.clear();
+            guard.prev_sample.clear();
+        }
+        let last_sample_utc = guard.snapshot.last_sample_utc;
+        guard.snapshot = overview_from(batch, &guard.rows, health, last_sample_utc);
+        if !guard.serialize_ui || guard.active.is_empty() {
+            let _ = guard.coalescer.take();
+            return Ok(None);
+        }
+        let (upserts, removes) = guard.coalescer.take();
+        let subscription_id = *guard.active.keys().next().unwrap_or(&0);
+        Ok(Some(MonitorStreamMessage::ConnectionDelta {
+            schema_version: SCHEMA_VERSION,
+            subscription_id,
+            seq,
+            snapshot: guard.snapshot.clone(),
             upserts,
             removes,
             backend_time: utc,
@@ -441,6 +503,7 @@ pub fn health_from(status: SessionStatus, storage: Option<&StorageHealth>) -> He
 fn empty_overview(status: SessionStatus) -> LiveOverview {
     LiveOverview {
         schema_version: SCHEMA_VERSION,
+        observation_phase: phase_from_status(status),
         meter_upload: None,
         meter_download: None,
         attributed_upload: None,
@@ -465,7 +528,7 @@ fn overview_from(
     batch: &AccountingBatch,
     rows: &BTreeMap<String, LiveConnectionView>,
     health: HealthView,
-    utc: i64,
+    last_sample_utc: Option<i64>,
 ) -> LiveOverview {
     let mut category_upload = BTreeMap::new();
     let mut category_download = BTreeMap::new();
@@ -486,6 +549,7 @@ fn overview_from(
     let coverage = batch.coverage.first();
     LiveOverview {
         schema_version: SCHEMA_VERSION,
+        observation_phase: phase_from_batch(batch, &health),
         meter_upload: batch.meter_upload,
         meter_download: batch.meter_download,
         attributed_upload: batch.attributed_upload,
@@ -499,10 +563,60 @@ fn overview_from(
         over_upload: batch.over_upload,
         over_download: batch.over_download,
         active_count: rows.len() as u32,
-        last_sample_utc: Some(utc),
+        last_sample_utc,
         coverage_kind: coverage.map(|item| item.kind.to_string()),
         coverage_reason: coverage.map(|item| item.reason.to_string()),
         health,
+    }
+}
+
+fn phase_from_status(status: SessionStatus) -> ObservationPhase {
+    match status {
+        SessionStatus::Connecting => ObservationPhase::Connecting,
+        SessionStatus::Connected => ObservationPhase::BaselinePending,
+        SessionStatus::ProtocolIncompatible => ObservationPhase::DecodeFailed,
+        SessionStatus::CoreRestarted => ObservationPhase::ResyncRequired,
+        SessionStatus::AuthFailed
+        | SessionStatus::PipeAccessDenied
+        | SessionStatus::PipeBusyTimeout
+        | SessionStatus::EndpointMissing
+        | SessionStatus::PidMismatch
+        | SessionStatus::Cancelled
+        | SessionStatus::NonLoopback => ObservationPhase::Disconnected,
+    }
+}
+
+fn phase_from_batch(batch: &AccountingBatch, health: &HealthView) -> ObservationPhase {
+    if batch
+        .coverage
+        .iter()
+        .any(|item| item.kind == "epoch" && item.reason == "core_restart")
+    {
+        return ObservationPhase::ResyncRequired;
+    }
+    if batch
+        .coverage
+        .iter()
+        .any(|item| item.kind == "closed" && item.reason == "pause_or_shutdown")
+    {
+        return ObservationPhase::Paused;
+    }
+    match health.session.as_str() {
+        "connected" => {
+            if batch.meter_upload.is_some()
+                && batch.meter_download.is_some()
+                && batch.attributed_upload.is_some()
+                && batch.attributed_download.is_some()
+            {
+                ObservationPhase::Current
+            } else {
+                ObservationPhase::BaselinePending
+            }
+        }
+        "connecting" => ObservationPhase::Connecting,
+        "protocol_incompatible" => ObservationPhase::DecodeFailed,
+        "core_restarted" => ObservationPhase::ResyncRequired,
+        _ => ObservationPhase::Disconnected,
     }
 }
 
@@ -544,6 +658,135 @@ mod channel_contract_tests {
         assert_ne!(first, second);
         assert!(!hub.is_active(first));
         assert!(hub.is_active(second));
+    }
+
+    #[test]
+    fn observation_phase_distinguishes_baseline_current_and_failures() {
+        let mut batch = AccountingBatch {
+            facts: Vec::new(),
+            coverage: Vec::new(),
+            attributed_upload: None,
+            attributed_download: None,
+            meter_upload: None,
+            meter_download: None,
+            gap_upload: None,
+            gap_download: None,
+            over_upload: None,
+            over_download: None,
+        };
+        assert_eq!(
+            phase_from_batch(&batch, &health_from(SessionStatus::Connected, None)),
+            ObservationPhase::BaselinePending
+        );
+        batch.attributed_upload = Some(0);
+        batch.attributed_download = Some(0);
+        batch.meter_upload = Some(0);
+        batch.meter_download = Some(0);
+        assert_eq!(
+            phase_from_batch(&batch, &health_from(SessionStatus::Connected, None)),
+            ObservationPhase::Current
+        );
+        assert_eq!(
+            phase_from_status(SessionStatus::ProtocolIncompatible),
+            ObservationPhase::DecodeFailed
+        );
+        assert_eq!(
+            phase_from_status(SessionStatus::CoreRestarted),
+            ObservationPhase::ResyncRequired
+        );
+    }
+
+    #[test]
+    fn connection_delta_carries_the_same_current_overview() {
+        let hub = MonitorHub::new();
+        let MonitorStreamMessage::Bootstrap {
+            subscription_id, ..
+        } = hub.subscribe()
+        else {
+            panic!("bootstrap");
+        };
+        let batch = AccountingBatch {
+            facts: Vec::new(),
+            coverage: Vec::new(),
+            attributed_upload: Some(0),
+            attributed_download: Some(0),
+            meter_upload: Some(0),
+            meter_download: Some(0),
+            gap_upload: Some(0),
+            gap_download: Some(0),
+            over_upload: Some(0),
+            over_download: Some(0),
+        };
+        let message = hub
+            .publish(
+                &batch,
+                Vec::new(),
+                health_from(SessionStatus::Connected, None),
+                100,
+            )
+            .expect("publish")
+            .expect("message");
+        let MonitorStreamMessage::ConnectionDelta {
+            subscription_id: actual,
+            snapshot,
+            ..
+        } = message
+        else {
+            panic!("delta");
+        };
+        assert_eq!(actual, subscription_id);
+        assert_eq!(snapshot.observation_phase, ObservationPhase::Current);
+        assert_eq!(snapshot.last_sample_utc, Some(100));
+    }
+
+    #[test]
+    fn lifecycle_publish_preserves_last_controller_sample() {
+        let hub = MonitorHub::new();
+        let current = AccountingBatch {
+            facts: Vec::new(),
+            coverage: Vec::new(),
+            attributed_upload: Some(0),
+            attributed_download: Some(0),
+            meter_upload: Some(0),
+            meter_download: Some(0),
+            gap_upload: Some(0),
+            gap_download: Some(0),
+            over_upload: Some(0),
+            over_download: Some(0),
+        };
+        hub.publish(
+            &current,
+            Vec::new(),
+            health_from(SessionStatus::Connected, None),
+            100,
+        )
+        .expect("sample");
+        let gap = AccountingBatch {
+            facts: Vec::new(),
+            coverage: vec![crate::accounting::CoverageChange {
+                kind: "gap",
+                reason: "disconnect_or_sleep",
+            }],
+            attributed_upload: None,
+            attributed_download: None,
+            meter_upload: None,
+            meter_download: None,
+            gap_upload: None,
+            gap_download: None,
+            over_upload: None,
+            over_download: None,
+        };
+        hub.publish_lifecycle(
+            &gap,
+            true,
+            health_from(SessionStatus::ProtocolIncompatible, None),
+            200,
+        )
+        .expect("lifecycle");
+
+        let overview = hub.overview();
+        assert_eq!(overview.last_sample_utc, Some(100));
+        assert_eq!(overview.observation_phase, ObservationPhase::DecodeFailed);
     }
 }
 

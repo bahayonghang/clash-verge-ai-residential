@@ -33,6 +33,8 @@ pub struct RetentionPreview {
 
 pub struct RetentionService;
 
+const CHAIN_IDENTITY_V1_LAYER: &str = "chain_identity_v1";
+
 impl RetentionService {
     pub fn preview(
         coordinator: &StorageCoordinator,
@@ -69,6 +71,7 @@ impl RetentionService {
         if cancel.load(Ordering::SeqCst) {
             return Err(ReportError::Cancelled("retention"));
         }
+        repair_chain_identity_v1(coordinator)?;
         materialize_hourly(coordinator, now_utc, raw_retain_days)?;
         materialize_daily_from_hourly(coordinator, now_utc)?;
         materialize_core(coordinator, now_utc)?;
@@ -79,6 +82,278 @@ impl RetentionService {
         }
         Self::preview(coordinator, raw_retain_days)
     }
+}
+
+/// Rebuilds only the portion of the existing derived layer that still has raw
+/// evidence. Raw-deleted hours and frozen report archives are intentionally
+/// left untouched.
+fn repair_chain_identity_v1(coordinator: &mut StorageCoordinator) -> Result<(), ReportError> {
+    let connection = coordinator.connection_mut();
+    let already_applied: bool = connection
+        .query_row(
+            "select exists(select 1 from retention_watermark where layer = ?1)",
+            [CHAIN_IDENTITY_V1_LAYER],
+            |row| row.get(0),
+        )
+        .map_err(|_| ReportError::Failed("chain repair marker read"))?;
+    if already_applied {
+        return Ok(());
+    }
+
+    connection
+        .execute_batch("begin immediate")
+        .map_err(|_| ReportError::StorageBusy("chain repair begin"))?;
+    let result = (|| {
+        let raw_bounds = connection
+            .query_row(
+                "select min(utc_minute), max(utc_minute) from connection_minute",
+                [],
+                |row| Ok((row.get::<_, Option<i64>>(0)?, row.get::<_, Option<i64>>(1)?)),
+            )
+            .map_err(|_| ReportError::Failed("chain repair raw bounds"))?;
+        let raw_bounds = raw_bounds.0.zip(raw_bounds.1);
+        let derived_bounds = connection
+            .query_row(
+                "select min(utc_hour), max(utc_hour) from traffic_hourly_dimension",
+                [],
+                |row| Ok((row.get::<_, Option<i64>>(0)?, row.get::<_, Option<i64>>(1)?)),
+            )
+            .map_err(|_| ReportError::Failed("chain repair derived bounds"))?;
+        let derived_bounds = derived_bounds.0.zip(derived_bounds.1);
+
+        let Some(((raw_minute, raw_max_minute), (derived_min, derived_max))) =
+            raw_bounds.zip(derived_bounds)
+        else {
+            write_chain_repair_marker(connection, 0)?;
+            return Ok(());
+        };
+        let start_hour = (raw_minute * 60).div_euclid(3_600) * 3_600;
+        let end_hour = (raw_max_minute * 60).div_euclid(3_600) * 3_600 + 3_600;
+        let start_hour = start_hour.max(derived_min);
+        let end_hour = end_hour.min(derived_max + 3_600);
+        if start_hour >= end_hour {
+            write_chain_repair_marker(connection, 0)?;
+            return Ok(());
+        }
+
+        let raw_totals = raw_chain_totals(connection, start_hour, end_hour, false)?;
+        let raw_known_totals = raw_chain_totals(connection, start_hour, end_hour, true)?;
+        let hourly_before = derived_chain_totals(
+            connection,
+            "traffic_hourly_dimension",
+            "utc_hour",
+            start_hour,
+            end_hour,
+            false,
+        )?;
+        let hourly_rows_before = derived_chain_row_count(
+            connection,
+            "traffic_hourly_dimension",
+            "utc_hour",
+            start_hour,
+            end_hour,
+        )?;
+        if hourly_rows_before > 0 && hourly_before != raw_totals {
+            return Err(ReportError::Failed("chain repair incomplete raw evidence"));
+        }
+        connection
+            .execute(
+                "delete from traffic_hourly_dimension
+                  where dimension_kind = 'chain' and utc_hour >= ?1 and utc_hour < ?2",
+                params![start_hour, end_hour],
+            )
+            .map_err(|_| ReportError::Failed("chain repair delete hourly"))?;
+        let start_minute = start_hour.div_euclid(60);
+        let end_minute = end_hour.div_euclid(60);
+        intern_chain_keys(connection, start_minute, end_minute)?;
+        insert_hourly_kind(connection, HOURLY_CHAIN, start_minute, end_minute)?;
+
+        let hourly_totals = derived_chain_totals(
+            connection,
+            "traffic_hourly_dimension",
+            "utc_hour",
+            start_hour,
+            end_hour,
+            false,
+        )?;
+        let hourly_known_totals = derived_chain_totals(
+            connection,
+            "traffic_hourly_dimension",
+            "utc_hour",
+            start_hour,
+            end_hour,
+            true,
+        )?;
+        if raw_totals != hourly_totals
+            || raw_known_totals != hourly_known_totals
+            || (hourly_rows_before > 0 && hourly_before != hourly_totals)
+        {
+            return Err(ReportError::Failed("chain repair hourly conservation"));
+        }
+
+        let start_day = start_hour.div_euclid(86_400) * 86_400;
+        let end_day = (end_hour - 1).div_euclid(86_400) * 86_400 + 86_400;
+        let daily_before = derived_chain_totals(
+            connection,
+            "traffic_daily_dimension",
+            "utc_day",
+            start_day,
+            end_day,
+            false,
+        )?;
+        let daily_rows_before = derived_chain_row_count(
+            connection,
+            "traffic_daily_dimension",
+            "utc_day",
+            start_day,
+            end_day,
+        )?;
+        connection
+            .execute(
+                "delete from traffic_daily_dimension
+                  where dimension_kind = 'chain' and utc_day >= ?1 and utc_day < ?2",
+                params![start_day, end_day],
+            )
+            .map_err(|_| ReportError::Failed("chain repair delete daily"))?;
+        connection
+            .execute(
+                "insert into traffic_daily_dimension(
+                    utc_day, category_id, dimension_kind, dimension_id,
+                    upload, download, connection_count, active_duration_sec
+                 )
+                 select (utc_hour / 86400) * 86400, category_id, 'chain', dimension_id,
+                        sum(upload), sum(download), sum(connection_count), sum(active_duration_sec)
+                   from traffic_hourly_dimension
+                  where dimension_kind = 'chain' and utc_hour >= ?1 and utc_hour < ?2
+                  group by 1, 2, 4",
+                params![start_day, end_day],
+            )
+            .map_err(|_| ReportError::Failed("chain repair rebuild daily"))?;
+        let affected_hourly = derived_chain_totals(
+            connection,
+            "traffic_hourly_dimension",
+            "utc_hour",
+            start_day,
+            end_day,
+            false,
+        )?;
+        let affected_daily = derived_chain_totals(
+            connection,
+            "traffic_daily_dimension",
+            "utc_day",
+            start_day,
+            end_day,
+            false,
+        )?;
+        if affected_hourly != affected_daily
+            || (daily_rows_before > 0 && daily_before != affected_daily)
+        {
+            return Err(ReportError::Failed("chain repair daily conservation"));
+        }
+
+        write_chain_repair_marker(connection, end_hour)?;
+        Ok(())
+    })();
+    match result {
+        Ok(()) => connection
+            .execute_batch("commit")
+            .map_err(|_| ReportError::Failed("chain repair commit")),
+        Err(error) => {
+            let _ = connection.execute_batch("rollback");
+            Err(error)
+        }
+    }
+}
+
+fn write_chain_repair_marker(
+    connection: &rusqlite::Connection,
+    watermark_utc: i64,
+) -> Result<(), ReportError> {
+    connection
+        .execute(
+            "insert into retention_watermark(layer, watermark_utc, delete_watermark_utc)
+             values (?1, ?2, 0)",
+            params![CHAIN_IDENTITY_V1_LAYER, watermark_utc],
+        )
+        .map_err(|_| ReportError::Failed("chain repair marker"))?;
+    Ok(())
+}
+
+fn raw_chain_totals(
+    connection: &rusqlite::Connection,
+    start_utc: i64,
+    end_utc: i64,
+    known_only: bool,
+) -> Result<(i64, i64), ReportError> {
+    let known_clause = if known_only {
+        "and chain_identity(a.chain_key) is not null"
+    } else {
+        ""
+    };
+    let sql = format!(
+        "select coalesce(sum(m.upload), 0), coalesce(sum(m.download), 0)
+           from connection_minute m
+           left join connection_session_attr a on a.session_pk = m.session_pk
+          where m.utc_minute >= ?1 and m.utc_minute < ?2 {known_clause}"
+    );
+    connection
+        .query_row(
+            &sql,
+            params![start_utc.div_euclid(60), end_utc.div_euclid(60)],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .map_err(|_| ReportError::Failed("chain repair raw totals"))
+}
+
+fn derived_chain_totals(
+    connection: &rusqlite::Connection,
+    table: &str,
+    time_column: &str,
+    start_utc: i64,
+    end_utc: i64,
+    known_only: bool,
+) -> Result<(i64, i64), ReportError> {
+    debug_assert!(matches!(
+        (table, time_column),
+        ("traffic_hourly_dimension", "utc_hour") | ("traffic_daily_dimension", "utc_day")
+    ));
+    let known_clause = if known_only {
+        "and dimension_id <> 0"
+    } else {
+        ""
+    };
+    let sql = format!(
+        "select coalesce(sum(upload), 0), coalesce(sum(download), 0)
+           from {table}
+          where dimension_kind = 'chain'
+            and {time_column} >= ?1 and {time_column} < ?2 {known_clause}"
+    );
+    connection
+        .query_row(&sql, params![start_utc, end_utc], |row| {
+            Ok((row.get(0)?, row.get(1)?))
+        })
+        .map_err(|_| ReportError::Failed("chain repair derived totals"))
+}
+
+fn derived_chain_row_count(
+    connection: &rusqlite::Connection,
+    table: &str,
+    time_column: &str,
+    start_utc: i64,
+    end_utc: i64,
+) -> Result<i64, ReportError> {
+    debug_assert!(matches!(
+        (table, time_column),
+        ("traffic_hourly_dimension", "utc_hour") | ("traffic_daily_dimension", "utc_day")
+    ));
+    let sql = format!(
+        "select count(*) from {table}
+          where dimension_kind = 'chain'
+            and {time_column} >= ?1 and {time_column} < ?2"
+    );
+    connection
+        .query_row(&sql, params![start_utc, end_utc], |row| row.get(0))
+        .map_err(|_| ReportError::Failed("chain repair derived rows"))
 }
 
 fn count(connection: &rusqlite::Connection, sql: &str) -> Result<i64, ReportError> {
@@ -273,7 +548,7 @@ insert or replace into traffic_hourly_dimension(
 select (m.utc_minute * 60 / 3600) * 3600,
        coalesce(a.primary_category_id, 0),
        'chain',
-       coalesce((select dimension_id from dimension_dict where dimension_kind = 'chain' and value = last_chain_hop(a.chain_key)), 0),
+       coalesce((select dimension_id from dimension_dict where dimension_kind = 'chain' and value = chain_identity(a.chain_key)), 0),
        sum(m.upload), sum(m.download),
        count(distinct m.session_pk),
        count(distinct m.utc_minute) * 60
@@ -320,11 +595,11 @@ fn intern_chain_keys(
     intern_distinct(
         connection,
         "chain",
-        "select distinct last_chain_hop(a.chain_key)
+        "select distinct chain_identity(a.chain_key)
            from connection_minute m
            left join connection_session_attr a on a.session_pk = m.session_pk
           where m.utc_minute >= ?1 and m.utc_minute < ?2
-            and last_chain_hop(a.chain_key) is not null",
+            and chain_identity(a.chain_key) is not null",
         start_min,
         end_min,
     )
@@ -655,5 +930,235 @@ mod retention_tests {
             )
             .expect("host");
         assert_eq!(core, host);
+    }
+
+    #[test]
+    fn chain_identity_repair_replaces_old_unknown_without_double_counting() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("chain-repair.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        coordinator
+            .connection()
+            .execute_batch(
+                "insert into traffic_hourly_dimension(
+                    utc_hour, category_id, dimension_kind, dimension_id,
+                    upload, download, connection_count, active_duration_sec
+                 ) values (0, 1, 'chain', 0, 30, 90, 2, 120);
+                 insert into traffic_daily_dimension(
+                    utc_day, category_id, dimension_kind, dimension_id,
+                    upload, download, connection_count, active_duration_sec
+                 ) values (0, 1, 'chain', 0, 30, 90, 2, 120);",
+            )
+            .expect("old materialization");
+
+        let cancel = Arc::new(AtomicBool::new(false));
+        RetentionService::run(
+            &mut coordinator,
+            10_000,
+            30,
+            RetentionMode::MaterializeOnly,
+            &SpaceBudget::unlimited(),
+            &cancel,
+        )
+        .expect("repair");
+
+        let direct_id: i64 = coordinator
+            .connection()
+            .query_row(
+                "select dimension_id from dimension_dict
+                  where dimension_kind = 'chain' and value = 'DIRECT'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("DIRECT interned");
+        assert_ne!(direct_id, 0);
+        let hourly: (i64, i64) = coordinator
+            .connection()
+            .query_row(
+                "select upload, download from traffic_hourly_dimension
+                  where dimension_kind = 'chain' and dimension_id = ?1",
+                [direct_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("hourly DIRECT");
+        let daily: (i64, i64) = coordinator
+            .connection()
+            .query_row(
+                "select upload, download from traffic_daily_dimension
+                  where dimension_kind = 'chain' and dimension_id = ?1",
+                [direct_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("daily DIRECT");
+        assert_eq!(hourly, (30, 90));
+        assert_eq!(daily, hourly);
+        let old_unknown_rows: i64 = coordinator
+            .connection()
+            .query_row(
+                "select count(*) from traffic_hourly_dimension
+                  where dimension_kind = 'chain' and dimension_id = 0",
+                [],
+                |row| row.get(0),
+            )
+            .expect("old unknown");
+        assert_eq!(old_unknown_rows, 0);
+        let marker: i64 = coordinator
+            .connection()
+            .query_row(
+                "select watermark_utc from retention_watermark where layer = ?1",
+                [CHAIN_IDENTITY_V1_LAYER],
+                |row| row.get(0),
+            )
+            .expect("marker");
+        assert_eq!(marker, 3_600);
+
+        RetentionService::run(
+            &mut coordinator,
+            10_000,
+            30,
+            RetentionMode::MaterializeOnly,
+            &SpaceBudget::unlimited(),
+            &cancel,
+        )
+        .expect("idempotent rerun");
+        let rerun_hourly: (i64, i64) = coordinator
+            .connection()
+            .query_row(
+                "select coalesce(sum(upload), 0), coalesce(sum(download), 0)
+                   from traffic_hourly_dimension where dimension_kind = 'chain'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("rerun totals");
+        assert_eq!(rerun_hourly, hourly);
+    }
+
+    #[test]
+    fn chain_identity_repair_rolls_back_before_writing_marker() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("chain-rollback.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        coordinator
+            .connection()
+            .execute_batch(
+                "insert into traffic_hourly_dimension(
+                    utc_hour, category_id, dimension_kind, dimension_id,
+                    upload, download, connection_count, active_duration_sec
+                 ) values (0, 1, 'chain', 0, 30, 90, 2, 120);
+                 insert into traffic_daily_dimension(
+                    utc_day, category_id, dimension_kind, dimension_id,
+                    upload, download, connection_count, active_duration_sec
+                 ) values (0, 1, 'chain', 0, 30, 90, 2, 120);
+                 create trigger reject_chain_identity
+                 before insert on dimension_dict
+                 when new.dimension_kind = 'chain'
+                 begin
+                   select raise(abort, 'injected chain intern failure');
+                 end;",
+            )
+            .expect("old materialization and failure trigger");
+
+        let error = repair_chain_identity_v1(&mut coordinator).expect_err("injected failure");
+        assert_eq!(error.code(), "storage_failure");
+        let old_hourly: (i64, i64, i64) = coordinator
+            .connection()
+            .query_row(
+                "select upload, download, dimension_id from traffic_hourly_dimension
+                  where dimension_kind = 'chain'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("hourly rollback");
+        let old_daily: (i64, i64, i64) = coordinator
+            .connection()
+            .query_row(
+                "select upload, download, dimension_id from traffic_daily_dimension
+                  where dimension_kind = 'chain'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("daily rollback");
+        assert_eq!(old_hourly, (30, 90, 0));
+        assert_eq!(old_daily, old_hourly);
+        let marker_count: i64 = coordinator
+            .connection()
+            .query_row(
+                "select count(*) from retention_watermark where layer = ?1",
+                [CHAIN_IDENTITY_V1_LAYER],
+                |row| row.get(0),
+            )
+            .expect("marker absent");
+        assert_eq!(marker_count, 0);
+
+        coordinator
+            .connection()
+            .execute_batch("drop trigger reject_chain_identity")
+            .expect("remove failure");
+        repair_chain_identity_v1(&mut coordinator).expect("retry succeeds");
+        let marker_count: i64 = coordinator
+            .connection()
+            .query_row(
+                "select count(*) from retention_watermark where layer = ?1",
+                [CHAIN_IDENTITY_V1_LAYER],
+                |row| row.get(0),
+            )
+            .expect("marker present");
+        assert_eq!(marker_count, 1);
+    }
+
+    #[test]
+    fn chain_identity_repair_refuses_partially_deleted_raw_hour() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("chain-partial.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        coordinator
+            .connection()
+            .execute_batch(
+                "insert into traffic_hourly_dimension(
+                    utc_hour, category_id, dimension_kind, dimension_id,
+                    upload, download, connection_count, active_duration_sec
+                 ) values (0, 1, 'chain', 0, 30, 90, 2, 120);
+                 insert into traffic_daily_dimension(
+                    utc_day, category_id, dimension_kind, dimension_id,
+                    upload, download, connection_count, active_duration_sec
+                 ) values (0, 1, 'chain', 0, 30, 90, 2, 120);
+                 delete from connection_minute where session_pk = 1;",
+            )
+            .expect("old materialization with partial raw evidence");
+
+        let error = repair_chain_identity_v1(&mut coordinator).expect_err("must preserve old data");
+        assert_eq!(error.code(), "storage_failure");
+        let hourly: (i64, i64, i64) = coordinator
+            .connection()
+            .query_row(
+                "select upload, download, dimension_id from traffic_hourly_dimension
+                  where dimension_kind = 'chain'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("old hourly preserved");
+        let daily: (i64, i64, i64) = coordinator
+            .connection()
+            .query_row(
+                "select upload, download, dimension_id from traffic_daily_dimension
+                  where dimension_kind = 'chain'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .expect("old daily preserved");
+        assert_eq!(hourly, (30, 90, 0));
+        assert_eq!(daily, hourly);
+        let marker_count: i64 = coordinator
+            .connection()
+            .query_row(
+                "select count(*) from retention_watermark where layer = ?1",
+                [CHAIN_IDENTITY_V1_LAYER],
+                |row| row.get(0),
+            )
+            .expect("marker absent");
+        assert_eq!(marker_count, 0);
     }
 }
