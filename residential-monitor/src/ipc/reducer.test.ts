@@ -10,6 +10,7 @@ import type { LiveConnectionView, LiveOverview, MonitorStreamMessage } from "../
 
 const snapshot = decodeOverview({
   schemaVersion: 1,
+  observationPhase: "current",
   meterUpload: 1,
   meterDownload: 1,
   attributedUpload: 1,
@@ -72,6 +73,7 @@ describe("reduceMonitor", () => {
       schemaVersion: 1,
       subscriptionId: 1,
       seq: 5,
+      snapshot,
       upserts: [row("late")],
       removes: [],
       backendTime: 2
@@ -86,6 +88,7 @@ describe("reduceMonitor", () => {
       schemaVersion: 1,
       subscriptionId: 1,
       seq: 4,
+      snapshot,
       upserts: [row("x")],
       removes: [],
       backendTime: 2
@@ -102,6 +105,7 @@ describe("reduceMonitor", () => {
       schemaVersion: 1,
       subscriptionId: 1,
       seq: 2,
+      snapshot,
       upserts: [row("a")],
       removes: [],
       backendTime: 2
@@ -119,6 +123,7 @@ describe("reduceMonitor", () => {
       schemaVersion: 1,
       subscriptionId: 1,
       seq: 2,
+      snapshot,
       upserts: [row("0:a")],
       removes: [],
       backendTime: 2
@@ -130,6 +135,7 @@ describe("reduceMonitor", () => {
       schemaVersion: 1,
       subscriptionId: 1,
       seq: 3,
+      snapshot,
       upserts: [],
       removes: ["0:a"],
       backendTime: 3

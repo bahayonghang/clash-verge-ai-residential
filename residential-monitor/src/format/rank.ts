@@ -1,4 +1,5 @@
 import type { ReportFilters } from "../dto";
+import { t, type UiLocale } from "../i18n";
 
 export const UNKNOWN_RANK_IDENTITY = "__unknown__";
 
@@ -23,6 +24,13 @@ export function rankDisplayLabel(identity: string, label: string, unknown: strin
   return label.length > 0 ? label : unknown;
 }
 
+export function missingDimensionLabel(
+  locale: UiLocale,
+  kind: DimensionKind
+): string {
+  return t(locale, `dimension.missing.${kind}`);
+}
+
 export function looksLikeIp(value: string): boolean {
   const trimmed = value.trim().replace(/^\[/, "").replace(/\]$/, "");
   if (/^(\d{1,3}\.){3}\d{1,3}$/.test(trimmed)) {
@@ -34,8 +42,15 @@ export function looksLikeIp(value: string): boolean {
   return trimmed.includes(":") && /^[0-9a-fA-F:]+$/.test(trimmed);
 }
 
-export function formatRankLabel(identity: string, label: string, unknown: string): string {
-  const text = rankDisplayLabel(identity, label, unknown);
+export function formatRankLabel(
+  identity: string,
+  label: string,
+  unknown: string,
+  missingLabel = unknown
+): string {
+  const text = isUnknownIdentity(identity)
+    ? missingLabel
+    : rankDisplayLabel(identity, label, unknown);
   if (!isUnknownIdentity(identity) && looksLikeIp(identity)) {
     return `${text}  IP`;
   }

@@ -81,6 +81,7 @@ export function previewBootstrap(): BootstrapDto {
     ],
     overview: {
       schemaVersion: SCHEMA_VERSION,
+      observationPhase: "unconfigured",
       meterUpload: null,
       meterDownload: null,
       attributedUpload: null,

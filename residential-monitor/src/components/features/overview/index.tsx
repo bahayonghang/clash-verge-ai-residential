@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { LiveOverview, RouteId } from "../../../dto";
 import type { TopSort } from "../../../format/rank";
-import type { UiLocale } from "../../../i18n";
+import { t, type UiLocale } from "../../../i18n";
 import { timeRangeFromPreset, type TimeRange } from "../../../lib/time-range";
 import {
   granularityForTimeRange,
@@ -52,7 +52,13 @@ export function OverviewPage({
 
   return (
     <div className="space-y-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        {t(locale, "overview.plane.live")}
+      </p>
       <CaliberGrid locale={locale} overview={overview} />
+      <p className="pt-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        {t(locale, "overview.plane.history")} · {t(locale, `time.preset.${queryRange.preset}`)}
+      </p>
       <TrendCard
         locale={locale}
         result={host.result}

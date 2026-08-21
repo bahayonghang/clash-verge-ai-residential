@@ -74,6 +74,7 @@ export function DimensionPage({
       <RankBarCard
         locale={locale}
         title={title}
+        kind={kind}
         result={parent.result}
         loading={parent.loading}
         errorZh={parent.errorZh}

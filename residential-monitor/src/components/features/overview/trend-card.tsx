@@ -1,6 +1,6 @@
 import { Activity } from "lucide-react";
 import type { ReportResult } from "../../../dto";
-import { formatBytes } from "../../../format/units";
+import { formatBytes, formatUtc } from "../../../format/units";
 import { t, type UiLocale } from "../../../i18n";
 import { cn, formatTemplate } from "../../../lib/utils";
 import { TREND_PRESETS, type TrendPreset } from "../../../hooks/use-report";
@@ -81,6 +81,13 @@ export function TrendCard({
             </span>
           </span>
           {coverage ? <span className="ml-auto text-muted-foreground">{coverage}</span> : null}
+          {result ? (
+            <span className="text-muted-foreground">
+              {formatTemplate(t(locale, "overview.history.generated"), {
+                time: formatUtc(result.generatedUtc)
+              })}
+            </span>
+          ) : null}
         </div>
       ) : null}
       <TrendArea

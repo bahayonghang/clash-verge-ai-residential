@@ -45,6 +45,9 @@ export function useMonitorStream(
       } catch {
         setState((prev) => ({
           ...prev,
+          snapshot: prev.snapshot
+            ? { ...prev.snapshot, observationPhase: "decodeFailed" }
+            : prev.snapshot,
           frozen: true,
           errorZh: t(localeRef.current, "stream.decode_fail")
         }));

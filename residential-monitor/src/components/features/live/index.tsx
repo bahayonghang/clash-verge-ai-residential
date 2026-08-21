@@ -136,6 +136,7 @@ export function LivePage({
   const kind = liveEmptyKind({
     address,
     session,
+    observationPhase: snapshot?.observationPhase ?? boot.overview.observationPhase,
     collectorRunning: live.collectorRunning,
     coverageKind: snapshot?.coverageKind ?? null,
     coverageReason: snapshot?.coverageReason ?? null,

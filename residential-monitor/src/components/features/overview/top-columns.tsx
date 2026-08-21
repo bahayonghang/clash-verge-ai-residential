@@ -1,7 +1,14 @@
 import type { ReactNode } from "react";
 import { ArrowRight, BarChart3, Cpu, Globe, Link2 } from "lucide-react";
 import type { ReportResult, RouteId } from "../../../dto";
-import { rankDisplayLabel, rankingSortValue, rankingTraffic, type TopSort } from "../../../format/rank";
+import {
+  missingDimensionLabel,
+  rankDisplayLabel,
+  rankingSortValue,
+  rankingTraffic,
+  type DimensionKind,
+  type TopSort
+} from "../../../format/rank";
 import { formatBytes } from "../../../format/units";
 import { t, type UiLocale } from "../../../i18n";
 import { cn } from "../../../lib/utils";
@@ -10,6 +17,7 @@ import { TopListItem } from "../../common/top-list-item";
 import { Button } from "../../ui/button";
 import { Skeleton } from "../../ui/skeleton";
 import { CapabilityNote, resolvedCapabilityNote } from "../dimension/capability-note";
+import { AttributionQualityNote } from "../dimension/attribution-quality-note";
 
 function SortToggle({
   locale,
@@ -57,6 +65,7 @@ function SortToggle({
 function TopColumn({
   locale,
   title,
+  kind,
   icon,
   color,
   result,
@@ -68,6 +77,7 @@ function TopColumn({
 }: {
   locale: UiLocale;
   title: string;
+  kind: DimensionKind;
   icon: ReactNode;
   color: string;
   result: ReportResult | null;
@@ -106,6 +116,7 @@ function TopColumn({
           noteZh={resolvedCapabilityNote(locale, result.drilldownCapability.noteZh, "dimension.exact_top_n_off")}
         />
       ) : null}
+      <AttributionQualityNote locale={locale} result={result} />
       {loading && rankings.length === 0 ? (
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((row) => (
@@ -124,7 +135,11 @@ function TopColumn({
                 key={row.identity}
                 rank={index + 1}
                 icon={icon}
-                title={rankDisplayLabel(row.identity, row.label, unknown)}
+                title={rankDisplayLabel(
+                  row.identity,
+                  row.label,
+                  missingDimensionLabel(locale, kind)
+                )}
                 value={value}
                 total={total}
                 color={color}
@@ -169,6 +184,7 @@ export function TopColumns({
       <TopColumn
         locale={locale}
         title={t(locale, "overview.top.host")}
+        kind="host"
         icon={<Globe className="h-4 w-4" />}
         color="#3B82F6"
         result={host.result}
@@ -181,6 +197,7 @@ export function TopColumns({
       <TopColumn
         locale={locale}
         title={t(locale, "overview.top.chain")}
+        kind="chain"
         icon={<Link2 className="h-4 w-4" />}
         color="#8B5CF6"
         result={chain.result}
@@ -193,6 +210,7 @@ export function TopColumns({
       <TopColumn
         locale={locale}
         title={t(locale, "overview.top.process")}
+        kind="process"
         icon={<Cpu className="h-4 w-4" />}
         color="#10B981"
         result={process.result}

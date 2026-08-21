@@ -65,6 +65,9 @@ export function reduceMonitor(state: MonitorState, message: MonitorStreamMessage
   if (seq > last + 1) {
     return {
       ...state,
+      snapshot: state.snapshot
+        ? { ...state.snapshot, observationPhase: "resyncRequired" }
+        : state.snapshot,
       frozen: true,
       needResync: true,
       errorZh: "实时序号出现缺口，已停止应用增量。"
@@ -97,7 +100,7 @@ export function reduceMonitor(state: MonitorState, message: MonitorStreamMessage
       closeMarks.set(id, "closed");
     }
   }
-  return { ...state, lastSeq: seq, connections, closeMarks };
+  return { ...state, lastSeq: seq, snapshot: message.snapshot, connections, closeMarks };
 }
 
 export function markCloseAccepted(state: MonitorState, identity: string): MonitorState {

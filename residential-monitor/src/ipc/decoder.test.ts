@@ -3,6 +3,7 @@ import { decodeMonitorMessage, decodeOverview } from "./decoder";
 
 const overview = {
   schemaVersion: 1,
+  observationPhase: "current",
   meterUpload: 10,
   meterDownload: 20,
   attributedUpload: 8,
@@ -54,5 +55,67 @@ describe("decodeMonitorMessage", () => {
     });
     expect(decoded.meterUpload).toBeNull();
     expect(decoded.gapUpload).toBeNull();
+  });
+
+  it("Overview 区分显式 null 与字段缺失", () => {
+    expect(decodeOverview({ ...overview, meterUpload: null }).meterUpload).toBeNull();
+    const missing = { ...overview } as Record<string, unknown>;
+    delete missing.meterUpload;
+    expect(() => decodeOverview(missing)).toThrow(/meterUpload/);
+    expect(() => decodeOverview({ ...overview, observationPhase: "mystery" })).toThrow(
+      /observationPhase/
+    );
+  });
+
+  it("connectionDelta 必须携带同 tick 的 snapshot", () => {
+    expect(() =>
+      decodeMonitorMessage({
+        kind: "connectionDelta",
+        schemaVersion: 1,
+        subscriptionId: 1,
+        seq: 2,
+        upserts: [],
+        removes: [],
+        backendTime: 2
+      })
+    ).toThrow(/概览|对象/);
+    const decoded = decodeMonitorMessage({
+      kind: "connectionDelta",
+      schemaVersion: 1,
+      subscriptionId: 1,
+      seq: 2,
+      snapshot: { ...overview, observationPhase: "baselinePending" },
+      upserts: [],
+      removes: [],
+      backendTime: 2
+    });
+    expect(decoded.kind === "connectionDelta" && decoded.snapshot.observationPhase).toBe(
+      "baselinePending"
+    );
+  });
+
+  it("拒绝静默丢弃无效 upsert 或补造 health 字段", () => {
+    expect(() =>
+      decodeMonitorMessage({
+        kind: "connectionDelta",
+        schemaVersion: 1,
+        subscriptionId: 1,
+        seq: 2,
+        snapshot: overview,
+        upserts: [null],
+        removes: [],
+        backendTime: 2
+      })
+    ).toThrow(/upsert/);
+    expect(() =>
+      decodeMonitorMessage({
+        kind: "healthChanged",
+        schemaVersion: 1,
+        subscriptionId: 1,
+        seq: 2,
+        health: { session: "connected", storageReason: null },
+        backendTime: 2
+      })
+    ).toThrow(/storageOk/);
   });
 });

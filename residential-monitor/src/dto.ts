@@ -27,8 +27,19 @@ export interface HealthView {
   storageReason: string | null;
 }
 
+export type ObservationPhase =
+  | "unconfigured"
+  | "connecting"
+  | "baselinePending"
+  | "current"
+  | "paused"
+  | "disconnected"
+  | "resyncRequired"
+  | "decodeFailed";
+
 export interface LiveOverview {
   schemaVersion: number;
+  observationPhase: ObservationPhase;
   meterUpload: number | null;
   meterDownload: number | null;
   attributedUpload: number | null;
@@ -88,6 +99,7 @@ export type MonitorStreamMessage =
       schemaVersion: number;
       subscriptionId: number;
       seq: number;
+      snapshot: LiveOverview;
       upserts: LiveConnectionView[];
       removes: string[];
       backendTime: number;
@@ -202,6 +214,19 @@ export interface DiagnosticsSnapshot {
   alertActive: number;
   outboxBacklog: number;
   recentRedactedErrorClasses: string[];
+  metadataCoverage: {
+    connections: number;
+    hostPresent: number;
+    sniffHostOnly: number;
+    destinationIpOnly: number;
+    hostAbsent: number;
+    processPresent: number;
+    processPathOnly: number;
+    processAbsent: number;
+    chainsPresent: number;
+    providerChainsOnly: number;
+    chainsAbsent: number;
+  };
 }
 
 export interface NotifyCapability {
@@ -327,6 +352,15 @@ export interface ReportResult {
     gapSec: number;
     slices: Array<{ kind: string; reason: string; startedUtc: number; endedUtc: number | null }>;
   };
+  attributionQuality: {
+    knownUpload: number;
+    knownDownload: number;
+    missingUpload: number;
+    missingDownload: number;
+    knownConnections: number;
+    missingConnections: number;
+    status: "complete" | "partial" | "unavailable";
+  };
   drilldownCapability: {
     sessions: boolean;
     currentPolicy: boolean;
@@ -448,6 +482,123 @@ const REPORT_GRANULARITIES = [
   "month"
 ] as const;
 
+const REPORT_GROUPINGS = ["category", "host", "process", "rule", "chain", "network"] as const;
+const REPORT_SORT_FIELDS = ["upload", "download", "name", "identity"] as const;
+
+function own(record: Record<string, unknown>, field: string, owner: string): unknown {
+  if (!Object.prototype.hasOwnProperty.call(record, field)) {
+    throw new Error(`${owner} 缺失 ${field}`);
+  }
+  return record[field];
+}
+
+function reportInteger(value: unknown, label: string, nonNegative = false): number {
+  if (
+    typeof value !== "number" ||
+    !Number.isSafeInteger(value) ||
+    (nonNegative && value < 0)
+  ) {
+    throw new Error(`ReportResult ${label} 无效`);
+  }
+  return value;
+}
+
+function reportString(value: unknown, label: string): string {
+  if (typeof value !== "string") {
+    throw new Error(`ReportResult ${label} 无效`);
+  }
+  return value;
+}
+
+function reportBoolean(value: unknown, label: string): boolean {
+  if (typeof value !== "boolean") {
+    throw new Error(`ReportResult ${label} 无效`);
+  }
+  return value;
+}
+
+function reportNullableString(value: unknown, label: string): string | null {
+  return value === null ? null : reportString(value, label);
+}
+
+function reportNullableInteger(value: unknown, label: string, nonNegative = false): number | null {
+  return value === null ? null : reportInteger(value, label, nonNegative);
+}
+
+function decodeReportFilters(value: unknown): ReportFilters {
+  if (!isRecord(value)) {
+    throw new Error("ReportResult queryEcho.filters 无效");
+  }
+  return {
+    category: reportNullableString(own(value, "category", "filters"), "filters.category"),
+    host: reportNullableString(own(value, "host", "filters"), "filters.host"),
+    process: reportNullableString(own(value, "process", "filters"), "filters.process"),
+    rule: reportNullableString(own(value, "rule", "filters"), "filters.rule"),
+    chain: reportNullableString(own(value, "chain", "filters"), "filters.chain"),
+    network: reportNullableString(own(value, "network", "filters"), "filters.network")
+  };
+}
+
+function decodeReportQuery(value: unknown): ReportQuery {
+  if (!isRecord(value)) {
+    throw new Error("ReportResult queryEcho 无效");
+  }
+  const granularity = reportString(own(value, "granularity", "queryEcho"), "queryEcho.granularity");
+  const grouping = reportString(own(value, "grouping", "queryEcho"), "queryEcho.grouping");
+  const targetPolicy = reportString(own(value, "targetPolicy", "queryEcho"), "queryEcho.targetPolicy");
+  const sort = own(value, "sort", "queryEcho");
+  const page = own(value, "page", "queryEcho");
+  const comparison = own(value, "comparison", "queryEcho");
+  if (!(REPORT_GRANULARITIES as readonly string[]).includes(granularity)) {
+    throw new Error("ReportResult queryEcho.granularity 无效");
+  }
+  if (!(REPORT_GROUPINGS as readonly string[]).includes(grouping)) {
+    throw new Error("ReportResult queryEcho.grouping 无效");
+  }
+  if (targetPolicy !== "current" && targetPolicy !== "historical") {
+    throw new Error("ReportResult queryEcho.targetPolicy 无效");
+  }
+  if (!isRecord(sort) || !isRecord(page)) {
+    throw new Error("ReportResult queryEcho 分页或排序无效");
+  }
+  const sortField = reportString(own(sort, "field", "sort"), "sort.field");
+  if (!(REPORT_SORT_FIELDS as readonly string[]).includes(sortField)) {
+    throw new Error("ReportResult queryEcho.sort.field 无效");
+  }
+  let decodedComparison: ReportQuery["comparison"] = null;
+  if (comparison !== null) {
+    if (!isRecord(comparison)) {
+      throw new Error("ReportResult queryEcho.comparison 无效");
+    }
+    decodedComparison = {
+      previousEqualWindow: reportBoolean(
+        own(comparison, "previousEqualWindow", "comparison"),
+        "comparison.previousEqualWindow"
+      )
+    };
+  }
+  return {
+    rangeStartUtc: reportInteger(own(value, "rangeStartUtc", "queryEcho"), "queryEcho.rangeStartUtc"),
+    rangeEndUtc: reportInteger(own(value, "rangeEndUtc", "queryEcho"), "queryEcho.rangeEndUtc"),
+    displayTimezone: reportString(own(value, "displayTimezone", "queryEcho"), "queryEcho.displayTimezone"),
+    granularity: granularity as ReportQuery["granularity"],
+    filters: decodeReportFilters(own(value, "filters", "queryEcho")),
+    grouping: grouping as ReportQuery["grouping"],
+    targetPolicy: targetPolicy as ReportQuery["targetPolicy"],
+    comparison: decodedComparison,
+    sort: {
+      field: sortField as ReportQuery["sort"]["field"],
+      descending: reportBoolean(own(sort, "descending", "sort"), "sort.descending")
+    },
+    page: {
+      limit: reportInteger(own(page, "limit", "page"), "page.limit", true),
+      after: reportNullableString(own(page, "after", "page"), "page.after")
+    },
+    topN: reportInteger(own(value, "topN", "queryEcho"), "queryEcho.topN", true),
+    includeSessions: reportBoolean(own(value, "includeSessions", "queryEcho"), "queryEcho.includeSessions")
+  };
+}
+
 function optionalU64(value: unknown, label: string): number | null {
   if (value === null) {
     return null;
@@ -496,15 +647,190 @@ export function decodeReportResult(value: unknown): ReportResult {
   if (!isRecord(value) || value.schemaVersion !== 1) {
     throw new Error("ReportResult 无效");
   }
-  if (typeof value.reportSnapshotToken !== "string" || !isRecord(value.totals) || !isRecord(value.coverage)) {
+  const totals = own(value, "totals", "ReportResult");
+  const coverage = own(value, "coverage", "ReportResult");
+  const quality = own(value, "attributionQuality", "ReportResult");
+  const drilldown = own(value, "drilldownCapability", "ReportResult");
+  const policy = own(value, "policyMetadata", "ReportResult");
+  const series = own(value, "series", "ReportResult");
+  const rankings = own(value, "rankings", "ReportResult");
+  const namedSql = own(value, "namedSql", "ReportResult");
+  if (
+    !isRecord(totals) ||
+    !isRecord(coverage) ||
+    !isRecord(quality) ||
+    !isRecord(drilldown) ||
+    !isRecord(policy) ||
+    !Array.isArray(series) ||
+    !Array.isArray(rankings) ||
+    !Array.isArray(namedSql)
+  ) {
     throw new Error("ReportResult 字段缺失");
   }
-  if (isRecord(value.queryEcho) && typeof value.queryEcho.granularity === "string") {
-    if (!(REPORT_GRANULARITIES as readonly string[]).includes(value.queryEcho.granularity)) {
-      throw new Error("ReportResult queryEcho.granularity 无效");
-    }
+  const qualityStatus = reportString(own(quality, "status", "attributionQuality"), "attributionQuality.status");
+  if (!["complete", "partial", "unavailable"].includes(qualityStatus)) {
+    throw new Error("ReportResult attributionQuality.status 无效");
   }
-  return value as unknown as ReportResult;
+  const decoded: ReportResult = {
+    schemaVersion: 1,
+    dataVersion: reportInteger(own(value, "dataVersion", "ReportResult"), "dataVersion", true),
+    reportSnapshotToken: reportString(
+      own(value, "reportSnapshotToken", "ReportResult"),
+      "reportSnapshotToken"
+    ),
+    queryEcho: decodeReportQuery(own(value, "queryEcho", "ReportResult")),
+    totals: {
+      upload: reportInteger(own(totals, "upload", "totals"), "totals.upload", true),
+      download: reportInteger(own(totals, "download", "totals"), "totals.download", true),
+      connectionCount: reportInteger(
+        own(totals, "connectionCount", "totals"),
+        "totals.connectionCount",
+        true
+      ),
+      activeDurationSec: reportInteger(
+        own(totals, "activeDurationSec", "totals"),
+        "totals.activeDurationSec",
+        true
+      ),
+      previousUpload: reportNullableInteger(
+        own(totals, "previousUpload", "totals"),
+        "totals.previousUpload",
+        true
+      ),
+      previousDownload: reportNullableInteger(
+        own(totals, "previousDownload", "totals"),
+        "totals.previousDownload",
+        true
+      )
+    },
+    series: series.map((item, index) => {
+      if (!isRecord(item)) throw new Error(`ReportResult series[${index}] 无效`);
+      return {
+        bucketUtc: reportInteger(own(item, "bucketUtc", "series"), `series[${index}].bucketUtc`),
+        upload: reportInteger(own(item, "upload", "series"), `series[${index}].upload`, true),
+        download: reportInteger(own(item, "download", "series"), `series[${index}].download`, true),
+        connectionCount: reportInteger(
+          own(item, "connectionCount", "series"),
+          `series[${index}].connectionCount`,
+          true
+        ),
+        activeDurationSec: reportInteger(
+          own(item, "activeDurationSec", "series"),
+          `series[${index}].activeDurationSec`,
+          true
+        )
+      };
+    }),
+    rankings: rankings.map((item, index) => {
+      if (!isRecord(item)) throw new Error(`ReportResult rankings[${index}] 无效`);
+      return {
+        identity: reportString(own(item, "identity", "rankings"), `rankings[${index}].identity`),
+        label: reportString(own(item, "label", "rankings"), `rankings[${index}].label`),
+        upload: reportInteger(own(item, "upload", "rankings"), `rankings[${index}].upload`, true),
+        download: reportInteger(own(item, "download", "rankings"), `rankings[${index}].download`, true),
+        connectionCount: reportInteger(
+          own(item, "connectionCount", "rankings"),
+          `rankings[${index}].connectionCount`,
+          true
+        ),
+        activeDurationSec: reportInteger(
+          own(item, "activeDurationSec", "rankings"),
+          `rankings[${index}].activeDurationSec`,
+          true
+        )
+      };
+    }),
+    coverage: {
+      status: reportString(own(coverage, "status", "coverage"), "coverage.status"),
+      coveredSec: reportInteger(own(coverage, "coveredSec", "coverage"), "coverage.coveredSec", true),
+      gapSec: reportInteger(own(coverage, "gapSec", "coverage"), "coverage.gapSec", true),
+      slices: (() => {
+        const slices = own(coverage, "slices", "coverage");
+        if (!Array.isArray(slices)) throw new Error("ReportResult coverage.slices 无效");
+        return slices.map((item, index) => {
+          if (!isRecord(item)) throw new Error(`ReportResult coverage.slices[${index}] 无效`);
+          return {
+            kind: reportString(own(item, "kind", "coverage slice"), `coverage.slices[${index}].kind`),
+            reason: reportString(own(item, "reason", "coverage slice"), `coverage.slices[${index}].reason`),
+            startedUtc: reportInteger(
+              own(item, "startedUtc", "coverage slice"),
+              `coverage.slices[${index}].startedUtc`
+            ),
+            endedUtc: reportNullableInteger(
+              own(item, "endedUtc", "coverage slice"),
+              `coverage.slices[${index}].endedUtc`
+            )
+          };
+        });
+      })()
+    },
+    attributionQuality: {
+      knownUpload: reportInteger(own(quality, "knownUpload", "attributionQuality"), "quality.knownUpload", true),
+      knownDownload: reportInteger(own(quality, "knownDownload", "attributionQuality"), "quality.knownDownload", true),
+      missingUpload: reportInteger(own(quality, "missingUpload", "attributionQuality"), "quality.missingUpload", true),
+      missingDownload: reportInteger(own(quality, "missingDownload", "attributionQuality"), "quality.missingDownload", true),
+      knownConnections: reportInteger(
+        own(quality, "knownConnections", "attributionQuality"),
+        "quality.knownConnections",
+        true
+      ),
+      missingConnections: reportInteger(
+        own(quality, "missingConnections", "attributionQuality"),
+        "quality.missingConnections",
+        true
+      ),
+      status: qualityStatus as ReportResult["attributionQuality"]["status"]
+    },
+    drilldownCapability: {
+      sessions: reportBoolean(own(drilldown, "sessions", "drilldownCapability"), "drilldown.sessions"),
+      currentPolicy: reportBoolean(
+        own(drilldown, "currentPolicy", "drilldownCapability"),
+        "drilldown.currentPolicy"
+      ),
+      crossDimension: reportBoolean(
+        own(drilldown, "crossDimension", "drilldownCapability"),
+        "drilldown.crossDimension"
+      ),
+      exactTopN: reportBoolean(own(drilldown, "exactTopN", "drilldownCapability"), "drilldown.exactTopN"),
+      noteZh: reportString(own(drilldown, "noteZh", "drilldownCapability"), "drilldown.noteZh")
+    },
+    policyMetadata: {
+      targetPolicy: reportString(own(policy, "targetPolicy", "policyMetadata"), "policy.targetPolicy"),
+      policyVersion: reportNullableInteger(
+        own(policy, "policyVersion", "policyMetadata"),
+        "policy.policyVersion",
+        true
+      ),
+      noteZh: reportString(own(policy, "noteZh", "policyMetadata"), "policy.noteZh")
+    },
+    dataTier: reportString(own(value, "dataTier", "ReportResult"), "dataTier"),
+    namedSql: namedSql.map((item, index) => reportString(item, `namedSql[${index}]`)),
+    unit: reportString(own(value, "unit", "ReportResult"), "unit"),
+    generatedUtc: reportInteger(own(value, "generatedUtc", "ReportResult"), "generatedUtc")
+  };
+  if (
+    decoded.attributionQuality.knownUpload + decoded.attributionQuality.missingUpload !==
+      decoded.totals.upload ||
+    decoded.attributionQuality.knownDownload + decoded.attributionQuality.missingDownload !==
+      decoded.totals.download ||
+    decoded.attributionQuality.knownConnections + decoded.attributionQuality.missingConnections !==
+      decoded.totals.connectionCount
+  ) {
+    throw new Error("ReportResult attributionQuality 不守恒");
+  }
+  const hasKnown =
+    decoded.attributionQuality.knownUpload > 0 ||
+    decoded.attributionQuality.knownDownload > 0 ||
+    decoded.attributionQuality.knownConnections > 0;
+  const hasMissing =
+    decoded.attributionQuality.missingUpload > 0 ||
+    decoded.attributionQuality.missingDownload > 0 ||
+    decoded.attributionQuality.missingConnections > 0;
+  const expectedStatus = hasMissing ? (hasKnown ? "partial" : "unavailable") : "complete";
+  if (decoded.attributionQuality.status !== expectedStatus) {
+    throw new Error("ReportResult attributionQuality.status 与计数不一致");
+  }
+  return decoded;
 }
 
 export type ReportArchiveKind = "hour" | "day";

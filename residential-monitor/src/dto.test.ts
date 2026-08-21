@@ -10,6 +10,69 @@ import {
   decodeShellStatus
 } from "./dto";
 
+function validReportPayload() {
+  return {
+    schemaVersion: 1,
+    dataVersion: 1,
+    reportSnapshotToken: "abc",
+    queryEcho: {
+      rangeStartUtc: 0,
+      rangeEndUtc: 60,
+      displayTimezone: "local",
+      granularity: "minute1",
+      filters: { category: null, host: null, process: null, rule: null, chain: null, network: null },
+      grouping: "process",
+      targetPolicy: "historical",
+      comparison: null,
+      sort: { field: "download", descending: true },
+      page: { limit: 200, after: null },
+      topN: 10,
+      includeSessions: false
+    },
+    totals: {
+      upload: 1,
+      download: 2,
+      connectionCount: 1,
+      activeDurationSec: 60,
+      previousUpload: null,
+      previousDownload: null
+    },
+    series: [],
+    rankings: [
+      {
+        identity: "__unknown__",
+        label: "",
+        upload: 1,
+        download: 2,
+        connectionCount: 1,
+        activeDurationSec: 60
+      }
+    ],
+    coverage: { status: "covered", coveredSec: 60, gapSec: 0, slices: [] },
+    attributionQuality: {
+      knownUpload: 0,
+      knownDownload: 0,
+      missingUpload: 1,
+      missingDownload: 2,
+      knownConnections: 0,
+      missingConnections: 1,
+      status: "unavailable"
+    },
+    drilldownCapability: {
+      sessions: true,
+      currentPolicy: true,
+      crossDimension: true,
+      exactTopN: true,
+      noteZh: ""
+    },
+    policyMetadata: { targetPolicy: "historical", policyVersion: null, noteZh: "" },
+    dataTier: "raw",
+    namedSql: ["rank_raw_attr"],
+    unit: "byte",
+    generatedUtc: 60
+  };
+}
+
 describe("decodeShellStatus", () => {
   it("接受完整 DTO", () => {
     const decoded = decodeShellStatus({
@@ -68,13 +131,25 @@ describe("decodeShellStatus", () => {
   });
 
   it("接受带 token 的报告结果", () => {
-    const decoded = decodeReportResult({
-      schemaVersion: 1,
-      reportSnapshotToken: "abc",
-      totals: { upload: 1, download: 2 },
-      coverage: { status: "empty" }
-    });
+    const decoded = decodeReportResult(validReportPayload());
     expect(decoded.reportSnapshotToken).toBe("abc");
+    expect(decoded.attributionQuality.status).toBe("unavailable");
+    expect(decoded.rankings[0]?.identity).toBe("__unknown__");
+  });
+
+  it("拒绝缺失 attributionQuality 或非法负数排名", () => {
+    const missing = validReportPayload();
+    delete (missing as Partial<typeof missing>).attributionQuality;
+    expect(() => decodeReportResult(missing)).toThrow(/attributionQuality|缺失/);
+    const negative = validReportPayload();
+    negative.rankings[0]!.download = -1;
+    expect(() => decodeReportResult(negative)).toThrow(/rankings/);
+    const nonConserving = validReportPayload();
+    nonConserving.attributionQuality.missingDownload = 1;
+    expect(() => decodeReportResult(nonConserving)).toThrow(/不守恒/);
+    const inconsistentStatus = validReportPayload();
+    inconsistentStatus.attributionQuality.status = "complete";
+    expect(() => decodeReportResult(inconsistentStatus)).toThrow(/status 与计数不一致/);
   });
 
   it("拒绝缺少 checksum 的诊断", () => {

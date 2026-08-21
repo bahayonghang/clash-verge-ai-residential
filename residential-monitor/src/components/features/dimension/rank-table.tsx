@@ -3,6 +3,7 @@ import type { ReportResult } from "../../../dto";
 import {
   formatRankLabel,
   isUnknownIdentity,
+  missingDimensionLabel,
   rankDisplayLabel,
   rankingShare,
   type DimensionKind
@@ -12,6 +13,7 @@ import { t, type UiLocale } from "../../../i18n";
 import { cn } from "../../../lib/utils";
 import { Button } from "../../ui/button";
 import { CapabilityNote, resolvedCapabilityNote } from "./capability-note";
+import { AttributionQualityNote } from "./attribution-quality-note";
 
 type TableSort = "name" | "upload" | "download" | "connections";
 
@@ -46,6 +48,7 @@ export function RankTable({
   onSelect: (identity: string, label: string) => void;
 }) {
   const unknown = t(locale, "common.unknown");
+  const missing = missingDimensionLabel(locale, kind);
   const [sort, setSort] = useState<TableSort>("download");
   const [descending, setDescending] = useState(true);
   const [page, setPage] = useState(0);
@@ -57,8 +60,8 @@ export function RankTable({
     rows.sort((left, right) => {
       const dir = descending ? -1 : 1;
       if (sort === "name") {
-        return dir * rankDisplayLabel(left.identity, left.label, unknown).localeCompare(
-          rankDisplayLabel(right.identity, right.label, unknown),
+        return dir * rankDisplayLabel(left.identity, left.label, missing).localeCompare(
+          rankDisplayLabel(right.identity, right.label, missing),
           locale
         );
       }
@@ -69,7 +72,7 @@ export function RankTable({
       return dir * (leftValue - rightValue);
     });
     return rows;
-  }, [descending, locale, result?.rankings, sort, unknown]);
+  }, [descending, locale, missing, result?.rankings, sort]);
 
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
@@ -101,6 +104,7 @@ export function RankTable({
   return (
     <div className="space-y-3">
       {errorZh && !result ? <CapabilityNote locale={locale} noteZh={errorZh} /> : null}
+      <AttributionQualityNote locale={locale} result={result} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm" aria-busy={loading}>
           <thead>
@@ -141,7 +145,7 @@ export function RankTable({
               </tr>
             ) : (
               visible.map((row, index) => {
-                const label = formatRankLabel(row.identity, row.label, unknown);
+                const label = formatRankLabel(row.identity, row.label, unknown, missing);
                 const unknownRow = isUnknownIdentity(row.identity);
                 const share = rankingShare(row.download, totals?.download ?? 0);
                 const canDrill = crossDimension && (!unknownRow || kind === "host");

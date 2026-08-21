@@ -43,6 +43,15 @@ function report(over: Partial<ReportResult> = {}): ReportResult {
       }
     ],
     coverage: { status: "ok", coveredSec: 60, gapSec: 0, slices: [] },
+    attributionQuality: {
+      knownUpload: 1,
+      knownDownload: 2,
+      missingUpload: 0,
+      missingDownload: 0,
+      knownConnections: 1,
+      missingConnections: 0,
+      status: "complete"
+    },
     drilldownCapability: {
       sessions: true,
       currentPolicy: true,

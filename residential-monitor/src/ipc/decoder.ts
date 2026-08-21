@@ -1,29 +1,73 @@
 import {
   SCHEMA_VERSION,
   type AlertSummary,
+  type HealthView,
   type LiveOverview,
-  type MonitorStreamMessage
+  type MonitorStreamMessage,
+  type ObservationPhase
 } from "../dto";
+
+const OVERVIEW_FIELDS = [
+  "schemaVersion",
+  "observationPhase",
+  "meterUpload",
+  "meterDownload",
+  "attributedUpload",
+  "attributedDownload",
+  "categoryUpload",
+  "categoryDownload",
+  "otherUpload",
+  "otherDownload",
+  "gapUpload",
+  "gapDownload",
+  "overUpload",
+  "overDownload",
+  "activeCount",
+  "lastSampleUtc",
+  "coverageKind",
+  "coverageReason",
+  "health"
+] as const;
+
+const OBSERVATION_PHASES = new Set<ObservationPhase>([
+  "unconfigured",
+  "connecting",
+  "baselinePending",
+  "current",
+  "paused",
+  "disconnected",
+  "resyncRequired",
+  "decodeFailed"
+]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
 function optionalNumber(value: unknown): number | null {
-  if (value === null || value === undefined) {
+  if (value === null) {
     return null;
   }
-  if (typeof value !== "number" || !Number.isFinite(value)) {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
     throw new Error("数字字段无效");
   }
   return value;
 }
 
 function requiredNumber(value: unknown, name: string): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
     throw new Error(`${name} 必须是数字`);
   }
   return value;
+}
+
+function numericRecord(value: unknown, name: string): Record<string, number> {
+  if (!isRecord(value)) {
+    throw new Error(`${name} 必须是对象`);
+  }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [key, requiredNumber(item, `${name}.${key}`)])
+  );
 }
 
 function requiredString(value: unknown, name: string): string {
@@ -33,26 +77,52 @@ function requiredString(value: unknown, name: string): string {
   return value;
 }
 
+function decodeHealth(value: unknown): HealthView {
+  if (!isRecord(value)) {
+    throw new Error("health 缺失");
+  }
+  for (const field of ["session", "storageOk", "storageReason"] as const) {
+    if (!Object.prototype.hasOwnProperty.call(value, field)) {
+      throw new Error(`health 字段缺失: ${field}`);
+    }
+  }
+  if (typeof value.storageOk !== "boolean") {
+    throw new Error("health.storageOk 必须是布尔值");
+  }
+  return {
+    session: requiredString(value.session, "health.session"),
+    storageOk: value.storageOk,
+    storageReason:
+      value.storageReason === null
+        ? null
+        : requiredString(value.storageReason, "health.storageReason")
+  };
+}
+
 export function decodeOverview(value: unknown): LiveOverview {
   if (!isRecord(value)) {
     throw new Error("概览必须是对象");
   }
+  for (const field of OVERVIEW_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(value, field)) {
+      throw new Error(`概览字段缺失: ${field}`);
+    }
+  }
   if (value.schemaVersion !== SCHEMA_VERSION) {
     throw new Error("不支持的 schemaVersion");
   }
-  if (!isRecord(value.health)) {
-    throw new Error("health 缺失");
+  if (!OBSERVATION_PHASES.has(value.observationPhase as ObservationPhase)) {
+    throw new Error("observationPhase 无效");
   }
   return {
     schemaVersion: SCHEMA_VERSION,
+    observationPhase: value.observationPhase as ObservationPhase,
     meterUpload: optionalNumber(value.meterUpload),
     meterDownload: optionalNumber(value.meterDownload),
     attributedUpload: optionalNumber(value.attributedUpload),
     attributedDownload: optionalNumber(value.attributedDownload),
-    categoryUpload: isRecord(value.categoryUpload) ? (value.categoryUpload as Record<string, number>) : {},
-    categoryDownload: isRecord(value.categoryDownload)
-      ? (value.categoryDownload as Record<string, number>)
-      : {},
+    categoryUpload: numericRecord(value.categoryUpload, "categoryUpload"),
+    categoryDownload: numericRecord(value.categoryDownload, "categoryDownload"),
     otherUpload: optionalNumber(value.otherUpload),
     otherDownload: optionalNumber(value.otherDownload),
     gapUpload: optionalNumber(value.gapUpload),
@@ -61,20 +131,13 @@ export function decodeOverview(value: unknown): LiveOverview {
     overDownload: optionalNumber(value.overDownload),
     activeCount: requiredNumber(value.activeCount, "activeCount"),
     lastSampleUtc: optionalNumber(value.lastSampleUtc),
-    coverageKind: value.coverageKind === null || value.coverageKind === undefined
+    coverageKind: value.coverageKind === null
       ? null
       : requiredString(value.coverageKind, "coverageKind"),
-    coverageReason: value.coverageReason === null || value.coverageReason === undefined
+    coverageReason: value.coverageReason === null
       ? null
       : requiredString(value.coverageReason, "coverageReason"),
-    health: {
-      session: requiredString(value.health.session, "health.session"),
-      storageOk: value.health.storageOk === true,
-      storageReason:
-        value.health.storageReason === null || value.health.storageReason === undefined
-          ? null
-          : requiredString(value.health.storageReason, "storageReason")
-    }
+    health: decodeHealth(value.health)
   };
 }
 
@@ -106,49 +169,48 @@ export function decodeMonitorMessage(value: unknown): MonitorStreamMessage {
       schemaVersion: SCHEMA_VERSION,
       subscriptionId,
       seq: requiredNumber(value.seq, "seq"),
-      upserts: value.upserts.filter(isRecord).map((item) => ({
-        identity: requiredString(item.identity, "identity"),
-        connectionId: requiredString(item.connectionId, "connectionId"),
-        epoch: requiredNumber(item.epoch, "epoch"),
-        upload: requiredNumber(item.upload, "upload"),
-        download: requiredNumber(item.download, "download"),
-        rateUpload: optionalNumber(item.rateUpload),
-        rateDownload: optionalNumber(item.rateDownload),
-        durationMs: optionalNumber(item.durationMs),
-        primary: item.primary == null ? null : requiredString(item.primary, "primary"),
-        tags: Array.isArray(item.tags) ? item.tags.map((tag) => String(tag)) : [],
-        host: item.host == null ? null : String(item.host),
-        sourceIp: item.sourceIp == null ? null : String(item.sourceIp),
-        destinationIp: item.destinationIp == null ? null : String(item.destinationIp),
-        processName: item.processName == null ? null : String(item.processName),
-        processPath: item.processPath == null ? null : String(item.processPath),
-        network: item.network == null ? null : String(item.network),
-        inbound: item.inbound == null ? null : String(item.inbound),
-        sourcePort: item.sourcePort == null ? null : String(item.sourcePort),
-        destinationPort: item.destinationPort == null ? null : String(item.destinationPort),
-        start: item.start == null ? null : String(item.start),
-        rule: item.rule == null ? null : String(item.rule),
-        rulePayload: item.rulePayload == null ? null : String(item.rulePayload),
-        chains: Array.isArray(item.chains) ? item.chains.map((node) => String(node)) : []
-      })),
+      snapshot: decodeOverview(value.snapshot),
+      upserts: value.upserts.map((item) => {
+        if (!isRecord(item)) {
+          throw new Error("connectionDelta upsert 无效");
+        }
+        return {
+          identity: requiredString(item.identity, "identity"),
+          connectionId: requiredString(item.connectionId, "connectionId"),
+          epoch: requiredNumber(item.epoch, "epoch"),
+          upload: requiredNumber(item.upload, "upload"),
+          download: requiredNumber(item.download, "download"),
+          rateUpload: optionalNumber(item.rateUpload),
+          rateDownload: optionalNumber(item.rateDownload),
+          durationMs: optionalNumber(item.durationMs),
+          primary: item.primary == null ? null : requiredString(item.primary, "primary"),
+          tags: Array.isArray(item.tags) ? item.tags.map((tag) => String(tag)) : [],
+          host: item.host == null ? null : String(item.host),
+          sourceIp: item.sourceIp == null ? null : String(item.sourceIp),
+          destinationIp: item.destinationIp == null ? null : String(item.destinationIp),
+          processName: item.processName == null ? null : String(item.processName),
+          processPath: item.processPath == null ? null : String(item.processPath),
+          network: item.network == null ? null : String(item.network),
+          inbound: item.inbound == null ? null : String(item.inbound),
+          sourcePort: item.sourcePort == null ? null : String(item.sourcePort),
+          destinationPort: item.destinationPort == null ? null : String(item.destinationPort),
+          start: item.start == null ? null : String(item.start),
+          rule: item.rule == null ? null : String(item.rule),
+          rulePayload: item.rulePayload == null ? null : String(item.rulePayload),
+          chains: Array.isArray(item.chains) ? item.chains.map((node) => String(node)) : []
+        };
+      }),
       removes: value.removes.map((item) => requiredString(item, "remove")),
       backendTime: requiredNumber(value.backendTime, "backendTime")
     };
   }
   if (kind === "healthChanged") {
-    if (!isRecord(value.health)) {
-      throw new Error("health 缺失");
-    }
     return {
       kind,
       schemaVersion: SCHEMA_VERSION,
       subscriptionId,
       seq: requiredNumber(value.seq, "seq"),
-      health: {
-        session: requiredString(value.health.session, "session"),
-        storageOk: value.health.storageOk === true,
-        storageReason: value.health.storageReason == null ? null : String(value.health.storageReason)
-      },
+      health: decodeHealth(value.health),
       backendTime: requiredNumber(value.backendTime, "backendTime")
     };
   }

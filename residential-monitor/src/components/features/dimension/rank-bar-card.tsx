@@ -1,5 +1,12 @@
 import type { ReportResult } from "../../../dto";
-import { formatRankLabel, rankingTraffic, TOP_N_OPTIONS, type TopNOption } from "../../../format/rank";
+import {
+  formatRankLabel,
+  missingDimensionLabel,
+  rankingTraffic,
+  TOP_N_OPTIONS,
+  type DimensionKind,
+  type TopNOption
+} from "../../../format/rank";
 import { formatBytes } from "../../../format/units";
 import { t, type UiLocale } from "../../../i18n";
 import { cn } from "../../../lib/utils";
@@ -7,10 +14,12 @@ import { RankBar } from "../../charts/rank-bar";
 import { OverviewCard } from "../../common/overview-card";
 import { Button } from "../../ui/button";
 import { CapabilityNote, resolvedCapabilityNote } from "./capability-note";
+import { AttributionQualityNote } from "./attribution-quality-note";
 
 export function RankBarCard({
   locale,
   title,
+  kind,
   result,
   loading,
   errorZh,
@@ -19,6 +28,7 @@ export function RankBarCard({
 }: {
   locale: UiLocale;
   title: string;
+  kind: DimensionKind;
   result: ReportResult | null;
   loading: boolean;
   errorZh: string | null;
@@ -35,7 +45,12 @@ export function RankBarCard({
   const data =
     result && exactTopN
       ? result.rankings.map((row) => ({
-          label: formatRankLabel(row.identity, row.label, unknown),
+          label: formatRankLabel(
+            row.identity,
+            row.label,
+            unknown,
+            missingDimensionLabel(locale, kind)
+          ),
           value: rankingTraffic(row)
         }))
       : [];
@@ -66,6 +81,7 @@ export function RankBarCard({
       }
     >
       {!exactTopN || (errorZh && !result) ? <CapabilityNote locale={locale} noteZh={noteZh} /> : null}
+      <AttributionQualityNote locale={locale} result={result} />
       {exactTopN ? (
         <RankBar
           locale={locale}

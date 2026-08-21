@@ -51,6 +51,15 @@ function report(over: Partial<ReportResult> = {}): ReportResult {
       }
     ],
     coverage: { status: "ok", coveredSec: 60, gapSec: 0, slices: [] },
+    attributionQuality: {
+      knownUpload: 1,
+      knownDownload: 2,
+      missingUpload: 0,
+      missingDownload: 0,
+      knownConnections: 1,
+      missingConnections: 0,
+      status: "complete"
+    },
     drilldownCapability: {
       sessions: true,
       currentPolicy: true,
@@ -82,7 +91,7 @@ describe("排名表未知行与能力", () => {
     );
     expect(html).toContain(`data-identity="${UNKNOWN_RANK_IDENTITY}"`);
     expect(html).toContain('data-unknown="1"');
-    expect(html).toContain("未知");
+    expect(html).toContain("未归因主机");
     expect(html).toMatch(/data-unknown="1"[\s\S]*data-drill="1"/);
     expect(html).not.toContain("未知行不能下钻");
   });

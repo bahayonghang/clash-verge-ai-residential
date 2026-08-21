@@ -65,6 +65,7 @@ export function MonitorSection({
     page: live.page,
     address,
     session,
+    observationPhase: overview.observationPhase,
     collectorRunning: live.collectorRunning,
     coverageKind: overview.coverageKind,
     coverageReason: overview.coverageReason,
@@ -76,6 +77,7 @@ export function MonitorSection({
   const kind = liveEmptyKind({
     address,
     session,
+    observationPhase: overview.observationPhase,
     collectorRunning: live.collectorRunning,
     coverageKind: overview.coverageKind,
     coverageReason: overview.coverageReason,

@@ -8,6 +8,7 @@ import { CaliberGrid } from "./caliber-grid";
 function overview(over: Partial<LiveOverview> = {}): LiveOverview {
   return {
     schemaVersion: SCHEMA_VERSION,
+    observationPhase: "current",
     meterUpload: 10,
     meterDownload: 20,
     attributedUpload: 8,
@@ -64,5 +65,55 @@ describe("概览口径卡", () => {
     const office = rows.find((row) => row.name === "办公");
     expect(office?.upload).toBeNull();
     expect(office?.download).toBe(4);
+  });
+
+  it("连接中与基线阶段不把 null 或 activeCount 0 显示为真实值", () => {
+    const connecting = renderToStaticMarkup(
+      <CaliberGrid
+        locale="zh"
+        overview={overview({
+          observationPhase: "connecting",
+          meterUpload: null,
+          meterDownload: null,
+          activeCount: 0
+        })}
+      />
+    );
+    expect(fieldValue(connecting, "meter-upload")).toBe("等待控制器连接");
+    expect(fieldValue(connecting, "active-count")).toBe("—");
+    const baseline = renderToStaticMarkup(
+      <CaliberGrid locale="zh" overview={overview({ observationPhase: "baselinePending" })} />
+    );
+    expect(fieldValue(baseline, "meter-upload")).toBe("正在建立差分基线");
+    expect(fieldValue(baseline, "active-count")).toBe("—");
+  });
+
+  it("current、暂停、断连、重同步与解码失败使用各自语义", () => {
+    const current = renderToStaticMarkup(
+      <CaliberGrid locale="zh" overview={overview({ meterUpload: 0, activeCount: 0 })} />
+    );
+    expect(fieldValue(current, "meter-upload")).toBe("0 B");
+    expect(fieldValue(current, "active-count")).toBe("0");
+
+    const disconnected = renderToStaticMarkup(
+      <CaliberGrid locale="zh" overview={overview({ observationPhase: "disconnected" })} />
+    );
+    expect(fieldValue(disconnected, "meter-upload")).toBe("10 B · 上次值");
+    expect(fieldValue(disconnected, "active-count")).toBe("—");
+
+    for (const [phase, copy] of [
+      ["paused", "采集已暂停，当前值不可用"],
+      ["resyncRequired", "需要重新同步，当前值不可用"],
+      ["decodeFailed", "控制器响应无法解码，当前值不可用"]
+    ] as const) {
+      const html = renderToStaticMarkup(
+        <CaliberGrid
+          locale="zh"
+          overview={overview({ observationPhase: phase, meterUpload: null })}
+        />
+      );
+      expect(fieldValue(html, "meter-upload")).toBe(copy);
+      expect(fieldValue(html, "active-count")).toBe("—");
+    }
   });
 });

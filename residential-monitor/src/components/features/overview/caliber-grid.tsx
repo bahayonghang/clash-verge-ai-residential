@@ -9,7 +9,9 @@ import { CaliberCard, SessionCaliberCard } from "./caliber-card";
 export function CaliberGrid({ locale, overview }: { locale: UiLocale; overview: LiveOverview }) {
   const unknown = t(locale, "common.unknown");
   const health = healthOf(locale, overview.health.session);
-  const coverage = overview.coverageKind
+  const coverage = overview.observationPhase !== "current"
+    ? t(locale, `overview.phase.${overview.observationPhase}`)
+    : overview.coverageKind
     ? formatTemplate(t(locale, "overview.coverage_gap"), {
         kind: overview.coverageKind,
         reason: overview.coverageReason && overview.coverageReason.length > 0 ? overview.coverageReason : unknown
@@ -29,6 +31,7 @@ export function CaliberGrid({ locale, overview }: { locale: UiLocale; overview: 
         color="#3B82F6"
         upload={overview.meterUpload}
         download={overview.meterDownload}
+        phase={overview.observationPhase}
         uploadField="meter-upload"
         downloadField="meter-download"
       />
@@ -39,6 +42,7 @@ export function CaliberGrid({ locale, overview }: { locale: UiLocale; overview: 
         color="#8B5CF6"
         upload={overview.attributedUpload}
         download={overview.attributedDownload}
+        phase={overview.observationPhase}
         uploadField="attr-upload"
         downloadField="attr-download"
       />
@@ -49,6 +53,7 @@ export function CaliberGrid({ locale, overview }: { locale: UiLocale; overview: 
         color="#06B6D4"
         upload={overview.otherUpload}
         download={overview.otherDownload}
+        phase={overview.observationPhase}
         uploadField="other-upload"
         downloadField="other-download"
       />
@@ -59,6 +64,7 @@ export function CaliberGrid({ locale, overview }: { locale: UiLocale; overview: 
         color="#F59E0B"
         upload={overview.gapUpload}
         download={overview.gapDownload}
+        phase={overview.observationPhase}
         uploadField="gap-upload"
         downloadField="gap-download"
       />
@@ -69,6 +75,7 @@ export function CaliberGrid({ locale, overview }: { locale: UiLocale; overview: 
         color="#EF4444"
         upload={overview.overUpload}
         download={overview.overDownload}
+        phase={overview.observationPhase}
         uploadField="over-upload"
         downloadField="over-download"
       />
@@ -77,6 +84,7 @@ export function CaliberGrid({ locale, overview }: { locale: UiLocale; overview: 
         icon={<Activity />}
         color="#10B981"
         activeCount={overview.activeCount}
+        phase={overview.observationPhase}
         coverage={coverage}
         healthTitle={health.title}
         healthAction={health.action}

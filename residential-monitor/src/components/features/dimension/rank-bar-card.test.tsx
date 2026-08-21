@@ -33,6 +33,15 @@ function report(over: Partial<ReportResult> = {}): ReportResult {
     series: [],
     rankings: [],
     coverage: { status: "ok", coveredSec: 60, gapSec: 0, slices: [] },
+    attributionQuality: {
+      knownUpload: 1,
+      knownDownload: 2,
+      missingUpload: 0,
+      missingDownload: 0,
+      knownConnections: 1,
+      missingConnections: 0,
+      status: "complete"
+    },
     drilldownCapability: {
       sessions: true,
       currentPolicy: true,
@@ -55,6 +64,7 @@ describe("排行条形图能力说明", () => {
       <RankBarCard
         locale="zh"
         title="进程"
+        kind="process"
         result={report({
           drilldownCapability: {
             sessions: false,
@@ -81,6 +91,7 @@ describe("排行条形图能力说明", () => {
       <RankBarCard
         locale="zh"
         title="进程"
+        kind="process"
         result={report({
           drilldownCapability: {
             sessions: false,

@@ -5,6 +5,7 @@ function base(overrides: Partial<LiveEmptyInput> = {}): LiveEmptyInput {
   return {
     address: "127.0.0.1:9097",
     session: "connected",
+    observationPhase: "current",
     collectorRunning: true,
     coverageKind: null,
     coverageReason: null,
@@ -23,9 +24,9 @@ describe("liveEmptyKind", () => {
   });
 
   it("未连接与鉴权失败", () => {
-    expect(liveEmptyKind(base({ session: "disconnected" }))).toBe("disconnected");
-    expect(liveEmptyKind(base({ session: "tcp_unauthorized" }))).toBe("disconnected");
-    expect(liveEmptyKind(base({ session: "endpoint_missing" }))).toBe("disconnected");
+    expect(liveEmptyKind(base({ session: "disconnected", observationPhase: "disconnected" }))).toBe("disconnected");
+    expect(liveEmptyKind(base({ session: "tcp_unauthorized", observationPhase: "disconnected" }))).toBe("disconnected");
+    expect(liveEmptyKind(base({ session: "endpoint_missing", observationPhase: "disconnected" }))).toBe("disconnected");
   });
 
   it("采集暂停不依赖 health.session", () => {
@@ -55,7 +56,17 @@ describe("liveEmptyKind", () => {
     expect(liveEmptyCopy("needResync")).toMatch(/重新订阅|重载/);
   });
 
-  it("有行时不挡住表格", () => {
-    expect(liveEmptyKind(base({ rowCount: 3, collectorRunning: false }))).toBe("hasRows");
+  it("当前有行时不挡住表格，断连或暂停保留行时明确 stale", () => {
+    expect(liveEmptyKind(base({ rowCount: 3 }))).toBe("hasRows");
+    expect(liveEmptyKind(base({ rowCount: 3, collectorRunning: false }))).toBe("stale");
+    expect(
+      liveEmptyKind(base({ rowCount: 3, session: "disconnected", observationPhase: "disconnected" }))
+    ).toBe("stale");
+    expect(liveEmptyCopy("stale")).toContain("上次已知");
+  });
+
+  it("connecting 与 disconnected 分开", () => {
+    expect(liveEmptyKind(base({ session: "connecting", observationPhase: "connecting" }))).toBe("connecting");
+    expect(liveEmptyCopy("connecting")).toContain("正在连接");
   });
 });
