@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 28
+- **Total Sessions**: 29
 - **Last Active**: 2026-08-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~880 | Active |
+| `journal-1.md` | ~903 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 29 | 2026-08-21 | 修复 Unknown 流量归因 | `8146e40`, `3013093`, `cd57f28` | `refactor/neko-ui-port` |
 | 28 | 2026-08-21 | 未知主机归因与英文侧栏 | `c65daa4`, `b0dee12`, `9dffefe`, `db8d770` | `refactor/neko-ui-port` |
 | 27 | 2026-08-21 | neko UI 重构实施与收口 | `718e8d7`, `3f0a856` | `refactor/neko-ui-port` |
 | 26 | 2026-08-20 | 填充关于页身份信息并支持侧栏调宽 | `aa35817` | `dev` |

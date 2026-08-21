@@ -878,3 +878,26 @@
 ### Next Steps
 
 - just tdev 实拍英文侧栏与主机页
+
+
+## Session 29: 修复 Unknown 流量归因
+
+**Date**: 2026-08-21
+**Task**: 修复 Unknown 流量归因
+**Branch**: `refactor/neko-ui-port`
+
+### Summary
+
+修复 durable writer/controller epoch、canonical metadata 与 DIRECT Chain 误归因；增加 attributionQuality、实时观测阶段和双数据面 UI；独立检查修复瞬时失败保真、并发 epoch、严格帧解码与重物化守恒，完整门禁通过。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8146e40` | (see git log) |
+| `3013093` | (see git log) |
+| `cd57f28` | (see git log) |
+
+### Status
+
+[OK] **Completed**
