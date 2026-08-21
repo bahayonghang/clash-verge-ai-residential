@@ -939,3 +939,40 @@
 ### Next Steps
 
 - 打开 Tauri 窗口核对规则页色井、悬停浮层与表头降序图标
+
+
+## Session 31: 报告快照配额与一周保留
+
+**Date**: 2026-08-21
+**Task**: 报告快照配额与一周保留
+**Package**: residential-monitor
+**Branch**: `refactor/neko-ui-port`
+
+### Summary
+
+修复 spool 8 格泄漏，显式运行报告写入 kind=manual 保留 7 天。
+
+### Main Changes
+
+- ReportSnapshotStore 复用 fingerprint 并 LRU 淘汰
+- useReport 卸载与取消响应释放 token
+- run_report persist_manual 写入 7 天手动档案
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bfcdc65` | (see git log) |
+| `73ab2a6` | (see git log) |
+
+### Testing
+
+- [OK] just monitor-check
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 本机走一遍侧栏并重启后打开手动档案再导出

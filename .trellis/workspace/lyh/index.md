@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 30
+- **Total Sessions**: 31
 - **Last Active**: 2026-08-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~941 | Active |
+| `journal-1.md` | ~978 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 31 | 2026-08-21 | 报告快照配额与一周保留 | `bfcdc65`, `73ab2a6` | `refactor/neko-ui-port` |
 | 30 | 2026-08-21 | 侧栏色井、图表浮层与排名表头 | `b826da8`, `c308dae` | `refactor/neko-ui-port` |
 | 29 | 2026-08-21 | 修复 Unknown 流量归因 | `8146e40`, `3013093`, `cd57f28` | `refactor/neko-ui-port` |
 | 28 | 2026-08-21 | 未知主机归因与英文侧栏 | `c65daa4`, `b0dee12`, `9dffefe`, `db8d770` | `refactor/neko-ui-port` |
