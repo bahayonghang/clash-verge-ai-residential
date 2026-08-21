@@ -11,6 +11,7 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - C3 report queries accept `minute1` / `minute2` / `minute5` / `minute10` granularity on the raw tier. Existing `hour` / `day` / `month` values stay unchanged.
 - C3 materializes `process`, `rule_group`, `chain`, and `network` dimension rows in addition to `host`. Category ranking on the dimension tier groups `category_id` and keeps `dimension_kind = host` so traffic is not counted five times.
 - Ranking identity `__unknown__` marks a missing dimension value. The row stays in the ranking so rank sums can match totals.
+- Host identity uses `metadata.host`, then `sniffHost`, then destination IP. The host page can inspect remaining `__unknown__` rows by rule, chain, and process.
 
 ### Changed
 
@@ -18,6 +19,13 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - Residential classification lives in one module with two named functions. Accounting uses exact target match. Live “residential only” still matches a configured target or a node name that contains 家宽.
 - `ReportFilters` now apply to raw totals, series, and rankings, including category. `filters.chain` matches the last chain hop. `filters.rule` matches the SQL rule key.
 - Dimension-layer `exact_top_n` is false when the grouping has no five-dimension materialization. Queries before the `hourly_dim_v2` watermark return `capability_unsupported`.
+- English sidebar brand is a two-line lockup. The sidebar slogan is the short bound-not-bill sentence. Nav and footer labels stay on one line at the default 220 px width.
+
+### Fixed
+
+- `just tinstall` / `tauri build` no longer emit the Vite 500 kB chunk warning. The desktop WebView loads from disk, so the budget is 1024 kB.
+- Windows MSVC no longer prints `linker_messages` for `residential_monitor_lib`. The crate type is `rlib` only; `cdylib` / `staticlib` were mobile leftovers.
+- Host rank bars no longer clip long FQDNs on the left of the Y-axis.
 
 ### Planned
 

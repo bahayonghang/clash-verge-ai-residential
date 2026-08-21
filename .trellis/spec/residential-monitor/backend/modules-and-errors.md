@@ -10,6 +10,7 @@
 - C0 候选 schema 不得复制为 C1 正式 migration。
 - C2 只消费 C1：`ControllerSession`、`AccountingEngine`、`StorageCoordinator`、`LiveProjection`、`RecoveryFacade`。C2 模块不得 `use rusqlite`，不得 `create table`。
 - C2 代码位于 `residential-monitor/src-tauri/src/c2/`。
+- 主机 identity 由 `session_host::resolve_host_identity` 单一实现：`host` → `sniffHost` → 目的 IP，写入现有 `connection_session.host`。`ensure_session_on` 用 `prefer_host_identity` 升级空值与 IP，不得用 IP 覆盖域名。`filters.host == "__unknown__"` 匹配空 host，不把哨兵当域名绑定。不升 schema。
 - 产品进程用 `c2/collector.rs` 约 1 Hz HTTP GET `/connections`。`test_controller` 只取一帧，不能代替循环。HTTP 期间不得持 `Mutex<AppFacade>`。
 - `Paused` / `Resumed` / `SleepGap` 发布时保留 `hub.rows()`。`Disconnected` 才允许清空。`session_status == Cancelled` 时跳过取帧；`reconnect_now` / `resume_collector` 必须离开 `Cancelled`，不得新开第二条循环。
 - `AppFacade::query` 必须经 `MonitorHub::query_snapshot` 一次锁定同时取出 rows 与 overview（含 `last_sample_utc`）。`query_connections_with_targets_at` 先过滤完整 matched 集合，再按 `(value desc, identity asc)` 选 `topDownload` / `topUpload`，然后才 sort / cursor / limit 分页。`limit` 与 cursor 不得改变 summary。空匹配热点为 `None`，不写 0。热点 DTO 不含 `process_path` 或原始规则。

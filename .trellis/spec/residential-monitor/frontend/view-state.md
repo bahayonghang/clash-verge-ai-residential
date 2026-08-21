@@ -10,6 +10,7 @@
 - `uiSidebarWidth` 为 160–352 的整数 CSS 像素，默认 220。写入本机键 `ui_sidebar_width`，不进控制器 JSON。拖动应用壳 `.shell` 右缘或键盘调整；拖动期间禁止整页 `paint`，并与实时表列宽拖动互斥。pointercancel / 失焦 / 捕获丢失回滚到开始宽度；松手成功才持久化一次。非法或缺失回落 220。Recovery 无库时只改内存。设置二级导航不提供独立宽度。
 - 不在前端实现分类、守恒、Top N 或导出统计。实时方向热点只渲染 `query_live_connections` 返回的 `summary`，不从当前页 rows 重算。
 - 缺口、未知和未归因差额必须单独展示，不能画成零。
+- 主机 identity 优先级为 `host` → `sniffHost` → 目的 IP。`filters.host == "__unknown__"` 表示空 host。主机页在 `crossDimension` 下可对未知行下钻；其它维未知行仍不可下钻。IP identity 在排名标签上加 `IP` 标记。
 - 热点卡片 follow `liveHotspotStatus`：`collectorRunning === null`、未知 coverage、断连、pause/shutdown、`needResync` / frozen 隐藏方向数值和旧的 matched/sample，不得显示 0 或过期 current。`noMatch` 可显示 matched `0` 与采样时间，方向值仍为未知。
 - 图表必须有对应数据表。
 - 固定 route：`overview`、`live`、`residential`、`host`、`rule`、`chain`、`process`、`reports`、`alerts`、`settings-data`。`reports` 与 `alerts` 均可用。

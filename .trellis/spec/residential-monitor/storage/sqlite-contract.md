@@ -22,5 +22,5 @@ PRAGMA foreign_keys = ON;
 - 低空间 backup / restore / spool / VACUUM 必须 fail closed，不得覆盖当前可用库。
 - 每个打开的连接在 `apply_required_pragmas` 之后注册 SQLite 标量函数 `last_chain_hop`（`Deterministic | Innocuous`）。新建 `StorageCoordinator` 连接后直接执行含该函数的 SQL 不得报 `no such function`。
 - 规则 / 链路聚合键在查询期派生，不改写入、不迁移。`filters.chain` 匹配 `last_chain_hop(a.chain_key)`。SQL 规则键为 `coalesce(last_chain_hop(a.chain_key), (select value from dimension_dict where dimension_kind='rule' and dimension_id=a.rule_id), 'DIRECT')`。过滤值只走绑定参数，禁止字符串插值。`namedSql` 回显常量名。
-- `dimension_dict` 新增 kind `'chain'` 与 `'rule_group'`，不得覆写既有 `'rule'`。精确维度层物化 host / process / `rule_group` / chain / network；水位键 `hourly_dim_v2`。排名 LEFT JOIN `dimension_dict`，缺失 identity 为 `"__unknown__"`，`dimension_dict.value` 不得写入该哨兵。
+- `dimension_dict` 新增 kind `'chain'` 与 `'rule_group'`，不得覆写既有 `'rule'`。精确维度层物化 host / process / `rule_group` / chain / network；水位键 `hourly_dim_v2`。排名 LEFT JOIN `dimension_dict`，缺失 identity 为 `"__unknown__"`，`dimension_dict.value` 不得写入该哨兵。`filters.host` 为该哨兵时 raw 层匹配 `coalesce(s.host,'')=''`，维度层匹配 `h.dimension_id = 0`。
 - 家宽份额 named SQL `share_residential_raw` 一次扫描同时取分子与分母。分子条件 `a.primary_category_id IS NOT NULL`。
