@@ -21,7 +21,7 @@
 - `AppFacade::query` 必须经 `MonitorHub::query_snapshot` 一次锁定同时取出 rows 与 overview（含 `last_sample_utc`）。`query_connections_with_targets_at` 先过滤完整 matched 集合，再按 `(value desc, identity asc)` 选 `topDownload` / `topUpload`，然后才 sort / cursor / limit 分页。`limit` 与 cursor 不得改变 summary。空匹配热点为 `None`，不写 0。热点 DTO 不含 `process_path` 或原始规则。
 - Tauri `Channel` 只放在 `lib.rs` 订阅表，不进入 `AppFacade`。
 - 托盘 id `main`。Tauri 2 默认左键弹菜单，必须 `show_menu_on_left_click(false)`。左键 Up 与左键双击打开窗口，右键才是菜单。四态由 `c2::desktop::tray_chrome(collector_running, session, storage_ok)` 决定，资源是 `icons/tray-*.png`。窗口 `icon.png` 不随状态变。`just tdev` 重启后通知区才换图标。
-- C3 代码位于 `residential-monitor/src-tauri/src/c3/`。C3 只通过 `StorageCoordinator` / `RecoveryFacade` 访问 SQLite，不得另建 writer 或通用 Repository。`ReportArchiveService` 拥有 `report_archive` 读写与过期删除。
+- C3 代码位于 `residential-monitor/src-tauri/src/c3/`。C3 只通过 `StorageCoordinator` / `RecoveryFacade` 访问 SQLite，不得另建 writer 或通用 Repository。`ReportArchiveService` 拥有 `report_archive` 读写与过期删除，含 `persist_manual`。C2 不得直接写该表。
 - 家宽判定只在 `src-tauri/src/residential.rs`：`residential_tags` / `is_residential_target`（核算，精确 target）与 `is_residential_filter`（实时筛选，精确 target 或节点名含「家宽」）。两者不得合并。`accounting::classify` 只调核算函数；`c2/query` 的「只看家宽」只调筛选函数。前端不得复制家宽字符串匹配。
 - `list_routes` 与引导 DTO 共用 `c2/shell.rs` 的 `default_routes_for`。十段顺序：`overview`、`live`、`residential`、`host`、`rule`、`chain`、`process`、`reports`、`alerts`、`settings-data`。禁止再维护第二份路由表。
 - `collector_loop_tick` 在 `apply_tick_result` 之后调用 `archive_tick`。`ReportService::run` 不得持 `Mutex<AppFacade>`。每 tick 最多 1 份档案。临时 snapshot 必须打开独立目录（`data_dir/archive-tick`），不得 `ReportSnapshotStore::open(data_dir)`，否则 `cleanup_orphans` 会删掉门面仍有效的 spool token。
@@ -33,4 +33,46 @@
 - AUMID 与 identifier 相同：`io.github.bahayonghang.residential-monitor`。About 固定 Releases URL，不注册 updater plugin，不新增 Windows Service。
 - 调试：`just tdev`（`tauri dev`）。出包：`just monitor-build`（只生成 NSIS，不安装）。安装：`just tinstall`（会改本机 current-user 安装态）。C5 自动门：`just monitor-c5-auto`。未再确认前不要执行 `tinstall`、本机 Credential Manager 真机测试或登录自启动写入。
 - C5 完整 30 天库、24 小时 soak、安装态通知 / 签名 / GitHub Release 不得由 fixture 或 smoke 冒充完成。C0 升级基线缺失时 `monitor-bench c5-baseline` 退出码 2。
+
+## Scenario: run_report persist_manual and snapshot LRU
+
+### 1. Scope / Trigger
+- Trigger: 分析报告 / 家宽「运行报告」、告警跳转要跨重启保留结果；聚合页现查不得打满 8 格 spool。
+
+### 2. Signatures
+- `run_report(query: ReportQuery, persist_manual: Option<bool>) -> ReportResult`
+- `ReportArchiveService::persist_manual(connection, result, now_utc)`
+- `ReportSnapshotStore::insert` / `get` / `release`
+
+### 3. Contracts
+- `persist_manual` 缺省 false。true 时查询成功后写 `report_archive.kind=manual`，返回值仍带会话 token。失败查询不写行。
+- 同一 `(kind, range_start_utc, query_fingerprint)` 的 manual 行覆盖；hour/day 已有 ok 仍不覆盖。
+- 现查（`useReport`）必须 false。C2 不直接 SQL。不升 schema。
+- 未过期 fingerprint 复用 token。满 8 格或超 spool 字节按 `last_access_utc` 淘汰。单 token 超 32 MiB 仍 `quota_exceeded`。TTL 600 秒。
+- `get` 刷新 `last_access_utc`，因此 `get_report` / 导出路径为 `&mut self`。
+
+### 4. Validation & Error Matrix
+- 读事务仍开 → `storage_failure`
+- 单 token 过大 / 淘汰后仍放不下 → `quota_exceeded`
+- 未知 `list_report_archives.kind` → `invalid_query`
+- Recovery-only → 既有 recovery 错误，不写档案
+
+### 5. Good/Base/Bad Cases
+- Good: 侧栏走完后再 `run_report` 成功；显式运行重启后列表可点选
+- Base: `persist_manual` 省略，行为与只写 spool 相同
+- Bad: 把 TTL 改成 7 天；现查也 persist；满 8 格直接拒绝且不淘汰
+
+### 6. Tests Required
+- `snapshot_store_tests`: 复用 fingerprint、第 9 次淘汰、32 MiB 拒绝
+- `archive_service_tests`: manual 覆盖、7 天 purge、不挡住 auto `next_job`
+
+### 7. Wrong vs Correct
+#### Wrong
+```rust
+if self.items.len() >= MAX_ACTIVE_TOKENS {
+    return Err(ReportError::QuotaExceeded("active token count"));
+}
+```
+#### Correct
+先 `cleanup_expired`，同 fingerprint 替换，再 LRU 淘汰，最后才 `QuotaExceeded`。
 

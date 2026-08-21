@@ -15,7 +15,8 @@ PRAGMA foreign_keys = ON;
 - `busy_timeout` 由 C0 测量后冻结，不能超过 durable commit SLO 仍称为健康。
 - SQLite `user_version`：C1 = 1 / checksum `c1-core-v1`；C3 = 2 / checksum `c3-report-v2`；C4 = 3 / checksum `c4-alert-v3`；C3 档案 = 4 / checksum `c3-archive-v4`。不得改写已发布 C1 / C3 / C4 migration 文本。`C3_DDL` 不得出现 `report_archive`。
 - C3 追加表：`dimension_dict`、`connection_session_attr`、`traffic_hourly_dimension`、`traffic_daily_dimension`、`traffic_daily_core`、`coverage_daily`、`retention_state`、`retention_watermark`、`report_snapshot_meta`。
-- C3 档案表（v4 `C3_ARCHIVE_DDL`）：`report_archive`。过期删除只针对该表，与 `AUTO_DELETE_ENABLED` 无关。
+- C3 档案表（v4 `C3_ARCHIVE_DDL`）：`report_archive`。过期删除只针对该表，与 `AUTO_DELETE_ENABLED` 无关。`kind` 合法值 `hour` / `day` / `manual`。hour 按 `range_end_utc` 保留 30 天；day 按 `range_end_utc` 保留 13 个月；manual 按 `generated_utc` 保留 7 天。写入 `manual` 不升 schema、不改已发布 DDL。
+- `ReportSnapshotStore`：未过期 `query_fingerprint` 复用 token 并续 TTL。满 `MAX_ACTIVE_TOKENS=8` 或总字节超 `MAX_SPOOL_BYTES` 时按 `last_access_utc` 淘汰后再插入。单 token 超 `MAX_TOKEN_BYTES` 仍 `quota_exceeded`。`TOKEN_TTL_SECS` 保持 600。
 - C4 追加表：`alert_rule`、`alert_instance`、`alert_event`、`notification_outbox`。facts、coverage、alert 与 outbox 必须在同一 writer 事务中提交。
 - `report_snapshot_token` 返回前必须关闭 SQLite read transaction。token 不持有连接或 WAL end mark。
 - 自动 DELETE 保持关闭（`AUTO_DELETE_ENABLED=false`），直到守恒门通过。不自动 VACUUM。freelist 不得显示为已释放文件空间。

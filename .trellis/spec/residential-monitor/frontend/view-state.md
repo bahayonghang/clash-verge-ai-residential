@@ -27,7 +27,7 @@
 - `route === "settings-data"` 时 `connectionDelta` / `summaryChanged` / `alertChanged` 不得刷新设置表单，除非 `errorZh` 相对上次已变。`healthChanged` 与 `bootstrap` 仍更新连接健康。进入连接分区时补一次 live 查询；停留设置页期间 `collectorRunning` 停在上次 tray 值。
 - 报告图探查只读当前 `ReportResult`：悬停或键盘焦点显示名称、流量、份额；点击钉住；Escape 取消。禁止按探查改 grouping 或自动 `run_report`。
 - 自动档案列表可见约 8 行；类型筛选走 `list_report_archives.kind`。
-- 进入 `reports` 时 `list_report_archives`，优先展示最新成功日档案，否则最新成功小时档案。手动「运行报告」只更新当前会话 token，不写 `report_archive`。
+- 进入 `reports` 时 `list_report_archives`，优先展示最新成功日档案，否则最新成功小时档案，不自动选手动行。分析报告「运行报告」、告警跳转与家宽「生成报告」在成功后写入 `report_archive`（`kind=manual`），按 `generated_utc` 保留 7 天；同一窗口同一 query 再跑则覆盖。概览 / 聚合页 `useReport` 现查不写档案。
 - C5 设置页可展示关于信息、删除预览 / 二次确认和用户主动 VACUUM。进入关于分区时自动 `get_about` 并缓存于当前会话；刷新强制重拉。加载中、失败、成功三态，默认不再停在未加载空文案。发布地址只展示固定 GitHub Releases URL，显示在关于卡内等宽文本，不得写入 `errorZh`。许可证、平台和「数据只留本机 / 无遥测」用 i18n 静态行，不新增 AboutDto 字段。设置页与 Recovery 壳显示 `logDir` 并用 `open_log_dir` 打开目录；路径写入文本节点，不拼 `file://`。Recovery 不加删除入口。焦点与选区由 React 受控输入保持，禁止为保焦点而整页 `innerHTML` 替换。缺口、未知和能力过期仍显示「未知」，不画成零。
 - 设置页 TCP secret 默认保存到本机凭据并回填密码框（圆点）。显示/隐藏走独立按钮。密钥只写受控 `input.value`，不写 `data-*` / `title`，不进 `console`，不进 i18n 插值。`secretFieldMarkup` 仍是测试用 HTML 辅助，React 设置页不得靠它拼密钥。
 - `AboutDto.signed === true` 时解码失败。发布地址只展示固定 GitHub Releases URL。

@@ -40,6 +40,46 @@
 #### Correct
 `system` 哨兵 + 校验后的本机族名；旧四档继续映射原栈。
 
+## Scenario: report archive kind manual
+
+### 1. Scope / Trigger
+- Trigger: 列表出现 `kind=manual`；`run_report` 增加 `persistManual`。
+
+### 2. Signatures
+- `run_report({ query, persistManual?: boolean })`
+- `release_report({ token })`
+- `ReportArchiveKind = "hour" | "day" | "manual"`
+- `ArchiveKindFilter = "all" | "hour" | "day" | "manual"`
+
+### 3. Contracts
+- 解码遇到非上述 kind 拒绝整页，不猜测。
+- 显式运行传 `persistManual: true`。`useReport` 现查省略或 false。
+- 卸载、换 query、取消响应必须 `release_report`。已返回但不采用的 token 也要释放。
+- 进页 `pickLatestArchive` 只选成功 day，否则成功 hour，跳过 manual。
+- 列表失败才用 `report.archive.unavailable`。水合失败保留列表，配额不得写入能力说明。
+
+### 4. Validation & Error Matrix
+- `kind` 不是 hour/day/manual → `ReportArchivePage 无效`
+- 水合 `quota_exceeded` → 结果区配额文案，列表仍可见
+- 列表 IPC 失败 → `report.archive.unavailable`
+
+### 5. Good/Base/Bad Cases
+- Good: 手动行可筛选、点选、导出绑定水合 token
+- Base: 无 manual 行时进页行为与改前相同
+- Bad: 把配额写进「能力说明」；取消的 `run_report` 不释放 token
+
+### 6. Tests Required
+- `decodeReportArchivePage` 接受 `manual`
+- `pickLatestArchive` 不选手动行
+- `RankBarCard` 配额进 alert、不进 `data-capability-note`
+- `shouldReleaseAbandoned` 覆盖取消与过期序号
+
+### 7. Wrong vs Correct
+#### Wrong
+`loadArchives` 水合失败时把 `statusZh` 写成档案列表暂不可用。
+#### Correct
+列表成功则 `setArchives`；水合失败只用配额/存储原文。
+
 ## Scenario: C2 Monitor Channel
 
 ### 1. Scope / Trigger
