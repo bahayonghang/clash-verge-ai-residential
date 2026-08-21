@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 27
+- **Total Sessions**: 28
 - **Last Active**: 2026-08-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~841 | Active |
+| `journal-1.md` | ~880 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 28 | 2026-08-21 | 未知主机归因与英文侧栏 | `c65daa4`, `b0dee12`, `9dffefe`, `db8d770` | `refactor/neko-ui-port` |
 | 27 | 2026-08-21 | neko UI 重构实施与收口 | `718e8d7`, `3f0a856` | `refactor/neko-ui-port` |
 | 26 | 2026-08-20 | 填充关于页身份信息并支持侧栏调宽 | `aa35817` | `dev` |
 | 25 | 2026-08-20 | 修复设置页字体选择器重绘打断 | `b32e605` | `feat/settings-system-fonts-layout` |

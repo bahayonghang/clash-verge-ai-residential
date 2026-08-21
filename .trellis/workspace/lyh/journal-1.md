@@ -839,3 +839,42 @@
 
 - 在 Tauri 窗口做四主题实拍与能力降级检查
 - 补测 monitor-bench 五维物化体积后一次性合入 main
+
+
+## Session 28: 未知主机归因与英文侧栏
+
+**Date**: 2026-08-21
+**Task**: 未知主机归因与英文侧栏
+**Package**: residential-monitor
+**Branch**: `refactor/neko-ui-port`
+
+### Summary
+
+英文侧栏两行品牌锁与单行导航。空 host 按 sniffHost 或目的 IP 归因，未知行可检查组成。桌面构建去掉 cdylib 与 500kB 警告。
+
+### Main Changes
+
+- 英文侧栏 220px 两行品牌与短口号
+- host identity: host then sniffHost then destination IP
+- 主机页未知行可下钻；条形图轴标签不再左侧裁切
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c65daa4` | (see git log) |
+| `b0dee12` | (see git log) |
+| `9dffefe` | (see git log) |
+| `db8d770` | (see git log) |
+
+### Testing
+
+- [OK] cargo test --workspace 267 passed; vitest 187; typecheck lint build; clippy -D warnings
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- just tdev 实拍英文侧栏与主机页
