@@ -1,6 +1,7 @@
 # DTO 解码
 
 - Rust 是权威校验者。前端解码失败时显示专门中文状态，不猜测缺字段。
+- `LiveOverview` 的所有约定字段都必须用 own-property 检查。字段存在且为 `null` 才是合法 pending/unavailable；字段缺失、undefined、非法 enum、负数或非有限数必须拒绝。`observationPhase` 合法值为 unconfigured / connecting / baselinePending / current / paused / disconnected / resyncRequired / decodeFailed。
 - 每条 Channel 消息必须检查 `schemaVersion`、`kind` 和单调 `seq`。
 - 禁止把 mihomo 原始 JSON 或 SQL 行传到视图层。
 - 时间展示用用户本地时区；持久时间保持 UTC integer。
@@ -53,7 +54,7 @@
 ### 3. Contracts
 - `schemaVersion` 必须为 `1`。
 - 后续消息只接受 `seq > baseSeq`。
-- `snapshot` 是概览 DTO，不含 10k 连接数组。
+- `snapshot` 是概览 DTO，不含 10k 连接数组。bootstrap 与每个 `connectionDelta` 都携带同 tick snapshot，使 rows、activeCount 与 phase 同步推进。
 - 列表与详情走 `query_live_connections` / `get_connection`。
 - `subscribe_monitor` / `resync_monitor` 必须保存 Tauri `Channel`，后续 `publish` 转发到该 Channel。只发 bootstrap 后丢弃 Channel，实时页会一直空。
 - 前端用 `@tauri-apps/api/core` 的 `Channel` + `invoke`。禁止把 `window.message` 当成 Monitor Channel。
@@ -79,9 +80,9 @@
 
 ### 7. Wrong vs Correct
 #### Wrong
-前端把 `meterUpload` 与 `attributedUpload` 加成「全局流量」，缺口当 0。监听 `window.message` 或只渲染 `bootstrap.snapshot`。
+前端把 `meterUpload` 与 `attributedUpload` 加成「全局流量」，缺口当 0。监听 `window.message`、只渲染 `bootstrap.snapshot`，或把缺失字段当作合法 null。
 #### Correct
-分字段展示；`null` 显示「未知」。用 Tauri Channel 订阅，再用 `query_live_connections` 填表。
+分字段展示；按 `observationPhase` 解释显式 `null`。用 Tauri Channel 订阅，再用 `query_live_connections` 填表。
 
 ## Scenario: C2 Live Connection Query Page
 
@@ -150,11 +151,12 @@ const page = decodeLiveConnectionPage(raw); // summary.topDownload 已由 Rust �
 
 ### 3. Contracts
 - `ReportResult.schemaVersion` 必须为 `1`。
+- `ReportResult.attributionQuality` 必须完整解码 known/missing upload/download/connections 与 complete/partial/unavailable；数字为非负安全整数，且 known + missing 必须精确等于 totals。rankings 每个字段也逐项验证，禁止 `as unknown as ReportResult` 绕过边界。
 - UI、CSV、JSON、HTML 只消费同一 `reportSnapshotToken`，不得为导出重新查询。
 - 大结果不经实时 Channel。
 - `restore` 可在 `recovery-only` 分支执行，不初始化 `ReportService`。
 - `queryEcho.granularity` 合法值为 `minute1` / `minute2` / `minute5` / `minute10` / `hour` / `day` / `month`。分钟档只在 raw 层有效；落到 HourlyDimension / DailyDimension / DailyCore 时返回 `capability_unsupported`，原因「分钟粒度只在 raw 保留期内可用」，不升粒度。
-- 排名 `identity` 为 `"__unknown__"` 表示维度值缺失。前端按未知渲染，不参与下钻；`filters` 无法表达该哨兵。
+- 排名 `identity` 为 `"__unknown__"` 表示维度值缺失。前端按 grouping 显示维度化缺失标签并保留字节；Host 维未知可下钻检查组成，其它维保持不可下钻。
 - 下钻 `filters.rule` / `filters.chain` 必须复用排名行 `identity`。`filters.chain` 是最后一跳，不是完整 `a>b>c`。单跳且有 payload 时 SQL 规则键是 `rule`，不是 `rule(payload)`。
 
 ### 4. Validation & Error Matrix

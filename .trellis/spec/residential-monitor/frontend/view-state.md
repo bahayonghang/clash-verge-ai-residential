@@ -10,12 +10,15 @@
 - `uiSidebarWidth` 为 160–352 的整数 CSS 像素，默认 220。写入本机键 `ui_sidebar_width`，不进控制器 JSON。拖动应用壳 `.shell` 右缘或键盘调整；拖动期间禁止整页 `paint`，并与实时表列宽拖动互斥。pointercancel / 失焦 / 捕获丢失回滚到开始宽度；松手成功才持久化一次。非法或缺失回落 220。Recovery 无库时只改内存。设置二级导航不提供独立宽度。
 - 不在前端实现分类、守恒、Top N 或导出统计。实时方向热点只渲染 `query_live_connections` 返回的 `summary`，不从当前页 rows 重算。
 - 缺口、未知和未归因差额必须单独展示，不能画成零。
+- Overview 顶部是「实时 · 当前控制器」，趋势/Top 是「历史 · 已存储数据 · 时间窗」。当前 connecting 与历史 ready 可同时成立；历史区域继续显示 report coverage 与 generated time，不能用 live health 解释历史 Unknown。
+- 实时数值只在 `observationPhase === "current"` 时把 0 当真实零。connecting 显示等待连接，baselinePending 显示建立差分基线；paused/disconnected/resyncRequired/decodeFailed 隐藏 current。若保留 last-known 数值或 rows，必须标为 stale / 上次值。
+- 报告 `coverage` 与 `attributionQuality` 是两个独立轴。Top 与维度页显示 exact attribution quality；`__unknown__` 按 grouping 显示未归因主机、未报告链路、控制器未报告进程或未保存/未报告规则，missing bytes 不隐藏。
 - 主机 identity 优先级为 `host` → `sniffHost` → 目的 IP。`filters.host == "__unknown__"` 表示空 host。主机页在 `crossDimension` 下可对未知行下钻；其它维未知行仍不可下钻。IP identity 在排名标签上加 `IP` 标记。
 - 热点卡片 follow `liveHotspotStatus`：`collectorRunning === null`、未知 coverage、断连、pause/shutdown、`needResync` / frozen 隐藏方向数值和旧的 matched/sample，不得显示 0 或过期 current。`noMatch` 可显示 matched `0` 与采样时间，方向值仍为未知。
 - 图表必须有对应数据表。
 - 固定 route：`overview`、`live`、`residential`、`host`、`rule`、`chain`、`process`、`reports`、`alerts`、`settings-data`。`reports` 与 `alerts` 均可用。
 - 关闭连接：`204` 只标 `accepted`；后续 `remove` 才标 `closed`；超时标 `unconfirmed`。没有关闭全部入口。
-- 实时连接空态必须区分：未配置、未连接、采集暂停、已连接无行、订阅缺口。禁止用验收句「关闭全部连接入口不存在」或单一「无数据」兜底。暂停看 `tray_summary.collector_running` 或 coverage `closed`/`pause_or_shutdown`，不要只判断 `health.session === "paused"`。
+- 实时连接空态必须区分：未配置、连接中、未连接、采集暂停、已连接无行、订阅缺口。断连/暂停/重连时若保留 rows，显示 stale 而不是让 `rowCount > 0` 优先冒充 current。禁止用验收句「关闭全部连接入口不存在」或单一「无数据」兜底。暂停看 `tray_summary.collector_running` 或 coverage `closed`/`pause_or_shutdown`，不要只判断 `health.session === "paused"`。
 - C4 只替换 alerts 页面内容，不得改写桌面生命周期或实时核算。`alertChanged` 只携带小型摘要；历史走 `list_alert_center`。
 - 报告图表与数据表只读同一个 `ReportResult`。前端不聚合、不传 SQL，不计算滚动速率或周期用量。
 - 分析报告主区顺序：工具条、状态、总量、趋势图+表、Top N 扇形图+表、页尾自动档案。总量与图在同一结果区内，不单独占一张空卡。

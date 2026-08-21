@@ -12,7 +12,12 @@
 - C2 代码位于 `residential-monitor/src-tauri/src/c2/`。
 - 主机 identity 由 `session_host::resolve_host_identity` 单一实现：`host` → `sniffHost` → 目的 IP，写入现有 `connection_session.host`。`ensure_session_on` 用 `prefer_host_identity` 升级空值与 IP，不得用 IP 覆盖域名。`filters.host == "__unknown__"` 匹配空 host，不把哨兵当域名绑定。不升 schema。
 - 产品进程用 `c2/collector.rs` 约 1 Hz HTTP GET `/connections`。`test_controller` 只取一帧，不能代替循环。HTTP 期间不得持 `Mutex<AppFacade>`。
-- `Paused` / `Resumed` / `SleepGap` 发布时保留 `hub.rows()`。`Disconnected` 才允许清空。`session_status == Cancelled` 时跳过取帧；`reconnect_now` / `resume_collector` 必须离开 `Cancelled`，不得新开第二条循环。
+- `/connections` 根帧必须同时含数值型 upload/download meter 与数组型 connections；缺字段或类型错误是 `ProtocolIncompatible`，不得静默归一为 0/空列表并关闭旧连接。每个 connection 必须有非空 id 和数值型 counters；任一坏行使整帧失败，未知附加字段仍忽略。
+- controller 字段覆盖诊断只输出互斥计数：Host 的 host/sniff/IP/absent、Process 的 process/path-only/absent、Chains 的 chains/provider-only/absent；不得输出 secret、完整 host/IP/processPath 或 provider 值。
+- `AccountingEngine` 是每个 durable controller generation 的 canonical metadata owner。同 generation 非空字段升级、空白字段不降级；Chains 只做非空整组替换。Live row 与 MinuteFact 必须由同一 canonical snapshot 产生。`providerChains` 只作诊断，不替代 `chains`。
+- `AppFacade::boot` 从 SQLite 原子保留新的 writer epoch；首次 frame、重连、meter/counter 回退、start 变化或消失后 raw id 复用时，从 SQLite 保留新的 controller epoch 后再建 baseline。进程内常量 epoch / bundle receipt 不得跨重启复用。
+- `Paused` / `Resumed` / `SleepGap`、Connected 生命周期事件及瞬时 HTTP/JSON/协议错误发布时保留 `hub.rows()`、rate 与真实 `last_sample_utc`；不得把错误发生时间伪装成 controller sample。只有 `Restarted` / `Shutdown` / `Cancelled` / `CoreRestarted` 终止态清空 rows。`session_status == Cancelled` 时跳过取帧；`reconnect_now` / `resume_collector` 必须离开 `Cancelled`，不得新开第二条循环。
+- `LiveOverview.observationPhase` 明确区分 unconfigured / connecting / baselinePending / current / paused / disconnected / resyncRequired / decodeFailed。每次 `connectionDelta` 携带同 tick overview；前端不得只更新 rows 而把 bootstrap 的 connecting 快照永久保留。
 - `AppFacade::query` 必须经 `MonitorHub::query_snapshot` 一次锁定同时取出 rows 与 overview（含 `last_sample_utc`）。`query_connections_with_targets_at` 先过滤完整 matched 集合，再按 `(value desc, identity asc)` 选 `topDownload` / `topUpload`，然后才 sort / cursor / limit 分页。`limit` 与 cursor 不得改变 summary。空匹配热点为 `None`，不写 0。热点 DTO 不含 `process_path` 或原始规则。
 - Tauri `Channel` 只放在 `lib.rs` 订阅表，不进入 `AppFacade`。
 - 托盘 id `main`。Tauri 2 默认左键弹菜单，必须 `show_menu_on_left_click(false)`。左键 Up 与左键双击打开窗口，右键才是菜单。四态由 `c2::desktop::tray_chrome(collector_running, session, storage_ok)` 决定，资源是 `icons/tray-*.png`。窗口 `icon.png` 不随状态变。`just tdev` 重启后通知区才换图标。

@@ -5,9 +5,18 @@
 - 空区间总量可以为 0。缺口、未知和能力不支持不得写成 0。
 - 30 天 raw 支持组合过滤和下钻。13 个月精确层只支持单维。更老的 core daily 只保留总量、历史主分类和 coverage。
 - `granularity` 合法值为 `minute1` / `minute2` / `minute5` / `minute10` / `hour` / `day` / `month`。分钟档只在 raw 保留期内可用，不升粒度。
-- 主机 identity 优先级为 `metadata.host` → `sniffHost` → 目的 IP，写入 `connection_session.host`。三者都空时排名 `identity` 为 `__unknown__`，`label` 为「未知」。
+- 主机 identity 优先级为 `metadata.host` → `sniffHost` → 目的 IP，写入 `connection_session.host`。三者都空时排名 `identity` 为 `__unknown__`；前端按维度显示「未归因主机」，不会把它与连接中、覆盖 gap 或未报告进程混为一谈。
 - `filters.host` 为 `__unknown__` 时匹配空 host，不把哨兵当域名绑定。主机页可对未知行下钻到规则 / 链路 / 进程。其它维度的未知行不参与下钻。
 - 自动 DELETE 保持关闭，直到守恒门通过。
+
+## Unknown 与维度归因
+
+- 实时卡片的空值表示 `observationPhase` 尚未到 `current`，例如未配置、连接中、差分基线待建立、暂停、断连、重同步或解码失败；它不是历史排名中的缺失 identity。只有 `current` 阶段的 `0` 才是真实零。
+- 报告的 coverage 只描述时间覆盖 / gap；`attributionQuality` 独立描述当前 grouping 的字段覆盖。后端精确返回 known/missing upload、download、connections，并保证 known + missing 等于 totals。Top N 不参与该计算。
+- 排名 `identity="__unknown__"` 的字节仍完整保留。Host 显示「未归因主机」，Chain 显示「未报告链路」，Process 显示「控制器未报告进程」，Rule 显示「未保存或未报告规则」。
+- 同一 controller generation 内，后续非空 metadata 可补全先前 session；空白帧不会擦除已知 Host / Process / Rule / Network / Chains。Process 缺失时只允许使用同帧或同 generation 已知 `processPath` 的 Windows / Unix basename；完整路径不进入历史字典、质量 DTO 或日志。
+- Chain identity 与 Rule group 分开：Chain 的单跳 `DIRECT` 保留为 `DIRECT`，多跳取末个非空 hop；Rule 对单跳链仍回退 raw rule。旧 hourly/daily Chain 只在仍有完整 raw 旁证的既有派生窗口内事务性重建；若重建前派生总量与 raw 总量不等则回滚并保留旧层，raw 已删除区间与 frozen archive 不改写。
+- 历史 Host / Process 缺失若没有当时 raw 旁证不可恢复，不用当前活动连接、DNS 或 Clash 页面猜测。Overview 将顶部标为「实时 · 当前控制器」，趋势和 Top 标为「历史 · 已存储数据 · 时间窗」，两者可同时处于 connecting 与 ready。
 
 ## 自动小时 / 日档案
 
