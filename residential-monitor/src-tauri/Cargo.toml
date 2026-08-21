@@ -9,7 +9,8 @@ default-run = "residential-monitor"
 
 [lib]
 name = "residential_monitor_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+# Windows 桌面只要 rlib。cdylib 会让 MSVC 打印「正在创建库」，rustc 记成 linker_messages。
+crate-type = ["rlib"]
 
 [[bin]]
 name = "residential-monitor"

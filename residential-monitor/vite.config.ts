@@ -14,6 +14,8 @@ export default defineConfig({
   },
   envPrefix: ["VITE_", "TAURI_ENV_"],
   build: {
+    // 桌面 WebView 从本地加载。默认 500 kB 是 HTTP 站点预算；当前入口约 1 MB。
+    chunkSizeWarningLimit: 1024,
     target: "es2022",
     minify: process.env.TAURI_ENV_DEBUG ? false : "esbuild",
     sourcemap: !!process.env.TAURI_ENV_DEBUG
