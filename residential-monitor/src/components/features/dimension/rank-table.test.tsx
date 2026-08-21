@@ -179,4 +179,31 @@ describe("排名表未知行与能力", () => {
     expect(html).toContain("<table");
     expect(html).not.toContain("data-drill=");
   });
+
+  it("默认下行降序带图标，不可排序列无按钮，不含字段归因", () => {
+    const html = renderToStaticMarkup(
+      <RankTable
+        locale="zh"
+        kind="rule"
+        result={report()}
+        loading={false}
+        errorZh={null}
+        selectedIdentity={null}
+        onSelect={() => undefined}
+      />
+    );
+    expect(html).not.toContain("字段归因");
+    expect(html).toContain("bg-muted/40");
+    const thead = html.slice(html.indexOf("<thead"), html.indexOf("</thead>"));
+    const download = thead.split("</th>").find((chunk) => chunk.includes(">下行<") || chunk.endsWith(">下行"));
+    expect(download).toBeDefined();
+    expect(download).toContain('aria-sort="descending"');
+    expect(download).toContain('data-sort-icon="descending"');
+    expect((thead.match(/data-sort-icon=/g) ?? []).length).toBe(4);
+    expect(thead).toMatch(/aria-sort="none"/);
+    expect((thead.match(/<button/g) ?? []).length).toBe(4);
+    expect(thead).toContain(">排名</th>");
+    expect(thead).toContain(">份额</th>");
+    expect(thead).toContain(">下钻</th>");
+  });
 });

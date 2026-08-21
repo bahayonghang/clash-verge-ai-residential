@@ -1,6 +1,7 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { inspectKeysMatch } from "../../format/report-inspect";
 import { cn } from "../../lib/utils";
+import { ShareSliceHover } from "./chart-hover";
 
 const FILLS = [
   "var(--chart-1)",
@@ -89,10 +90,7 @@ export function ShareDonut({
             })}
           </Pie>
           {onHover ? null : (
-            <Tooltip
-              isAnimationActive={false}
-              formatter={(value, name) => [String(value ?? ""), String(name ?? "")]}
-            />
+            <Tooltip cursor={false} isAnimationActive={false} content={<ShareSliceHover />} />
           )}
         </PieChart>
       </ResponsiveContainer>

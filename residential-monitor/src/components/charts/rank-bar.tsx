@@ -13,6 +13,7 @@ import { ellipsizeLabel, rankAxisWidth } from "../../format/rank";
 import { t, type UiLocale } from "../../i18n";
 import { cn } from "../../lib/utils";
 import { Skeleton } from "../ui/skeleton";
+import { RankBarHover } from "./chart-hover";
 
 export interface RankBarDatum {
   label: string;
@@ -106,16 +107,13 @@ export function RankBar({
             axisLine={false}
             tickLine={false}
             interval={0}
-            tick={{ fontSize: 11, fill: "#888888" }}
+            tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
             tickFormatter={(value: string | number) => ellipsizeLabel(String(value), maxChars)}
           />
           <Tooltip
-            formatter={(value) => formatValue(typeof value === "number" ? value : Number(value ?? 0))}
-            contentStyle={{
-              background: "var(--popover)",
-              border: "1px solid var(--border)",
-              borderRadius: "0.5rem"
-            }}
+            cursor={false}
+            isAnimationActive={false}
+            content={<RankBarHover formatValue={formatValue} />}
           />
           <Bar dataKey="value" radius={[0, 4, 4, 0]} isAnimationActive={false}>
             {data.map((item, index) => (

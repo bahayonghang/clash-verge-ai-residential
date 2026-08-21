@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import {
   Bell,
   ChartColumn,
@@ -18,6 +18,7 @@ import type { RouteId } from "../../dto";
 import { t, type UiLocale } from "../../i18n";
 import { cn, formatTemplate } from "../../lib/utils";
 import { BRAND_MARK, BUSINESS_ROUTES, isRouteId } from "../../nav-icons";
+import { BUSINESS_NAV_TINTS } from "../../nav-tints";
 import { SHELL_WIDTH_MAX, SHELL_WIDTH_MIN } from "../../shell-width";
 import { StatusDot } from "../common/status-dot";
 import { Button } from "../ui/button";
@@ -169,7 +170,10 @@ export function Sidebar({
       {recovery ? (
         <p className="px-4 py-3 text-sm text-amber-500">{t(locale, "shell.recovery")}</p>
       ) : (
-        <nav className="flex-1 space-y-1 overflow-auto p-4" aria-label={t(locale, "nav.aria")}>
+        <nav
+          className="flex flex-1 flex-col gap-[length:var(--nav-item-gap)] overflow-auto p-4"
+          aria-label={t(locale, "nav.aria")}
+        >
           {BUSINESS_ROUTES.map((id) => {
             const Icon = ROUTE_LUCIDE[id];
             const current = id === route;
@@ -178,7 +182,9 @@ export function Sidebar({
                 key={id}
                 type="button"
                 data-route={id}
+                data-nav-tint={id}
                 aria-current={current ? "page" : undefined}
+                style={{ "--nav-tint": BUSINESS_NAV_TINTS[id] } as CSSProperties}
                 className={cn(
                   "shell-nav-item flex w-full items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors",
                   current
@@ -186,7 +192,9 @@ export function Sidebar({
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 )}
               >
-                <Icon className="h-5 w-5 shrink-0" />
+                <span className="shell-nav-well" aria-hidden="true">
+                  <Icon className="size-4" />
+                </span>
                 <span className="min-w-0 truncate">{t(locale, `route.${id}`)}</span>
               </button>
             );

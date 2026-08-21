@@ -26,7 +26,9 @@ export const ROUTE_ORDER: RouteId[] = [
   "settings-data"
 ];
 
-export const BUSINESS_ROUTES: RouteId[] = ROUTE_ORDER.filter((id) => id !== "settings-data");
+export const BUSINESS_ROUTES = ROUTE_ORDER.filter(
+  (id): id is Exclude<RouteId, "settings-data"> => id !== "settings-data"
+);
 
 export const ROUTE_ICONS: Record<RouteId, string> = {
   overview: iconOverview,

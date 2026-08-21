@@ -11,6 +11,8 @@ colors:
   accent-light: "#0063ff"
   card: "#171c2b"
   card-light: "#ffffff"
+  popover: "#242a3c"
+  popover-light: "#ffffff"
   ink: "#f8fafc"
   muted: "#94a3b8"
   chart-1: "#3b82f6"
@@ -74,14 +76,14 @@ components:
 
 **Creative North Star: "Clash Verge 隔壁的观测台"**
 
-桌面工作台。左侧深色认页，右侧读数区。蓝只出现在当前栏和主按钮。工艺对齐 Clash Verge Rev 与 neko：图标加文字的侧栏、圆角选中条、扁平面板。
+桌面工作台。左侧深色认页，右侧读数区。选中栏和主按钮用主色蓝；未选中业务项用色井认页。工艺对齐 Clash Verge Rev 与 neko：色井加文字的侧栏、圆角选中条、扁平面板。
 
 密度是专家工具档。表格保持表格。缺口写「未知」，不写零，不写账单。
 
 **Key Characteristics:**
 
 - 四款主题：Latte / Frappé / Macchiato / Mocha
-- 蓝只打选中项和主操作
+- 选中项主色蓝；未选中业务导航用色井
 - 本地生成图标，不走 CDN
 - 系统无衬线 + 等宽数字
 
@@ -98,7 +100,7 @@ components:
 - **卡片**（Mocha `#171c2b`，Latte `#ffffff`）：指标和表单面板。
 
 ### Named Rules
-**The One Blue Rule.** 蓝只用于当前页和主操作。状态靠文案和圆点，不靠第二套彩色徽章。
+**The One Blue Rule.** 选中导航和主按钮只用主色蓝。未选中业务导航用 `--nav-*` 色井认页；色井不是健康或告警严重度。关于 / 设置无色井。连接状态仍靠文案和圆点。
 
 ## Typography
 
@@ -142,12 +144,13 @@ Operate 表面用系统栈。数字用等宽和 `tabular-nums`。
 - 焦点用 ring
 
 ### Navigation
-- 左栏图标 + `titleZh`
-- 当前项整行蓝底
+- 左栏色井 + 图标 + `titleZh`；色井 comfortable 1.75rem，compact 1.5rem
+- 当前项整行蓝底、白图标浅白井
 - Recovery-only 不渲染九段业务导航
 
 ### Data table
 - 语义 `<table>`，`aria-sort`
+- 可排序列进入时就有可见 lucide 方向图标
 - 等宽数字
 
 ## Do's and Don'ts

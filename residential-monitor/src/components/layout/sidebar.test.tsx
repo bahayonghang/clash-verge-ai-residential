@@ -73,4 +73,21 @@ describe("Sidebar", () => {
     expect(html).not.toContain('data-brand="en-stack"');
     expect(html).toContain("设置 / 数据管理");
   });
+
+  it("业务导航带色井与间距，关于与设置无 tint", () => {
+    const html = renderSidebar({ locale: "zh", route: "overview" });
+    for (const id of BUSINESS_ROUTES) {
+      expect(html).toContain(`data-nav-tint="${id}"`);
+    }
+    expect(html).toContain("shell-nav-well");
+    expect(html).toContain("gap-[length:var(--nav-item-gap)]");
+    expect(html).toMatch(/data-nav-tint="overview"[^>]*aria-current="page"/);
+    expect(html).toContain("bg-primary");
+    const bottom = html.slice(html.indexOf('aria-label="侧栏底部"'));
+    expect(bottom).toContain("关于");
+    expect(bottom).toContain("设置 / 数据管理");
+    expect(bottom).not.toContain("data-nav-tint");
+    expect(bottom).not.toContain("shell-nav-well");
+    expect(bottom).not.toContain('aria-current="page"');
+  });
 });

@@ -11,9 +11,9 @@ import {
 import { formatBytes } from "../../../format/units";
 import { t, type UiLocale } from "../../../i18n";
 import { cn } from "../../../lib/utils";
+import { SortableTh } from "../../common/sortable-th";
 import { Button } from "../../ui/button";
 import { CapabilityNote, resolvedCapabilityNote } from "./capability-note";
-import { AttributionQualityNote } from "./attribution-quality-note";
 
 type TableSort = "name" | "upload" | "download" | "connections";
 
@@ -104,35 +104,34 @@ export function RankTable({
   return (
     <div className="space-y-3">
       {errorZh && !result ? <CapabilityNote locale={locale} noteZh={errorZh} /> : null}
-      <AttributionQualityNote locale={locale} result={result} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm" aria-busy={loading}>
-          <thead>
-            <tr className="border-b border-border/60 text-left text-muted-foreground">
-              <th className="py-2 font-medium">{t(locale, "dimension.col.rank")}</th>
-              <th className="py-2 font-medium" aria-sort={ariaSort("name", sort, descending)}>
-                <button type="button" className="hover:text-foreground" onClick={() => toggleSort("name")}>
-                  {t(locale, "overview.col.name")}
-                </button>
-              </th>
-              <th className="py-2 font-medium" aria-sort={ariaSort("upload", sort, descending)}>
-                <button type="button" className="hover:text-foreground" onClick={() => toggleSort("upload")}>
-                  {t(locale, "overview.col.upload")}
-                </button>
-              </th>
-              <th className="py-2 font-medium" aria-sort={ariaSort("download", sort, descending)}>
-                <button type="button" className="hover:text-foreground" onClick={() => toggleSort("download")}>
-                  {t(locale, "overview.col.download")}
-                </button>
-              </th>
-              <th className="py-2 font-medium" aria-sort={ariaSort("connections", sort, descending)}>
-                <button type="button" className="hover:text-foreground" onClick={() => toggleSort("connections")}>
-                  {t(locale, "report.metric.connections")}
-                </button>
-              </th>
-              <th className="py-2 font-medium">{t(locale, "report.col.share")}</th>
+          <thead className="bg-muted/40 text-foreground">
+            <tr className="border-b border-border/60 text-left">
+              <th className="py-2 font-semibold text-muted-foreground">{t(locale, "dimension.col.rank")}</th>
+              <SortableTh
+                label={t(locale, "overview.col.name")}
+                ariaSort={ariaSort("name", sort, descending)}
+                onClick={() => toggleSort("name")}
+              />
+              <SortableTh
+                label={t(locale, "overview.col.upload")}
+                ariaSort={ariaSort("upload", sort, descending)}
+                onClick={() => toggleSort("upload")}
+              />
+              <SortableTh
+                label={t(locale, "overview.col.download")}
+                ariaSort={ariaSort("download", sort, descending)}
+                onClick={() => toggleSort("download")}
+              />
+              <SortableTh
+                label={t(locale, "report.metric.connections")}
+                ariaSort={ariaSort("connections", sort, descending)}
+                onClick={() => toggleSort("connections")}
+              />
+              <th className="py-2 font-semibold text-muted-foreground">{t(locale, "report.col.share")}</th>
               {crossDimension ? (
-                <th className="py-2 font-medium">{t(locale, "dimension.drilldown")}</th>
+                <th className="py-2 font-semibold text-muted-foreground">{t(locale, "dimension.drilldown")}</th>
               ) : null}
             </tr>
           </thead>

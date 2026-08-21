@@ -49,6 +49,7 @@
   --pad-card: 1.5rem;
   --row-h: 2.5rem;
   --nav-item-py: 0.75rem;
+  --nav-item-gap: 0.5rem;
 }
 
 :root[data-theme="latte"] {
@@ -76,6 +77,15 @@
   --chart-3: #00c7ff;
   --chart-4: #00d084;
   --chart-5: #ff8c42;
+  --nav-overview: var(--chart-1);
+  --nav-live: var(--chart-3);
+  --nav-residential: var(--chart-5);
+  --nav-host: var(--chart-2);
+  --nav-rule: var(--chart-4);
+  --nav-chain: #0284c7;
+  --nav-process: #ea580c;
+  --nav-reports: #4f46e5;
+  --nav-alerts: var(--destructive);
   --sidebar: #ffffff;
   --sidebar-foreground: #1a1d29;
   --sidebar-primary: #0063ff;
@@ -92,7 +102,7 @@
   --foreground: #f8fafc;
   --card: #252a38;
   --card-foreground: #f8fafc;
-  --popover: #252a38;
+  --popover: #32384a;
   --popover-foreground: #f8fafc;
   --primary: #3b82f6;
   --primary-foreground: #ffffff;
@@ -111,6 +121,15 @@
   --chart-3: #06b6d4;
   --chart-4: #10b981;
   --chart-5: #f59e0b;
+  --nav-overview: var(--chart-1);
+  --nav-live: var(--chart-3);
+  --nav-residential: var(--chart-5);
+  --nav-host: var(--chart-2);
+  --nav-rule: var(--chart-4);
+  --nav-chain: #0ea5e9;
+  --nav-process: #f97316;
+  --nav-reports: #6366f1;
+  --nav-alerts: var(--destructive);
   --sidebar: #1d222d;
   --sidebar-foreground: #f8fafc;
   --sidebar-primary: #3b82f6;
@@ -127,7 +146,7 @@
   --foreground: #f8fafc;
   --card: #1e2331;
   --card-foreground: #f8fafc;
-  --popover: #1e2331;
+  --popover: #2a3042;
   --popover-foreground: #f8fafc;
   --primary: #3b82f6;
   --primary-foreground: #ffffff;
@@ -146,6 +165,15 @@
   --chart-3: #06b6d4;
   --chart-4: #10b981;
   --chart-5: #f59e0b;
+  --nav-overview: var(--chart-1);
+  --nav-live: var(--chart-3);
+  --nav-residential: var(--chart-5);
+  --nav-host: var(--chart-2);
+  --nav-rule: var(--chart-4);
+  --nav-chain: #0ea5e9;
+  --nav-process: #f97316;
+  --nav-reports: #6366f1;
+  --nav-alerts: var(--destructive);
   --sidebar: #161b27;
   --sidebar-foreground: #f8fafc;
   --sidebar-primary: #3b82f6;
@@ -162,7 +190,7 @@
   --foreground: #f8fafc;
   --card: #171c2b;
   --card-foreground: #f8fafc;
-  --popover: #171c2b;
+  --popover: #242a3c;
   --popover-foreground: #f8fafc;
   --primary: #3b82f6;
   --primary-foreground: #ffffff;
@@ -181,6 +209,15 @@
   --chart-3: #06b6d4;
   --chart-4: #10b981;
   --chart-5: #f59e0b;
+  --nav-overview: var(--chart-1);
+  --nav-live: var(--chart-3);
+  --nav-residential: var(--chart-5);
+  --nav-host: var(--chart-2);
+  --nav-rule: var(--chart-4);
+  --nav-chain: #0ea5e9;
+  --nav-process: #f97316;
+  --nav-reports: #6366f1;
+  --nav-alerts: var(--destructive);
   --sidebar: #0f1420;
   --sidebar-foreground: #f8fafc;
   --sidebar-primary: #3b82f6;
@@ -207,12 +244,14 @@
   --pad-card: 1.5rem;
   --row-h: 2.5rem;
   --nav-item-py: 0.75rem;
+  --nav-item-gap: 0.5rem;
 }
 
 :root[data-density="compact"] {
   --pad-card: 0.75rem;
   --row-h: 2rem;
   --nav-item-py: 0.32rem;
+  --nav-item-gap: 0.25rem;
 }
 
 @layer base {
@@ -319,6 +358,28 @@
   padding-top: var(--nav-item-py);
   padding-bottom: var(--nav-item-py);
   white-space: nowrap;
+}
+
+.shell-nav-well {
+  display: flex;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  color: var(--nav-tint);
+  background-color: color-mix(in srgb, var(--nav-tint) 18%, transparent);
+}
+
+:root[data-density="compact"] .shell-nav-well {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.shell-nav-item[aria-current="page"] .shell-nav-well {
+  color: var(--primary-foreground);
+  background-color: color-mix(in srgb, white 18%, transparent);
 }
 
 [data-slot="card"] {

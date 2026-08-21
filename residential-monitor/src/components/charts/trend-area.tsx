@@ -15,6 +15,7 @@ import { formatBytes } from "../../format/units";
 import { t, type UiLocale } from "../../i18n";
 import { cn } from "../../lib/utils";
 import { Skeleton } from "../ui/skeleton";
+import { ChartHover } from "./chart-hover";
 
 export const TREND_DOWNLOAD_COLOR = "#3b82f6";
 export const TREND_UPLOAD_COLOR = "#a855f7";
@@ -60,10 +61,7 @@ function TrendTooltip({
   }
   const unknown = t(locale, "common.unknown");
   return (
-    <div className="rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-lg">
-      <p className="mb-2 text-xs text-muted-foreground">
-        {new Date(point.bucketUtc * 1000).toLocaleString()}
-      </p>
+    <ChartHover title={new Date(point.bucketUtc * 1000).toLocaleString()} titleMuted>
       <p className="flex items-center gap-2 text-sm">
         <span className="h-2 w-2 rounded-full" style={{ backgroundColor: TREND_DOWNLOAD_COLOR }} />
         <span className="text-muted-foreground">{t(locale, "overview.dir.down")}</span>
@@ -74,7 +72,7 @@ function TrendTooltip({
         <span className="text-muted-foreground">{t(locale, "overview.dir.up")}</span>
         <span className="font-medium tabular-nums">{formatBytes(point.upload, unknown)}</span>
       </p>
-    </div>
+    </ChartHover>
   );
 }
 

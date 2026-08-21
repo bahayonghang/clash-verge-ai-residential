@@ -4,6 +4,7 @@ import { formatSharePct, type ShareModel, type ShareRow } from "../../../format/
 import { formatBytes } from "../../../format/units";
 import { t, type UiLocale } from "../../../i18n";
 import { cn } from "../../../lib/utils";
+import { SortableTh } from "../../common/sortable-th";
 import { useReportInspect } from "./inspect-context";
 
 type SortField = "name" | "upload" | "download" | "share";
@@ -53,14 +54,13 @@ export function RankingTable({ locale, share }: { locale: UiLocale; share: Share
   };
 
   const head = (id: SortField, label: string, numeric: boolean): ReactNode => (
-    <th
-      className={cn("px-2 py-1.5 font-medium", numeric ? "text-right" : "text-left")}
-      aria-sort={ariaSort(field, id, descending)}
-    >
-      <button type="button" className="underline-offset-2 hover:underline" onClick={() => toggle(id)}>
-        {label}
-      </button>
-    </th>
+    <SortableTh
+      label={label}
+      ariaSort={ariaSort(field, id, descending)}
+      onClick={() => toggle(id)}
+      numeric={numeric}
+      className="px-2"
+    />
   );
 
   return (
