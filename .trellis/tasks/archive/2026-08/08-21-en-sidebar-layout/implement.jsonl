@@ -1,0 +1,6 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": "DESIGN.md", "reason": "侧栏默认 220px、标题层级、选中整块蓝底。"}
+{"file": "PRODUCT.md", "reason": "界面中/英；产品名家宽流量监控。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "侧栏宽度契约 160-352 默认 220。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "前端约束与质量门。"}
+{"file": ".trellis/tasks/08-21-en-sidebar-layout/design.md", "reason": "220px 两行品牌锁与单行导航。"}
