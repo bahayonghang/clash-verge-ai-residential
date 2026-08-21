@@ -1,0 +1,33 @@
+{
+  "id": "neko-ui-refactor",
+  "name": "neko-ui-refactor",
+  "title": "residential-monitor 前端按 neko-master 重构",
+  "description": "",
+  "status": "in_progress",
+  "dev_type": "refactor",
+  "scope": "residential-monitor",
+  "package": "residential-monitor",
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-21",
+  "completedAt": null,
+  "branch": "refactor/neko-ui-port",
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-21-neko-shell-foundation",
+    "08-21-neko-overview-aggregation",
+    "08-21-neko-live-page",
+    "08-21-residential-page",
+    "08-21-reports-alerts-settings-port",
+    "08-21-c3-dimension-capability"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}

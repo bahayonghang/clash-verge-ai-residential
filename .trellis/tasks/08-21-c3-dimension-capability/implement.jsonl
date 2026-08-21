@@ -1,0 +1,4 @@
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"SQL 模板化、标量函数注册、五维物化与索引使用都受存储契约约束。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"CapabilityUnsupported 的错误形状与中文下一步按此模块约定。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"Granularity 联合类型扩展与 __unknown__ 哨兵要进边界解码约定。"}
+{"file":"ref/neko-master/AGENTS.md","reason":"第 68-76 行的 Key Contracts；规则命名归并曾在 v1.3.9 造成回归，派生键按其等价语义实现。"}

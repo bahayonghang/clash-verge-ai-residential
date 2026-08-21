@@ -1,0 +1,3 @@
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"实时筛选与排序只留当前会话；列宽与显隐写入 live_table_layout。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"缺口、未知、暂停、无行必须分开表达的原文约束。"}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"live-table-*、live-filter-workspace、format/live-* 已有纯函数与单测，按复用清单避免重写。"}

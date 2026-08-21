@@ -1,0 +1,3 @@
+{"file":".trellis/tasks/archive/2026-08/08-20-live-filter-workspace/design.md","reason":"draft/applied 分离与 requestSeq 竞态的既有设计，移植后语义须一致。"}
+{"file":".trellis/tasks/archive/2026-08/08-20-live-table-width-stability/prd.md","reason":"列宽稳定性的既有验收口径，移植后不得回退。"}
+{"file":".trellis/tasks/archive/2026-08/08-20-live-connection-hotspot-summary/prd.md","reason":"热点摘要的口径与状态要求，移植后逐条对照。"}

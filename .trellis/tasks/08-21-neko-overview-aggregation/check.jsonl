@@ -1,0 +1,2 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"聚合页跨 Rust 查询层与前端展示层，验收按跨层清单核对。"}
+{"file":".trellis/tasks/08-21-c3-dimension-capability/implement.md","reason":"「交接」小节登记实际交付的分钟档枚举值与 __unknown__ 哨兵字面量，本任务据此回填 design.md。"}

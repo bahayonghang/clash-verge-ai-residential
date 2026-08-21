@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"前端总约束的原文，含「不引入 UI 框架」与两条质量门；本次要改前者、保后者。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"前端只保存视图选择与 DTO 缓存、不重算 Top N，是全部聚合页的硬约束。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"边界解码与缺口/未知分开表达的原文约束。"}
+{"file":"PRODUCT.md","reason":"固定五页、vanilla TS 两条需改，前端不重算核算一条必须保留。"}
+{"file":"DESIGN.md","reason":"现行令牌与规则，新令牌替换范围以此为基准。"}
