@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"检查未改 C3_ARCHIVE_DDL / checksum，过期删除只针对 report_archive，自动 DELETE 仍关闭。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"检查 persist_manual 不进 C2 SQL；错误仍是稳定码 + messageZh；现查不持 Facade 锁跑 ReportService。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"检查 manual kind 解码与 i18n 键成对；IPC 只在 hooks。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"检查现查不写档案、进页不自动选手动行、图表与表仍同一 ReportResult。"}
+{"file":".trellis/tasks/08-21-report-snapshot-quota/research/snapshot-quota.md","reason":"检查 release 覆盖 useReport 取消路径，且配额不再写入能力说明。"}

@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"report_archive 过期删除、token 返回前关闭读事务、不得改写已发布 C3 档案 DDL。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"ReportArchiveService 拥有档案读写；C2 不得 rusqlite；archive-tick 必须独立 spool 目录。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"ArchiveKind 增 manual 必须在边界解码，缺字段不得猜测。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"现行「手动不写 report_archive」将被本任务改写；进页仍优先日/小时档案。"}
+{"file":".trellis/tasks/08-21-report-snapshot-quota/research/snapshot-quota.md","reason":"配额常量、泄漏路径、截图文案与 8 格占用的代码锚点。"}
