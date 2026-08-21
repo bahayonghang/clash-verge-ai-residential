@@ -901,3 +901,41 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 30: 侧栏色井、图表浮层与排名表头
+
+**Date**: 2026-08-21
+**Task**: 侧栏色井、图表浮层与排名表头
+**Package**: residential-monitor
+**Branch**: `refactor/neko-ui-port`
+
+### Summary
+
+规则页侧栏未选中用路由色井，抬升暗色 popover 并自定义条形图浮层，排名表接入 lucide 排序图标；字段归因只留在图卡。
+
+### Main Changes
+
+- 业务导航 --nav-* 色井；选中仍是主色整行
+- 暗色 --popover 高于 --card；RankBar ChartHover 去掉 value :
+- RankTable / RankingTable 接入 SortableTh；表上不再重复归因
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b826da8` | (see git log) |
+| `c308dae` | (see git log) |
+
+### Testing
+
+- [OK] npm --prefix residential-monitor typecheck / lint / test(201) / build
+- [OK] 规则页 1200x800 Mocha/Latte 实拍未做
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 打开 Tauri 窗口核对规则页色井、悬停浮层与表头降序图标
