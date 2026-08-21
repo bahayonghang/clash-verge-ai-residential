@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "Defines the pasteable host-script boundary, local TOML compiler surface, ignored-artifact rule, and required cross-platform CI gate."}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Defines SWITCH_CONFIG_FIELDS as the single mapping owner and the parser, exact-one injection, completion, and generated-script test contracts."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Requires narrow positive and adjacent negative domain tests, managed cleanup/idempotency coverage, secret safety, and just ci."}
+{"file": ".trellis/tasks/08-21-openai-auth-routing/research/openai-auth-routing-evidence.md", "reason": "Records the approved switch split, bounded domain classifications, local selected values, and UNVERIFIED login-flow boundary."}

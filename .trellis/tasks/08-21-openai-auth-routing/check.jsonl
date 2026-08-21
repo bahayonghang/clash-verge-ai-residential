@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Review route and DNS symmetry, explicit negative scope, current-managed cleanup, idempotency, credentials, and the full just ci gate."}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Review mapping/default bidirectionality, legacy TOML completion, exact-one injection, and isolated generated-script behavior."}
+{"file": ".trellis/tasks/08-21-openai-auth-routing/research/openai-auth-routing-evidence.md", "reason": "Check every active domain against the approved first-party auth/assets split and preserve the actual-login UNVERIFIED boundary."}
