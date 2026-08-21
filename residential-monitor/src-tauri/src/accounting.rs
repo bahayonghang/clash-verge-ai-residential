@@ -281,11 +281,7 @@ impl AccountingEngine {
 }
 
 fn classify(targets: &[String], chains: &[String]) -> (Vec<String>, Option<String>) {
-    let tags: Vec<String> = targets
-        .iter()
-        .filter(|target| chains.iter().any(|node| node == *target))
-        .cloned()
-        .collect();
+    let tags = crate::residential::residential_tags(targets, chains);
     let primary = tags.first().cloned();
     (tags, primary)
 }

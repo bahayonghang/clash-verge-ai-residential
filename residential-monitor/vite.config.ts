@@ -1,8 +1,10 @@
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig({
+  plugins: [react()],
   clearScreen: false,
   server: {
     port: 1420,
@@ -17,6 +19,6 @@ export default defineConfig({
     sourcemap: !!process.env.TAURI_ENV_DEBUG
   },
   test: {
-    include: ["src/**/*.test.ts"]
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"]
   }
 });

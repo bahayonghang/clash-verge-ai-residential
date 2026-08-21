@@ -1,11 +1,13 @@
 //! 精确保留：先物化并核对，再推进 watermark，最后可选删除。
 
 use crate::c3::query::{
-    ReportError, AUTO_DELETE_ENABLED, DIMENSION_RETAIN_DAYS, RAW_RETAIN_DAYS_MAX,
+    ReportError, AUTO_DELETE_ENABLED, DIMENSION_RETAIN_DAYS, HOURLY_DIM_V2_LAYER,
+    RAW_RETAIN_DAYS_MAX,
 };
 use crate::c3::space::SpaceBudget;
+use crate::c3::sql::UNKNOWN_IDENTITY;
 use crate::storage::StorageCoordinator;
-use rusqlite::params;
+use rusqlite::{params, OptionalExtension};
 use sha2::{Digest, Sha256};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -100,24 +102,26 @@ fn materialize_hourly(
     let result = (|| {
         connection
             .execute(
-                "insert or replace into traffic_hourly_dimension(
-                    utc_hour, category_id, dimension_kind, dimension_id,
-                    upload, download, connection_count, active_duration_sec
-                 )
-                 select (m.utc_minute * 60 / 3600) * 3600,
-                        coalesce(a.primary_category_id, 0),
-                        'host',
-                        coalesce(a.host_id, 0),
-                        sum(m.upload), sum(m.download),
-                        count(distinct m.session_pk),
-                        count(distinct m.utc_minute) * 60
-                   from connection_minute m
-                   left join connection_session_attr a on a.session_pk = m.session_pk
-                  where m.utc_minute >= ?1 and m.utc_minute < ?2
-                  group by 1, 2, 4",
-                params![start_min, end_min],
+                "insert or ignore into retention_watermark(layer, watermark_utc, delete_watermark_utc)
+                 values (?1, ?2, 0)",
+                params![HOURLY_DIM_V2_LAYER, cutoff.max(0)],
             )
-            .map_err(|_| ReportError::Failed("hourly materialize"))?;
+            .map_err(|_| ReportError::Failed("hourly_dim_v2 watermark"))?;
+        let v2_start: i64 = connection
+            .query_row(
+                "select watermark_utc from retention_watermark where layer = ?1",
+                [HOURLY_DIM_V2_LAYER],
+                |row| row.get(0),
+            )
+            .map_err(|_| ReportError::Failed("hourly_dim_v2 read"))?;
+        let v2_start_min = v2_start.div_euclid(60);
+        intern_chain_keys(connection, v2_start_min, end_min)?;
+        intern_rule_groups(connection, v2_start_min, end_min)?;
+        insert_hourly_kind(connection, HOURLY_HOST, start_min, end_min)?;
+        insert_hourly_kind(connection, HOURLY_PROCESS, v2_start_min, end_min)?;
+        insert_hourly_kind(connection, HOURLY_RULE_GROUP, v2_start_min, end_min)?;
+        insert_hourly_kind(connection, HOURLY_CHAIN, v2_start_min, end_min)?;
+        insert_hourly_kind(connection, HOURLY_NETWORK, v2_start_min, end_min)?;
         verify_layer(connection, "hourly", start_min * 60, end_min * 60)?;
         Ok(())
     })();
@@ -167,6 +171,7 @@ fn materialize_core(coordinator: &mut StorageCoordinator, now_utc: i64) -> Resul
                     sum(connection_count), sum(active_duration_sec)
                from traffic_daily_dimension
               where utc_day < ?1
+                and dimension_kind = 'host'
               group by utc_day, category_id",
             [now_utc],
         )
@@ -180,6 +185,7 @@ fn materialize_core(coordinator: &mut StorageCoordinator, now_utc: i64) -> Resul
                     sum(connection_count), sum(active_duration_sec)
                from traffic_daily_dimension
               where utc_day < ?1
+                and dimension_kind = 'host'
               group by utc_day",
             [now_utc],
         )
@@ -206,6 +212,194 @@ fn materialize_coverage_daily(
             [now_utc],
         )
         .map_err(|_| ReportError::Failed("coverage daily"))?;
+    Ok(())
+}
+
+const HOURLY_HOST: &str = "
+insert or replace into traffic_hourly_dimension(
+    utc_hour, category_id, dimension_kind, dimension_id,
+    upload, download, connection_count, active_duration_sec)
+select (m.utc_minute * 60 / 3600) * 3600,
+       coalesce(a.primary_category_id, 0),
+       'host',
+       coalesce(a.host_id, 0),
+       sum(m.upload), sum(m.download),
+       count(distinct m.session_pk),
+       count(distinct m.utc_minute) * 60
+  from connection_minute m
+  left join connection_session_attr a on a.session_pk = m.session_pk
+ where m.utc_minute >= ?1 and m.utc_minute < ?2
+ group by 1, 2, 4
+";
+
+const HOURLY_PROCESS: &str = "
+insert or replace into traffic_hourly_dimension(
+    utc_hour, category_id, dimension_kind, dimension_id,
+    upload, download, connection_count, active_duration_sec)
+select (m.utc_minute * 60 / 3600) * 3600,
+       coalesce(a.primary_category_id, 0),
+       'process',
+       coalesce(a.process_id, 0),
+       sum(m.upload), sum(m.download),
+       count(distinct m.session_pk),
+       count(distinct m.utc_minute) * 60
+  from connection_minute m
+  left join connection_session_attr a on a.session_pk = m.session_pk
+ where m.utc_minute >= ?1 and m.utc_minute < ?2
+ group by 1, 2, 4
+";
+
+const HOURLY_NETWORK: &str = "
+insert or replace into traffic_hourly_dimension(
+    utc_hour, category_id, dimension_kind, dimension_id,
+    upload, download, connection_count, active_duration_sec)
+select (m.utc_minute * 60 / 3600) * 3600,
+       coalesce(a.primary_category_id, 0),
+       'network',
+       coalesce(a.network_id, 0),
+       sum(m.upload), sum(m.download),
+       count(distinct m.session_pk),
+       count(distinct m.utc_minute) * 60
+  from connection_minute m
+  left join connection_session_attr a on a.session_pk = m.session_pk
+ where m.utc_minute >= ?1 and m.utc_minute < ?2
+ group by 1, 2, 4
+";
+
+const HOURLY_CHAIN: &str = "
+insert or replace into traffic_hourly_dimension(
+    utc_hour, category_id, dimension_kind, dimension_id,
+    upload, download, connection_count, active_duration_sec)
+select (m.utc_minute * 60 / 3600) * 3600,
+       coalesce(a.primary_category_id, 0),
+       'chain',
+       coalesce((select dimension_id from dimension_dict where dimension_kind = 'chain' and value = last_chain_hop(a.chain_key)), 0),
+       sum(m.upload), sum(m.download),
+       count(distinct m.session_pk),
+       count(distinct m.utc_minute) * 60
+  from connection_minute m
+  left join connection_session_attr a on a.session_pk = m.session_pk
+ where m.utc_minute >= ?1 and m.utc_minute < ?2
+ group by 1, 2, 4
+";
+
+const HOURLY_RULE_GROUP: &str = "
+insert or replace into traffic_hourly_dimension(
+    utc_hour, category_id, dimension_kind, dimension_id,
+    upload, download, connection_count, active_duration_sec)
+select (m.utc_minute * 60 / 3600) * 3600,
+       coalesce(a.primary_category_id, 0),
+       'rule_group',
+       coalesce((select dimension_id from dimension_dict where dimension_kind = 'rule_group' and value = coalesce(last_chain_hop(a.chain_key), (select value from dimension_dict d2 where d2.dimension_kind = 'rule' and d2.dimension_id = a.rule_id), 'DIRECT')), 0),
+       sum(m.upload), sum(m.download),
+       count(distinct m.session_pk),
+       count(distinct m.utc_minute) * 60
+  from connection_minute m
+  left join connection_session_attr a on a.session_pk = m.session_pk
+ where m.utc_minute >= ?1 and m.utc_minute < ?2
+ group by 1, 2, 4
+";
+
+fn insert_hourly_kind(
+    connection: &rusqlite::Connection,
+    sql: &str,
+    start_min: i64,
+    end_min: i64,
+) -> Result<(), ReportError> {
+    connection
+        .execute(sql, params![start_min, end_min])
+        .map_err(|_| ReportError::Failed("hourly materialize"))?;
+    Ok(())
+}
+
+fn intern_chain_keys(
+    connection: &rusqlite::Connection,
+    start_min: i64,
+    end_min: i64,
+) -> Result<(), ReportError> {
+    intern_distinct(
+        connection,
+        "chain",
+        "select distinct last_chain_hop(a.chain_key)
+           from connection_minute m
+           left join connection_session_attr a on a.session_pk = m.session_pk
+          where m.utc_minute >= ?1 and m.utc_minute < ?2
+            and last_chain_hop(a.chain_key) is not null",
+        start_min,
+        end_min,
+    )
+}
+
+fn intern_rule_groups(
+    connection: &rusqlite::Connection,
+    start_min: i64,
+    end_min: i64,
+) -> Result<(), ReportError> {
+    intern_distinct(
+        connection,
+        "rule_group",
+        "select distinct coalesce(last_chain_hop(a.chain_key), (select value from dimension_dict d where d.dimension_kind = 'rule' and d.dimension_id = a.rule_id), 'DIRECT')
+           from connection_minute m
+           left join connection_session_attr a on a.session_pk = m.session_pk
+          where m.utc_minute >= ?1 and m.utc_minute < ?2",
+        start_min,
+        end_min,
+    )
+}
+
+fn intern_distinct(
+    connection: &rusqlite::Connection,
+    kind: &str,
+    sql: &str,
+    start_min: i64,
+    end_min: i64,
+) -> Result<(), ReportError> {
+    let mut statement = connection
+        .prepare(sql)
+        .map_err(|_| ReportError::Failed("intern select"))?;
+    let values = statement
+        .query_map(params![start_min, end_min], |row| row.get::<_, String>(0))
+        .map_err(|_| ReportError::Failed("intern query"))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|_| ReportError::Failed("intern row"))?;
+    for value in values {
+        intern_one(connection, kind, &value)?;
+    }
+    Ok(())
+}
+
+fn intern_one(
+    connection: &rusqlite::Connection,
+    kind: &str,
+    value: &str,
+) -> Result<(), ReportError> {
+    if value.is_empty() || value == UNKNOWN_IDENTITY {
+        return Ok(());
+    }
+    let existing: Option<i64> = connection
+        .query_row(
+            "select dimension_id from dimension_dict where dimension_kind = ?1 and value = ?2",
+            params![kind, value],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(|_| ReportError::Failed("intern lookup"))?;
+    if existing.is_some() {
+        return Ok(());
+    }
+    let next: i64 = connection
+        .query_row(
+            "select coalesce(max(dimension_id), 0) + 1 from dimension_dict where dimension_kind = ?1",
+            [kind],
+            |row| row.get(0),
+        )
+        .map_err(|_| ReportError::Failed("intern max"))?;
+    connection
+        .execute(
+            "insert or ignore into dimension_dict(dimension_kind, dimension_id, value) values (?1, ?2, ?3)",
+            params![kind, next, value],
+        )
+        .map_err(|_| ReportError::Failed("intern insert"))?;
     Ok(())
 }
 
@@ -386,5 +580,80 @@ mod retention_tests {
             )
             .expect("state");
         assert_eq!(status, "verified");
+    }
+
+    #[test]
+    fn five_dimension_kinds_and_v2_watermark() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("r5.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        coordinator
+            .connection()
+            .execute(
+                "insert or replace into retention_watermark(layer, watermark_utc, delete_watermark_utc)
+                 values ('hourly_dim_v2', 0, 0)",
+                [],
+            )
+            .expect("v2");
+        RetentionService::run(
+            &mut coordinator,
+            40 * 86_400,
+            30,
+            RetentionMode::MaterializeOnly,
+            &SpaceBudget::unlimited(),
+            &Arc::new(AtomicBool::new(false)),
+        )
+        .expect("run");
+        let kinds: Vec<String> = {
+            let mut statement = coordinator
+                .connection()
+                .prepare("select distinct dimension_kind from traffic_hourly_dimension order by 1")
+                .expect("stmt");
+            statement
+                .query_map([], |row| row.get(0))
+                .expect("map")
+                .collect::<Result<Vec<_>, _>>()
+                .expect("rows")
+        };
+        assert_eq!(
+            kinds,
+            vec!["chain", "host", "network", "process", "rule_group"]
+        );
+        let v2: i64 = coordinator
+            .connection()
+            .query_row(
+                "select watermark_utc from retention_watermark where layer = 'hourly_dim_v2'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("v2");
+        assert_eq!(v2, 0);
+        let sentinel: i64 = coordinator
+            .connection()
+            .query_row(
+                "select count(*) from dimension_dict where value = '__unknown__'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("sentinel");
+        assert_eq!(sentinel, 0);
+        let core: i64 = coordinator
+            .connection()
+            .query_row(
+                "select coalesce(sum(download), 0) from traffic_daily_core where category_id = 0",
+                [],
+                |row| row.get(0),
+            )
+            .expect("core");
+        let host: i64 = coordinator
+            .connection()
+            .query_row(
+                "select coalesce(sum(download), 0) from traffic_daily_dimension where dimension_kind = 'host'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("host");
+        assert_eq!(core, host);
     }
 }

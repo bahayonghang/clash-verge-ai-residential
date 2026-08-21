@@ -136,6 +136,7 @@ const page = decodeLiveConnectionPage(raw); // summary.topDownload 已由 Rust �
 
 ### 2. Signatures
 - `run_report(query: ReportQuery) -> ReportResult`
+- `residential_share(rangeStartUtc, rangeEndUtc, displayTimezone) -> ResidentialShare`
 - `get_report(token) -> ReportResult`
 - `release_report(token) -> bool`
 - `list_report_archives({ kind?, after?, limit? }) -> ReportArchivePage`
@@ -152,6 +153,9 @@ const page = decodeLiveConnectionPage(raw); // summary.topDownload 已由 Rust �
 - UI、CSV、JSON、HTML 只消费同一 `reportSnapshotToken`，不得为导出重新查询。
 - 大结果不经实时 Channel。
 - `restore` 可在 `recovery-only` 分支执行，不初始化 `ReportService`。
+- `queryEcho.granularity` 合法值为 `minute1` / `minute2` / `minute5` / `minute10` / `hour` / `day` / `month`。分钟档只在 raw 层有效；落到 HourlyDimension / DailyDimension / DailyCore 时返回 `capability_unsupported`，原因「分钟粒度只在 raw 保留期内可用」，不升粒度。
+- 排名 `identity` 为 `"__unknown__"` 表示维度值缺失。前端按未知渲染，不参与下钻；`filters` 无法表达该哨兵。
+- 下钻 `filters.rule` / `filters.chain` 必须复用排名行 `identity`。`filters.chain` 是最后一跳，不是完整 `a>b>c`。单跳且有 payload 时 SQL 规则键是 `rule`，不是 `rule(payload)`。
 
 ### 4. Validation & Error Matrix
 - 非法 range / timezone / page / cursor → `invalid_query`
@@ -175,6 +179,43 @@ const page = decodeLiveConnectionPage(raw); // summary.topDownload 已由 Rust �
 前端自己按表格重算 Top N，或导出时再跑一遍 SQL。
 #### Correct
 图表、数据表和导出都读当前 `ReportResult`。
+
+## Scenario: residential_share
+
+### 1. Scope / Trigger
+- Trigger: 家宽页聚合段读取「家宽占可归因观测」比例。
+
+### 2. Signatures
+- `residential_share(range_start_utc: i64, range_end_utc: i64, display_timezone: String) -> ResidentialShare`
+
+### 3. Contracts
+- `schemaVersion` 必须为 `1`。
+- 四个流量字段为 `Option<u64>`：`residentialUpload` / `residentialDownload` / `attributedUpload` / `attributedDownload`。
+- 家宽分子：`a.primary_category_id IS NOT NULL`（核算口径，精确 target）。
+- 分母：同区间无分类过滤的可归因观测（含未分类连接）。
+- 先查 `COVERAGE_RAW`。`covered_sec == 0` 时四个字段全部为 `None`。`covered_sec > 0` 时填实测值，此时 `0` 表示区间内无家宽流量。
+- `namedSql` 回显常量名，至少含 `share_residential_raw`。
+- 返回 `targetCount` 与 `policyVersion`。未配置 targets 时前端走引导态，不把 `None` 画成 0%。
+
+### 4. Validation & Error Matrix
+- `range_end <= range_start` 或区间过大 → `invalid_query`
+- 非法 timezone → `invalid_query`
+- 无覆盖 → 四个字段 `None`，不是错误
+
+### 5. Good/Base/Bad Cases
+- Good: 有覆盖且家宽为 0 → 四个 `Some`，家宽为 0，界面写「区间内无家宽流量」
+- Base: 无覆盖 → 四个 `None`，界面「未知」
+- Bad: 用 totals 的 `coalesce(sum, 0)` 把无覆盖显示成 0%
+
+### 6. Tests Required
+- Rust：无覆盖 → 四个 `None`；有覆盖且家宽 0 → 四个 `Some`；`named_sql` 回显一致
+- TS：`decodeResidentialShare` 拒绝缺字段；`None` 不画成 0
+
+### 7. Wrong vs Correct
+#### Wrong
+空窗 totals 为 0 就显示 0%。
+#### Correct
+无覆盖显示「未知」；有覆盖的 0 才是真实零。
 
 ## Scenario: C3 Report Archives
 

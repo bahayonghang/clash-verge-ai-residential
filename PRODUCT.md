@@ -30,11 +30,11 @@ web
 
 ## Capabilities and Constraints
 
-- 固定五页：概览、实时连接、分析报告、告警、设置 / 数据管理。
+- 十段路由：概览、实时连接、家宽、主机、规则、链路、进程、分析报告、告警、设置 / 数据管理。
 - 设置可切换界面中/英。默认中文。安装产品名与删除确认短语保持中文。
 - 只能关闭单条当前连接，没有关闭全部入口。
 - v1 只支持 Windows 11 NSIS current-user。不发布 macOS / Linux。
-- 前端是 Vanilla TypeScript + Vite，不引入 UI 框架，禁止远程 URL 和 CDN。
+- 前端是 React + Tailwind + Vite，禁止远程 URL 和 CDN。
 - 前端只保存视图选择和 DTO 缓存，不在浏览器里重做核算或 Top N。
 - 本次全页视觉重做保持专家工具密度：表格、指标和表单仍一屏可扫，不改成大留白营销卡片。
 

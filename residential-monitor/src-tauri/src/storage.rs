@@ -6,6 +6,7 @@ use crate::c3::schema::{
     C3_ARCHIVE_DDL, C3_ARCHIVE_MIGRATION_CHECKSUM, C3_ARCHIVE_SCHEMA_VERSION, C3_DDL,
     C3_MIGRATION_CHECKSUM, C3_SCHEMA_VERSION,
 };
+use crate::c3::sql::UNKNOWN_IDENTITY;
 use crate::c4::schema::{C4_DDL, C4_MIGRATION_CHECKSUM, C4_SCHEMA_VERSION};
 use crate::c4::types::AlertWriteSet;
 
@@ -79,6 +80,8 @@ pub enum CommitOutcome {
 pub fn migrate(path: &Path) -> Result<Connection, StorageError> {
     let connection = open_bundled(path).map_err(|error| StorageError::Closed(error.to_string()))?;
     apply_required_pragmas(&connection, BUSY_TIMEOUT_MS)
+        .map_err(|error| StorageError::Closed(error.to_string()))?;
+    crate::c3::rule_name::register_last_chain_hop(&connection)
         .map_err(|error| StorageError::Closed(error.to_string()))?;
     let user_version: i32 = connection.query_row("pragma user_version", [], |row| row.get(0))?;
     if user_version > SCHEMA_VERSION {
@@ -676,6 +679,9 @@ fn intern_dim(
     let Some(value) = value else {
         return Ok(None);
     };
+    if value == UNKNOWN_IDENTITY {
+        return Ok(None);
+    }
     if let Some(existing) = connection
         .query_row(
             "select dimension_id from dimension_dict where dimension_kind = ?1 and value = ?2",
@@ -704,6 +710,8 @@ pub fn open_interruptible_reader(path: &Path) -> Result<Connection, StorageError
         rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_FULL_MUTEX,
     )?;
     apply_required_pragmas(&connection, BUSY_TIMEOUT_MS)
+        .map_err(|error| StorageError::Closed(error.to_string()))?;
+    crate::c3::rule_name::register_last_chain_hop(&connection)
         .map_err(|error| StorageError::Closed(error.to_string()))?;
     Ok(connection)
 }

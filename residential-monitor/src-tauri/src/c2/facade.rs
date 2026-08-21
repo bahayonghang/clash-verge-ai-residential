@@ -22,6 +22,7 @@ use crate::c3::backup::BackupRestoreService;
 use crate::c3::export::{ExportPreview, ExportService, ExportSpec};
 use crate::c3::query::{ReportError, ReportQuery, ReportResult, RAW_RETAIN_DAYS_DEFAULT};
 use crate::c3::retention::{RetentionMode, RetentionPreview, RetentionService};
+use crate::c3::share::{query_residential_share, ResidentialShare};
 use crate::c3::snapshot::ReportSnapshotStore;
 use crate::c3::space::SpaceBudget;
 use crate::c4::engine::{AlertEngine, HealthSnapshot};
@@ -954,6 +955,29 @@ impl AppFacade {
             );
         }
         phases
+    }
+
+    pub fn residential_share(
+        &self,
+        range_start_utc: i64,
+        range_end_utc: i64,
+        display_timezone: String,
+    ) -> Result<ResidentialShare, AppErrorDto> {
+        let path = self
+            .storage
+            .as_ref()
+            .ok_or_else(recovery_only)?
+            .path()
+            .to_path_buf();
+        let now = chrono::Utc::now().timestamp();
+        query_residential_share(
+            &path,
+            range_start_utc,
+            range_end_utc,
+            &display_timezone,
+            now,
+        )
+        .map_err(map_report)
     }
 
     pub fn run_report(&mut self, query: ReportQuery) -> Result<ReportResult, AppErrorDto> {

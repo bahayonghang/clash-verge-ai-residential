@@ -1,14 +1,5 @@
 import type { ShareModel, ShareRow } from "./report-view";
 
-const SKIP_REPORT_PAINT_KINDS = new Set([
-  "connectionDelta",
-  "healthChanged",
-  "summaryChanged",
-  "alertChanged"
-]);
-
-const SKIP_SETTINGS_PAINT_KINDS = new Set(["connectionDelta", "summaryChanged", "alertChanged"]);
-
 export type ReportInspectModel =
   | {
       surface: "pie";
@@ -51,24 +42,6 @@ export function inspectGroup(key: string): string {
 
 export function inspectKeysMatch(left: string, right: string): boolean {
   return left === right || inspectGroup(left) === inspectGroup(right);
-}
-
-export function shouldSkipRoutinePaint(
-  route: string,
-  messageKind: string,
-  errorZh: string | null,
-  paintedErrorZh: string | null
-): boolean {
-  if (errorZh !== paintedErrorZh) {
-    return false;
-  }
-  if (route === "reports") {
-    return SKIP_REPORT_PAINT_KINDS.has(messageKind);
-  }
-  if (route === "settings-data") {
-    return SKIP_SETTINGS_PAINT_KINDS.has(messageKind);
-  }
-  return false;
 }
 
 export function reportInspectModel(
@@ -119,48 +92,4 @@ export function emptyReportScroll(): ReportScrollState {
 
 export function applyReportScrollReset(captured: ReportScrollState, reset: boolean): ReportScrollState {
   return reset ? emptyReportScroll() : captured;
-}
-
-export function readReportScroll(root: ParentNode): ReportScrollState {
-  const workspace = root.querySelector(".workspace");
-  const wraps: Record<string, number> = {};
-  root.querySelectorAll("[data-report-scroll]").forEach((node) => {
-    if (!(node instanceof HTMLElement)) {
-      return;
-    }
-    const id = node.dataset.reportScroll;
-    if (id) {
-      wraps[id] = node.scrollTop;
-    }
-  });
-  return {
-    workspace: workspace instanceof HTMLElement ? workspace.scrollTop : 0,
-    wraps
-  };
-}
-
-export function writeReportScroll(root: ParentNode, state: ReportScrollState): void {
-  const workspace = root.querySelector(".workspace");
-  if (workspace instanceof HTMLElement) {
-    workspace.scrollTop = state.workspace;
-  }
-  for (const [id, top] of Object.entries(state.wraps)) {
-    const node = root.querySelector(`[data-report-scroll="${id}"]`);
-    if (node instanceof HTMLElement) {
-      node.scrollTop = top;
-    }
-  }
-}
-
-export function inspectKeyExists(root: ParentNode, key: string | null): boolean {
-  if (!key) {
-    return false;
-  }
-  const nodes = root.querySelectorAll("[data-inspect]");
-  for (const node of nodes) {
-    if (inspectKeysMatch(node.getAttribute("data-inspect") ?? "", key)) {
-      return true;
-    }
-  }
-  return false;
 }

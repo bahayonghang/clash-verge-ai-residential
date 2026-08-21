@@ -15,6 +15,7 @@ pub mod identity;
 pub mod live;
 pub mod live_table_layout;
 pub mod redact;
+pub mod residential;
 pub mod session;
 pub mod sqlite_probe;
 pub mod storage;
@@ -33,13 +34,15 @@ use c2::hub::{LiveConnectionView, MonitorStreamMessage};
 use c2::query::{ConnectionPage, ConnectionQuery};
 use c2::settings::ControllerSettings;
 use c2::shell::{
-    BootBranch, FileMode, FilePurpose, OperationProgress, RecoveryStatus, RouteDescriptor,
+    default_routes_for, BootBranch, FileMode, FilePurpose, OperationProgress, RecoveryStatus,
+    RouteDescriptor,
 };
 use c2::subscriptions::SubscriptionRegistry;
 use c3::archive::{ReportArchivePage, ReportArchiveService};
 use c3::export::{ExportPreview, ExportSpec};
 use c3::query::{ReportQuery, ReportResult};
 use c3::retention::RetentionPreview;
+use c3::share::ResidentialShare;
 use c3::snapshot::ReportSnapshotStore;
 use c4::diagnose::DiagnosticsSnapshot;
 use c4::notify::NotifyCapability;
@@ -571,7 +574,7 @@ fn disconnect_controller(
 #[tauri::command]
 fn list_routes(state: State<Mutex<AppFacade>>) -> Result<Vec<RouteDescriptor>, AppErrorDto> {
     let locale = state.lock().expect("state").ui_locale;
-    Ok(c2::shell::default_routes_for(locale))
+    Ok(default_routes_for(locale))
 }
 
 #[tauri::command]
@@ -680,6 +683,19 @@ fn run_report(
     query: ReportQuery,
 ) -> Result<ReportResult, AppErrorDto> {
     state.lock().expect("state").run_report(query)
+}
+
+#[tauri::command]
+fn residential_share(
+    state: State<Mutex<AppFacade>>,
+    range_start_utc: i64,
+    range_end_utc: i64,
+    display_timezone: String,
+) -> Result<ResidentialShare, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .residential_share(range_start_utc, range_end_utc, display_timezone)
 }
 
 #[tauri::command]
@@ -1261,6 +1277,7 @@ pub fn run() {
             cancel_operation,
             get_recovery_status,
             run_report,
+            residential_share,
             list_report_archives,
             get_report_archive,
             get_report,

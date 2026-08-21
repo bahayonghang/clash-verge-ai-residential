@@ -1,18 +1,22 @@
 //! 统一 ReportService：短读快照内物化，返回前关闭事务。
 
 use crate::c3::query::{
-    decode_cursor, empty_result, encode_cursor, plan_capability, validate_query, CoverageSlice,
-    DataTier, DimensionKind, PolicyMetadata, RankingRow, ReportError, ReportQuery, ReportResult,
-    ReportTotals, SeriesPoint, SessionRow, TargetPolicy,
+    decode_cursor, empty_result, encode_cursor, plan_capability, plan_capability_ex,
+    validate_query, CoverageSlice, DataTier, DimensionKind, PolicyMetadata, RankingRow,
+    ReportError, ReportQuery, ReportResult, ReportTotals, SeriesPoint, SessionRow, TargetPolicy,
+    HOURLY_DIM_V2_LAYER, UNKNOWN_LABEL_ZH,
 };
 use crate::c3::snapshot::ReportSnapshotStore;
 use crate::c3::sql::{
-    dimension_kind_sql, COVERAGE_DAILY, COVERAGE_RAW, RANK_DAILY_DIM, RANK_HOURLY, RANK_RAW,
-    SERIES_DAILY_CORE, SERIES_DAILY_DIM, SERIES_HOURLY, SERIES_RAW, TOTALS_DAILY_CORE,
-    TOTALS_DAILY_DIM, TOTALS_HOURLY, TOTALS_RAW,
+    dimension_filter_clause, dimension_kind_sql, dimension_kind_sql_layer, filter_clause,
+    merge_sql_params, render_sql, COVERAGE_DAILY, COVERAGE_RAW, RANK_DAILY_CATEGORY,
+    RANK_DAILY_DIM, RANK_HOURLY, RANK_HOURLY_CATEGORY, RANK_RAW, RANK_RAW_ATTR, RANK_RAW_CHAIN,
+    RANK_RAW_RULE, SERIES_DAILY_CORE, SERIES_DAILY_DIM, SERIES_HOURLY, SERIES_RAW,
+    TOTALS_DAILY_CORE, TOTALS_DAILY_DIM, TOTALS_HOURLY, TOTALS_RAW, UNKNOWN_IDENTITY,
 };
 use crate::storage::{open_interruptible_reader, StorageCoordinator};
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::types::Value;
+use rusqlite::{params, params_from_iter, Connection, OptionalExtension};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -55,6 +59,7 @@ impl ReportService {
 
     pub fn explain_named(connection: &Connection, name: &str) -> Result<Vec<String>, ReportError> {
         let sql = crate::c3::sql::lookup(name).ok_or(ReportError::InvalidQuery("unknown sql"))?;
+        let sql = render_sql(sql, "");
         let mut statement = connection
             .prepare(&format!("explain query plan {sql}"))
             .map_err(|_| ReportError::Failed("eqp"))?;
@@ -103,7 +108,8 @@ fn build_result(
     if cancel.load(Ordering::SeqCst) {
         return Err(ReportError::Cancelled("user"));
     }
-    let plan = plan_capability(query, now_utc, raw_retain_days)?;
+    let v2_start = load_hourly_dim_v2_start(connection);
+    let plan = plan_capability_ex(query, now_utc, raw_retain_days, v2_start)?;
     let data_version = connection
         .query_row(
             "select watermark from data_version where id = 1",
@@ -170,26 +176,14 @@ fn fill_raw(
     start_min: i64,
     end_min: i64,
 ) -> Result<(), ReportError> {
-    let host_on = i64::from(query.filters.host.is_some());
-    let process_on = i64::from(query.filters.process.is_some());
-    let rule_on = i64::from(query.filters.rule.is_some());
-    let network_on = i64::from(query.filters.network.is_some());
-    let chain_on = i64::from(query.filters.chain.is_some());
-    let host = query.filters.host.clone().unwrap_or_default();
-    let process = query.filters.process.clone().unwrap_or_default();
-    let rule = query.filters.rule.clone().unwrap_or_default();
-    let network = query.filters.network.clone().unwrap_or_default();
-    let chain = query.filters.chain.clone().unwrap_or_default();
-    let (upload, download, count, duration): (i64, i64, i64, i64) = connection
-        .query_row(
-            TOTALS_RAW,
-            params![
-                start_min, end_min, host_on, host, process_on, process, rule_on, rule, network_on,
-                network, chain_on, chain
-            ],
-            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
-        )
-        .map_err(map_sqlite)?;
+    let (fragment, filter_params) = filter_clause(&query.filters);
+    let totals_sql = render_sql(TOTALS_RAW, &fragment);
+    let totals_params = merge_sql_params(
+        [Value::from(start_min), Value::from(end_min)],
+        &filter_params,
+        [],
+    );
+    let (upload, download, count, duration) = load_totals(connection, &totals_sql, &totals_params)?;
     result.totals = ReportTotals {
         upload,
         download,
@@ -206,56 +200,37 @@ fn fill_raw(
         let span = query.range_end_utc - query.range_start_utc;
         let prev_start = (query.range_start_utc - span).div_euclid(60);
         let prev_end = start_min;
-        let (prev_up, prev_down, _, _): (i64, i64, i64, i64) = connection
-            .query_row(
-                TOTALS_RAW,
-                params![
-                    prev_start, prev_end, host_on, host, process_on, process, rule_on, rule,
-                    network_on, network, chain_on, chain
-                ],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
-            )
-            .map_err(map_sqlite)?;
+        let prev_params = merge_sql_params(
+            [Value::from(prev_start), Value::from(prev_end)],
+            &filter_params,
+            [],
+        );
+        let (prev_up, prev_down, _, _) = load_totals(connection, &totals_sql, &prev_params)?;
         result.totals.previous_upload = Some(prev_up);
         result.totals.previous_download = Some(prev_down);
     }
-    let bucket = match query.granularity {
-        crate::c3::query::Granularity::Hour => 60,
-        crate::c3::query::Granularity::Day => 1_440,
-        crate::c3::query::Granularity::Month => 43_200,
-    };
-    let mut series = connection.prepare(SERIES_RAW).map_err(map_sqlite)?;
-    let rows = series
-        .query_map(params![start_min, end_min, bucket, host_on, host], |row| {
-            Ok(SeriesPoint {
-                bucket_utc: row.get::<_, i64>(0)? * 60,
-                upload: row.get(1)?,
-                download: row.get(2)?,
-                connection_count: row.get(3)?,
-                active_duration_sec: row.get(4)?,
-            })
-        })
-        .map_err(map_sqlite)?;
-    result.series = rows.collect::<Result<Vec<_>, _>>().map_err(map_sqlite)?;
-    if query.grouping == DimensionKind::Host || query.grouping == DimensionKind::Category {
-        let mut rank = connection.prepare(RANK_RAW).map_err(map_sqlite)?;
-        let rows = rank
-            .query_map(params![start_min, end_min, query.top_n as i64], |row| {
-                let label: String = row.get(0)?;
-                Ok(RankingRow {
-                    identity: label.clone(),
-                    label,
-                    upload: row.get(1)?,
-                    download: row.get(2)?,
-                    connection_count: row.get(3)?,
-                    active_duration_sec: row.get(4)?,
-                })
-            })
-            .map_err(map_sqlite)?;
-        result.rankings = rows.collect::<Result<Vec<_>, _>>().map_err(map_sqlite)?;
-    } else {
-        fill_raw_attr_rank(connection, query, result, start_min, end_min)?;
-    }
+    let bucket = query.granularity.bucket_minutes();
+    let series_sql = render_sql(SERIES_RAW, &fragment);
+    let series_params = merge_sql_params(
+        [
+            Value::from(bucket),
+            Value::from(bucket),
+            Value::from(start_min),
+            Value::from(end_min),
+        ],
+        &filter_params,
+        [],
+    );
+    result.series = load_series(connection, &series_sql, &series_params, 60)?;
+    fill_raw_rank(
+        connection,
+        query,
+        result,
+        start_min,
+        end_min,
+        &fragment,
+        &filter_params,
+    )?;
     fill_coverage_raw(connection, query, result)?;
     if query.include_sessions {
         fill_sessions(connection, query, result, start_min, end_min)?;
@@ -263,49 +238,43 @@ fn fill_raw(
     Ok(())
 }
 
-fn fill_raw_attr_rank(
+fn fill_raw_rank(
     connection: &Connection,
     query: &ReportQuery,
     result: &mut ReportResult,
     start_min: i64,
     end_min: i64,
+    fragment: &str,
+    filter_params: &[String],
 ) -> Result<(), ReportError> {
-    let kind = dimension_kind_sql(query.grouping);
-    let sql = "
-        select coalesce(d.value, ''),
-               coalesce(sum(m.upload), 0), coalesce(sum(m.download), 0),
-               count(distinct m.session_pk), count(distinct m.utc_minute) * 60
-          from connection_minute m
-          join connection_session_attr a on a.session_pk = m.session_pk
-          join dimension_dict d on d.dimension_kind = ?3 and d.dimension_id = case ?3
-            when 'process' then a.process_id
-            when 'rule' then a.rule_id
-            when 'network' then a.network_id
-            when 'category' then a.primary_category_id
-            else a.host_id end
-         where m.utc_minute >= ?1 and m.utc_minute < ?2
-         group by d.value
-         order by sum(m.download) desc, d.value asc
-         limit ?4
-    ";
-    let mut statement = connection.prepare(sql).map_err(map_sqlite)?;
-    let rows = statement
-        .query_map(
-            params![start_min, end_min, kind, query.top_n as i64],
-            |row| {
-                let label: String = row.get(0)?;
-                Ok(RankingRow {
-                    identity: label.clone(),
-                    label,
-                    upload: row.get(1)?,
-                    download: row.get(2)?,
-                    connection_count: row.get(3)?,
-                    active_duration_sec: row.get(4)?,
-                })
-            },
-        )
-        .map_err(map_sqlite)?;
-    result.rankings = rows.collect::<Result<Vec<_>, _>>().map_err(map_sqlite)?;
+    let (sql, prefix) = match query.grouping {
+        DimensionKind::Host => (
+            render_sql(RANK_RAW, fragment),
+            vec![Value::from(start_min), Value::from(end_min)],
+        ),
+        DimensionKind::Chain => (
+            render_sql(RANK_RAW_CHAIN, fragment),
+            vec![Value::from(start_min), Value::from(end_min)],
+        ),
+        DimensionKind::Rule => (
+            render_sql(RANK_RAW_RULE, fragment),
+            vec![Value::from(start_min), Value::from(end_min)],
+        ),
+        DimensionKind::Process | DimensionKind::Network | DimensionKind::Category => {
+            let kind = dimension_kind_sql(query.grouping);
+            (
+                render_sql(RANK_RAW_ATTR, fragment),
+                vec![
+                    Value::Text(kind.into()),
+                    Value::Text(kind.into()),
+                    Value::from(start_min),
+                    Value::from(end_min),
+                ],
+            )
+        }
+    };
+    let params = merge_sql_params(prefix, filter_params, [Value::from(i64::from(query.top_n))]);
+    result.rankings = load_rankings(connection, &sql, &params)?;
     Ok(())
 }
 
@@ -316,52 +285,17 @@ fn fill_hourly(
     start: i64,
     end: i64,
 ) -> Result<(), ReportError> {
-    let kind = dimension_kind_sql(query.grouping);
-    let (upload, download, count, duration): (i64, i64, i64, i64) = connection
-        .query_row(TOTALS_HOURLY, params![start, end, kind], |row| {
-            Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
-        })
-        .map_err(map_sqlite)?;
-    result.totals = ReportTotals {
-        upload,
-        download,
-        connection_count: count,
-        active_duration_sec: duration,
-        previous_upload: None,
-        previous_download: None,
-    };
-    let mut series = connection.prepare(SERIES_HOURLY).map_err(map_sqlite)?;
-    result.series = series
-        .query_map(params![start, end, kind], |row| {
-            Ok(SeriesPoint {
-                bucket_utc: row.get(0)?,
-                upload: row.get(1)?,
-                download: row.get(2)?,
-                connection_count: row.get(3)?,
-                active_duration_sec: row.get(4)?,
-            })
-        })
-        .map_err(map_sqlite)?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(map_sqlite)?;
-    let mut rank = connection.prepare(RANK_HOURLY).map_err(map_sqlite)?;
-    result.rankings = rank
-        .query_map(params![start, end, kind, query.top_n as i64], |row| {
-            let label: String = row.get(0)?;
-            Ok(RankingRow {
-                identity: label.clone(),
-                label,
-                upload: row.get(1)?,
-                download: row.get(2)?,
-                connection_count: row.get(3)?,
-                active_duration_sec: row.get(4)?,
-            })
-        })
-        .map_err(map_sqlite)?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(map_sqlite)?;
-    fill_coverage_daily(connection, query, result)?;
-    Ok(())
+    fill_dimension_layer(
+        connection,
+        query,
+        result,
+        start,
+        end,
+        TOTALS_HOURLY,
+        SERIES_HOURLY,
+        RANK_HOURLY,
+        RANK_HOURLY_CATEGORY,
+    )
 }
 
 fn fill_daily_dim(
@@ -371,12 +305,49 @@ fn fill_daily_dim(
     start: i64,
     end: i64,
 ) -> Result<(), ReportError> {
-    let kind = dimension_kind_sql(query.grouping);
-    let (upload, download, count, duration): (i64, i64, i64, i64) = connection
-        .query_row(TOTALS_DAILY_DIM, params![start, end, kind], |row| {
-            Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
-        })
-        .map_err(map_sqlite)?;
+    fill_dimension_layer(
+        connection,
+        query,
+        result,
+        start,
+        end,
+        TOTALS_DAILY_DIM,
+        SERIES_DAILY_DIM,
+        RANK_DAILY_DIM,
+        RANK_DAILY_CATEGORY,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn fill_dimension_layer(
+    connection: &Connection,
+    query: &ReportQuery,
+    result: &mut ReportResult,
+    start: i64,
+    end: i64,
+    totals_sql: &str,
+    series_sql: &str,
+    rank_sql: &str,
+    rank_category_sql: &str,
+) -> Result<(), ReportError> {
+    let (fragment, filter_params) = dimension_filter_clause(&query.filters, query.grouping);
+    let kind = if query.grouping == DimensionKind::Category {
+        "host"
+    } else {
+        dimension_kind_sql_layer(query.grouping)
+    };
+    let rendered_totals = render_sql(totals_sql, &fragment);
+    let totals_params = merge_sql_params(
+        [
+            Value::from(start),
+            Value::from(end),
+            Value::Text(kind.into()),
+        ],
+        &filter_params,
+        [],
+    );
+    let (upload, download, count, duration) =
+        load_totals(connection, &rendered_totals, &totals_params)?;
     result.totals = ReportTotals {
         upload,
         download,
@@ -385,36 +356,29 @@ fn fill_daily_dim(
         previous_upload: None,
         previous_download: None,
     };
-    let mut series = connection.prepare(SERIES_DAILY_DIM).map_err(map_sqlite)?;
-    result.series = series
-        .query_map(params![start, end, kind], |row| {
-            Ok(SeriesPoint {
-                bucket_utc: row.get(0)?,
-                upload: row.get(1)?,
-                download: row.get(2)?,
-                connection_count: row.get(3)?,
-                active_duration_sec: row.get(4)?,
-            })
-        })
-        .map_err(map_sqlite)?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(map_sqlite)?;
-    let mut rank = connection.prepare(RANK_DAILY_DIM).map_err(map_sqlite)?;
-    result.rankings = rank
-        .query_map(params![start, end, kind, query.top_n as i64], |row| {
-            let label: String = row.get(0)?;
-            Ok(RankingRow {
-                identity: label.clone(),
-                label,
-                upload: row.get(1)?,
-                download: row.get(2)?,
-                connection_count: row.get(3)?,
-                active_duration_sec: row.get(4)?,
-            })
-        })
-        .map_err(map_sqlite)?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(map_sqlite)?;
+    let rendered_series = render_sql(series_sql, &fragment);
+    result.series = load_series(connection, &rendered_series, &totals_params, 1)?;
+    let (rendered_rank, rank_prefix) = if query.grouping == DimensionKind::Category {
+        (
+            render_sql(rank_category_sql, &fragment),
+            vec![Value::from(start), Value::from(end)],
+        )
+    } else {
+        (
+            render_sql(rank_sql, &fragment),
+            vec![
+                Value::from(start),
+                Value::from(end),
+                Value::Text(kind.into()),
+            ],
+        )
+    };
+    let rank_params = merge_sql_params(
+        rank_prefix,
+        &filter_params,
+        [Value::from(i64::from(query.top_n))],
+    );
+    result.rankings = load_rankings(connection, &rendered_rank, &rank_params)?;
     fill_coverage_daily(connection, query, result)?;
     Ok(())
 }
@@ -583,6 +547,78 @@ fn fill_sessions(
         result.next_cursor = Some(encode_cursor(last.download, &last.identity));
     }
     Ok(())
+}
+
+fn load_hourly_dim_v2_start(connection: &Connection) -> Option<i64> {
+    connection
+        .query_row(
+            "select watermark_utc from retention_watermark where layer = ?1",
+            [HOURLY_DIM_V2_LAYER],
+            |row| row.get(0),
+        )
+        .optional()
+        .ok()
+        .flatten()
+}
+
+fn load_totals(
+    connection: &Connection,
+    sql: &str,
+    params: &[Value],
+) -> Result<(i64, i64, i64, i64), ReportError> {
+    connection
+        .query_row(sql, params_from_iter(params.iter()), |row| {
+            Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
+        })
+        .map_err(map_sqlite)
+}
+
+fn load_series(
+    connection: &Connection,
+    sql: &str,
+    params: &[Value],
+    bucket_scale: i64,
+) -> Result<Vec<SeriesPoint>, ReportError> {
+    let mut statement = connection.prepare(sql).map_err(map_sqlite)?;
+    let rows = statement
+        .query_map(params_from_iter(params.iter()), |row| {
+            Ok(SeriesPoint {
+                bucket_utc: row.get::<_, i64>(0)? * bucket_scale,
+                upload: row.get(1)?,
+                download: row.get(2)?,
+                connection_count: row.get(3)?,
+                active_duration_sec: row.get(4)?,
+            })
+        })
+        .map_err(map_sqlite)?;
+    rows.collect::<Result<Vec<_>, _>>().map_err(map_sqlite)
+}
+
+fn load_rankings(
+    connection: &Connection,
+    sql: &str,
+    params: &[Value],
+) -> Result<Vec<RankingRow>, ReportError> {
+    let mut statement = connection.prepare(sql).map_err(map_sqlite)?;
+    let rows = statement
+        .query_map(params_from_iter(params.iter()), |row| {
+            let identity: String = row.get(0)?;
+            let label = if identity == UNKNOWN_IDENTITY {
+                UNKNOWN_LABEL_ZH.to_string()
+            } else {
+                identity.clone()
+            };
+            Ok(RankingRow {
+                identity,
+                label,
+                upload: row.get(1)?,
+                download: row.get(2)?,
+                connection_count: row.get(3)?,
+                active_duration_sec: row.get(4)?,
+            })
+        })
+        .map_err(map_sqlite)?;
+    rows.collect::<Result<Vec<_>, _>>().map_err(map_sqlite)
 }
 
 fn load_policy_version(connection: &Connection) -> Option<u32> {
@@ -815,5 +851,447 @@ mod report_service_tests {
         .expect("second");
         assert_eq!(first.totals, second.totals);
         assert_eq!(first.rankings, second.rankings);
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::field_reassign_with_default)]
+mod dimension_capability_tests {
+    use super::*;
+    use crate::c3::query::Granularity;
+    use crate::c3::retention::{RetentionMode, RetentionService};
+    use crate::c3::space::SpaceBudget;
+    use crate::c3::sql::UNKNOWN_IDENTITY;
+    use crate::storage::StorageCoordinator;
+    use tempfile::tempdir;
+
+    fn setup() -> (tempfile::TempDir, StorageCoordinator, ReportSnapshotStore) {
+        let dir = tempdir().expect("dir");
+        let path = dir.path().join("dim.sqlite3");
+        let coordinator = StorageCoordinator::open(&path).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        seed_extra_dimensions(coordinator.connection());
+        let store = ReportSnapshotStore::open(dir.path());
+        (dir, coordinator, store)
+    }
+
+    fn seed_extra_dimensions(connection: &Connection) {
+        connection
+            .execute_batch(
+                "
+                insert or ignore into connection_session(session_pk, epoch_id, connection_id, started_utc, host)
+                values (3, 1, 'gamma', 600, 'c.example');
+                insert or ignore into dimension_dict(dimension_kind, dimension_id, value) values
+                    ('host', 3, 'c.example'),
+                    ('process', 2, 'other.exe'),
+                    ('rule', 1, 'RuleSet'),
+                    ('network', 2, 'udp'),
+                    ('category', 2, '机场');
+                insert or ignore into connection_session_attr(
+                    session_pk, host_id, process_id, rule_id, network_id, chain_key,
+                    policy_version, primary_category_id, started_utc, ended_utc
+                ) values (3, 3, 2, 1, 2, 'PROXY>家宽', 1, 2, 600, null);
+                insert or ignore into connection_minute(utc_minute, session_pk, upload, download)
+                values (10, 3, 5, 15);
+                ",
+            )
+            .expect("extra seed");
+    }
+
+    fn run_now(
+        coordinator: &StorageCoordinator,
+        store: &mut ReportSnapshotStore,
+        query: ReportQuery,
+        now: i64,
+    ) -> ReportResult {
+        let cancel = Arc::new(AtomicBool::new(false));
+        ReportService::run(coordinator.path(), store, query, now, 30, &cancel, None).expect("run")
+    }
+
+    fn base_query() -> ReportQuery {
+        let mut query = ReportQuery::default();
+        query.range_start_utc = 0;
+        query.range_end_utc = 4_000;
+        query
+    }
+
+    #[test]
+    fn named_sql_matches_grouping() {
+        let (_dir, coordinator, mut store) = setup();
+        let mut query = base_query();
+        query.grouping = DimensionKind::Chain;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        assert!(result.named_sql.iter().any(|name| name == "rank_raw_chain"));
+        assert!(!result.named_sql.iter().any(|name| name == "rank_raw"));
+        let mut query = base_query();
+        query.grouping = DimensionKind::Category;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        assert!(result.named_sql.iter().any(|name| name == "rank_raw_attr"));
+    }
+
+    #[test]
+    fn chain_rank_differs_from_host() {
+        let (_dir, coordinator, mut store) = setup();
+        let mut host_q = base_query();
+        host_q.grouping = DimensionKind::Host;
+        let mut chain_q = base_query();
+        chain_q.grouping = DimensionKind::Chain;
+        let host = run_now(&coordinator, &mut store, host_q, 3_600);
+        let chain = run_now(&coordinator, &mut store, chain_q, 3_600);
+        let host_ids: Vec<_> = host
+            .rankings
+            .iter()
+            .map(|row| row.identity.as_str())
+            .collect();
+        let chain_ids: Vec<_> = chain
+            .rankings
+            .iter()
+            .map(|row| row.identity.as_str())
+            .collect();
+        assert!(host_ids.contains(&"c.example"));
+        assert!(chain_ids.contains(&"家宽"));
+        assert_ne!(host_ids, chain_ids);
+    }
+
+    #[test]
+    fn category_rank_differs_from_host() {
+        let (_dir, coordinator, mut store) = setup();
+        let mut host_q = base_query();
+        host_q.grouping = DimensionKind::Host;
+        let mut cat_q = base_query();
+        cat_q.grouping = DimensionKind::Category;
+        let host = run_now(&coordinator, &mut store, host_q, 3_600);
+        let category = run_now(&coordinator, &mut store, cat_q, 3_600);
+        let host_ids: Vec<_> = host
+            .rankings
+            .iter()
+            .map(|row| row.identity.as_str())
+            .collect();
+        let cat_ids: Vec<_> = category
+            .rankings
+            .iter()
+            .map(|row| row.identity.as_str())
+            .collect();
+        assert!(cat_ids.contains(&"家宽") || cat_ids.contains(&"机场"));
+        assert_ne!(host_ids, cat_ids);
+    }
+
+    #[test]
+    fn rule_rank_uses_policy_group_not_raw_type() {
+        let (_dir, coordinator, mut store) = setup();
+        let mut query = base_query();
+        query.grouping = DimensionKind::Rule;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        let ids: Vec<_> = result
+            .rankings
+            .iter()
+            .map(|row| row.identity.as_str())
+            .collect();
+        assert!(ids.contains(&"家宽"));
+        assert!(!ids.contains(&"RuleSet"));
+        assert!(!ids.contains(&"Match"));
+    }
+
+    #[test]
+    fn drilldown_filter_chain_and_rule_take_subset() {
+        let (_dir, coordinator, mut store) = setup();
+        let global = run_now(&coordinator, &mut store, base_query(), 3_600);
+        let mut chain_q = base_query();
+        chain_q.grouping = DimensionKind::Chain;
+        let chain = run_now(&coordinator, &mut store, chain_q, 3_600);
+        let hop = chain
+            .rankings
+            .iter()
+            .find(|row| row.identity == "家宽")
+            .expect("hop");
+        let mut filtered = base_query();
+        filtered.filters.chain = Some(hop.identity.clone());
+        let subset = run_now(&coordinator, &mut store, filtered, 3_600);
+        assert_eq!(subset.totals.download, hop.download);
+        assert!(subset.totals.download < global.totals.download);
+
+        let mut rule_q = base_query();
+        rule_q.grouping = DimensionKind::Rule;
+        let rules = run_now(&coordinator, &mut store, rule_q, 3_600);
+        let rule_row = rules
+            .rankings
+            .iter()
+            .find(|row| row.identity == "家宽")
+            .expect("rule");
+        let mut rule_filtered = base_query();
+        rule_filtered.filters.rule = Some(rule_row.identity.clone());
+        let rule_subset = run_now(&coordinator, &mut store, rule_filtered, 3_600);
+        assert_eq!(rule_subset.totals.download, rule_row.download);
+        assert!(rule_subset.totals.download < global.totals.download);
+    }
+
+    fn assert_filter_reduces(field: &str, value: &str) {
+        let (_dir, coordinator, mut store) = setup();
+        let global = run_now(&coordinator, &mut store, base_query(), 3_600);
+        let mut query = base_query();
+        match field {
+            "host" => query.filters.host = Some(value.into()),
+            "process" => query.filters.process = Some(value.into()),
+            "rule" => query.filters.rule = Some(value.into()),
+            "network" => query.filters.network = Some(value.into()),
+            "chain" => query.filters.chain = Some(value.into()),
+            "category" => query.filters.category = Some(value.into()),
+            _ => panic!("field"),
+        }
+        let filtered = run_now(&coordinator, &mut store, query, 3_600);
+        let series_up: i64 = filtered.series.iter().map(|point| point.upload).sum();
+        let series_down: i64 = filtered.series.iter().map(|point| point.download).sum();
+        assert_eq!(series_up, filtered.totals.upload, "{field} series upload");
+        assert_eq!(
+            series_down, filtered.totals.download,
+            "{field} series download"
+        );
+        assert!(
+            filtered.totals.download < global.totals.download,
+            "{field} should reduce"
+        );
+    }
+
+    #[test]
+    fn host_filter_reduces_and_series_matches_totals() {
+        assert_filter_reduces("host", "c.example");
+    }
+
+    #[test]
+    fn process_filter_reduces_and_series_matches_totals() {
+        assert_filter_reduces("process", "other.exe");
+    }
+
+    #[test]
+    fn rule_filter_reduces_and_series_matches_totals() {
+        assert_filter_reduces("rule", "家宽");
+    }
+
+    #[test]
+    fn network_filter_reduces_and_series_matches_totals() {
+        assert_filter_reduces("network", "udp");
+    }
+
+    #[test]
+    fn chain_filter_reduces_and_series_matches_totals() {
+        assert_filter_reduces("chain", "家宽");
+    }
+
+    #[test]
+    fn category_filter_reduces_and_series_matches_totals() {
+        assert_filter_reduces("category", "机场");
+    }
+
+    #[test]
+    fn minute_granularity_raw_series_buckets() {
+        let (_dir, coordinator, mut store) = setup();
+        let mut query = base_query();
+        query.granularity = Granularity::Minute1;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        assert!(result.series.len() >= 2);
+        assert_eq!(result.data_tier, DataTier::Raw);
+    }
+
+    fn enable_v2_from_epoch(coordinator: &StorageCoordinator) {
+        coordinator
+            .connection()
+            .execute(
+                "insert or replace into retention_watermark(layer, watermark_utc, delete_watermark_utc)
+                 values ('hourly_dim_v2', 0, 0)",
+                [],
+            )
+            .expect("v2");
+    }
+
+    fn materialize(coordinator: &mut StorageCoordinator, now: i64) {
+        RetentionService::run(
+            coordinator,
+            now,
+            30,
+            RetentionMode::MaterializeOnly,
+            &SpaceBudget::unlimited(),
+            &Arc::new(AtomicBool::new(false)),
+        )
+        .expect("materialize");
+    }
+
+    #[test]
+    fn five_kinds_materialize_and_keys_match_raw() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("m.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        seed_extra_dimensions(coordinator.connection());
+        enable_v2_from_epoch(&coordinator);
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let mut raw_q = base_query();
+        raw_q.grouping = DimensionKind::Chain;
+        let raw_chain = run_now(&coordinator, &mut store, raw_q, 3_600);
+        let mut raw_rule_q = base_query();
+        raw_rule_q.grouping = DimensionKind::Rule;
+        let raw_rule = run_now(&coordinator, &mut store, raw_rule_q, 3_600);
+        materialize(&mut coordinator, 40 * 86_400);
+        let kinds: Vec<String> = {
+            let mut statement = coordinator
+                .connection()
+                .prepare("select distinct dimension_kind from traffic_hourly_dimension order by 1")
+                .expect("kinds");
+            statement
+                .query_map([], |row| row.get(0))
+                .expect("map")
+                .collect::<Result<Vec<_>, _>>()
+                .expect("rows")
+        };
+        assert_eq!(
+            kinds,
+            vec!["chain", "host", "network", "process", "rule_group"]
+        );
+        let mut dim_q = base_query();
+        dim_q.grouping = DimensionKind::Chain;
+        dim_q.range_start_utc = 0;
+        dim_q.range_end_utc = 4_000;
+        let dim_chain = run_now(&coordinator, &mut store, dim_q, 40 * 86_400);
+        assert_eq!(dim_chain.data_tier, DataTier::HourlyDimension);
+        let mut raw_keys: Vec<_> = raw_chain
+            .rankings
+            .iter()
+            .map(|row| row.identity.clone())
+            .collect();
+        let mut dim_keys: Vec<_> = dim_chain
+            .rankings
+            .iter()
+            .map(|row| row.identity.clone())
+            .collect();
+        raw_keys.sort();
+        dim_keys.sort();
+        assert_eq!(raw_keys, dim_keys);
+        let mut dim_rule_q = base_query();
+        dim_rule_q.grouping = DimensionKind::Rule;
+        let dim_rule = run_now(&coordinator, &mut store, dim_rule_q, 40 * 86_400);
+        let mut raw_rule_keys: Vec<_> = raw_rule
+            .rankings
+            .iter()
+            .map(|row| row.identity.clone())
+            .collect();
+        let mut dim_rule_keys: Vec<_> = dim_rule
+            .rankings
+            .iter()
+            .map(|row| row.identity.clone())
+            .collect();
+        raw_rule_keys.sort();
+        dim_rule_keys.sort();
+        assert_eq!(raw_rule_keys, dim_rule_keys);
+    }
+
+    #[test]
+    fn process_rule_chain_network_category_rank_outside_raw() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("old.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        seed_extra_dimensions(coordinator.connection());
+        enable_v2_from_epoch(&coordinator);
+        materialize(&mut coordinator, 40 * 86_400);
+        let mut store = ReportSnapshotStore::open(dir.path());
+        for grouping in [
+            DimensionKind::Process,
+            DimensionKind::Rule,
+            DimensionKind::Chain,
+            DimensionKind::Network,
+            DimensionKind::Category,
+        ] {
+            let mut query = base_query();
+            query.grouping = grouping;
+            let result = run_now(&coordinator, &mut store, query, 40 * 86_400);
+            assert!(
+                !result.rankings.is_empty(),
+                "{grouping:?} should have ranks"
+            );
+            assert_eq!(result.data_tier, DataTier::HourlyDimension);
+        }
+    }
+
+    #[test]
+    fn range_before_v2_watermark_returns_chinese_capability() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("wm.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        materialize(&mut coordinator, 40 * 86_400);
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let mut query = base_query();
+        query.grouping = DimensionKind::Process;
+        let cancel = Arc::new(AtomicBool::new(false));
+        let error = ReportService::run(
+            coordinator.path(),
+            &mut store,
+            query,
+            40 * 86_400,
+            30,
+            &cancel,
+            None,
+        )
+        .expect_err("before v2");
+        assert_eq!(error.code(), "capability_unsupported");
+        assert!(error.to_string().contains("五维物化水位"));
+    }
+
+    #[test]
+    fn unknown_rank_row_closes_totals() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("unk.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        coordinator
+            .connection()
+            .execute_batch(
+                "
+                insert or ignore into connection_session(session_pk, epoch_id, connection_id, started_utc, host)
+                values (9, 1, 'none', 100, 'orphan.example');
+                insert or ignore into connection_minute(utc_minute, session_pk, upload, download)
+                values (2, 9, 7, 11);
+                ",
+            )
+            .expect("orphan");
+        enable_v2_from_epoch(&coordinator);
+        materialize(&mut coordinator, 40 * 86_400);
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let mut query = base_query();
+        query.grouping = DimensionKind::Process;
+        query.top_n = 100;
+        let result = run_now(&coordinator, &mut store, query, 40 * 86_400);
+        let rank_down: i64 = result.rankings.iter().map(|row| row.download).sum();
+        assert_eq!(rank_down, result.totals.download);
+        assert!(result
+            .rankings
+            .iter()
+            .any(|row| row.identity == UNKNOWN_IDENTITY && row.label == "未知"));
+        let exists: i64 = coordinator
+            .connection()
+            .query_row(
+                "select count(*) from dimension_dict where value = ?1",
+                [UNKNOWN_IDENTITY],
+                |row| row.get(0),
+            )
+            .expect("count");
+        assert_eq!(exists, 0);
+    }
+
+    #[test]
+    fn category_rank_sum_does_not_exceed_totals() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("cat.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        seed_extra_dimensions(coordinator.connection());
+        enable_v2_from_epoch(&coordinator);
+        materialize(&mut coordinator, 40 * 86_400);
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let mut query = base_query();
+        query.grouping = DimensionKind::Category;
+        query.top_n = 100;
+        let result = run_now(&coordinator, &mut store, query, 40 * 86_400);
+        let rank_down: i64 = result.rankings.iter().map(|row| row.download).sum();
+        assert!(rank_down <= result.totals.download);
     }
 }

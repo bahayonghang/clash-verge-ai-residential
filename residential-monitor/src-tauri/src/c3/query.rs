@@ -20,6 +20,8 @@ pub const TOP_N_MAX: u32 = 100;
 pub const MAX_RANGE_SECS: i64 = 400 * 86_400;
 pub const AUTO_DELETE_ENABLED: bool = false;
 pub const REPORT_DTO_VERSION: u32 = 1;
+pub const UNKNOWN_LABEL_ZH: &str = "未知";
+pub const HOURLY_DIM_V2_LAYER: &str = "hourly_dim_v2";
 
 #[derive(Debug, Error)]
 pub enum ReportError {
@@ -106,9 +108,38 @@ impl ReportError {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Granularity {
+    #[serde(rename = "minute1")]
+    Minute1,
+    #[serde(rename = "minute2")]
+    Minute2,
+    #[serde(rename = "minute5")]
+    Minute5,
+    #[serde(rename = "minute10")]
+    Minute10,
     Hour,
     Day,
     Month,
+}
+
+impl Granularity {
+    pub fn is_minute(self) -> bool {
+        matches!(
+            self,
+            Self::Minute1 | Self::Minute2 | Self::Minute5 | Self::Minute10
+        )
+    }
+
+    pub fn bucket_minutes(self) -> i64 {
+        match self {
+            Self::Minute1 => 1,
+            Self::Minute2 => 2,
+            Self::Minute5 => 5,
+            Self::Minute10 => 10,
+            Self::Hour => 60,
+            Self::Day => 1_440,
+            Self::Month => 43_200,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -161,6 +192,7 @@ pub struct ReportFilters {
 impl ReportFilters {
     pub fn dimension_filter_count(&self) -> usize {
         [
+            self.category.as_ref(),
             self.host.as_ref(),
             self.process.as_ref(),
             self.rule.as_ref(),
@@ -581,6 +613,7 @@ pub fn needs_exact_dimension(query: &ReportQuery) -> bool {
             | DimensionKind::Rule
             | DimensionKind::Chain
             | DimensionKind::Network
+            | DimensionKind::Category
     )
 }
 
@@ -588,6 +621,15 @@ pub fn plan_capability(
     query: &ReportQuery,
     now_utc: i64,
     raw_retain_days: i64,
+) -> Result<CapabilityPlan, ReportError> {
+    plan_capability_ex(query, now_utc, raw_retain_days, None)
+}
+
+pub fn plan_capability_ex(
+    query: &ReportQuery,
+    now_utc: i64,
+    raw_retain_days: i64,
+    hourly_dim_v2_start: Option<i64>,
 ) -> Result<CapabilityPlan, ReportError> {
     validate_query(query)?;
     let raw_days = raw_retain_days.clamp(1, RAW_RETAIN_DAYS_MAX);
@@ -601,12 +643,18 @@ pub fn plan_capability(
         REPORT_DEADLINE_MS
     };
 
+    if query.granularity.is_minute() && query.range_start_utc < raw_cutoff {
+        return Err(ReportError::CapabilityUnsupported(
+            "分钟粒度只在 raw 保留期内可用",
+        ));
+    }
     if wants_raw && query.range_start_utc < raw_cutoff {
         return Err(ReportError::CapabilityUnsupported(
             "raw expired for sessions, current policy, or cross-dimension filters",
         ));
     }
-    if wants_dim && query.range_start_utc < dim_cutoff {
+    if wants_dim && query.grouping != DimensionKind::Category && query.range_start_utc < dim_cutoff
+    {
         return Err(ReportError::CapabilityUnsupported(
             "exact high-cardinality ranking expired",
         ));
@@ -628,40 +676,42 @@ pub fn plan_capability(
     }
 
     if query.range_start_utc >= dim_cutoff && wants_dim {
+        if query.grouping != DimensionKind::Host {
+            if let Some(start) = hourly_dim_v2_start {
+                if query.range_start_utc < start {
+                    return Err(ReportError::CapabilityUnsupported(
+                        "该维度的精确层从五维物化水位起可用",
+                    ));
+                }
+            }
+        }
         let hourly = matches!(query.granularity, Granularity::Hour);
+        let exact_top_n = query.grouping == DimensionKind::Host
+            || hourly_dim_v2_start.is_some_and(|start| query.range_start_utc >= start);
+        let note_zh = if exact_top_n {
+            "13 个月精确层只支持历史主分类加单一分析维度。".into()
+        } else {
+            "该维度尚未五维物化，精确 Top N 不可用。".into()
+        };
         return Ok(CapabilityPlan {
             tier: if hourly {
                 DataTier::HourlyDimension
             } else {
                 DataTier::DailyDimension
             },
-            named_sql: if hourly {
-                vec![
-                    "totals_hourly_dimension",
-                    "series_hourly_dimension",
-                    "rank_hourly_dimension",
-                    "coverage_daily",
-                ]
-            } else {
-                vec![
-                    "totals_daily_dimension",
-                    "series_daily_dimension",
-                    "rank_daily_dimension",
-                    "coverage_daily",
-                ]
-            },
+            named_sql: dim_named_sql(query, hourly),
             drilldown: DrilldownCapability {
                 sessions: false,
                 current_policy: false,
                 cross_dimension: false,
-                exact_top_n: true,
-                note_zh: "13 个月精确层只支持历史主分类加单一分析维度。".into(),
+                exact_top_n,
+                note_zh,
             },
             deadline_ms: deadline,
         });
     }
 
-    if wants_dim || wants_raw {
+    if wants_raw || (wants_dim && query.grouping != DimensionKind::Category) {
         return Err(ReportError::CapabilityUnsupported(
             "requested capability is outside retained layers",
         ));
@@ -682,7 +732,12 @@ pub fn plan_capability(
 }
 
 fn raw_named_sql(query: &ReportQuery) -> Vec<&'static str> {
-    let mut names = vec!["totals_raw", "series_raw", "rank_raw", "coverage_raw"];
+    let mut names = vec![
+        "totals_raw",
+        "series_raw",
+        crate::c3::sql::raw_rank_sql(query.grouping),
+        "coverage_raw",
+    ];
     if query.include_sessions {
         names.push("sessions_keyset");
     }
@@ -690,6 +745,24 @@ fn raw_named_sql(query: &ReportQuery) -> Vec<&'static str> {
         names.push("totals_raw_compare");
     }
     names
+}
+
+fn dim_named_sql(query: &ReportQuery, hourly: bool) -> Vec<&'static str> {
+    if hourly {
+        vec![
+            "totals_hourly_dimension",
+            "series_hourly_dimension",
+            crate::c3::sql::dim_rank_sql(query.grouping, true),
+            "coverage_daily",
+        ]
+    } else {
+        vec![
+            "totals_daily_dimension",
+            "series_daily_dimension",
+            crate::c3::sql::dim_rank_sql(query.grouping, false),
+            "coverage_daily",
+        ]
+    }
 }
 
 pub fn encode_cursor(sort_value: i64, identity: &str) -> String {
@@ -941,5 +1014,93 @@ mod query_contract_tests {
     #[test]
     fn auto_delete_stays_disabled() {
         const { assert!(!AUTO_DELETE_ENABLED) };
+    }
+
+    #[test]
+    fn granularity_kebab_case_keeps_hour_day_month() {
+        assert_eq!(
+            serde_json::to_string(&Granularity::Hour).unwrap(),
+            "\"hour\""
+        );
+        assert_eq!(serde_json::to_string(&Granularity::Day).unwrap(), "\"day\"");
+        assert_eq!(
+            serde_json::to_string(&Granularity::Month).unwrap(),
+            "\"month\""
+        );
+        assert_eq!(
+            serde_json::to_string(&Granularity::Minute1).unwrap(),
+            "\"minute1\""
+        );
+        assert_eq!(
+            serde_json::to_string(&Granularity::Minute2).unwrap(),
+            "\"minute2\""
+        );
+        assert_eq!(
+            serde_json::to_string(&Granularity::Minute5).unwrap(),
+            "\"minute5\""
+        );
+        assert_eq!(
+            serde_json::to_string(&Granularity::Minute10).unwrap(),
+            "\"minute10\""
+        );
+        assert_eq!(Granularity::Minute1.bucket_minutes(), 1);
+        assert_eq!(Granularity::Hour.bucket_minutes(), 60);
+        assert_eq!(Granularity::Day.bucket_minutes(), 1_440);
+        assert_eq!(Granularity::Month.bucket_minutes(), 43_200);
+        assert_eq!(
+            serde_json::from_str::<Granularity>("\"hour\"").unwrap(),
+            Granularity::Hour
+        );
+        assert_eq!(
+            serde_json::from_str::<Granularity>("\"minute1\"").unwrap(),
+            Granularity::Minute1
+        );
+    }
+
+    #[test]
+    fn minute_granularity_outside_raw_is_unsupported() {
+        let mut query = ReportQuery::default();
+        query.granularity = Granularity::Minute1;
+        query.range_start_utc = 0;
+        query.range_end_utc = 3_600;
+        let error = plan_capability(&query, 90 * 86_400, 30).expect_err("minute");
+        assert_eq!(error.code(), "capability_unsupported");
+        assert!(error.to_string().contains("分钟粒度"));
+    }
+
+    #[test]
+    fn category_filter_counts_and_triggers_needs_raw() {
+        let mut query = ReportQuery::default();
+        query.filters.category = Some("家宽".into());
+        assert_eq!(query.filters.dimension_filter_count(), 1);
+        assert!(!needs_raw(&query));
+        query.filters.host = Some("a.example".into());
+        assert_eq!(query.filters.dimension_filter_count(), 2);
+        assert!(needs_raw(&query));
+    }
+
+    #[test]
+    fn process_dimension_without_v2_is_not_exact_top_n() {
+        let mut query = ReportQuery::default();
+        query.grouping = DimensionKind::Process;
+        query.range_start_utc = 0;
+        query.range_end_utc = 86_400;
+        let now = 40 * 86_400;
+        let plan = plan_capability_ex(&query, now, 30, None).expect("plan");
+        assert_eq!(plan.tier, DataTier::HourlyDimension);
+        assert!(!plan.drilldown.exact_top_n);
+        assert!(plan.drilldown.note_zh.contains("尚未五维物化"));
+    }
+
+    #[test]
+    fn process_before_v2_watermark_is_unsupported() {
+        let mut query = ReportQuery::default();
+        query.grouping = DimensionKind::Process;
+        query.range_start_utc = 0;
+        query.range_end_utc = 86_400;
+        let now = 40 * 86_400;
+        let error = plan_capability_ex(&query, now, 30, Some(10 * 86_400)).expect_err("watermark");
+        assert_eq!(error.code(), "capability_unsupported");
+        assert!(error.to_string().contains("五维物化水位"));
     }
 }

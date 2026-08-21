@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { secretFieldMarkup } from "./secret-field";
-import mainSource from "../main.ts?raw";
+import settingsSource from "../hooks/use-settings.ts?raw";
 
 describe("secret-field", () => {
   it("默认是 password，并提供显示按钮", () => {
@@ -18,7 +18,7 @@ describe("secret-field", () => {
   });
 
   it("保存默认写入本机凭据，不是 session-only", () => {
-    expect(mainSource).toMatch(/sessionOnly:\s*false/);
-    expect(mainSource).not.toMatch(/sessionOnly:\s*true/);
+    expect(settingsSource).toMatch(/sessionOnly:\s*false/);
+    expect(settingsSource).not.toMatch(/sessionOnly:\s*true/);
   });
 });

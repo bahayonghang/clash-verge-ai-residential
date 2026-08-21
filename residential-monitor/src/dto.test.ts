@@ -6,6 +6,7 @@ import {
   decodeDiagnostics,
   decodeReportArchivePage,
   decodeReportResult,
+  decodeResidentialShare,
   decodeShellStatus
 } from "./dto";
 
@@ -30,6 +31,36 @@ describe("decodeShellStatus", () => {
         messageZh: "骨架"
       })
     ).toThrow(/kind/);
+  });
+
+  it("接受四个 Option 的家宽份额", () => {
+    const decoded = decodeResidentialShare({
+      schemaVersion: 1,
+      residentialUpload: null,
+      residentialDownload: null,
+      attributedUpload: null,
+      attributedDownload: null,
+      coverageStatus: "uncovered",
+      namedSql: ["coverage_raw"],
+      generatedUtc: 1,
+      targetCount: 0,
+      policyVersion: null
+    });
+    expect(decoded.residentialUpload).toBeNull();
+    expect(decoded.coverageStatus).toBe("uncovered");
+    expect(decoded.targetCount).toBe(0);
+  });
+
+  it("拒绝缺少 schemaVersion 的家宽份额", () => {
+    expect(() =>
+      decodeResidentialShare({
+        residentialUpload: 0,
+        coverageStatus: "covered",
+        namedSql: [],
+        generatedUtc: 1,
+        targetCount: 0
+      })
+    ).toThrow(/ResidentialShare/);
   });
 
   it("拒绝缺少 token 的报告结果", () => {

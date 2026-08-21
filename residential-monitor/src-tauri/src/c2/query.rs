@@ -122,9 +122,7 @@ fn matches_filter(row: &LiveConnectionView, filter: &ConnectionFilter, targets: 
 }
 
 fn is_residential(row: &LiveConnectionView, targets: &[String]) -> bool {
-    row.chains
-        .iter()
-        .any(|node| targets.iter().any(|target| target == node) || node.contains("家宽"))
+    crate::residential::is_residential_filter(targets, &row.chains)
 }
 
 fn is_numeric_field(field: &str) -> bool {
@@ -544,6 +542,51 @@ mod connection_query_tests {
         let page = query_connections_with_targets(&[home, other], &query, &["家宽".into()]);
         assert_eq!(page.rows.len(), 1);
         assert_eq!(page.rows[0].connection_id, "a");
+    }
+
+    /// 改造前 `is_residential` 原文。用于断言「只看家宽」选中集合不变。
+    fn legacy_is_residential(row: &LiveConnectionView, targets: &[String]) -> bool {
+        row.chains
+            .iter()
+            .any(|node| targets.iter().any(|target| target == node) || node.contains("家宽"))
+    }
+
+    #[test]
+    fn residential_only_selected_set_matches_legacy() {
+        let mut exact = row("a", "a.test");
+        exact.chains = vec!["家宽-SOCKS5".into()];
+        let mut substring = row("b", "b.test");
+        substring.chains = vec!["AI-家宽".into()];
+        let mut miss = row("c", "c.test");
+        miss.chains = vec!["DIRECT".into()];
+        let mut both = row("d", "d.test");
+        both.chains = vec!["家宽".into(), "其它".into()];
+        let rows = [exact, substring, miss, both];
+        let query = ConnectionQuery {
+            filter: ConnectionFilter {
+                residential_only: true,
+                ..ConnectionFilter::default()
+            },
+            sort_field: "identity".into(),
+            ..ConnectionQuery::default()
+        };
+        for targets in [
+            vec!["家宽-SOCKS5".into()],
+            vec!["家宽".into()],
+            Vec::<String>::new(),
+            vec!["DIRECT".into()],
+        ] {
+            let page = query_connections_with_targets(&rows, &query, &targets);
+            let mut got: Vec<String> = page.rows.iter().map(|item| item.identity.clone()).collect();
+            let mut expected: Vec<String> = rows
+                .iter()
+                .filter(|item| legacy_is_residential(item, &targets))
+                .map(|item| item.identity.clone())
+                .collect();
+            got.sort();
+            expected.sort();
+            assert_eq!(got, expected, "targets={targets:?}");
+        }
     }
 
     #[test]

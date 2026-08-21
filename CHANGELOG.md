@@ -4,6 +4,21 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 
 ## [Unreleased]
 
+### Added
+
+- Dedicated residential page with live monitor, category aggregation, share of attributed observation, and report export. New command `residential_share`. Coverage with `covered_sec == 0` returns four `None` fields, not 0%.
+- Ported the reports, alerts, settings/data, recovery, and unavailable pages onto the React shell. Share charts use Recharts. Export, retention, backup, alert-rule, and about behavior stay the same.
+- C3 report queries accept `minute1` / `minute2` / `minute5` / `minute10` granularity on the raw tier. Existing `hour` / `day` / `month` values stay unchanged.
+- C3 materializes `process`, `rule_group`, `chain`, and `network` dimension rows in addition to `host`. Category ranking on the dimension tier groups `category_id` and keeps `dimension_kind = host` so traffic is not counted five times.
+- Ranking identity `__unknown__` marks a missing dimension value. The row stays in the ranking so rank sums can match totals.
+
+### Changed
+
+- Replaced the vanilla TypeScript + Catppuccin shell with a React + Tailwind desktop UI. Navigation is ten routes. Overview, live connections, and host / rule / chain / process pages ship in the new shell. `src/main.ts` and `src/styles.css` are removed.
+- Residential classification lives in one module with two named functions. Accounting uses exact target match. Live “residential only” still matches a configured target or a node name that contains 家宽.
+- `ReportFilters` now apply to raw totals, series, and rankings, including category. `filters.chain` matches the last chain hop. `filters.rule` matches the SQL rule key.
+- Dimension-layer `exact_top_n` is false when the grouping has no five-dimension materialization. Queries before the `hourly_dim_v2` watermark return `capability_unsupported`.
+
 ### Planned
 
 - Add sanitized real-profile integration fixtures.

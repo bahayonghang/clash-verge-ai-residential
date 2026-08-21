@@ -5,39 +5,11 @@ import {
   inspectKeysMatch,
   rankingInspectKey,
   reportInspectModel,
-  shouldSkipRoutinePaint,
   trendInspectKey
 } from "./report-inspect";
 import { reportShareModel } from "./report-view";
 
 const copy = { unknown: "未知", remainder: "其余" };
-
-describe("shouldSkipRoutinePaint", () => {
-  it("skips live deltas while the reports route is open", () => {
-    expect(shouldSkipRoutinePaint("reports", "connectionDelta", null, null)).toBe(true);
-    expect(shouldSkipRoutinePaint("reports", "healthChanged", null, null)).toBe(true);
-    expect(shouldSkipRoutinePaint("reports", "summaryChanged", null, null)).toBe(true);
-    expect(shouldSkipRoutinePaint("reports", "alertChanged", null, null)).toBe(true);
-  });
-
-  it("paints bootstrap, live route, and error changes", () => {
-    expect(shouldSkipRoutinePaint("reports", "bootstrap", null, null)).toBe(false);
-    expect(shouldSkipRoutinePaint("live", "connectionDelta", null, null)).toBe(false);
-    expect(shouldSkipRoutinePaint("overview", "healthChanged", null, null)).toBe(false);
-    expect(shouldSkipRoutinePaint("reports", "connectionDelta", "缺口", null)).toBe(false);
-    expect(shouldSkipRoutinePaint("reports", "connectionDelta", "缺口", "缺口")).toBe(true);
-  });
-
-  it("skips connection traffic on the settings route and still paints health", () => {
-    expect(shouldSkipRoutinePaint("settings-data", "connectionDelta", null, null)).toBe(true);
-    expect(shouldSkipRoutinePaint("settings-data", "summaryChanged", null, null)).toBe(true);
-    expect(shouldSkipRoutinePaint("settings-data", "alertChanged", null, null)).toBe(true);
-    expect(shouldSkipRoutinePaint("settings-data", "healthChanged", null, null)).toBe(false);
-    expect(shouldSkipRoutinePaint("settings-data", "bootstrap", null, null)).toBe(false);
-    expect(shouldSkipRoutinePaint("settings-data", "connectionDelta", "缺口", null)).toBe(false);
-    expect(shouldSkipRoutinePaint("settings-data", "connectionDelta", "缺口", "缺口")).toBe(true);
-  });
-});
 
 describe("inspect keys", () => {
   it("names ranking and remainder rows", () => {

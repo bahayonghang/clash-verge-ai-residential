@@ -87,6 +87,11 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
         ),
         "route.overview" => ("概览", "Overview"),
         "route.live" => ("实时连接", "Live connections"),
+        "route.residential" => ("家宽", "Residential"),
+        "route.host" => ("主机", "Host"),
+        "route.rule" => ("规则", "Rule"),
+        "route.chain" => ("链路", "Chain"),
+        "route.process" => ("进程", "Process"),
         "route.reports" => ("分析报告", "Reports"),
         "route.alerts" => ("告警", "Alerts"),
         "route.settings-data" => ("设置 / 数据管理", "Settings / data"),
@@ -103,6 +108,39 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
         "notify.alert_title" => ("家宽流量监控告警", "Residential Traffic Monitor alert"),
         "notify.alert_body" => ("告警事件", "Alert event"),
         "export.html_title" => ("家宽流量报告", "Residential traffic report"),
+        "residential.caliber.filter" => (
+            "筛选口径：命中已配置 target，或节点名含「家宽」。",
+            "Filter caliber: a configured target, or a node name that contains 家宽.",
+        ),
+        "residential.caliber.accounting" => (
+            "核算口径：仅命中已配置 target。",
+            "Accounting caliber: a configured target only.",
+        ),
+        "residential.caliber.diff" => (
+            "实时段用筛选口径，聚合段用核算口径，两者容纳集可能不等。",
+            "The monitor uses the filter caliber. Aggregation uses the accounting caliber. The selected sets can differ.",
+        ),
+        "residential.share.unknown" => ("未知", "Unknown"),
+        "residential.share.zero_den" => (
+            "分母为零。可归因观测在该区间为 0。",
+            "The denominator is zero. Attributed observation is 0 in this range.",
+        ),
+        "residential.share.zero_traffic" => (
+            "区间内无家宽流量。",
+            "No residential traffic in this range.",
+        ),
+        "residential.share.uncovered" => (
+            "该区间无采集覆盖。占比未知，不是 0%。",
+            "This range has no collection coverage. The share is unknown, not 0%.",
+        ),
+        "residential.targets.empty" => (
+            "尚未配置重点目标。请到设置页填写家宽节点名称并保存。",
+            "No focus targets are configured. Open Settings, enter residential node names, then save.",
+        ),
+        "error.residential_share" => (
+            "无法读取家宽占比。",
+            "Cannot read the residential share.",
+        ),
         "export.html_totals" => (
             "总量 上行 {} 下行 {}。覆盖 {}。",
             "Totals upload {} download {}. Coverage {}.",
@@ -371,6 +409,27 @@ mod i18n_tests {
             t(UiLocale::Zh, "session.connected"),
             t(UiLocale::En, "session.connected")
         );
+    }
+
+    #[test]
+    fn residential_keys_resolve_in_both_locales() {
+        for key in [
+            "residential.caliber.filter",
+            "residential.caliber.accounting",
+            "residential.caliber.diff",
+            "residential.share.unknown",
+            "residential.share.zero_den",
+            "residential.share.zero_traffic",
+            "residential.share.uncovered",
+            "residential.targets.empty",
+            "error.residential_share",
+        ] {
+            let zh = t(UiLocale::Zh, key);
+            let en = t(UiLocale::En, key);
+            assert!(!zh.is_empty(), "{key} missing zh");
+            assert!(!en.is_empty(), "{key} missing en");
+            assert_ne!(zh, en, "{key} not translated");
+        }
     }
 
     #[test]

@@ -31,6 +31,11 @@ pub fn default_routes_for(locale: UiLocale) -> Vec<RouteDescriptor> {
     [
         ("overview", "route.overview"),
         ("live", "route.live"),
+        ("residential", "route.residential"),
+        ("host", "route.host"),
+        ("rule", "route.rule"),
+        ("chain", "route.chain"),
+        ("process", "route.process"),
         ("reports", "route.reports"),
         ("alerts", "route.alerts"),
         ("settings-data", "route.settings-data"),
@@ -193,13 +198,33 @@ mod shell_seam_tests {
     #[test]
     fn reports_and_alerts_are_available_after_c4() {
         let routes = default_routes();
-        assert_eq!(routes.len(), 5);
+        assert_eq!(
+            routes
+                .iter()
+                .map(|item| item.id.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "overview",
+                "live",
+                "residential",
+                "host",
+                "rule",
+                "chain",
+                "process",
+                "reports",
+                "alerts",
+                "settings-data",
+            ]
+        );
         let reports = routes.iter().find(|item| item.id == "reports").unwrap();
         assert!(reports.available);
         assert_eq!(reports.unavailable_until, None);
         let alerts = routes.iter().find(|item| item.id == "alerts").unwrap();
         assert!(alerts.available);
         assert_eq!(alerts.unavailable_until, None);
+        let residential = routes.iter().find(|item| item.id == "residential").unwrap();
+        assert!(residential.available);
+        assert_eq!(residential.title_zh, "家宽");
     }
 
     #[test]

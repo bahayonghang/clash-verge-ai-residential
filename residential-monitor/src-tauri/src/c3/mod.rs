@@ -7,8 +7,10 @@ pub mod backup;
 pub mod export;
 pub mod query;
 pub mod retention;
+pub mod rule_name;
 pub mod schema;
 pub mod service;
+pub mod share;
 pub mod snapshot;
 pub mod space;
 pub mod sql;
@@ -18,13 +20,14 @@ pub use backup::BackupRestoreService;
 pub use export::{ExportService, ExportSpec};
 pub use query::{
     default_auto_report_query, local_day_bounds, local_hour_bounds, local_month_bounds,
-    plan_capability, timezone_offset_secs, validate_query, CapabilityPlan, DrilldownCapability,
-    ReportError, ReportQuery, ReportResult, AUTO_DELETE_ENABLED, DIMENSION_RETAIN_DAYS,
-    MAX_ACTIVE_TOKENS, MAX_SPOOL_BYTES, MAX_TOKEN_BYTES, PAGE_DEADLINE_MS, RAW_RETAIN_DAYS_DEFAULT,
-    RAW_RETAIN_DAYS_MAX, REPORT_DEADLINE_MS, TOKEN_TTL_SECS,
+    plan_capability, plan_capability_ex, timezone_offset_secs, validate_query, CapabilityPlan,
+    DrilldownCapability, ReportError, ReportQuery, ReportResult, AUTO_DELETE_ENABLED,
+    DIMENSION_RETAIN_DAYS, MAX_ACTIVE_TOKENS, MAX_SPOOL_BYTES, MAX_TOKEN_BYTES, PAGE_DEADLINE_MS,
+    RAW_RETAIN_DAYS_DEFAULT, RAW_RETAIN_DAYS_MAX, REPORT_DEADLINE_MS, TOKEN_TTL_SECS,
 };
 pub use retention::RetentionService;
 pub use service::ReportService;
+pub use share::{query_residential_share, ResidentialShare};
 pub use snapshot::ReportSnapshotStore;
 pub use space::SpaceBudget;
 

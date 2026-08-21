@@ -309,17 +309,23 @@ td,th{{border-bottom:1px solid #2a3340;padding:6px;font-variant-numeric:tabular-
 
 fn metadata_line(result: &ReportResult) -> String {
     format!(
-        "utc={}..{} tz={} unit={} policy={:?} schema={} data={} generated={} coverage={} gap={} token={}",
+        "utc={}..{} tz={} unit={} policy={:?} policy_version={:?} schema={} data={} generated={} coverage={} covered={} gap={} sessions={} currentPolicy={} crossDimension={} exactTopN={} token={}",
         result.query_echo.range_start_utc,
         result.query_echo.range_end_utc,
         result.query_echo.display_timezone,
         result.unit,
         result.policy_metadata.target_policy,
+        result.policy_metadata.policy_version,
         result.schema_version,
         result.data_version,
         result.generated_utc,
         result.coverage.status,
+        result.coverage.covered_sec,
         result.coverage.gap_sec,
+        result.drilldown_capability.sessions,
+        result.drilldown_capability.current_policy,
+        result.drilldown_capability.cross_dimension,
+        result.drilldown_capability.exact_top_n,
         result.report_snapshot_token
     )
 }
@@ -431,10 +437,19 @@ mod export_tests {
         let json_text = std::fs::read_to_string(json).expect("read");
         let html_text = std::fs::read_to_string(html).expect("read");
         assert!(csv_text.contains(",10,20,"));
+        assert!(csv_text.contains("policy_version="));
+        assert!(csv_text.contains("coverage="));
+        assert!(csv_text.contains("currentPolicy="));
         assert!(json_text.contains("\"download\":20"));
+        assert!(json_text.contains("\"policyVersion\""));
+        assert!(json_text.contains("\"drilldownCapability\""));
         assert!(html_text.contains("下行 20"));
+        assert!(html_text.contains("policy_version="));
         assert!(html_text.contains("@media print"));
         assert!(!html_text.contains("http://"));
+        assert!(!csv_text.to_ascii_lowercase().contains("bearer "));
+        assert!(!csv_text.to_ascii_lowercase().contains("password="));
+        assert!(!json_text.to_ascii_lowercase().contains("secret="));
         let error = ExportService::export_to_path(
             &result,
             &ExportSpec::default(),

@@ -6,7 +6,8 @@ import {
   LIST_PAGE_DEFAULT
 } from "./live-session";
 import liveSessionSource from "./live-session.ts?raw";
-import mainSource from "../main.ts?raw";
+import mainSource from "../main.tsx?raw";
+import streamSource from "../hooks/use-monitor-stream.ts?raw";
 
 describe("live-session", () => {
   const hotspot = {
@@ -109,6 +110,8 @@ describe("live-session", () => {
   it("产品源码不再把 window.message 当 Channel", () => {
     expect(mainSource).not.toMatch(/addEventListener\(\s*["']message["']/);
     expect(mainSource).not.toMatch(/window\.addEventListener\(\s*["']message["']/);
+    expect(streamSource).not.toMatch(/addEventListener\(\s*["']message["']/);
+    expect(streamSource).toContain("subscribeMonitor");
     expect(liveSessionSource).toContain("@tauri-apps/api/core");
     expect(liveSessionSource).toContain("subscribe_monitor");
     expect(liveSessionSource).toContain("query_live_connections");

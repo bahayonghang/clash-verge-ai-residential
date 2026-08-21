@@ -1,6 +1,6 @@
 # residential-monitor frontend
 
-Vanilla TypeScript + Vite 桌面壳。不引入 UI 框架。根仓库 frontend spec 只覆盖可粘贴 Clash 扩展，不适用于本子项目。
+React 19 + Tailwind v4 + Vite 桌面壳。`components/**` 不得直接 `invoke`，IPC 只在 `hooks/**`。每个 hook 必须请求序号递增、过期响应丢弃、失败保留上次结果并单独暴露 `errorZh`。根仓库 frontend spec 只覆盖可粘贴 Clash 扩展，不适用于本子项目。十段 `RouteId`：`overview`、`live`、`residential`、`host`、`rule`、`chain`、`process`、`reports`、`alerts`、`settings-data`。入口是 `src/main.tsx`，禁止再引入 `src/main.ts` 或 `src/styles.css`。
 
 ## Pre-Development Checklist
 

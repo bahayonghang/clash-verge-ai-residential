@@ -2,7 +2,17 @@ import type { UiDensity, UiFont, UiFontSize, UiTheme } from "./theme";
 
 export const SCHEMA_VERSION = 1;
 
-export type RouteId = "overview" | "live" | "reports" | "alerts" | "settings-data";
+export type RouteId =
+  | "overview"
+  | "live"
+  | "residential"
+  | "host"
+  | "rule"
+  | "chain"
+  | "process"
+  | "reports"
+  | "alerts"
+  | "settings-data";
 
 export interface RouteDescriptor {
   id: RouteId;
@@ -271,7 +281,7 @@ export interface ReportQuery {
   rangeStartUtc: number;
   rangeEndUtc: number;
   displayTimezone: string;
-  granularity: "hour" | "day" | "month";
+  granularity: "minute1" | "minute2" | "minute5" | "minute10" | "hour" | "day" | "month";
   filters: ReportFilters;
   grouping: "category" | "host" | "process" | "rule" | "chain" | "network";
   targetPolicy: "current" | "historical";
@@ -303,6 +313,7 @@ export interface ReportResult {
     activeDurationSec: number;
   }>;
   rankings: Array<{
+    /** identity `"__unknown__"` 表示维度值缺失；前端按未知渲染，不参与下钻。 */
     identity: string;
     label: string;
     upload: number;
@@ -328,6 +339,19 @@ export interface ReportResult {
   namedSql: string[];
   unit: string;
   generatedUtc: number;
+}
+
+export interface ResidentialShare {
+  schemaVersion: number;
+  residentialUpload: number | null;
+  residentialDownload: number | null;
+  attributedUpload: number | null;
+  attributedDownload: number | null;
+  coverageStatus: string;
+  namedSql: string[];
+  generatedUtc: number;
+  targetCount: number;
+  policyVersion: number | null;
 }
 
 export interface RetentionPreview {
@@ -414,12 +438,71 @@ export function decodeDiagnostics(value: unknown): DiagnosticsSnapshot {
   return value as unknown as DiagnosticsSnapshot;
 }
 
+const REPORT_GRANULARITIES = [
+  "minute1",
+  "minute2",
+  "minute5",
+  "minute10",
+  "hour",
+  "day",
+  "month"
+] as const;
+
+function optionalU64(value: unknown, label: string): number | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) {
+    return value;
+  }
+  throw new Error(`ResidentialShare ${label} 无效`);
+}
+
+export function decodeResidentialShare(value: unknown): ResidentialShare {
+  if (!isRecord(value) || value.schemaVersion !== 1) {
+    throw new Error("ResidentialShare 无效");
+  }
+  if (typeof value.coverageStatus !== "string" || !Array.isArray(value.namedSql)) {
+    throw new Error("ResidentialShare 字段缺失");
+  }
+  if (typeof value.generatedUtc !== "number" || !Number.isSafeInteger(value.generatedUtc)) {
+    throw new Error("ResidentialShare generatedUtc 无效");
+  }
+  if (typeof value.targetCount !== "number" || !Number.isSafeInteger(value.targetCount) || value.targetCount < 0) {
+    throw new Error("ResidentialShare targetCount 无效");
+  }
+  let policyVersion: number | null = null;
+  if (value.policyVersion !== null && value.policyVersion !== undefined) {
+    if (typeof value.policyVersion !== "number" || !Number.isSafeInteger(value.policyVersion)) {
+      throw new Error("ResidentialShare policyVersion 无效");
+    }
+    policyVersion = value.policyVersion;
+  }
+  return {
+    schemaVersion: 1,
+    residentialUpload: optionalU64(value.residentialUpload, "residentialUpload"),
+    residentialDownload: optionalU64(value.residentialDownload, "residentialDownload"),
+    attributedUpload: optionalU64(value.attributedUpload, "attributedUpload"),
+    attributedDownload: optionalU64(value.attributedDownload, "attributedDownload"),
+    coverageStatus: value.coverageStatus,
+    namedSql: value.namedSql.map((item) => String(item)),
+    generatedUtc: value.generatedUtc,
+    targetCount: value.targetCount,
+    policyVersion
+  };
+}
+
 export function decodeReportResult(value: unknown): ReportResult {
   if (!isRecord(value) || value.schemaVersion !== 1) {
     throw new Error("ReportResult 无效");
   }
   if (typeof value.reportSnapshotToken !== "string" || !isRecord(value.totals) || !isRecord(value.coverage)) {
     throw new Error("ReportResult 字段缺失");
+  }
+  if (isRecord(value.queryEcho) && typeof value.queryEcho.granularity === "string") {
+    if (!(REPORT_GRANULARITIES as readonly string[]).includes(value.queryEcho.granularity)) {
+      throw new Error("ReportResult queryEcho.granularity 无效");
+    }
   }
   return value as unknown as ReportResult;
 }

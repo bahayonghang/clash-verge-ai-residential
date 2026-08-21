@@ -1,33 +1,35 @@
 import { describe, expect, it } from "vitest";
 import { HEALTH_KEYS, healthTitle } from "../i18n";
-import { BRAND_MARK, ROUTE_ICONS } from "../nav-icons";
-
-const routes = [
-  { id: "overview", available: true, unavailableUntil: null },
-  { id: "live", available: true, unavailableUntil: null },
-  { id: "reports", available: true, unavailableUntil: null },
-  { id: "alerts", available: true, unavailableUntil: null },
-  { id: "settings-data", available: true, unavailableUntil: null }
-];
+import { BRAND_MARK, ROUTE_ICONS, ROUTE_ORDER, isRouteId } from "../nav-icons";
 
 describe("应用壳导航", () => {
-  it("五段 route 稳定，告警页已启用", () => {
-    expect(routes.map((item) => item.id)).toEqual([
+  it("十段 route 稳定，顺序固定", () => {
+    expect(ROUTE_ORDER).toEqual([
       "overview",
       "live",
+      "residential",
+      "host",
+      "rule",
+      "chain",
+      "process",
       "reports",
       "alerts",
       "settings-data"
     ]);
-    expect(routes.find((item) => item.id === "reports")?.available).toBe(true);
-    expect(routes.find((item) => item.id === "alerts")?.available).toBe(true);
-    expect(routes.find((item) => item.id === "alerts")?.unavailableUntil).toBe(null);
+    expect(ROUTE_ORDER).toHaveLength(10);
   });
 
-  it("五条 route 与产品标记都有本地图标", () => {
-    expect(Object.keys(ROUTE_ICONS).sort()).toEqual(routes.map((item) => item.id).sort());
+  it("十条 route 与产品标记都有本地图标", () => {
+    expect(Object.keys(ROUTE_ICONS).sort()).toEqual([...ROUTE_ORDER].sort());
     expect(Object.values(ROUTE_ICONS).every((src) => src.length > 0)).toBe(true);
     expect(BRAND_MARK.length).toBeGreaterThan(0);
+  });
+
+  it("isRouteId 不把原型方法名当成 route", () => {
+    expect(isRouteId("overview")).toBe(true);
+    expect(isRouteId("settings-data")).toBe(true);
+    expect(isRouteId("toString")).toBe(false);
+    expect(isRouteId("constructor")).toBe(false);
   });
 });
 

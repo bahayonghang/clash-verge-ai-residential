@@ -1,9 +1,11 @@
 # 报告口径
 
-- 应用内图表、数据表和 CSV / JSON / HTML 使用同一个 `ReportResult`。
+- 应用内图表、数据表和 CSV / JSON / HTML 使用同一个 `ReportResult`。图表是 Recharts 封装；占比环图与趋势图旁保留同口径数据表。悬停或钉住高亮只读当前结果，不改 grouping、不自动重查。
 - `report_snapshot_token` 返回前关闭 SQLite 读事务。
 - 空区间总量可以为 0。缺口、未知和能力不支持不得写成 0。
 - 30 天 raw 支持组合过滤和下钻。13 个月精确层只支持单维。更老的 core daily 只保留总量、历史主分类和 coverage。
+- `granularity` 合法值为 `minute1` / `minute2` / `minute5` / `minute10` / `hour` / `day` / `month`。分钟档只在 raw 保留期内可用，不升粒度。
+- 排名 `identity` 为 `__unknown__` 表示维度值缺失，`label` 为「未知」。该行留在排名中，不参与下钻。
 - 自动 DELETE 保持关闭，直到守恒门通过。
 
 ## 自动小时 / 日档案
