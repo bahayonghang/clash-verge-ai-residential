@@ -976,3 +976,25 @@
 ### Next Steps
 
 - 本机走一遍侧栏并重启后打开手动档案再导出
+
+
+## Session 32: 完成 OpenAI 认证路由开关
+
+**Date**: 2026-08-21
+**Task**: 完成 OpenAI 认证路由开关
+**Branch**: `dev`
+
+### Summary
+
+新增独立 OpenAI 第一方认证与网页资源路由开关，补齐 TOML 渲染、清理/DNS 回归与 Windows 到 Ubuntu 安全部署说明；本机认证开启、网页资源与 Google 认证保持关闭。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f30cbabef3a6824c4a6f0f5ea427034e254db039` | (see git log) |
+| `4dffa4d2ffeb443262c2d0a642aa8d4e0eb7b8b2` | (see git log) |
+
+### Status
+
+[OK] **Completed**
