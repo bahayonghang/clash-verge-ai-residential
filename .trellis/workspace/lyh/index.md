@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 32
-- **Last Active**: 2026-08-21
+- **Total Sessions**: 33
+- **Last Active**: 2026-08-22
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1000 | Active |
+| `journal-1.md` | ~1040 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 33 | 2026-08-22 | 进程归因：查找进程与进程页 | `281817a`, `199b8ff`, `f681c1e`, `cfef9c2` | `dev` |
 | 32 | 2026-08-21 | 完成 OpenAI 认证路由开关 | `f30cbabef3a6824c4a6f0f5ea427034e254db039`, `4dffa4d2ffeb443262c2d0a642aa8d4e0eb7b8b2` | `dev` |
 | 31 | 2026-08-21 | 报告快照配额与一周保留 | `bfcdc65`, `73ab2a6` | `refactor/neko-ui-port` |
 | 30 | 2026-08-21 | 侧栏色井、图表浮层与排名表头 | `b826da8`, `c308dae` | `refactor/neko-ui-port` |

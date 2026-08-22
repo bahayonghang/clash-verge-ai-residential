@@ -998,3 +998,43 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 33: 进程归因：查找进程与进程页
+
+**Date**: 2026-08-22
+**Task**: 进程归因：查找进程与进程页
+**Package**: residential-monitor
+**Branch**: `dev`
+
+### Summary
+
+脚本默认写顶层 find-process-mode always。进程页支持未知行下钻、核算口径过滤，以及字段归因不可用时的缺字段说明。
+
+### Main Changes
+
+- 扩展脚本写出顶层 find-process-mode always，不注入进程路由
+- 进程未知行可下钻；核算口径开关；归因不可用空态
+- 公开模板粘贴到 Verge 会因 xxx 占位失败，应粘贴 local.js
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `281817a` | (see git log) |
+| `199b8ff` | (see git log) |
+| `f681c1e` | (see git log) |
+| `cfef9c2` | (see git log) |
+
+### Testing
+
+- [OK] just ci
+- [OK] just monitor-check
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 重载 Clash Verge 全局脚本后核对实时连接进程列
