@@ -30,13 +30,14 @@ use crate::session::ControllerSession;
 #[cfg(not(windows))]
 use c2::desktop::ProcessSingleInstance;
 use c2::desktop::{tray_chrome, InstanceClaim, ShutdownPhase, TrayVisual};
+use c2::dialog::TauriFileDialog;
 use c2::facade::{parse_socket_locale, AppErrorDto, AppFacade, BootstrapDto, ProbeResult};
 use c2::hub::{LiveConnectionView, MonitorStreamMessage};
 use c2::query::{ConnectionPage, ConnectionQuery};
 use c2::settings::ControllerSettings;
 use c2::shell::{
-    default_routes_for, BootBranch, FileMode, FilePurpose, OperationProgress, RecoveryStatus,
-    RouteDescriptor,
+    default_routes_for, BootBranch, FileDialogPort, FileMode, FilePurpose, OperationProgress,
+    RecoveryStatus, RouteDescriptor,
 };
 use c2::subscriptions::SubscriptionRegistry;
 use c3::archive::{ReportArchivePage, ReportArchiveService};
@@ -48,7 +49,7 @@ use c3::snapshot::ReportSnapshotStore;
 use c4::diagnose::DiagnosticsSnapshot;
 use c4::notify::NotifyCapability;
 use c4::types::{AlertCenterPage, AlertRule, AlertSummary};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use tauri::ipc::Channel;
 use tauri::menu::Menu;
 use tauri::{AppHandle, Emitter, Manager, Runtime, State};
@@ -637,15 +638,15 @@ fn save_live_table_layout(
 }
 
 #[tauri::command]
-fn pick_file(
-    state: State<Mutex<AppFacade>>,
+async fn pick_file(
+    dialog: State<'_, Arc<dyn FileDialogPort + Send + Sync>>,
+    locale: String,
     purpose: FilePurpose,
     mode: FileMode,
 ) -> Result<Option<String>, AppErrorDto> {
-    Ok(state
-        .lock()
-        .expect("state")
-        .pick_file(purpose, mode)
+    let locale = UiLocale::parse(Some(locale.trim()));
+    Ok(dialog
+        .pick(locale, purpose, mode)
         .map(|path| path.to_string_lossy().into_owned()))
 }
 
@@ -1219,8 +1220,13 @@ pub fn run() {
     );
     let background = facade.desktop.launch_mode == c2::desktop::LaunchMode::Background;
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .manage(Mutex::new(facade))
         .setup(move |app| {
+            app.manage(Arc::new(TauriFileDialog {
+                app: app.handle().clone(),
+            }) as Arc<dyn FileDialogPort + Send + Sync>);
             attach_window_close(app);
             #[cfg(windows)]
             start_windows_activation_listener(app.handle().clone());
@@ -1228,7 +1234,10 @@ pub fn run() {
             let locale = app
                 .state::<Mutex<AppFacade>>()
                 .lock()
-                .map(|guard| guard.ui_locale)
+                .map(|mut guard| {
+                    guard.attach_notification_handle(app.handle().clone());
+                    guard.ui_locale
+                })
                 .unwrap_or(UiLocale::Zh);
             apply_locale_chrome(app.handle(), locale);
             if background {

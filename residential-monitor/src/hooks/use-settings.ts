@@ -561,7 +561,8 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     await withOperation("backup", t(locale, "settings.backup_fail"), async () => {
       const picked = await invoke<string | null>("pick_file", {
         purpose: "backup-create",
-        mode: "save"
+        mode: "save",
+        locale
       });
       if (!picked) {
         return "cancelled";
@@ -575,7 +576,8 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     await withOperation("restore", t(locale, "settings.restore_fail"), async () => {
       const picked = await invoke<string | null>("pick_file", {
         purpose: "backup-restore",
-        mode: "open"
+        mode: "open",
+        locale
       });
       if (!picked) {
         return "cancelled";
@@ -595,7 +597,8 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     try {
       const picked = await invoke<string | null>("pick_file", {
         purpose: "backup-restore",
-        mode: "open"
+        mode: "open",
+        locale
       });
       if (!picked) {
         return null;

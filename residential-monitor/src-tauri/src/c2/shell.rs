@@ -66,8 +66,45 @@ pub enum FileMode {
     Save,
 }
 
-pub trait FileDialogPort {
-    fn pick(&self, purpose: FilePurpose, mode: FileMode) -> Option<PathBuf>;
+pub trait FileDialogPort: Send + Sync {
+    fn pick(&self, locale: UiLocale, purpose: FilePurpose, mode: FileMode) -> Option<PathBuf>;
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DialogSpec {
+    pub title: String,
+    pub file_name: String,
+    pub filter_name: String,
+    pub extensions: Vec<String>,
+}
+
+pub fn dialog_spec(locale: UiLocale, purpose: FilePurpose) -> DialogSpec {
+    match purpose {
+        FilePurpose::ReportExport => DialogSpec {
+            title: t(locale, "dialog.report_export.title").into(),
+            file_name: t(locale, "dialog.report_export.file").into(),
+            filter_name: t(locale, "dialog.filter.report").into(),
+            extensions: vec!["csv".into(), "json".into(), "html".into()],
+        },
+        FilePurpose::BackupCreate => DialogSpec {
+            title: t(locale, "dialog.backup_create.title").into(),
+            file_name: t(locale, "dialog.backup_create.file").into(),
+            filter_name: t(locale, "dialog.filter.backup").into(),
+            extensions: vec!["sqlite3".into()],
+        },
+        FilePurpose::BackupRestore => DialogSpec {
+            title: t(locale, "dialog.backup_restore.title").into(),
+            file_name: t(locale, "dialog.backup_restore.file").into(),
+            filter_name: t(locale, "dialog.filter.backup").into(),
+            extensions: vec!["sqlite3".into()],
+        },
+        FilePurpose::DiagnosticsExport => DialogSpec {
+            title: t(locale, "dialog.diagnostics_export.title").into(),
+            file_name: t(locale, "dialog.diagnostics_export.file").into(),
+            filter_name: t(locale, "dialog.filter.json").into(),
+            extensions: vec!["json".into()],
+        },
+    }
 }
 
 #[derive(Default)]
@@ -76,7 +113,7 @@ pub struct FakeFileDialog {
 }
 
 impl FileDialogPort for FakeFileDialog {
-    fn pick(&self, _purpose: FilePurpose, _mode: FileMode) -> Option<PathBuf> {
+    fn pick(&self, _locale: UiLocale, _purpose: FilePurpose, _mode: FileMode) -> Option<PathBuf> {
         self.next.lock().expect("dialog").clone()
     }
 }
@@ -232,9 +269,49 @@ mod shell_seam_tests {
         let dialog = FakeFileDialog::default();
         *dialog.next.lock().expect("d") = Some(PathBuf::from("C:/tmp/report.csv"));
         let path = dialog
-            .pick(FilePurpose::ReportExport, FileMode::Save)
+            .pick(UiLocale::Zh, FilePurpose::ReportExport, FileMode::Save)
             .expect("path");
         assert!(path.ends_with("report.csv"));
+    }
+
+    #[test]
+    fn dialog_spec_covers_all_purposes_in_both_locales() {
+        for purpose in [
+            FilePurpose::ReportExport,
+            FilePurpose::BackupCreate,
+            FilePurpose::BackupRestore,
+            FilePurpose::DiagnosticsExport,
+        ] {
+            let zh = dialog_spec(UiLocale::Zh, purpose);
+            let en = dialog_spec(UiLocale::En, purpose);
+            for (name, spec) in [("zh", &zh), ("en", &en)] {
+                assert!(!spec.title.is_empty(), "{name} title empty for {purpose:?}");
+                assert!(
+                    !spec.file_name.is_empty(),
+                    "{name} file name empty for {purpose:?}"
+                );
+                assert!(!spec.filter_name.is_empty());
+                assert!(!spec.extensions.is_empty());
+            }
+            // 英文译文必须可达，否则对话框标题会固定为中文。
+            assert_ne!(zh.title, en.title, "{purpose:?} has no English title");
+        }
+    }
+
+    #[test]
+    fn export_purposes_filter_matches_file_name() {
+        for purpose in [FilePurpose::ReportExport, FilePurpose::DiagnosticsExport] {
+            let spec = dialog_spec(UiLocale::Zh, purpose);
+            let extension = Path::new(&spec.file_name)
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .unwrap_or_default();
+            assert!(
+                spec.extensions.iter().any(|item| item == extension),
+                "{purpose:?}: default file name {extension:?} not in filter {:?}",
+                spec.extensions
+            );
+        }
     }
 
     #[test]

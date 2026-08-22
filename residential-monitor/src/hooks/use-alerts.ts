@@ -255,7 +255,8 @@ export function useAlerts(locale: UiLocale, active: boolean): {
     try {
       const path = await invoke<string | null>("pick_file", {
         purpose: "diagnostics-export",
-        mode: "save"
+        mode: "save",
+        locale
       });
       if (!path) {
         if (token === seq.current) {

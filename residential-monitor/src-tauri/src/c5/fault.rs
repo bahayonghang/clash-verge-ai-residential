@@ -3,7 +3,7 @@
 use crate::c3::backup::BackupRestoreService;
 use crate::c3::query::ReportError;
 use crate::c3::space::SpaceBudget;
-use crate::c4::notify::{FakeNotificationSink, NotificationSink};
+use crate::c4::notify::{NotificationSink, WindowsNotificationSink};
 use crate::controller::SessionStatus;
 use crate::storage::StorageCoordinator;
 use crate::transport::profiles;
@@ -139,11 +139,13 @@ fn restore_bad_candidate() -> FaultResult {
 }
 
 fn notification_unavailable() -> FaultResult {
-    let sink = FakeNotificationSink::default();
+    // 生产 sink（未 attach AppHandle）：capability().available == false，
+    // 该自检与生产行为一致，不再走测试替身。
+    let sink = WindowsNotificationSink::new();
     let cap = sink.capability();
     FaultResult {
         id: "notification-unavailable".into(),
-        environment: "fake-sink".into(),
+        environment: "windows-sink-unattached".into(),
         expected_health: "notification-unavailable".into(),
         coverage_written_as_zero: false,
         current_db_intact: true,

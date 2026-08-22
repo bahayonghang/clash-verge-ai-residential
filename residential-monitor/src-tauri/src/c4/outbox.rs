@@ -206,9 +206,9 @@ pub fn complete_send(
     }
 }
 
-pub fn scan_once<S: NotificationSink>(
+pub fn scan_once(
     coordinator: &mut StorageCoordinator,
-    sink: &mut S,
+    sink: &mut dyn NotificationSink,
     now_utc: i64,
     lease_token: &str,
     locale: crate::i18n::UiLocale,

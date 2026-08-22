@@ -456,7 +456,8 @@ export function useReportArchive(locale: UiLocale): {
       try {
         const picked = await invoke<string | null>("pick_file", {
           purpose: "report-export",
-          mode: "save"
+          mode: "save",
+          locale
         });
         if (!picked) {
           if (token === seq.current) {

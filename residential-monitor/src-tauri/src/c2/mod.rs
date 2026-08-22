@@ -4,6 +4,7 @@ pub mod close;
 pub mod collector;
 pub mod contract;
 pub mod desktop;
+pub mod dialog;
 pub mod facade;
 pub mod hub;
 pub mod query;

@@ -15,8 +15,8 @@ use crate::c2::settings::{
     validate_targets, ControllerSettings, SettingsError, SettingsWorkflow, WizardState,
 };
 use crate::c2::shell::{
-    default_routes_for, recovery_status, validate_backup, BootBranch, FakeFileDialog, FileMode,
-    FilePurpose, OperationProgress, OperationRegistry, RecoveryStatus, RouteDescriptor,
+    default_routes_for, recovery_status, validate_backup, BootBranch, OperationProgress,
+    OperationRegistry, RecoveryStatus, RouteDescriptor,
 };
 use crate::c3::archive::{ReportArchivePage, ReportArchiveService};
 use crate::c3::backup::BackupRestoreService;
@@ -27,7 +27,7 @@ use crate::c3::share::{query_residential_share, ResidentialShare};
 use crate::c3::snapshot::ReportSnapshotStore;
 use crate::c3::space::SpaceBudget;
 use crate::c4::engine::{AlertEngine, HealthSnapshot};
-use crate::c4::notify::{FakeNotificationSink, NotificationSink, NotifyPayload};
+use crate::c4::notify::{NotificationSink, NotifyPayload, WindowsNotificationSink};
 use crate::c4::types::{
     validate_rule, AlertCenterPage, AlertRule, AlertSummary, ALERT_DTO_VERSION,
 };
@@ -193,7 +193,6 @@ pub struct AppFacade {
     pub workflow: SettingsWorkflow,
     pub closes: CloseRegistry,
     pub operations: OperationRegistry,
-    pub dialog: FakeFileDialog,
     pub autostart: FakeAutostart,
     pub session: ControllerSession,
     pub data_dir: PathBuf,
@@ -202,7 +201,7 @@ pub struct AppFacade {
     pub space: SpaceBudget,
     pub raw_retain_days: i64,
     pub alerts: AlertEngine,
-    pub notify: FakeNotificationSink,
+    pub notify: Box<dyn NotificationSink + Send>,
     pub writer_epoch: u64,
     pub bundle_seq: u64,
     controller_epoch_ready: bool,
@@ -331,7 +330,6 @@ impl AppFacade {
                     workflow: SettingsWorkflow::new(FakeCredentialStore::new(), true),
                     closes: CloseRegistry::new(),
                     operations: OperationRegistry::new(),
-                    dialog: FakeFileDialog::default(),
                     autostart: FakeAutostart::new(),
                     session: ControllerSession::new(String::new()),
                     data_dir: data_dir.clone(),
@@ -340,7 +338,7 @@ impl AppFacade {
                     space: SpaceBudget::unlimited(),
                     raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
                     alerts,
-                    notify: FakeNotificationSink::default(),
+                    notify: Box::new(WindowsNotificationSink::new()),
                     writer_epoch,
                     bundle_seq: 1,
                     controller_epoch_ready: false,
@@ -388,7 +386,6 @@ impl AppFacade {
             workflow: SettingsWorkflow::new(FakeCredentialStore::new(), false),
             closes: CloseRegistry::new(),
             operations: OperationRegistry::new(),
-            dialog: FakeFileDialog::default(),
             autostart: FakeAutostart::new(),
             session: ControllerSession::new(String::new()),
             data_dir: data_dir.clone(),
@@ -397,7 +394,7 @@ impl AppFacade {
             space: SpaceBudget::unlimited(),
             raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
             alerts: AlertEngine::new(),
-            notify: FakeNotificationSink::default(),
+            notify: Box::new(WindowsNotificationSink::new()),
             writer_epoch: 0,
             bundle_seq: 1,
             controller_epoch_ready: false,
@@ -839,7 +836,7 @@ impl AppFacade {
                 if let Some(storage) = self.storage.as_mut() {
                     let _ = crate::c4::outbox::scan_once(
                         storage,
-                        &mut self.notify,
+                        self.notify.as_mut(),
                         utc,
                         &token,
                         self.ui_locale,
@@ -1068,11 +1065,6 @@ impl AppFacade {
                 false,
             )
         })
-    }
-
-    pub fn pick_file(&self, purpose: FilePurpose, mode: FileMode) -> Option<PathBuf> {
-        use crate::c2::shell::FileDialogPort;
-        self.dialog.pick(purpose, mode)
     }
 
     pub fn start_operation(&mut self, id: String, kind: String) -> OperationProgress {
@@ -1417,6 +1409,10 @@ impl AppFacade {
         })
     }
 
+    pub fn attach_notification_handle(&mut self, app: tauri::AppHandle) {
+        self.notify.attach(app);
+    }
+
     pub fn test_notification(
         &mut self,
     ) -> Result<crate::c4::notify::NotifyCapability, AppErrorDto> {
@@ -1489,9 +1485,9 @@ impl AppFacade {
         let token = format!("scan-{}", self.bundle_seq);
         let locale = self.ui_locale;
         let storage = self.storage.as_mut().ok_or_else(recovery_only)?;
-        crate::c4::outbox::scan_once(storage, &mut self.notify, now, &token, locale).map_err(|_| {
-            localized_error(locale, "outbox", "error.outbox", "action.retry_later", true)
-        })
+        crate::c4::outbox::scan_once(storage, self.notify.as_mut(), now, &token, locale).map_err(
+            |_| localized_error(locale, "outbox", "error.outbox", "action.retry_later", true),
+        )
     }
 
     pub fn create_backup(&self, dest: &Path) -> Result<String, AppErrorDto> {
@@ -1714,6 +1710,18 @@ mod c2_facade_contract_tests {
     use crate::live::LiveProjection;
     use crate::storage::{list_user_tables, migrate};
     use tempfile::tempdir;
+
+    #[test]
+    fn test_notification_reason_has_no_internal_type_names() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let capability = facade.test_notification().expect("capability");
+        assert!(
+            !capability.reason_zh.contains("Fake"),
+            "{}",
+            capability.reason_zh
+        );
+    }
 
     #[test]
     fn c2_only_names_frozen_c1_owners() {
