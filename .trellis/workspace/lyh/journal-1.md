@@ -1038,3 +1038,25 @@
 ### Next Steps
 
 - 重载 Clash Verge 全局脚本后核对实时连接进程列
+
+
+## Session 34: 解封 dev 合并 main：真实端口与存储重跑
+
+**Date**: 2026-08-22
+**Task**: 解封 dev 合并 main：真实端口与存储重跑
+**Branch**: `dev`
+
+### Summary
+
+完成 08-22-dev-main-merge-unblock 及两个子任务。child1：生产组合根接真实文件对话框（tauri-plugin-dialog，pick_file 独立 managed state 不取 facade 锁）与 Windows toast（tauri-plugin-notification，ALLOW_TOAST 反转为关闭开关）；rfd 的 comctl32 v6 清单改由链接器嵌入所有目标，修复测试可执行文件 STATUS_ENTRYPOINT_NOT_FOUND。child2：提取 StorageState::open，restore/删除/VACUUM 后经 reboot_storage 重跑存储侧启动，刷新 writer_epoch、告警与 settings，不触碰 workflow 与 session_status。审查后三项修正：SinkState 状态枚举使 AC4 测试真实覆盖、dialog_spec 贯通前端 locale、fault.rs 自检改用真实 sink。AC9 安装版手工验证未做。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a0f09a3` | (see git log) |
+| `a6b1729` | (see git log) |
+
+### Status
+
+[OK] **Completed**

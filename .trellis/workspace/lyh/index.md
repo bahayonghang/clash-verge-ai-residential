@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 33
+- **Total Sessions**: 34
 - **Last Active**: 2026-08-22
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1040 | Active |
+| `journal-1.md` | ~1062 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 34 | 2026-08-22 | 解封 dev 合并 main：真实端口与存储重跑 | `a0f09a3`, `a6b1729` | `dev` |
 | 33 | 2026-08-22 | 进程归因：查找进程与进程页 | `281817a`, `199b8ff`, `f681c1e`, `cfef9c2` | `dev` |
 | 32 | 2026-08-21 | 完成 OpenAI 认证路由开关 | `f30cbabef3a6824c4a6f0f5ea427034e254db039`, `4dffa4d2ffeb443262c2d0a642aa8d4e0eb7b8b2` | `dev` |
 | 31 | 2026-08-21 | 报告快照配额与一周保留 | `bfcdc65`, `73ab2a6` | `refactor/neko-ui-port` |
