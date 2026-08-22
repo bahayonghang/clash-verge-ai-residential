@@ -59,7 +59,8 @@ grok_web_assets = true
 cursor_process_fallback = false
 # Claude Code 的辅助流量：安装、更新、文档和包管理；不包括核心推理流量。
 claude_code_auxiliary = false
-# 为已知 AI 进程添加进程名匹配规则的总开关。会扩大代理范围并启用进程查找。
+# 为已知 AI 进程添加进程名匹配规则的总开关。会扩大代理范围。
+# 查找进程由脚本写到配置顶层 find-process-mode: always，与本开关无关。
 ai_process_fallback = false
 # Anthropic 官方入站 IP 网段兜底：覆盖域名嗅探失败或应用直接连接 IP 的情形。
 anthropic_ip_fallback = true

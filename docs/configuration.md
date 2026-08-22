@@ -62,7 +62,7 @@ The optional `[routing]` and `[runtime]` TOML tables accept partial overrides. D
 | `routing.grok_web_assets` | `ROUTE_GROK_WEB_ASSETS` | `true` | When `true`, injects `DOMAIN-SUFFIX,grok.com`. When `false`, replaces that suffix with exact hosts `grok.com`, `cli-chat-proxy.grok.com`, and `code.grok.com`. `DOMAIN-SUFFIX,api.x.ai` stays under `routing.grok_core`. | Requires `routing.grok_core = true`. The `false` value leaves `assets.grok.com` on the airport upstream. |
 | `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | Adds Cursor process-level fallback rules. | Requires `routing.ai_process_fallback = true` and can capture non-AI requests. |
 | `routing.claude_code_auxiliary` | `ROUTE_CLAUDE_CODE_AUXILIARY` | `false` | Routes Claude Code installation, update, documentation, and package endpoints. | These are auxiliary rather than inference traffic. |
-| `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | Adds process-level fallbacks for known AI applications. | Can capture non-AI requests made by those processes. |
+| `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | Adds process-level fallbacks for known AI applications. | Can capture non-AI requests made by those processes. Process lookup is separate: the script always writes top-level `find-process-mode: always`. A value nested under `profile:` is ignored by the kernel. |
 | `routing.anthropic_ip_fallback` | `ENABLE_ANTHROPIC_IP_FALLBACK` | `true` | Routes Anthropic's official inbound IP ranges when domain matching is unavailable. | None. |
 | `routing.shared_realtime_infrastructure` | `ROUTE_SHARED_REALTIME_INFRASTRUCTURE` | `false` | Routes shared STUN/TURN infrastructure. | Can capture realtime traffic from unrelated applications. |
 | `routing.global_realtime_ports` | `ROUTE_GLOBAL_REALTIME_PORTS` | `false` | Adds broad realtime UDP-port rules. | Requires `routing.shared_realtime_infrastructure = true`; scope is intentionally broad. |
@@ -87,6 +87,7 @@ The detailed Chinese-language setup guide in [Local TOML configuration and sync]
 Recommended runtime settings:
 
 - Rule mode.
+- Put `find-process-mode: always` at the Mihomo YAML top level when Clash Verge Merge still nests it under `profile:`. The kernel does not read `profile.find-process-mode`.
 - TUN enabled when system-wide interception or process rules are required.
 - 在 Clash Verge Rev 的 TUN 设置中启用 DNS 劫持。TUN 已启用时，脚本还会补充 `any:53` 和 `tcp://any:53`。但当前版本会在全局脚本运行后，从设置页面恢复 `tun` 和 `ipv6`；这两个字段应以设置页面为准，并在该页面关闭 IPv6。
 - Browser private/secure DNS disabled when it bypasses the system resolver.

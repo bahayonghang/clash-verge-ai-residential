@@ -3,6 +3,7 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const childProcess = require("node:child_process");
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
@@ -1430,7 +1431,7 @@ test("严格 DNS 模式移除独立旁路，并保持私有域名使用系统 DN
   assert.equal(dns["prefer-h3"], false);
 });
 
-test("已开启 TUN 时只补齐 DNS 劫持；AI-only 模式不强制进程匹配", () => {
+test("已开启 TUN 时只补齐 DNS 劫持；AI-only 写顶层查找进程 always，不注入进程路由", () => {
   const config = configFixture({
     proxies: [airportNode("HK")],
     groups: [group("🚀节点选择", ["HK"])],
@@ -1440,7 +1441,70 @@ test("已开启 TUN 时只补齐 DNS 劫持；AI-only 模式不强制进程匹�
   const output = quietMain(config, "赔钱机场");
   assert.equal(output.tun["dns-hijack"].includes("any:53"), true);
   assert.equal(output.tun["dns-hijack"].includes("tcp://any:53"), true);
-  assert.equal(output["find-process-mode"], "off");
+  assert.equal(output["find-process-mode"], "always");
+  assert.deepEqual(
+    output.rules.filter((rule) => String(rule).startsWith("PROCESS-")),
+    []
+  );
+});
+
+test("profile 嵌套的 find-process-mode 仍写出顶层 always", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])]
+  });
+  config.profile = { "store-selected": true, "find-process-mode": "always" };
+  const output = quietMain(config, "赔钱机场");
+  assert.equal(output["find-process-mode"], "always");
+  assert.equal(output.profile["find-process-mode"], "always");
+});
+
+test("开启进程路由时注入 PROCESS 规则，查找进程仍为顶层 always", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "ai-residential-process-"));
+  try {
+    const patched = fs.readFileSync(scriptPath, "utf8").replace(
+      "const ENABLE_AI_PROCESS_FALLBACK = false;",
+      "const ENABLE_AI_PROCESS_FALLBACK = true;"
+    );
+    assert.match(patched, /const ENABLE_AI_PROCESS_FALLBACK = true;/);
+    const patchedPath = path.join(directory, "script.js");
+    fs.writeFileSync(patchedPath, patched, "utf8");
+    const probeSource = [
+      '"use strict";',
+      "const script = require(process.argv[1]);",
+      "const home = script.constants.HOME_PROXY_NAME;",
+      "const config = {",
+      "  proxies: [",
+      "    { name: home, type: 'socks5', server: 'home.example.test', port: 1080, username: 'home-user', password: 'home-pass', udp: true },",
+      "    { name: 'HK', type: 'ss', server: 'hk.example.test', port: 443, cipher: 'aes-128-gcm', password: 'airport-secret', udp: true }",
+      "  ],",
+      "  'proxy-groups': [{ name: '🚀节点选择', type: 'select', proxies: ['HK'] }],",
+      "  rules: [],",
+      "  dns: {}",
+      "};",
+      "const originalInfo = console.info;",
+      "const originalWarn = console.warn;",
+      "console.info = () => {};",
+      "console.warn = () => {};",
+      "let output;",
+      "try { output = script.main(config, '赔钱机场'); }",
+      "finally { console.info = originalInfo; console.warn = originalWarn; }",
+      "process.stdout.write(JSON.stringify({",
+      "  findProcessMode: output['find-process-mode'],",
+      "  processRules: output.rules.filter((rule) => String(rule).startsWith('PROCESS-'))",
+      "}));"
+    ].join("\n");
+    const probe = JSON.parse(childProcess.execFileSync(
+      process.execPath,
+      ["-e", probeSource, patchedPath],
+      { encoding: "utf8" }
+    ));
+    assert.equal(probe.findProcessMode, "always");
+    assert.ok(probe.processRules.length > 0);
+    assert.ok(probe.processRules.some((rule) => rule.startsWith("PROCESS-NAME")));
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test("最终注入规则不存在重复项", () => {

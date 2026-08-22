@@ -53,6 +53,12 @@
  * 运行环境：Clash Verge Rev 的 JavaScript 扩展脚本环境。
  * 入口签名：main(config, profileName)
  *
+ * 公开模板 clash-verge-ai-residential.js 必须保持 xxx 占位，不要把它
+ * 粘进 Clash Verge Global Extend Script。请执行 just render-local，
+ * 再粘贴生成的 clash-verge-ai-residential.local.js。占位脚本在没有
+ * 预置「家宽-SOCKS5」节点的 Profile 上会抛错；Verge 脚本控制台只显示
+ * Script execution failed。
+ *
  * @file clash-verge-ai-residential.js
  */
 
@@ -1666,10 +1672,9 @@ function hardenSniffer(config) {
 }
 
 function ensureProcessLookup(config) {
-  if (!ENABLE_AI_PROCESS_FALLBACK) return;
-  if (!config["find-process-mode"] || config["find-process-mode"] === "off") {
-    config["find-process-mode"] = "strict";
-  }
+  // 查找进程与进程路由分开：始终写顶层 always，供监控读取进程 identity。
+  // Clash Verge 写在 profile.find-process-mode 的值内核不用；保留该嵌套键不删。
+  config["find-process-mode"] = "always";
 }
 
 // ============================================================
@@ -1716,7 +1721,7 @@ function main(config, profileName) {
   // 7. 重建严格 DNS 路径。
   config.dns = buildDnsConfig(config.dns, upstreamName);
 
-  // 8. 加固用户已经启用的 TUN 与域名嗅探；进程级全量代理默认关闭。
+  // 8. 加固已启用的 TUN 与域名嗅探。查找进程写顶层 always；进程路由默认关闭。
   hardenTun(config);
   hardenSniffer(config);
   ensureProcessLookup(config);

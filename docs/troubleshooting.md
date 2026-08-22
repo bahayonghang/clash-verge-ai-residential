@@ -39,6 +39,8 @@ This can be expected under AI-only routing. Marketplace, update, download, media
 
 若 `repo42.cursor.sh` 仍命中 `AI-家宽`，先检查是否把 `routing.cursor_repository_indexing` 设为 `true`，以及订阅或 Merge 层是否残留用户自有的 `DOMAIN,repo42.cursor.sh,AI-家宽`。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`；该主机仍由 `cursor_core` 控制，Clash 域名规则无法在保留多数 Cursor API 的同时隔离这条回退路径。默认关闭索引家宽不能宣称已排除全部仓库上传。
 
+Clash Verge 脚本控制台只显示 `Script execution failed` 时，查看 `%APPDATA%\io.github.clash-verge-rev.clash-verge-rev\logs\latest.log`。`Script execution error: expected value at line 1 column 1` 表示 `main` 抛错后返回值为空。最常见原因是把公开模板 `clash-verge-ai-residential.js`（`HOME_PROXY_TEMPLATE` 为 `xxx`）粘进 Global Extend Script，而当前 Profile 没有预置 `家宽-SOCKS5` 节点。应粘贴 `just render-local` 生成的 `clash-verge-ai-residential.local.js`。
+
 意外命中的常见原因包括：
 
 - stale rules remain in a subscription, another script, or Global Extend Config (Merge);
