@@ -218,115 +218,153 @@ pub struct AppFacade {
     last_logged_session: Option<SessionStatus>,
 }
 
+/// 存储派生状态：打开主库后读取的全部启动值。`boot()` 与
+/// `reboot_storage()` 共用，保证还原 / 删除 / VACUUM 后的存储侧状态与
+/// 冷启动一致（`writer_epoch`、targets、告警规则与实例、设置）。
+struct StorageState {
+    storage: StorageCoordinator,
+    writer_epoch: u64,
+    settings: ControllerSettings,
+    wizard_complete: bool,
+    ui_locale: UiLocale,
+    ui_theme: UiTheme,
+    ui_font: UiFont,
+    ui_font_size: UiFontSize,
+    ui_density: UiDensity,
+    ui_sidebar_width: i32,
+    live_table_layout: LiveTableLayout,
+    engine: AccountingEngine,
+    alerts: AlertEngine,
+}
+
+impl StorageState {
+    fn open(db_path: &Path) -> Result<Self, StorageError> {
+        let mut storage = StorageCoordinator::open(db_path)?;
+        let writer_epoch = match storage.reserve_writer_epoch() {
+            Ok(value) => value,
+            Err(error) => {
+                app_log::emit(
+                    Level::Error,
+                    "writer_epoch_reserve",
+                    serde_json::json!({ "class": storage_error_class(&error) }),
+                );
+                return Err(error);
+            }
+        };
+        let settings: ControllerSettings = storage
+            .get_setting("controller")
+            .ok()
+            .flatten()
+            .and_then(|raw| serde_json::from_str(&raw).ok())
+            .unwrap_or_default();
+        let wizard_complete = storage
+            .get_setting("wizard_complete")
+            .ok()
+            .flatten()
+            .as_deref()
+            == Some("1");
+        let ui_locale = UiLocale::parse(storage.get_setting(SETTING_KEY).ok().flatten().as_deref());
+        let ui_theme = UiTheme::parse(
+            storage
+                .get_setting(THEME_SETTING_KEY)
+                .ok()
+                .flatten()
+                .as_deref(),
+        );
+        let ui_font = UiFont::parse(
+            storage
+                .get_setting(FONT_SETTING_KEY)
+                .ok()
+                .flatten()
+                .as_deref(),
+        );
+        let ui_font_size = UiFontSize::parse(
+            storage
+                .get_setting(FONT_SIZE_SETTING_KEY)
+                .ok()
+                .flatten()
+                .as_deref(),
+        );
+        let ui_density = UiDensity::parse(
+            storage
+                .get_setting(DENSITY_SETTING_KEY)
+                .ok()
+                .flatten()
+                .as_deref(),
+        );
+        let ui_sidebar_width = parse_sidebar_width(
+            storage
+                .get_setting(SIDEBAR_WIDTH_SETTING_KEY)
+                .ok()
+                .flatten()
+                .as_deref(),
+        );
+        let live_table_layout = parse_setting(
+            storage
+                .get_setting(LAYOUT_SETTING_KEY)
+                .ok()
+                .flatten()
+                .as_deref(),
+        );
+        let mut engine = AccountingEngine::new();
+        if let Ok((_, targets)) = storage.load_targets() {
+            if !targets.is_empty() {
+                engine.set_targets(targets);
+            }
+        }
+        let mut alerts = AlertEngine::new();
+        if let Ok(rules) = crate::c4::store::load_rules(storage.connection()) {
+            let _ = alerts.load_rules(rules);
+        }
+        if let Ok(instances) = crate::c4::store::load_instances(storage.connection()) {
+            for instance in instances {
+                alerts.restore_instance(instance);
+            }
+        }
+        Ok(Self {
+            storage,
+            writer_epoch,
+            settings,
+            wizard_complete,
+            ui_locale,
+            ui_theme,
+            ui_font,
+            ui_font_size,
+            ui_density,
+            ui_sidebar_width,
+            live_table_layout,
+            engine,
+            alerts,
+        })
+    }
+}
+
 impl AppFacade {
     pub fn boot(data_dir: impl Into<PathBuf>, args: &[String], claim: InstanceClaim) -> Self {
         let data_dir = data_dir.into();
         let db_path = data_dir.join("monitor.sqlite3");
         let desktop = DesktopRuntime::start(args, claim);
-        match StorageCoordinator::open(&db_path) {
-            Ok(mut storage) => {
+        match StorageState::open(&db_path) {
+            Ok(state) => {
                 app_log::emit(
                     Level::Info,
                     "storage_open",
                     serde_json::json!({ "class": "ok" }),
                 );
-                let writer_epoch = match storage.reserve_writer_epoch() {
-                    Ok(value) => value,
-                    Err(error) => {
-                        app_log::emit(
-                            Level::Error,
-                            "writer_epoch_reserve",
-                            serde_json::json!({ "class": storage_error_class(&error) }),
-                        );
-                        drop(storage);
-                        return Self::recovery_only(desktop, data_dir, db_path);
-                    }
-                };
-                let settings: ControllerSettings = storage
-                    .get_setting("controller")
-                    .ok()
-                    .flatten()
-                    .and_then(|raw| serde_json::from_str(&raw).ok())
-                    .unwrap_or_default();
-                let wizard_complete = storage
-                    .get_setting("wizard_complete")
-                    .ok()
-                    .flatten()
-                    .as_deref()
-                    == Some("1");
-                let ui_locale =
-                    UiLocale::parse(storage.get_setting(SETTING_KEY).ok().flatten().as_deref());
-                let ui_theme = UiTheme::parse(
-                    storage
-                        .get_setting(THEME_SETTING_KEY)
-                        .ok()
-                        .flatten()
-                        .as_deref(),
-                );
-                let ui_font = UiFont::parse(
-                    storage
-                        .get_setting(FONT_SETTING_KEY)
-                        .ok()
-                        .flatten()
-                        .as_deref(),
-                );
-                let ui_font_size = UiFontSize::parse(
-                    storage
-                        .get_setting(FONT_SIZE_SETTING_KEY)
-                        .ok()
-                        .flatten()
-                        .as_deref(),
-                );
-                let ui_density = UiDensity::parse(
-                    storage
-                        .get_setting(DENSITY_SETTING_KEY)
-                        .ok()
-                        .flatten()
-                        .as_deref(),
-                );
-                let ui_sidebar_width = parse_sidebar_width(
-                    storage
-                        .get_setting(SIDEBAR_WIDTH_SETTING_KEY)
-                        .ok()
-                        .flatten()
-                        .as_deref(),
-                );
-                let live_table_layout = parse_setting(
-                    storage
-                        .get_setting(LAYOUT_SETTING_KEY)
-                        .ok()
-                        .flatten()
-                        .as_deref(),
-                );
-                let mut engine = AccountingEngine::new();
-                if let Ok((_, targets)) = storage.load_targets() {
-                    if !targets.is_empty() {
-                        engine.set_targets(targets);
-                    }
-                }
-                let mut alerts = AlertEngine::new();
-                if let Ok(rules) = crate::c4::store::load_rules(storage.connection()) {
-                    let _ = alerts.load_rules(rules);
-                }
-                if let Ok(instances) = crate::c4::store::load_instances(storage.connection()) {
-                    for instance in instances {
-                        alerts.restore_instance(instance);
-                    }
-                }
                 let hub = MonitorHub::new();
-                if settings.address.trim().is_empty() {
+                if state.settings.address.trim().is_empty() {
                     hub.set_observation_phase(ObservationPhase::Unconfigured);
                 }
                 Self {
                     branch: BootBranch::NormalReady,
                     desktop,
                     hub,
-                    engine,
+                    engine: state.engine,
                     recovery: RecoveryFacade::open(&db_path),
-                    storage: Some(storage),
-                    settings,
+                    storage: Some(state.storage),
+                    settings: state.settings,
                     wizard: WizardState::default(),
-                    wizard_complete,
+                    wizard_complete: state.wizard_complete,
                     workflow: SettingsWorkflow::new(FakeCredentialStore::new(), true),
                     closes: CloseRegistry::new(),
                     operations: OperationRegistry::new(),
@@ -337,33 +375,29 @@ impl AppFacade {
                     snapshots: ReportSnapshotStore::open(&data_dir),
                     space: SpaceBudget::unlimited(),
                     raw_retain_days: RAW_RETAIN_DAYS_DEFAULT,
-                    alerts,
+                    alerts: state.alerts,
                     notify: Box::new(WindowsNotificationSink::new()),
-                    writer_epoch,
+                    writer_epoch: state.writer_epoch,
                     bundle_seq: 1,
                     controller_epoch_ready: false,
                     last_frame_utc: None,
                     metadata_coverage: crate::controller::MetadataCoverage::default(),
                     last_period_eval_utc: 0,
-                    ui_locale,
-                    ui_theme,
-                    ui_font,
-                    ui_font_size,
-                    ui_density,
-                    ui_sidebar_width,
-                    live_table_layout,
+                    ui_locale: state.ui_locale,
+                    ui_theme: state.ui_theme,
+                    ui_font: state.ui_font,
+                    ui_font_size: state.ui_font_size,
+                    ui_density: state.ui_density,
+                    ui_sidebar_width: state.ui_sidebar_width,
+                    live_table_layout: state.live_table_layout,
                     last_logged_session: None,
                 }
             }
             Err(error) => {
-                let class = match error {
-                    StorageError::Sqlite(_) => "sqlite",
-                    StorageError::Closed(_) => "closed",
-                };
                 app_log::emit(
                     Level::Error,
                     "storage_open",
-                    serde_json::json!({ "class": class }),
+                    serde_json::json!({ "class": storage_error_class(&error) }),
                 );
                 Self::recovery_only(desktop, data_dir, db_path)
             }
@@ -410,6 +444,36 @@ impl AppFacade {
             live_table_layout: LiveTableLayout::default(),
             last_logged_session: None,
         }
+    }
+
+    /// 还原 / 删除本地数据 / VACUUM 关闭旧连接后重跑存储侧启动。
+    /// 只在 `StorageState::open` 全部成功后才写 `self`；失败时 `self.storage`
+    /// 保持入口处已置的 `None`，由调用方决定进入 `RecoveryOnly`。
+    /// 不触碰 `workflow`（会话 secret 与 Windows 凭据适配）与 `session_status`
+    /// （采集会话不重连，下一轮 tick 自然更新）。
+    fn reboot_storage(&mut self) -> Result<(), StorageError> {
+        let db_path = self.data_dir.join("monitor.sqlite3");
+        let state = StorageState::open(&db_path)?;
+        self.storage = Some(state.storage);
+        self.writer_epoch = state.writer_epoch;
+        self.bundle_seq = 1;
+        self.settings = state.settings;
+        self.wizard_complete = state.wizard_complete;
+        self.ui_locale = state.ui_locale;
+        self.ui_theme = state.ui_theme;
+        self.ui_font = state.ui_font;
+        self.ui_font_size = state.ui_font_size;
+        self.ui_density = state.ui_density;
+        self.ui_sidebar_width = state.ui_sidebar_width;
+        self.live_table_layout = state.live_table_layout;
+        self.engine = state.engine;
+        self.alerts = state.alerts;
+        if self.settings.address.trim().is_empty() {
+            self.hub
+                .set_observation_phase(ObservationPhase::Unconfigured);
+        }
+        self.branch = BootBranch::NormalReady;
+        Ok(())
     }
 
     pub fn bootstrap(&self) -> Result<BootstrapDto, AppErrorDto> {
@@ -1523,18 +1587,18 @@ impl AppFacade {
             serde_json::json!({ "ok": restored.is_ok() }),
         );
         restored.map_err(map_report)?;
-        match StorageCoordinator::open(&live) {
-            Ok(storage) => {
-                self.storage = Some(storage);
-                self.branch = BootBranch::NormalReady;
-                Ok(())
+        match self.reboot_storage() {
+            Ok(()) => Ok(()),
+            Err(_) => {
+                self.branch = BootBranch::RecoveryOnly;
+                self.storage = None;
+                Err(self.err(
+                    "restore_reopen",
+                    "error.restore_reopen",
+                    "action.check_backup",
+                    true,
+                ))
             }
-            Err(_) => Err(self.err(
-                "restore_reopen",
-                "error.restore_reopen",
-                "action.check_backup",
-                true,
-            )),
         }
     }
 
@@ -1569,11 +1633,7 @@ impl AppFacade {
             details_redacted: "delete".into(),
         })?;
         if report.all_declared_ok {
-            let live = self.data_dir.join("monitor.sqlite3");
-            if let Ok(storage) = StorageCoordinator::open(&live) {
-                self.storage = Some(storage);
-                self.branch = BootBranch::NormalReady;
-            } else {
+            if self.reboot_storage().is_err() {
                 self.branch = BootBranch::RecoveryOnly;
             }
         } else {
@@ -1605,14 +1665,8 @@ impl AppFacade {
             "vacuum",
             serde_json::json!({ "ok": result.is_ok() }),
         );
-        match StorageCoordinator::open(&live) {
-            Ok(storage) => {
-                self.storage = Some(storage);
-                self.branch = BootBranch::NormalReady;
-            }
-            Err(_) => {
-                self.branch = BootBranch::RecoveryOnly;
-            }
+        if self.reboot_storage().is_err() {
+            self.branch = BootBranch::RecoveryOnly;
         }
         result.map_err(map_report)
     }
@@ -2223,6 +2277,219 @@ mod c2_facade_contract_tests {
         assert!(status.future);
         assert!(status.restore_available);
         assert!(facade.storage.is_none());
+    }
+
+    // ---- 08-22-storage-reboot-after-recovery：还原 / 删除 / VACUUM 后重跑存储侧启动 ----
+
+    fn threshold_rule(threshold: i64) -> crate::c4::types::AlertRule {
+        crate::c4::types::AlertRule {
+            rule_id: "rate-cat".into(),
+            version: 1,
+            enabled: true,
+            kind: crate::c4::types::AlertKind::Rate,
+            selector_kind: crate::c4::types::SelectorKind::PrimaryCategory,
+            selector_value: Some("家宽".into()),
+            direction: Some(crate::c4::types::AlertDirection::Download),
+            threshold_value: threshold,
+            recovery_threshold: Some(40),
+            period: None,
+            timezone: "UTC".into(),
+            cooldown_sec: 300,
+            quiet_start_min: None,
+            quiet_end_min: None,
+            created_utc: 0,
+            updated_utc: 0,
+        }
+    }
+
+    fn db_max_writer_epoch(facade: &AppFacade) -> i64 {
+        facade
+            .storage
+            .as_ref()
+            .expect("storage")
+            .connection()
+            .query_row(
+                "select coalesce(max(writer_epoch), 0) from committed_bundle",
+                [],
+                |row| row.get(0),
+            )
+            .expect("max epoch")
+    }
+
+    #[test]
+    fn restore_backup_reboots_writer_epoch_across_backup_history() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let epoch_before = facade.writer_epoch;
+        facade.ingest_snapshot(snapshot("pre-backup"), 1, 1);
+        facade.ingest_snapshot(snapshot("pre-backup"), 2, 2);
+        assert!(db_max_writer_epoch(&facade) > 0);
+
+        let backup_dir = tempdir().expect("backup dir");
+        let backup = backup_dir.path().join("backup.sqlite3");
+        facade.create_backup(&backup).expect("backup");
+
+        // 备份之后继续提交，使还原库内的 epoch 历史落后于当前。
+        facade.ingest_snapshot(snapshot("post-backup"), 3, 3);
+        facade.restore_backup(&backup).expect("restore");
+
+        assert!(facade.writer_epoch > epoch_before);
+        assert!(facade.writer_epoch as i64 > db_max_writer_epoch(&facade));
+        assert_eq!(facade.branch, BootBranch::NormalReady);
+        assert!(facade.storage.is_some());
+    }
+
+    #[test]
+    fn first_commit_after_restore_is_not_rejected_by_receipt() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.ingest_snapshot(snapshot("pre"), 1, 1);
+        let backup_dir = tempdir().expect("backup dir");
+        let backup = backup_dir.path().join("backup.sqlite3");
+        facade.create_backup(&backup).expect("backup");
+        facade.ingest_snapshot(snapshot("post"), 2, 2);
+        facade.restore_backup(&backup).expect("restore");
+
+        facade.ingest_snapshot(snapshot("after-restore"), 5, 5);
+        let health = &facade.hub.overview().health;
+        assert!(health.storage_ok, "health: {:?}", health.storage_reason);
+        assert_ne!(health.storage_reason.as_deref(), Some("payload_mismatch"));
+        assert_ne!(
+            health.storage_reason.as_deref(),
+            Some("retry_window_expired")
+        );
+    }
+
+    #[test]
+    fn restore_backup_recovers_alert_rules_from_backup_point() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.upsert_alert_rule(threshold_rule(100)).expect("R1");
+        let backup_dir = tempdir().expect("backup dir");
+        let backup = backup_dir.path().join("backup.sqlite3");
+        facade.create_backup(&backup).expect("backup");
+
+        let mut changed = threshold_rule(200);
+        changed.version = 2;
+        facade.upsert_alert_rule(changed).expect("R2");
+        let rate = |facade: &AppFacade| {
+            facade
+                .list_alert_rules()
+                .expect("rules")
+                .into_iter()
+                .find(|rule| rule.rule_id == "rate-cat")
+                .expect("rate-cat rule")
+        };
+        assert_eq!(rate(&facade).threshold_value, 200);
+
+        facade.restore_backup(&backup).expect("restore");
+        let restored = rate(&facade);
+        assert_eq!(restored.threshold_value, 100);
+        assert_eq!(restored.version, 1);
+    }
+
+    #[test]
+    fn user_vacuum_reboots_writer_epoch() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.ingest_snapshot(snapshot("pre"), 1, 1);
+        let before = facade.writer_epoch;
+        facade.run_user_vacuum().expect("vacuum");
+        assert!(facade.writer_epoch > before);
+        assert_eq!(facade.branch, BootBranch::NormalReady);
+        assert!(facade.storage.is_some());
+    }
+
+    #[test]
+    fn confirm_delete_reboots_storage_to_first_epoch() {
+        // confirm_delete 会删除真实日志目录；用环境变量指到临时目录。
+        let log_dir = tempdir().expect("log dir");
+        std::env::set_var("RESIDENTIAL_MONITOR_LOG_DIR", log_dir.path());
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.ingest_snapshot(snapshot("pre"), 1, 1);
+        assert!(facade.writer_epoch >= 1);
+
+        let report = facade
+            .confirm_delete_local_data(crate::identity::DELETE_CONFIRM_PHRASE)
+            .expect("delete");
+        assert!(report.all_declared_ok);
+
+        assert_eq!(facade.branch, BootBranch::NormalReady);
+        assert!(facade.storage.is_some());
+        assert_eq!(facade.settings, ControllerSettings::default());
+        // 库只含迁移种子规则（health-*），无用户规则。
+        let rule_ids: Vec<String> = facade
+            .list_alert_rules()
+            .expect("rules")
+            .into_iter()
+            .map(|rule| rule.rule_id)
+            .collect();
+        assert!(rule_ids.iter().all(|id| id.starts_with("health-")));
+        assert_eq!(facade.writer_epoch, 1);
+        std::env::remove_var("RESIDENTIAL_MONITOR_LOG_DIR");
+    }
+
+    #[test]
+    fn failed_reopen_after_restore_stays_recovery_only() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.ingest_snapshot(snapshot("pre"), 1, 1);
+        let bogus = dir.path().join("not-a-backup.sqlite3");
+        std::fs::write(&bogus, b"not a sqlite db").expect("bogus");
+
+        let result = facade.restore_backup(&bogus);
+        assert!(result.is_err());
+        assert_eq!(facade.branch, BootBranch::RecoveryOnly);
+        assert!(facade.storage.is_none());
+    }
+
+    #[test]
+    fn restore_backup_keeps_data_dir_and_launch_mode() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.ingest_snapshot(snapshot("pre"), 1, 1);
+        let backup_dir = tempdir().expect("backup dir");
+        let backup = backup_dir.path().join("backup.sqlite3");
+        facade.create_backup(&backup).expect("backup");
+        facade.ingest_snapshot(snapshot("post"), 2, 2);
+
+        let data_dir_before = facade.data_dir.clone();
+        let launch_before = facade.desktop.launch_mode;
+        facade.restore_backup(&backup).expect("restore");
+        assert_eq!(facade.data_dir, data_dir_before);
+        assert_eq!(facade.desktop.launch_mode, launch_before);
+    }
+
+    #[test]
+    fn restore_backup_keeps_workflow_and_session_secret() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let persistent_before = facade.workflow.persistent_available();
+        let settings = facade
+            .workflow
+            .save_secret(
+                &facade.settings.clone(),
+                "127.0.0.1:9090",
+                Some("session-secret"),
+                true,
+                false,
+            )
+            .expect("save secret");
+        facade.settings = settings;
+        facade.ingest_snapshot(snapshot("pre"), 1, 1);
+        let backup_dir = tempdir().expect("backup dir");
+        let backup = backup_dir.path().join("backup.sqlite3");
+        facade.create_backup(&backup).expect("backup");
+        facade.ingest_snapshot(snapshot("post"), 2, 2);
+
+        facade.restore_backup(&backup).expect("restore");
+        assert_eq!(facade.workflow.persistent_available(), persistent_before);
+        let secret = facade
+            .workflow
+            .resolve(&facade.settings.credential_target, "session")
+            .expect("resolve session secret");
+        assert_eq!(secret.as_header_bytes(), b"session-secret");
     }
 }
 
