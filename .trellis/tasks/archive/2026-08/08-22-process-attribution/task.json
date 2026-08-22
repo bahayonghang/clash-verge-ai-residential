@@ -1,0 +1,29 @@
+{
+  "id": "process-attribution",
+  "name": "process-attribution",
+  "title": "进程归因：查找进程与进程页",
+  "description": "让 Mihomo 顶层 always 查找进程；进程页可按家宽核算口径过滤、未知行可下钻、归因不可用时给出空态",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-22",
+  "completedAt": "2026-08-22",
+  "branch": null,
+  "base_branch": "dev",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-22-process-lookup-observation",
+    "08-22-process-page-capability"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
