@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "Rust 质量门。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "前端质量门。"}
+{"file": ".trellis/spec/residential-monitor/storage/index.md", "reason": "存储质量门。"}
+{"file": "PRODUCT.md", "reason": "未知不得填零；图表与表同口径。"}
