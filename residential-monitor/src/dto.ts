@@ -37,6 +37,34 @@ export type ObservationPhase =
   | "resyncRequired"
   | "decodeFailed";
 
+export interface MetadataCoverage {
+  connections: number;
+  hostPresent: number;
+  sniffHostOnly: number;
+  destinationIpOnly: number;
+  hostAbsent: number;
+  processPresent: number;
+  processPathOnly: number;
+  processAbsent: number;
+  chainsPresent: number;
+  providerChainsOnly: number;
+  chainsAbsent: number;
+}
+
+export const EMPTY_METADATA_COVERAGE: MetadataCoverage = {
+  connections: 0,
+  hostPresent: 0,
+  sniffHostOnly: 0,
+  destinationIpOnly: 0,
+  hostAbsent: 0,
+  processPresent: 0,
+  processPathOnly: 0,
+  processAbsent: 0,
+  chainsPresent: 0,
+  providerChainsOnly: 0,
+  chainsAbsent: 0
+};
+
 export interface LiveOverview {
   schemaVersion: number;
   observationPhase: ObservationPhase;
@@ -57,6 +85,7 @@ export interface LiveOverview {
   coverageKind: string | null;
   coverageReason: string | null;
   health: HealthView;
+  metadataCoverage: MetadataCoverage;
 }
 
 export interface LiveConnectionView {
@@ -214,19 +243,7 @@ export interface DiagnosticsSnapshot {
   alertActive: number;
   outboxBacklog: number;
   recentRedactedErrorClasses: string[];
-  metadataCoverage: {
-    connections: number;
-    hostPresent: number;
-    sniffHostOnly: number;
-    destinationIpOnly: number;
-    hostAbsent: number;
-    processPresent: number;
-    processPathOnly: number;
-    processAbsent: number;
-    chainsPresent: number;
-    providerChainsOnly: number;
-    chainsAbsent: number;
-  };
+  metadataCoverage: MetadataCoverage;
 }
 
 export interface NotifyCapability {

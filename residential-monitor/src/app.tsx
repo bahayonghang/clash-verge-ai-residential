@@ -215,7 +215,15 @@ function Workspace({
     case "rule":
     case "chain":
     case "process":
-      rest = <DimensionPage key={route} locale={locale} kind={route} timeRange={timeRange} />;
+      rest = (
+        <DimensionPage
+          key={route}
+          locale={locale}
+          kind={route}
+          timeRange={timeRange}
+          overview={overview}
+        />
+      );
       break;
     case "reports":
       rest = <ReportsPage locale={locale} jumpQuery={reportJump} />;

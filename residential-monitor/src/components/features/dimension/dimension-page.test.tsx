@@ -14,7 +14,8 @@ describe("聚合页骨架", () => {
     expect(app).toContain("case \"rule\"");
     expect(app).toContain("case \"chain\"");
     expect(app).toContain("case \"process\"");
-    expect(app).toContain("<DimensionPage key={route} locale={locale} kind={route} timeRange={timeRange} />");
+    expect(app).toContain("kind={route}");
+    expect(app).toContain("overview={overview}");
     expect(app.match(/DimensionPage/g)?.length).toBe(2);
     expect(page).toContain("kind: DimensionKind");
     expect(page).toContain("setSelected(null)");

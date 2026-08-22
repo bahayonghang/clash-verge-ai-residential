@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { ReportResult } from "../../../dto";
+import { EMPTY_METADATA_COVERAGE } from "../../../dto";
 import { RankBarCard } from "./rank-bar-card";
 
 function report(over: Partial<ReportResult> = {}): ReportResult {
@@ -127,5 +128,45 @@ describe("排行条形图能力说明", () => {
     expect(html).toContain("role=\"alert\"");
     expect(html).toContain("报告快照配额已满。");
     expect(html).not.toContain("data-capability-note");
+  });
+
+  it("进程维归因不可用时不画 100% 条，并展示当前帧覆盖", () => {
+    const html = renderToStaticMarkup(
+      <RankBarCard
+        locale="zh"
+        title="进程"
+        kind="process"
+        result={report({
+          attributionQuality: {
+            knownUpload: 0,
+            knownDownload: 0,
+            missingUpload: 1,
+            missingDownload: 2,
+            knownConnections: 0,
+            missingConnections: 1,
+            status: "unavailable"
+          },
+          rankings: [
+            {
+              identity: "__unknown__",
+              label: "未知",
+              upload: 1,
+              download: 2,
+              connectionCount: 1,
+              activeDurationSec: 1
+            }
+          ]
+        })}
+        loading={false}
+        errorZh={null}
+        topN={20}
+        onTopNChange={() => undefined}
+        coverage={{ ...EMPTY_METADATA_COVERAGE, connections: 126, processAbsent: 126 }}
+      />
+    );
+    expect(html).toContain("data-process-missing");
+    expect(html).toContain("find-process-mode: always");
+    expect(html).toContain("缺失 126");
+    expect(html).not.toContain("recharts");
   });
 });

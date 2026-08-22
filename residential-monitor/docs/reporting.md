@@ -6,7 +6,9 @@
 - 30 天 raw 支持组合过滤和下钻。13 个月精确层只支持单维。更老的 core daily 只保留总量、历史主分类和 coverage。
 - `granularity` 合法值为 `minute1` / `minute2` / `minute5` / `minute10` / `hour` / `day` / `month`。分钟档只在 raw 保留期内可用，不升粒度。
 - 主机 identity 优先级为 `metadata.host` → `sniffHost` → 目的 IP，写入 `connection_session.host`。三者都空时排名 `identity` 为 `__unknown__`；前端按维度显示「未归因主机」，不会把它与连接中、覆盖 gap 或未报告进程混为一谈。
-- `filters.host` 为 `__unknown__` 时匹配空 host，不把哨兵当域名绑定。主机页可对未知行下钻到规则 / 链路 / 进程。其它维度的未知行不参与下钻。
+- `filters.host` 为 `__unknown__` 时匹配空 host，不把哨兵当域名绑定。主机页可对未知行下钻到规则 / 链路 / 进程。
+- `filters.process` 为 `__unknown__` 时匹配空进程 identity。进程页可对未知行下钻到主机 / 链路。规则与链路维的未知行不参与下钻。
+- `filters.category` 为 `__residential__` 时匹配核算口径（`primary_category_id` 非空）。进程页「仅核算口径」开关使用该哨兵，不是某个重点目标名称。
 - 自动 DELETE 保持关闭，直到守恒门通过。
 
 ## Unknown 与维度归因

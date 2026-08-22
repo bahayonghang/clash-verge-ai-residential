@@ -9,6 +9,12 @@ use rusqlite::types::Value;
 /// 维度值缺失时排名 identity 的哨兵。真实 `dimension_dict.value` 不得等于该字面量。
 pub const UNKNOWN_IDENTITY: &str = "__unknown__";
 
+/// 核算口径过滤哨兵：命中任一重点目标（`primary_category_id` 非空）。不是字典值。
+pub const RESIDENTIAL_ACCOUNTING_FILTER: &str = "__residential__";
+
+/// 进程 identity 缺失。与字段归因、未知下钻共用。
+pub const PROCESS_MISSING_SQL: &str = "a.process_id is null or not exists (select 1 from dimension_dict q where q.dimension_kind='process' and q.dimension_id=a.process_id)";
+
 /// SQL 侧规则聚合键：多跳取顶层策略组，单跳取原始 rule，皆空取 DIRECT。
 /// 与 `build_rule_name` 在「单跳且有 payload」时不同；聚合路径只用本定义。
 pub const RULE_KEY_SQL: &str = "coalesce(last_chain_hop(a.chain_key), (select value from dimension_dict where dimension_kind = 'rule' and dimension_id = a.rule_id), 'DIRECT')";
@@ -320,8 +326,14 @@ pub fn filter_clause(filters: &ReportFilters) -> (String, Vec<String>) {
         }
     }
     if let Some(value) = &filters.process {
-        fragment.push_str(" and a.process_id = (select dimension_id from dimension_dict where dimension_kind = 'process' and value = ?)");
-        params.push(value.clone());
+        if value == UNKNOWN_IDENTITY {
+            fragment.push_str(" and (");
+            fragment.push_str(PROCESS_MISSING_SQL);
+            fragment.push(')');
+        } else {
+            fragment.push_str(" and a.process_id = (select dimension_id from dimension_dict where dimension_kind = 'process' and value = ?)");
+            params.push(value.clone());
+        }
     }
     if let Some(value) = &filters.rule {
         fragment.push_str(" and ");
@@ -338,8 +350,12 @@ pub fn filter_clause(filters: &ReportFilters) -> (String, Vec<String>) {
         params.push(value.clone());
     }
     if let Some(value) = &filters.category {
-        fragment.push_str(" and a.primary_category_id = (select dimension_id from dimension_dict where dimension_kind = 'category' and value = ?)");
-        params.push(value.clone());
+        if value == RESIDENTIAL_ACCOUNTING_FILTER {
+            fragment.push_str(" and a.primary_category_id is not null");
+        } else {
+            fragment.push_str(" and a.primary_category_id = (select dimension_id from dimension_dict where dimension_kind = 'category' and value = ?)");
+            params.push(value.clone());
+        }
     }
     (fragment, params)
 }
@@ -352,8 +368,12 @@ pub fn dimension_filter_clause(
     let mut fragment = String::new();
     let mut params = Vec::new();
     if let Some(value) = &filters.category {
-        fragment.push_str(" and h.category_id = (select dimension_id from dimension_dict where dimension_kind = 'category' and value = ?)");
-        params.push(value.clone());
+        if value == RESIDENTIAL_ACCOUNTING_FILTER {
+            fragment.push_str(" and h.category_id != 0");
+        } else {
+            fragment.push_str(" and h.category_id = (select dimension_id from dimension_dict where dimension_kind = 'category' and value = ?)");
+            params.push(value.clone());
+        }
     }
     match grouping {
         DimensionKind::Host => {
@@ -394,7 +414,7 @@ fn append_dim_identity(
     let Some(value) = value else {
         return;
     };
-    if value == UNKNOWN_IDENTITY && kind == "host" {
+    if value == UNKNOWN_IDENTITY && matches!(kind, "host" | "process") {
         fragment.push_str(" and h.dimension_id = 0");
         return;
     }
@@ -484,6 +504,43 @@ mod sql_corpus_tests {
             Some(&UNKNOWN_IDENTITY.to_string()),
         );
         assert_eq!(dim, " and h.dimension_id = 0");
+        assert!(dim_params.is_empty());
+    }
+
+    #[test]
+    fn unknown_process_filter_matches_missing_process_without_binding_sentinel() {
+        let filters = ReportFilters {
+            process: Some(UNKNOWN_IDENTITY.into()),
+            ..ReportFilters::default()
+        };
+        let (fragment, params) = filter_clause(&filters);
+        assert!(fragment.contains(PROCESS_MISSING_SQL));
+        assert!(!fragment.contains("a.process_id = (select"));
+        assert!(params.is_empty());
+        let mut dim = String::new();
+        let mut dim_params = Vec::new();
+        append_dim_identity(
+            &mut dim,
+            &mut dim_params,
+            "process",
+            Some(&UNKNOWN_IDENTITY.to_string()),
+        );
+        assert_eq!(dim, " and h.dimension_id = 0");
+        assert!(dim_params.is_empty());
+    }
+
+    #[test]
+    fn residential_accounting_filter_matches_non_null_category() {
+        let filters = ReportFilters {
+            category: Some(RESIDENTIAL_ACCOUNTING_FILTER.into()),
+            ..ReportFilters::default()
+        };
+        let (fragment, params) = filter_clause(&filters);
+        assert!(fragment.contains("a.primary_category_id is not null"));
+        assert!(!fragment.contains("dimension_dict"));
+        assert!(params.is_empty());
+        let (dim, dim_params) = dimension_filter_clause(&filters, DimensionKind::Process);
+        assert!(dim.contains("h.category_id != 0"));
         assert!(dim_params.is_empty());
     }
 

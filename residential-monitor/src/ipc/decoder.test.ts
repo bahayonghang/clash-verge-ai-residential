@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { EMPTY_METADATA_COVERAGE } from "../dto";
 import { decodeMonitorMessage, decodeOverview } from "./decoder";
 
 const overview = {
@@ -20,7 +21,8 @@ const overview = {
   lastSampleUtc: 1,
   coverageKind: null,
   coverageReason: null,
-  health: { session: "connected", storageOk: true, storageReason: null }
+  health: { session: "connected", storageOk: true, storageReason: null },
+  metadataCoverage: EMPTY_METADATA_COVERAGE
 };
 
 describe("decodeMonitorMessage", () => {

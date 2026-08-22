@@ -147,7 +147,8 @@ export function RankTable({
                 const label = formatRankLabel(row.identity, row.label, unknown, missing);
                 const unknownRow = isUnknownIdentity(row.identity);
                 const share = rankingShare(row.download, totals?.download ?? 0);
-                const canDrill = crossDimension && (!unknownRow || kind === "host");
+                const canDrill =
+                  crossDimension && (!unknownRow || kind === "host" || kind === "process");
                 return (
                   <tr
                     key={row.identity}

@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { LiveOverview } from "../../../dto";
+import { EMPTY_METADATA_COVERAGE } from "../../../dto";
 import { SCHEMA_VERSION } from "../../../dto";
 import { categoryRows } from "../../../format/overview";
 import { CaliberGrid } from "./caliber-grid";
@@ -26,6 +27,7 @@ function overview(over: Partial<LiveOverview> = {}): LiveOverview {
     coverageKind: null,
     coverageReason: null,
     health: { session: "connected", storageOk: true, storageReason: null },
+    metadataCoverage: EMPTY_METADATA_COVERAGE,
     ...over
   };
 }

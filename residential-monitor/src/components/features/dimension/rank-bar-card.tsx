@@ -1,4 +1,4 @@
-import type { ReportResult } from "../../../dto";
+import type { MetadataCoverage, ReportResult } from "../../../dto";
 import {
   formatRankLabel,
   missingDimensionLabel,
@@ -9,7 +9,7 @@ import {
 } from "../../../format/rank";
 import { formatBytes } from "../../../format/units";
 import { t, type UiLocale } from "../../../i18n";
-import { cn } from "../../../lib/utils";
+import { cn, formatTemplate } from "../../../lib/utils";
 import { RankBar } from "../../charts/rank-bar";
 import { OverviewCard } from "../../common/overview-card";
 import { Button } from "../../ui/button";
@@ -24,7 +24,8 @@ export function RankBarCard({
   loading,
   errorZh,
   topN,
-  onTopNChange
+  onTopNChange,
+  coverage
 }: {
   locale: UiLocale;
   title: string;
@@ -34,9 +35,12 @@ export function RankBarCard({
   errorZh: string | null;
   topN: TopNOption;
   onTopNChange: (next: TopNOption) => void;
+  coverage?: MetadataCoverage;
 }) {
   const unknown = t(locale, "common.unknown");
   const exactTopN = result?.drilldownCapability.exactTopN !== false;
+  const hideProcessBar =
+    kind === "process" && result?.attributionQuality.status === "unavailable";
   const noteZh = resolvedCapabilityNote(
     locale,
     result?.drilldownCapability.noteZh,
@@ -87,7 +91,23 @@ export function RankBarCard({
         </p>
       ) : null}
       <AttributionQualityNote locale={locale} result={result} />
-      {exactTopN ? (
+      {hideProcessBar ? (
+        <div data-process-missing="1" className="space-y-2 text-sm text-muted-foreground">
+          <p>{t(locale, "dimension.process_missing.body")}</p>
+          {coverage ? (
+            <p>
+              {formatTemplate(t(locale, "dimension.process_missing.coverage"), {
+                present: coverage.processPresent,
+                pathOnly: coverage.processPathOnly,
+                absent: coverage.processAbsent,
+                total: coverage.connections
+              })}
+            </p>
+          ) : null}
+          <p>{t(locale, "dimension.process_missing.next")}</p>
+        </div>
+      ) : null}
+      {exactTopN && !hideProcessBar ? (
         <RankBar
           locale={locale}
           data={data}

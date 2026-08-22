@@ -96,11 +96,28 @@ describe("排名表未知行与能力", () => {
     expect(html).not.toContain("未知行不能下钻");
   });
 
-  it("非主机维 __unknown__ 无下钻入口", () => {
+  it("进程维 __unknown__ 可下钻", () => {
     const html = renderToStaticMarkup(
       <RankTable
         locale="zh"
         kind="process"
+        result={report()}
+        loading={false}
+        errorZh={null}
+        selectedIdentity={null}
+        onSelect={() => undefined}
+      />
+    );
+    expect(html).toMatch(/data-unknown="1"[\s\S]*data-drill="1"/);
+    expect(html).toContain("控制器未报告进程");
+    expect(html).not.toContain("未知行不能下钻");
+  });
+
+  it("规则维 __unknown__ 无下钻入口", () => {
+    const html = renderToStaticMarkup(
+      <RankTable
+        locale="zh"
+        kind="rule"
         result={report()}
         loading={false}
         errorZh={null}

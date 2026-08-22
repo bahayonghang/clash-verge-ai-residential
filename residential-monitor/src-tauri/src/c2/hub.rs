@@ -2,7 +2,7 @@
 
 use crate::accounting::AccountingBatch;
 use crate::c2::contract::{COALESCE_MAX_BYTES, COALESCE_MAX_KEYS, SCHEMA_VERSION};
-use crate::controller::SessionStatus;
+use crate::controller::{MetadataCoverage, SessionStatus};
 use crate::live::{LiveProjection, MonitorMessage};
 use crate::storage::StorageHealth;
 use serde::Serialize;
@@ -67,6 +67,7 @@ pub struct LiveOverview {
     pub coverage_kind: Option<String>,
     pub coverage_reason: Option<String>,
     pub health: HealthView,
+    pub metadata_coverage: MetadataCoverage,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -521,6 +522,7 @@ fn empty_overview(status: SessionStatus) -> LiveOverview {
         coverage_kind: None,
         coverage_reason: None,
         health: health_from(status, None),
+        metadata_coverage: MetadataCoverage::default(),
     }
 }
 
@@ -567,7 +569,37 @@ fn overview_from(
         coverage_kind: coverage.map(|item| item.kind.to_string()),
         coverage_reason: coverage.map(|item| item.reason.to_string()),
         health,
+        metadata_coverage: coverage_from_live_rows(rows),
     }
+}
+
+fn coverage_from_live_rows(rows: &BTreeMap<String, LiveConnectionView>) -> MetadataCoverage {
+    let mut coverage = MetadataCoverage {
+        connections: rows.len() as u64,
+        ..MetadataCoverage::default()
+    };
+    for row in rows.values() {
+        if row.host.is_some() {
+            coverage.host_present += 1;
+        } else if row.destination_ip.is_some() {
+            coverage.destination_ip_only += 1;
+        } else {
+            coverage.host_absent += 1;
+        }
+        if row.process_name.is_some() {
+            coverage.process_present += 1;
+        } else if row.process_path.is_some() {
+            coverage.process_path_only += 1;
+        } else {
+            coverage.process_absent += 1;
+        }
+        if !row.chains.is_empty() {
+            coverage.chains_present += 1;
+        } else {
+            coverage.chains_absent += 1;
+        }
+    }
+    coverage
 }
 
 fn phase_from_status(status: SessionStatus) -> ObservationPhase {
@@ -737,6 +769,8 @@ mod channel_contract_tests {
         assert_eq!(actual, subscription_id);
         assert_eq!(snapshot.observation_phase, ObservationPhase::Current);
         assert_eq!(snapshot.last_sample_utc, Some(100));
+        assert_eq!(snapshot.metadata_coverage.connections, 0);
+        assert_eq!(snapshot.metadata_coverage.process_absent, 0);
     }
 
     #[test]

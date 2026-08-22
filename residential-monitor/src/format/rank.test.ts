@@ -38,4 +38,11 @@ describe("rank helpers", () => {
     expect(filtersForDrilldown("host", UNKNOWN_RANK_IDENTITY).host).toBe(UNKNOWN_RANK_IDENTITY);
     expect(filtersForDrilldown("rule", UNKNOWN_RANK_IDENTITY).rule).toBeNull();
   });
+
+  it("process unknown drilldown sets process sentinel", () => {
+    expect(filtersForDrilldown("process", UNKNOWN_RANK_IDENTITY).process).toBe(
+      UNKNOWN_RANK_IDENTITY
+    );
+    expect(filtersForDrilldown("chain", UNKNOWN_RANK_IDENTITY).chain).toBeNull();
+  });
 });

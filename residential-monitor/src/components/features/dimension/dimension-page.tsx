@@ -2,11 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Cpu, Globe, Link2, Route as RouteIcon, type LucideIcon } from "lucide-react";
 import {
   drilldownTargets,
+  emptyReportFilters,
   filtersForDrilldown,
   isUnknownIdentity,
+  RESIDENTIAL_ACCOUNTING_FILTER,
   type DimensionKind,
   type TopNOption
 } from "../../../format/rank";
+import type { LiveOverview } from "../../../dto";
 import { t, type UiLocale } from "../../../i18n";
 import type { TimeRange } from "../../../lib/time-range";
 import { granularityForTimeRange, useReport } from "../../../hooks/use-report";
@@ -24,14 +27,17 @@ const KIND_ICON: Record<DimensionKind, LucideIcon> = {
 export function DimensionPage({
   locale,
   kind,
-  timeRange
+  timeRange,
+  overview
 }: {
   locale: UiLocale;
   kind: DimensionKind;
   timeRange: TimeRange;
+  overview: LiveOverview;
 }) {
   const [topN, setTopN] = useState<TopNOption>(20);
   const [selected, setSelected] = useState<{ identity: string; label: string } | null>(null);
+  const [residentialOnly, setResidentialOnly] = useState(false);
   const targets = drilldownTargets(kind);
   const [targetKind, setTargetKind] = useState<DimensionKind>(targets[0]);
   const granularity = granularityForTimeRange(timeRange.preset);
@@ -39,21 +45,32 @@ export function DimensionPage({
   useEffect(() => {
     setSelected(null);
     setTargetKind(drilldownTargets(kind)[0]);
+    setResidentialOnly(false);
   }, [kind]); // kind 变化时清掉上一维选中行，避免 filters 串维。
+  const parentFilters = useMemo(() => {
+    if (kind !== "process" || !residentialOnly) {
+      return undefined;
+    }
+    return { ...emptyReportFilters(), category: RESIDENTIAL_ACCOUNTING_FILTER };
+  }, [kind, residentialOnly]);
   const parent = useReport({
     grouping: kind,
     timeRange,
     granularity,
-    topN
+    topN,
+    filters: parentFilters
   });
-  const drillFilters = useMemo(
-    () => (selected ? filtersForDrilldown(kind, selected.identity) : undefined),
-    [kind, selected]
-  );
+  const drillFilters = useMemo(() => {
+    if (!selected) {
+      return undefined;
+    }
+    const base = parentFilters ?? emptyReportFilters();
+    return filtersForDrilldown(kind, selected.identity, base);
+  }, [kind, parentFilters, selected]);
   const canDrill =
     parent.result?.drilldownCapability.crossDimension === true &&
     selected !== null &&
-    (!isUnknownIdentity(selected.identity) || kind === "host");
+    (!isUnknownIdentity(selected.identity) || kind === "host" || kind === "process");
   const drill = useReport({
     grouping: targetKind,
     timeRange,
@@ -67,9 +84,22 @@ export function DimensionPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Icon className="h-5 w-5 text-muted-foreground" />
-        <h1 className="text-lg font-semibold">{title}</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Icon className="h-5 w-5 text-muted-foreground" />
+          <h1 className="text-lg font-semibold">{title}</h1>
+        </div>
+        {kind === "process" ? (
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              data-residential-only="1"
+              checked={residentialOnly}
+              onChange={(event) => setResidentialOnly(event.target.checked)}
+            />
+            {t(locale, "dimension.residential_only")}
+          </label>
+        ) : null}
       </div>
       <RankBarCard
         locale={locale}
@@ -80,6 +110,7 @@ export function DimensionPage({
         errorZh={parent.errorZh}
         topN={topN}
         onTopNChange={setTopN}
+        coverage={overview.metadataCoverage}
       />
       <RankTable
         locale={locale}
@@ -89,7 +120,7 @@ export function DimensionPage({
         errorZh={parent.errorZh}
         selectedIdentity={selected?.identity ?? null}
         onSelect={(identity, label) => {
-          if (isUnknownIdentity(identity) && kind !== "host") {
+          if (isUnknownIdentity(identity) && kind !== "host" && kind !== "process") {
             return;
           }
           setSelected({ identity, label });

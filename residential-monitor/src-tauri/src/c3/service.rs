@@ -200,7 +200,7 @@ fn load_raw_attribution_quality(
 ) -> Result<AttributionQuality, ReportError> {
     let missing = match query.grouping {
         DimensionKind::Host => "coalesce(s.host, '') = ''",
-        DimensionKind::Process => "a.process_id is null or not exists (select 1 from dimension_dict q where q.dimension_kind='process' and q.dimension_id=a.process_id)",
+        DimensionKind::Process => crate::c3::sql::PROCESS_MISSING_SQL,
         DimensionKind::Rule => "0",
         DimensionKind::Chain => "chain_identity(a.chain_key) is null",
         DimensionKind::Network => "a.network_id is null or not exists (select 1 from dimension_dict q where q.dimension_kind='network' and q.dimension_id=a.network_id)",
@@ -992,7 +992,7 @@ mod dimension_capability_tests {
     use crate::c3::query::Granularity;
     use crate::c3::retention::{RetentionMode, RetentionService};
     use crate::c3::space::SpaceBudget;
-    use crate::c3::sql::UNKNOWN_IDENTITY;
+    use crate::c3::sql::{RESIDENTIAL_ACCOUNTING_FILTER, UNKNOWN_IDENTITY};
     use crate::storage::StorageCoordinator;
     use tempfile::tempdir;
 
@@ -1239,6 +1239,58 @@ mod dimension_capability_tests {
         assert_eq!(
             unavailable.attribution_quality.missing_download,
             unavailable.totals.download
+        );
+    }
+
+    #[test]
+    fn unknown_process_filter_keeps_only_missing_process_sessions() {
+        let (_dir, coordinator, mut store) = setup();
+        coordinator
+            .connection()
+            .execute(
+                "update connection_session_attr set process_id = null where session_pk = 2",
+                [],
+            )
+            .expect("one process missing");
+        let mut query = base_query();
+        query.grouping = DimensionKind::Host;
+        query.filters.process = Some(UNKNOWN_IDENTITY.into());
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        assert_eq!(result.totals.upload, 20);
+        assert_eq!(result.totals.download, 60);
+        assert_eq!(result.totals.connection_count, 1);
+        assert_eq!(
+            result.attribution_quality.known_upload + result.attribution_quality.missing_upload,
+            result.totals.upload
+        );
+    }
+
+    #[test]
+    fn residential_accounting_filter_keeps_tagged_sessions() {
+        let (_dir, coordinator, mut store) = setup();
+        coordinator
+            .connection()
+            .execute(
+                "update connection_session_attr set primary_category_id = null where session_pk = 2",
+                [],
+            )
+            .expect("untag one session");
+        let mut global = base_query();
+        global.grouping = DimensionKind::Process;
+        let all = run_now(&coordinator, &mut store, global, 3_600);
+        let mut query = base_query();
+        query.grouping = DimensionKind::Process;
+        query.filters.category = Some(RESIDENTIAL_ACCOUNTING_FILTER.into());
+        let filtered = run_now(&coordinator, &mut store, query, 3_600);
+        assert!(filtered.totals.download < all.totals.download);
+        assert_eq!(filtered.totals.download, all.totals.download - 60);
+        assert_eq!(
+            filtered
+                .series
+                .iter()
+                .map(|point| point.download)
+                .sum::<i64>(),
+            filtered.totals.download
         );
     }
 

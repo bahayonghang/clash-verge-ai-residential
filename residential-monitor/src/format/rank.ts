@@ -3,6 +3,9 @@ import { t, type UiLocale } from "../i18n";
 
 export const UNKNOWN_RANK_IDENTITY = "__unknown__";
 
+/** 核算口径过滤哨兵：命中任一重点目标。不是字典值。 */
+export const RESIDENTIAL_ACCOUNTING_FILTER = "__residential__";
+
 export type DimensionKind = "host" | "process" | "rule" | "chain";
 
 export type TopSort = "traffic" | "connections";
@@ -97,6 +100,9 @@ export function filtersForDrilldown(
   if (isUnknownIdentity(identity)) {
     if (kind === "host") {
       return { ...base, host: identity };
+    }
+    if (kind === "process") {
+      return { ...base, process: identity };
     }
     return { ...base };
   }

@@ -3,6 +3,7 @@ import {
   type AlertSummary,
   type HealthView,
   type LiveOverview,
+  type MetadataCoverage,
   type MonitorStreamMessage,
   type ObservationPhase
 } from "../dto";
@@ -26,7 +27,22 @@ const OVERVIEW_FIELDS = [
   "lastSampleUtc",
   "coverageKind",
   "coverageReason",
-  "health"
+  "health",
+  "metadataCoverage"
+] as const;
+
+const COVERAGE_FIELDS = [
+  "connections",
+  "hostPresent",
+  "sniffHostOnly",
+  "destinationIpOnly",
+  "hostAbsent",
+  "processPresent",
+  "processPathOnly",
+  "processAbsent",
+  "chainsPresent",
+  "providerChainsOnly",
+  "chainsAbsent"
 ] as const;
 
 const OBSERVATION_PHASES = new Set<ObservationPhase>([
@@ -99,6 +115,33 @@ function decodeHealth(value: unknown): HealthView {
   };
 }
 
+function decodeMetadataCoverage(value: unknown): MetadataCoverage {
+  if (!isRecord(value)) {
+    throw new Error("metadataCoverage 必须是对象");
+  }
+  for (const field of COVERAGE_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(value, field)) {
+      throw new Error(`metadataCoverage 字段缺失: ${field}`);
+    }
+  }
+  return {
+    connections: requiredNumber(value.connections, "metadataCoverage.connections"),
+    hostPresent: requiredNumber(value.hostPresent, "metadataCoverage.hostPresent"),
+    sniffHostOnly: requiredNumber(value.sniffHostOnly, "metadataCoverage.sniffHostOnly"),
+    destinationIpOnly: requiredNumber(value.destinationIpOnly, "metadataCoverage.destinationIpOnly"),
+    hostAbsent: requiredNumber(value.hostAbsent, "metadataCoverage.hostAbsent"),
+    processPresent: requiredNumber(value.processPresent, "metadataCoverage.processPresent"),
+    processPathOnly: requiredNumber(value.processPathOnly, "metadataCoverage.processPathOnly"),
+    processAbsent: requiredNumber(value.processAbsent, "metadataCoverage.processAbsent"),
+    chainsPresent: requiredNumber(value.chainsPresent, "metadataCoverage.chainsPresent"),
+    providerChainsOnly: requiredNumber(
+      value.providerChainsOnly,
+      "metadataCoverage.providerChainsOnly"
+    ),
+    chainsAbsent: requiredNumber(value.chainsAbsent, "metadataCoverage.chainsAbsent")
+  };
+}
+
 export function decodeOverview(value: unknown): LiveOverview {
   if (!isRecord(value)) {
     throw new Error("概览必须是对象");
@@ -137,7 +180,8 @@ export function decodeOverview(value: unknown): LiveOverview {
     coverageReason: value.coverageReason === null
       ? null
       : requiredString(value.coverageReason, "coverageReason"),
-    health: decodeHealth(value.health)
+    health: decodeHealth(value.health),
+    metadataCoverage: decodeMetadataCoverage(value.metadataCoverage)
   };
 }
 

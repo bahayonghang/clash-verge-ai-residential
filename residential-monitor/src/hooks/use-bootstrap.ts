@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
+  EMPTY_METADATA_COVERAGE,
   SCHEMA_VERSION,
   type BootstrapDto,
   type ControllerSettings,
@@ -98,7 +99,8 @@ export function previewBootstrap(): BootstrapDto {
       lastSampleUtc: null,
       coverageKind: null,
       coverageReason: null,
-      health: { session: "no_data", storageOk: true, storageReason: null }
+      health: { session: "no_data", storageOk: true, storageReason: null },
+      metadataCoverage: EMPTY_METADATA_COVERAGE
     },
     settings: {
       transport: "tcp",

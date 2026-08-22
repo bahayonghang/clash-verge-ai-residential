@@ -7,6 +7,7 @@ import {
   visibleRows
 } from "./reducer";
 import type { LiveConnectionView, LiveOverview, MonitorStreamMessage } from "../dto";
+import { EMPTY_METADATA_COVERAGE } from "../dto";
 
 const snapshot = decodeOverview({
   schemaVersion: 1,
@@ -27,7 +28,8 @@ const snapshot = decodeOverview({
   lastSampleUtc: 1,
   coverageKind: null,
   coverageReason: null,
-  health: { session: "connected", storageOk: true, storageReason: null }
+  health: { session: "connected", storageOk: true, storageReason: null },
+  metadataCoverage: EMPTY_METADATA_COVERAGE
 });
 
 function bootstrap(id: number, baseSeq: number): MonitorStreamMessage {
