@@ -12,9 +12,11 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - C3 materializes `process`, `rule_group`, `chain`, and `network` dimension rows in addition to `host`. Category ranking on the dimension tier groups `category_id` and keeps `dimension_kind = host` so traffic is not counted five times.
 - Ranking identity `__unknown__` marks a missing dimension value. The row stays in the ranking so rank sums can match totals.
 - Host identity uses `metadata.host`, then `sniffHost`, then destination IP. The host page can inspect remaining `__unknown__` rows by rule, chain, and process.
+- Process unknown rows can drill to host and chain. The process page can filter by residential accounting caliber. When process attribution is unavailable the rank bar is replaced by a missing-field note and current-frame process coverage.
 
 ### Changed
 
+- The extension script writes top-level `find-process-mode: always` even when `routing.ai_process_fallback` is false. It still does not inject `PROCESS-NAME` / `PROCESS-PATH` rules unless that switch is on. A Clash Verge value nested under `profile:` does not reach the kernel.
 - Replaced the vanilla TypeScript + Catppuccin shell with a React + Tailwind desktop UI. Navigation is ten routes. Overview, live connections, and host / rule / chain / process pages ship in the new shell. `src/main.ts` and `src/styles.css` are removed.
 - Residential classification lives in one module with two named functions. Accounting uses exact target match. Live “residential only” still matches a configured target or a node name that contains 家宽.
 - `ReportFilters` now apply to raw totals, series, and rankings, including category. `filters.chain` matches the last chain hop. `filters.rule` matches the SQL rule key.
