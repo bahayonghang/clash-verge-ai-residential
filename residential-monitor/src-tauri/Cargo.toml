@@ -1,0 +1,61 @@
+[package]
+name = "residential-monitor"
+version = "0.2.0"
+description = "家宽流量监控"
+authors = ["lyh"]
+edition = "2021"
+license = "MIT"
+default-run = "residential-monitor"
+
+[lib]
+name = "residential_monitor_lib"
+# Windows 桌面只要 rlib。cdylib 会让 MSVC 打印「正在创建库」，rustc 记成 linker_messages。
+crate-type = ["rlib"]
+
+[[bin]]
+name = "residential-monitor"
+path = "src/main.rs"
+
+[[bin]]
+name = "monitor-bench"
+path = "src/bin/monitor-bench.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+clap = { version = "4", features = ["derive"] }
+hex = "0.4"
+http = "1"
+http-body-util = "0.1"
+hyper = { version = "1", features = ["client", "http1", "server"] }
+hyper-util = { version = "0.1", features = ["http1", "server", "tokio"] }
+rand = { version = "0.9", features = ["small_rng"] }
+rusqlite = { version = "0.40", features = ["bundled", "backup", "hooks", "modern_sqlite", "functions"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"
+thiserror = "2"
+tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "time"] }
+tokio-tungstenite = "0.27"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_Security_Credentials",
+  "Win32_System_Memory",
+  "Win32_System_Threading"
+] }
+
+[dev-dependencies]
+futures-util = { version = "0.3", default-features = false, features = ["sink"] }
+tempfile = "3"
+
+[profile.release]
+lto = false
+codegen-units = 16

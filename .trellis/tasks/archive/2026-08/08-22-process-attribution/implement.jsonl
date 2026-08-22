@@ -1,0 +1,7 @@
+{"file": "CONTEXT.md", "reason": "查找进程、进程路由、进程 identity、跨维下钻、核算口径的词汇。"}
+{"file": "docs/adr/0001-process-lookup-vs-process-routing.md", "reason": "顶层 always 查找与进程路由分开。"}
+{"file": "docs/adr/0002-unknown-process-drilldown.md", "reason": "进程未知行可下钻。"}
+{"file": "docs/adr/0003-controller-only-process-identity.md", "reason": "不做操作系统进程反查。"}
+{"file": "PRODUCT.md", "reason": "未知保持未知；meter 与可归因分开。"}
+{"file": ".trellis/tasks/08-22-process-attribution/research/runtime-process-coverage.md", "reason": "本机内核仍为 strict、连接进程字段全空。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "脚本配置到控制器元数据再到进程页的跨层流。"}

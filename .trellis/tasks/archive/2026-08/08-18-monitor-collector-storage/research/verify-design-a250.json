@@ -1,0 +1,11 @@
+{
+  "actual_minutes": 10800000,
+  "actual_sessions": 2160000,
+  "c1_reopen_watermark": 1,
+  "expected_minutes": 10800000,
+  "expected_sessions": 2160000,
+  "path": "bench-data/a250-d30.sqlite3",
+  "profile": "c1",
+  "row_counts_match": true,
+  "spec_hash": "25621c132a8721eb8f9314e988324f0053edbd31552104fdf1a1b5810d9784fd"
+}

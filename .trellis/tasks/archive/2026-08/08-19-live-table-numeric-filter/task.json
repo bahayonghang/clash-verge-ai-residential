@@ -1,0 +1,28 @@
+{
+  "id": "live-table-numeric-filter",
+  "name": "live-table-numeric-filter",
+  "title": "实时表数值筛选条件",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-19",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-19-live-table-sort-width",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "添加条件：数字+单位，比较字节/毫秒"
+  }
+}

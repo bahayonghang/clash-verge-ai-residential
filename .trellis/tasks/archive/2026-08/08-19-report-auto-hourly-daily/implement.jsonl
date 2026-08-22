@@ -1,0 +1,12 @@
+{"file": ".trellis/spec/guides/index.md", "reason": "跨层与复用思考入口。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "档案 JSON、Command、前端解码边界。"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "C3 代码位置与质量门。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C3 只经 StorageCoordinator；C2 不 rusqlite；C4 不另建聚合。"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "run_report 必须 interrupt；新 command 同样可取消。"}
+{"file": ".trellis/spec/residential-monitor/storage/index.md", "reason": "SQLite 权威账本；自动 DELETE 关闭。"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "user_version 与已发布 checksum；只许前向追加。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Vanilla TS；无 UI 框架。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "ReportResult 合同；新 list/get 需边界解码。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "前端不聚合 Top N；图表与表同一 ReportResult。"}
+{"file": ".trellis/tasks/08-19-report-auto-hourly-daily/prd.md", "reason": "AC1–AC10 与保留期决定。"}
+{"file": ".trellis/tasks/08-19-report-auto-hourly-daily/design.md", "reason": "v4 表、调度锁分段、水合导出。"}

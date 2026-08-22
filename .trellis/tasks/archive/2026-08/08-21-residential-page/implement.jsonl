@@ -1,0 +1,4 @@
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"TOTALS_RAW / SERIES_RAW 参数扩展与 named_sql 回显涉及存储契约。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"新增查询能力的错误形状与中文下一步按此模块约定。"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"家宽报告导出不得泄漏 secret，长操作取消语义按此约定。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"家宽占比与排名必须来自 Rust，前端不重算。"}

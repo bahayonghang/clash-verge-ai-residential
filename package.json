@@ -1,6 +1,6 @@
 {
   "name": "clash-verge-ai-residential",
-  "version": "5.5.0",
+  "version": "5.11.0",
   "private": true,
   "description": "Clash Verge Rev global extension script for AI-only residential SOCKS5 routing, multi-profile chained proxy selection, and DNS leak mitigation.",
   "license": "MIT",
@@ -8,8 +8,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "check": "node --check clash-verge-ai-residential.js && node --check tests/regression.test.js && node --check tests/sync-local-config.test.js && node --check tests/check-template-safety.test.js && node --check scripts/check-template-safety.js && node --check scripts/sync-local-config.js",
-    "test": "node --test tests/regression.test.js tests/sync-local-config.test.js tests/check-template-safety.test.js",
+    "check": "node --check clash-verge-ai-residential.js && node --check tests/regression.test.js && node --check tests/sync-local-config.test.js && node --check tests/check-template-safety.test.js && node --check tests/sync-monitor-version.test.js && node --check scripts/check-template-safety.js && node --check scripts/sync-local-config.js && node --check scripts/sync-monitor-version.js",
+    "test": "node --test tests/regression.test.js tests/sync-local-config.test.js tests/check-template-safety.test.js tests/sync-monitor-version.test.js",
     "check:secrets": "node scripts/check-template-safety.js",
     "ci": "npm run check && npm run test && npm run check:secrets"
   }

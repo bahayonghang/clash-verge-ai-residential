@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/backend/index.md","reason":"检查 fmt、clippy、workspace tests 与模块边界。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"检查单 collector、错误分类、生命周期和 secret-free 日志。"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"检查 reconnect / activation 不泄漏 secret 且取消语义保持。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"检查 Channel bootstrap、状态 DTO 和前端不伪造 Connected。"}
+{"file":".trellis/tasks/08-19-monitor-auto-connect-settings-redesign/research/current-state.md","reason":"对照当前证据、首启决策和托盘任务冲突做回归检查。"}

@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Vanilla TS 壳约束、禁止远程资源和前端质量门。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "uiFont 会话/持久化边界；设置分区不得变成顶级 route。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "BootstrapDto.uiFont 缺字段回落；Rust 是校验权威。"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "Rust 命令与 clippy/test 门；新命令不得破坏采集锁约定。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "外观键走 put_setting；错误只暴露稳定码；C2 不碰 rusqlite。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "ui_font 从枚举改为字符串，前后端 parse 必须同一规则。"}

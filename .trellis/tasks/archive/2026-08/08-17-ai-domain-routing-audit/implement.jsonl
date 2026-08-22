@@ -1,0 +1,6 @@
+{"file": ".trellis/tasks/08-17-ai-domain-routing-audit/research/openai-9247338-allowlist-excerpt.md", "reason": "官方 5 主机原文摘录，exact 清单的唯一依据"}
+{"file": ".trellis/tasks/08-17-ai-domain-routing-audit/research/community-and-official-domain-gap.md", "reason": "官方缺口与社区排除清单"}
+{"file": ".trellis/tasks/08-17-ai-domain-routing-audit/research/codex-review-verification.md", "reason": "suffix 过宽、DNS 伪测试、UNVERIFIED 客户端的核验结论"}
+{"file": "docs/routing-scope.md", "reason": "新增域名必须满足的准入标准与负向测试要求"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "正负向测试、真实 Profile 与 ci 门禁约定"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "扩展脚本运行模型与常量改动前的检查清单"}

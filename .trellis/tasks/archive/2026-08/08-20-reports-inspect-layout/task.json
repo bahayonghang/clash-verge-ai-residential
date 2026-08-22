@@ -1,0 +1,29 @@
+{
+  "id": "reports-inspect-layout",
+  "name": "reports-inspect-layout",
+  "title": "分析报告页探查与排版",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-20",
+  "completedAt": "2026-08-20",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "package": "residential-monitor",
+    "description": "修复分析报告 Top N 滚动与 details 被 Channel 重绘冲掉，补齐图表探查，并按 Operate 模式收紧该页排版。"
+  }
+}

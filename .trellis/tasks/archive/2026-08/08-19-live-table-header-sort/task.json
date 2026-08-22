@@ -1,0 +1,28 @@
+{
+  "id": "live-table-header-sort",
+  "name": "live-table-header-sort",
+  "title": "实时表头排序",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-19",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-19-live-table-sort-width",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "表头点击排序，未知在后"
+  }
+}

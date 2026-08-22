@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "概览只改壳层渲染。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "缺口未知不画成零；不做 Top N。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "只用 LiveOverview 已有字段。"}
+{"file": ".trellis/tasks/08-19-overview-caliber-layout/prd.md", "reason": "本子任务需求。"}
+{"file": ".trellis/tasks/08-19-ui-catppuccin-layout/design.md", "reason": "成对口径结构。"}

@@ -11,6 +11,7 @@ coverage/
 *.local.yaml
 *.local.yml
 clash-verge-ai-residential.local.toml
+clash-verge-ai-residential.local copy.toml
 clash-verge-ai-residential.local.js
 private/
 clash-verge-ai-residential.private.js
@@ -25,3 +26,14 @@ Thumbs.db
 .agents/
 .codex/
 .claude/
+.cursor/
+
+# residential-monitor generated artifacts
+residential-monitor/node_modules/
+residential-monitor/dist/
+residential-monitor/src-tauri/target/
+residential-monitor/bench-data/
+bench-data/
+.worktrees/
+
+ref/

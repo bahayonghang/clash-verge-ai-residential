@@ -35,4 +35,16 @@ stays on their airport proxy. Node ≥18, zero dependencies, no bundler/transpil
 - 2-space indent, double quotes, `"use strict"`, CommonJS. No linter/formatter configured — keep
   syntax clean (`npm run check`).
 
-@AGENTS.md
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for bahayonghang/clash-verge-ai-residential. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical roles use matching label strings: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+single-context. See `docs/agents/domain.md`.

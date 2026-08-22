@@ -1,0 +1,26 @@
+{
+  "active": 10000,
+  "hz": 1,
+  "frames": 1800,
+  "duration_ms": 1866430,
+  "p50_ms": 15,
+  "p95_ms": 37,
+  "p99_ms": 3037,
+  "max_ms": 3321,
+  "prepare_reuse": 18000000,
+  "commits": 1800,
+  "dropped_unexplained": 0,
+  "synchronous": "FULL",
+  "all_counters_change": true,
+  "db_bytes": 147456,
+  "wal_bytes": 0,
+  "queue_depth_max": 1,
+  "decision": "adopt",
+  "fallback_trigger": "max 3321ms 超过父设计 3000ms 正常上限；p95 37ms 低于 1500ms",
+  "constraints_for_c1": [
+    "正式指标使用 WAL + FULL。",
+    "按 p95 评估 durable commit，不得把 10k 峰值外推为 30 天容量。",
+    "单帧 commit 超过 1500ms 时进入 storage_backpressure，不得静默丢帧。"
+  ],
+  "approved_by": "user-2026-08-18"
+}

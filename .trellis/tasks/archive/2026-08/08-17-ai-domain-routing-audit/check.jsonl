@@ -1,0 +1,5 @@
+{"file": ".trellis/tasks/08-17-ai-domain-routing-audit/prd.md", "reason": "验收：5 个 exact、真 DNS 键、UNVERIFIED 客户端、提交白名单"}
+{"file": ".trellis/tasks/08-17-ai-domain-routing-audit/research/codex-review-verification.md", "reason": "防止回到 suffix 或裸键伪测试"}
+{"file": ".trellis/tasks/08-17-ai-domain-routing-audit/research/openai-9247338-allowlist-excerpt.md", "reason": "核对注入主机是否超出官方摘录"}
+{"file": "docs/routing-scope.md", "reason": "Domain 变更规则与登录/推理出口分离"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "正负向测试、幂等与凭据安全检查"}

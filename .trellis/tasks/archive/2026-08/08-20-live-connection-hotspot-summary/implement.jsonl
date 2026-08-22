@@ -1,0 +1,2 @@
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"前端不得重算 Top N，未知/缺口不填零，图表需同口径数据说明。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"query_live_connections 权威列表、fail-closed DTO 和 Channel snapshot 边界。"}

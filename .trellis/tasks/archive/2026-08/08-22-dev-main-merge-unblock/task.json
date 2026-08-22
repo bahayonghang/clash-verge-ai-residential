@@ -1,0 +1,31 @@
+{
+  "id": "dev-main-merge-unblock",
+  "name": "dev-main-merge-unblock",
+  "title": "解封 dev 合并 main：生产端口与恢复后状态",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-22",
+  "completedAt": "2026-08-22",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-22-prod-shell-ports-real",
+    "08-22-storage-reboot-after-recovery"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "核对 Cursor 的 dev→main 合并审查，只承接成立且构成合并门槛的条目：生产组合根交付的假端口，以及还原/vacuum/删除后的陈旧存储派生状态"
+  }
+}

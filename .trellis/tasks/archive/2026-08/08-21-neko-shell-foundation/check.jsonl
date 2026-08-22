@@ -1,0 +1,2 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"路由扩展跨 Rust list_routes 与前端 RouteId 两层，按跨层清单核对。"}
+{"file":".trellis/tasks/archive/2026-08/08-20-shell-sidebar-resize/prd.md","reason":"侧栏宽度拖动与 ARIA slider 语义的既有验收口径，移植后不得回退。"}

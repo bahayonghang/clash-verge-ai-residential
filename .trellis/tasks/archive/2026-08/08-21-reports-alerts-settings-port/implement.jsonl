@@ -1,0 +1,6 @@
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"本子任务负责改写其中「不引入 UI 框架」，并须保留 signed 与部分失败两条质量门。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"decodeAbout 拒绝 signed、DeleteReport 部分失败的解码与展示约束。"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"secret 回填与显示切换、长操作取消的既有约定。"}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"report-view / report-inspect / secret-field 的纯函数与单测须复用而非重写。"}
+{"file":"PRODUCT.md","reason":"第 33、37 行需改，第 38 行必须保持不改。"}
+{"file":"DESIGN.md","reason":"整份令牌与规则按 neko 重写，保留禁止远程字体与 CDN、禁止顶栏横导航两条。"}

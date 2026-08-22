@@ -1,0 +1,6 @@
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"前端层入口：组件不得 invoke、十段 RouteId、检查命令。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"视图只保存选择与 DTO 缓存；表头排序保持会话内，不新增持久化键。"}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"色井、ChartHover、SortableTh 必须复用口径卡与 TrendTooltip，禁止第三套浮层边框。"}
+{"file":"DESIGN.md","reason":"One Blue Rule 与 Navigation / Data table 段是本任务要修订的设计合同。"}
+{"file":"PRODUCT.md","reason":"Operate 工作台、禁止远程 URL、十段路由与键盘可达侧栏。"}
+{"file":".trellis/tasks/08-21-neko-shell-readability/research/screenshot-and-anchors.md","reason":"截图三处缺陷与文件锚点、色井/浮层/表头的产品决定。"}

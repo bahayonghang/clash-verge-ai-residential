@@ -1,0 +1,3 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"判定收敛跨 accounting 与 c2/query 两处，SQL 扩展跨查询与前端两层。"}
+{"file":".trellis/tasks/08-21-neko-overview-aggregation/design.md","reason":"第 5.1 节的过滤能力缺口分工；fill_raw_attr_rank 的改动可能已由该子任务落地。"}
+{"file":"residential-monitor/docs/reporting.md","reason":"现行报告口径文档，家宽报告的口径表述须与之一致或同步更新。"}

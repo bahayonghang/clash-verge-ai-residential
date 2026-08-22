@@ -36,8 +36,18 @@ These guides help you **ask the right questions before coding**.
 - [ ] You're not sure where to put some logic
 - [ ] You are adding an event kind, JSONL record, RPC payload, or config field
 - [ ] UI / command code starts casting raw payload fields directly
+- [ ] Real-time summary or Top 1 is derived from a truncated `rows` page instead of the query snapshot `summary`
 
 → Read [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md)
+
+### When Changing AI Residential Domains
+
+- [ ] Official firewall/allowlist pages say "do not block". They are not a contract to inject every listed host into `AI-家宽`.
+- [ ] Clash `DOMAIN` / `DOMAIN-SUFFIX` match host/SNI only. A path such as `/backend-api/codex/responses` cannot be split from other paths on the same host.
+- [ ] Values removed from activation must stay in `allPossible*` so old rules and DNS keys are cleaned.
+- [ ] Do not retire `daily-cloudcode-pa.googleapis.com`. Antigravity `language_server` uses it as `--cloud_code_endpoint`. A missing official firewall line is not evidence that the host is unused.
+
+→ Product contract: [docs/routing-scope.md](../../../docs/routing-scope.md)
 
 ### When to Think About Code Reuse
 

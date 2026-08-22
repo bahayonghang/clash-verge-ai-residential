@@ -40,22 +40,29 @@ The final `HOME_PROXY_TEMPLATE["dialer-proxy"]` value remains the preferred cros
 
 ## Scope switches
 
-The optional `[routing]` and `[runtime]` TOML tables accept partial overrides. Omitted keys inherit the public-script defaults. The defaults intentionally minimize residential traffic; enabling permissive or shared-infrastructure switches can change privacy, cost, compatibility, and traffic scope.
+The optional `[routing]` and `[runtime]` TOML tables accept partial overrides. During sync, missing switch keys (including a missing table) are auto-completed into the local TOML from the example defaults; existing values, comments, and line endings are preserved verbatim. The defaults intentionally minimize residential traffic; enabling permissive or shared-infrastructure switches can change privacy, cost, compatibility, and traffic scope.
 
 ### Routing table
 
 | TOML key | JavaScript constant | Default | Effect | Dependency or risk |
 | --- | --- | --- | --- | --- |
 | `routing.openai_shared_dependencies` | `ROUTE_OPENAI_SHARED_DEPENDENCIES` | `false` | Routes OpenAI shared identity, support, telemetry, and payment dependencies. | Expands beyond model traffic. |
+| `routing.openai_core` | `ROUTE_OPENAI_CORE` | `true` | Routes the ChatGPT product, the OpenAI model API, and uploaded/generated user content. | When disabled, GPT traffic falls through to the airport upstream. |
+| `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `false` | Routes the bounded first-party login hosts `auth.openai.com` (including its children) and exact `auth0.openai.com`. | Independent from OpenAI core, web assets, and shared third-party dependencies; does not route the broad `openai.com` suffix. |
+| `routing.openai_web_assets` | `ROUTE_OPENAI_WEB_ASSETS` | `false` | Routes the `oaistatic.com` web-asset suffix. | Independent from OpenAI authentication and shared dependencies; enable only when the page needs the residential exit for these assets. |
 | `routing.claude_shared_dependencies` | `ROUTE_CLAUDE_SHARED_DEPENDENCIES` | `false` | Routes Claude analytics, support, risk-control, and other shared dependencies. | Expands beyond model traffic. |
 | `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `false` | Routes the shared Google authentication entry used by Antigravity. | Can affect authentication for other Google products. |
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | Routes project-management APIs such as Service Usage, Resource Manager, IAM, and API Hub. | These are project configuration rather than inference. |
 | `routing.antigravity_update_and_telemetry` | `ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY` | `false` | Routes Antigravity updates, extension marketplace, and telemetry. | Expands into update and analytics traffic. |
 | `routing.gemini_web_core` | `ROUTE_GEMINI_WEB_CORE` | `true` | Routes Gemini Web and Google AI Studio product endpoints. | None. |
-| `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `false` | Routes Cursor AI APIs, Tab, Agent, indexing, Cloud Agent, and product-specific authentication. | Cursor users must opt in explicitly. |
+| `routing.vertex_ai_endpoints` | `ROUTE_VERTEX_AI_ENDPOINTS` | `true` | Routes four Vertex AI / Agent Platform rules: `aiplatform.googleapis.com`, `aiplatform.us.rep.googleapis.com`, `aiplatform.eu.rep.googleapis.com`, and the regional regex `^[a-z0-9-]+-aiplatform\.googleapis\.com$`. | Set to `false` when Antigravity enterprise inference and other Vertex AI traffic should stay on the airport upstream. |
+| `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `true` | Routes Cursor AI APIs, Tab, Agent, the authorize/SSO admin portal, Cloud Agent VMs, and product-specific authentication. | Set to `false` when Cursor core traffic should stay on the airport upstream. `api2.cursor.sh` stays under this switch. |
+| `routing.cursor_repository_indexing` | `ROUTE_CURSOR_REPOSITORY_INDEXING` | `false` | Routes Cursor repository-indexing hosts `repo[0-9]+.cursor.sh`. | Independent of `routing.cursor_core`. The default sends repo indexing back to the original Profile/airport upstream. A missing local TOML field is completed as `false`. Set the field to `true` to restore v5.8.1 residential routing for those hosts. Official docs and local 2026-08-17 logs jointly confirm `repo42.cursor.sh`. The `repo[0-9]+.cursor.sh` pattern is this project's forward-compat policy, not an official Cursor wildcard contract. Privacy Mode does not stop indexing uploads. `disableHttp2` or a server-forced HTTP/1.1 fallback can put RepositoryService on shared `api2.cursor.sh`; Clash domain rules cannot isolate that path, so this switch does not exclude all repository uploads from the residential link. |
+| `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | Routes Grok Build (xAI grok CLI) inference API (`cli-chat-proxy.grok.com`), the Grok product domain, `auth.x.ai`, and `api.x.ai`. | Set to `false` when Grok should stay on the airport upstream. |
+| `routing.grok_web_assets` | `ROUTE_GROK_WEB_ASSETS` | `true` | When `true`, injects `DOMAIN-SUFFIX,grok.com`. When `false`, replaces that suffix with exact hosts `grok.com`, `cli-chat-proxy.grok.com`, and `code.grok.com`. `DOMAIN-SUFFIX,api.x.ai` stays under `routing.grok_core`. | Requires `routing.grok_core = true`. The `false` value leaves `assets.grok.com` on the airport upstream. |
 | `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | Adds Cursor process-level fallback rules. | Requires `routing.ai_process_fallback = true` and can capture non-AI requests. |
 | `routing.claude_code_auxiliary` | `ROUTE_CLAUDE_CODE_AUXILIARY` | `false` | Routes Claude Code installation, update, documentation, and package endpoints. | These are auxiliary rather than inference traffic. |
-| `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | Adds process-level fallbacks for known AI applications. | Can capture non-AI requests made by those processes. |
+| `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | Adds process-level fallbacks for known AI applications. | Can capture non-AI requests made by those processes. Process lookup is separate: the script always writes top-level `find-process-mode: always`. A value nested under `profile:` is ignored by the kernel. |
 | `routing.anthropic_ip_fallback` | `ENABLE_ANTHROPIC_IP_FALLBACK` | `true` | Routes Anthropic's official inbound IP ranges when domain matching is unavailable. | None. |
 | `routing.shared_realtime_infrastructure` | `ROUTE_SHARED_REALTIME_INFRASTRUCTURE` | `false` | Routes shared STUN/TURN infrastructure. | Can capture realtime traffic from unrelated applications. |
 | `routing.global_realtime_ports` | `ROUTE_GLOBAL_REALTIME_PORTS` | `false` | Adds broad realtime UDP-port rules. | Requires `routing.shared_realtime_infrastructure = true`; scope is intentionally broad. |
@@ -71,7 +78,7 @@ The optional `[routing]` and `[runtime]` TOML tables accept partial overrides. O
 | `runtime.enable_domain_sniffer` | `ENABLE_DOMAIN_SNIFFER` | `true` | Hardens domain sniffing for IP-only connections and missing DNS mappings. | Does not globally override destinations. |
 | `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | Completes DNS-hijack entries for an already enabled TUN. | Effective only when the Profile has TUN enabled. |
 | `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | Enables `strict-route` on the existing TUN. | Requires enabled TUN and `runtime.harden_existing_tun_dns_hijack = true`; may affect VMs or special routes. |
-| `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | Warns when a reachable child group or node explicitly disables UDP. | A top-level upstream with UDP disabled still fails validation. |
+| `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | Emits one summary warning when reachable leaves explicitly disable UDP (at most 8 samples). | A top-level upstream with UDP disabled still fails validation. |
 
 The detailed Chinese-language setup guide in [Local TOML configuration and sync](local-configuration.md) includes both `just` and direct Node workflows. Keep shared dependencies and process-wide fallbacks disabled unless sanitized connection evidence proves they are required.
 
@@ -80,8 +87,9 @@ The detailed Chinese-language setup guide in [Local TOML configuration and sync]
 Recommended runtime settings:
 
 - Rule mode.
+- Put `find-process-mode: always` at the Mihomo YAML top level when Clash Verge Merge still nests it under `profile:`. The kernel does not read `profile.find-process-mode`.
 - TUN enabled when system-wide interception or process rules are required.
-- DNS hijack enabled; the script supplements `any:53` and `tcp://any:53` only when TUN is already enabled.
+- 在 Clash Verge Rev 的 TUN 设置中启用 DNS 劫持。TUN 已启用时，脚本还会补充 `any:53` 和 `tcp://any:53`。但当前版本会在全局脚本运行后，从设置页面恢复 `tun` 和 `ipv6`；这两个字段应以设置页面为准，并在该页面关闭 IPv6。
 - Browser private/secure DNS disabled when it bypasses the system resolver.
 - The selected upstream group must not resolve to `DIRECT`, `REJECT`, or the residential proxy itself.
-- Both the selected airport path and the residential SOCKS5 service must support UDP when the target feature needs UDP.
+- 目标功能需要 UDP 时，选中的机场线路和住宅 SOCKS5 服务都必须支持 UDP。机场订阅节点若省略 `udp` 字段，Mihomo 默认禁用 UDP。

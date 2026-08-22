@@ -2,16 +2,49 @@
 
 /**
  * Clash Verge Rev 全局扩展脚本
- * Claude / ChatGPT / Gemini / Google Antigravity 核心家宽链路 · Cursor 可选 · v5.5
+ * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.11.0
  *
  * 数据路径：
  *   本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
  *
- * v5.5 重点：
+ * v5.11.0 重点：
+ *   - 新增独立的 OpenAI 第一方认证与网页静态资源开关，公开默认均关闭。
+ *   - 认证只覆盖 auth.openai.com 后缀与 auth0.openai.com 精确主机；
+ *     oaistatic.com 由独立开关控制，不扩大到整个 openai.com。
+ *
+ * v5.10.1 重点：
+ *   - 恢复 daily-cloudcode-pa.googleapis.com。Antigravity language_server 把
+ *     --cloud_code_endpoint 设为该主机；v5.10.0 误判为无出处预发布端点。
+ *
+ * v5.10.0 重点：
+ *   - 5 条无会话证据或官方遥测主机退出激活，仍留在 allPossible* 供升级清理。
+ *   - api2 / authenticate / adminportal42 / antigravity.google 收窄为精确主机；
+ *     api.x.ai 改为后缀以覆盖区域与 mTLS 端点。
+ *   - 新增 routing.grok_web_assets 与 routing.vertex_ai_endpoints，默认开启。
+ *
+ * v5.9.0 重点：
+ *   - 仓库索引主机 repo[0-9]+.cursor.sh 从 Cursor 核心目录拆出；
+ *     routing.cursor_repository_indexing 默认关闭，不再消耗家宽。
+ *   - Cursor Chat/Tab/Agent/认证/Cloud Agent 仍由 routing.cursor_core 控制（默认开启）。
+ *
+ * v5.8.1 重点：
+ *   - 大订阅 outbound 索引，避免按叶子全表扫描；UDP 叶子警告改为一条汇总。
+ *
+ * v5.8 重点：
+ *   - 按官方 help.openai.com/9247338 以 exact 补齐五个 chat.openai.com 家族主机；
+ *     不注入 DOMAIN-SUFFIX,chat.openai.com。
+ *
+ * v5.7 重点：
+ *   - 域名对齐官方网络文档：补 Claude MCP 代理与资产代理、Grok 认证与 API 域；
+ *     api.openai.com 从 exact 提升为 suffix，覆盖 Codex 的 us./eu. 数据驻留前缀。
+ *   - 上游代理组中的保留名引用被移除时输出 warn，递归链清理不再静默。
+ *   - 记录 Clash Verge Rev 权威字段（tun/ipv6）对脚本改写的覆盖行为并提示。
+ *
+ * v5.6 重点：
+ *   - Cursor 核心路由默认开启；补充授权端点、SSO 管理门户与 Cloud Agent VM 域。
+ *   - 新增 Grok Build（xAI grok CLI）核心域与 routing.grok_core 开关，默认开启。
  *   - 默认只让 AI 产品核心、模型推理、代码补全、Agent、索引与产品专属认证流量走家宽。
- *   - Cursor 核心路由默认关闭；需要时可通过本地 TOML 或脚本开关启用。
- *   - 删除 Cursor 冗余匹配，保留窄范围 API、Tab、Agent 与索引目录。
- *   - 不注入 YouTube、Maps、广告、统计、通用 Google 静态资源等共享域名。
+ *   - 不注入插件市场、CDN、更新下载、广告、统计、通用 Google 静态资源等共享域名。
  *   - 默认关闭进程级兜底、共享遥测、通用 STUN/TURN、公共 DoH/DoT 劫持。
  *   - AI 域名 DNS 经家宽；其他域名 DNS 经当前 Profile 的机场上游，不再默认占用家宽。
  *   - 保留多 Profile 上游解析、递归链防护、严格配置校验与幂等重建。
@@ -20,6 +53,12 @@
  * 运行环境：Clash Verge Rev 的 JavaScript 扩展脚本环境。
  * 入口签名：main(config, profileName)
  *
+ * 公开模板 clash-verge-ai-residential.js 必须保持 xxx 占位，不要把它
+ * 粘进 Clash Verge Global Extend Script。请执行 just render-local，
+ * 再粘贴生成的 clash-verge-ai-residential.local.js。占位脚本在没有
+ * 预置「家宽-SOCKS5」节点的 Profile 上会抛错；Verge 脚本控制台只显示
+ * Script execution failed。
+ *
  * @file clash-verge-ai-residential.js
  */
 
@@ -27,7 +66,7 @@
 // 0. 脚本标识与保留名称
 // ============================================================
 
-const SCRIPT_VERSION = "5.5.0";
+const SCRIPT_VERSION = "5.11.0";
 const AI_GROUP = "AI-家宽";
 const HOME_PROXY_NAME = "家宽-SOCKS5";
 
@@ -97,6 +136,15 @@ const ALLOW_HEURISTIC_UPSTREAM_FALLBACK = false;
 // WorkOS / Intercom / Sentry / Datadog / Stripe 等共享依赖不是模型推理，默认不走家宽。
 const ROUTE_OPENAI_SHARED_DEPENDENCIES = false;
 
+// ChatGPT 产品、OpenAI 模型 API 与用户上传/生成内容；默认走家宽，可在本地 TOML 关闭。
+const ROUTE_OPENAI_CORE = true;
+
+// OpenAI 第一方登录主机；默认保留在机场出口，按需与核心流量统一到家宽。
+const ROUTE_OPENAI_AUTH = false;
+
+// ChatGPT 网页静态资源；与第一方认证及共享第三方依赖独立，默认不走家宽。
+const ROUTE_OPENAI_WEB_ASSETS = false;
+
 // Claude 的统计、客服、风控与共享第三方依赖默认不走家宽。
 const ROUTE_CLAUDE_SHARED_DEPENDENCIES = false;
 
@@ -112,8 +160,21 @@ const ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY = false;
 // Gemini Web / Google AI Studio 产品入口。
 const ROUTE_GEMINI_WEB_CORE = true;
 
-// Cursor AI API、Tab、Agent、索引、Cloud Agent 与产品专属认证；默认关闭。
-const ROUTE_CURSOR_CORE = false;
+// Vertex AI / Agent Platform 全局、多区域与区域端点；Antigravity 企业推理走这些主机。
+const ROUTE_VERTEX_AI_ENDPOINTS = true;
+
+// Cursor AI API、Tab、Agent、Cloud Agent 与产品专属认证；默认走家宽。
+const ROUTE_CURSOR_CORE = true;
+
+// Cursor 仓库索引主机；与 ROUTE_CURSOR_CORE 独立，默认关闭以免占用家宽。
+const ROUTE_CURSOR_REPOSITORY_INDEXING = false;
+
+// Grok Build（xAI grok CLI）推理 API 与产品域；默认走家宽，可在本地 TOML 关闭。
+const ROUTE_GROK_CORE = true;
+
+// Grok 网页静态资源。关闭后 grok.com 从后缀改为 grok.com、cli-chat-proxy.grok.com、
+// code.grok.com 精确主机；api.x.ai 后缀仍由 grok_core 注入。
+const ROUTE_GROK_WEB_ASSETS = true;
 
 // Cursor 进程会访问插件市场、GitHub、npm、MCP 和用户后端；默认不做进程级全量代理。
 const ROUTE_CURSOR_PROCESS_FALLBACK = false;
@@ -159,32 +220,78 @@ const CORE_SUFFIX_DOMAINS = [
   // Claude Web / Desktop / generated content
   "claude.ai",
   "claude.com",
-  "clau.de",
-  "claudemcpclient.com",
   "claudemcpcontent.com",
-  "claudeusercontent.com",
+  "claudeusercontent.com"
+];
 
+const RETIRED_CORE_SUFFIX_DOMAINS = [
+  // v5.10 退出激活：无官方出处。保留供 allPossibleSuffix 清理旧规则。
+  "clau.de",
+  "claudemcpclient.com"
+];
+
+// ChatGPT 产品域；开关关闭后 GPT 流量改走机场，不再进家宽。
+const OPENAI_CORE_SUFFIX_DOMAINS = [
   // ChatGPT Web / user-uploaded and generated content；通用静态 CDN 不走家宽
   "chatgpt.com",
   "oaiusercontent.com",
 
-  // Google Antigravity 产品域
-  "antigravity.google"
+  // 官方模型 API。v5.7 从 exact 提升为 suffix：Codex API-key 路线使用
+  // us. / eu. 数据驻留前缀（learn.chatgpt.com 配置文档），exact 会漏匹配。
+  "api.openai.com"
 ];
 
 const CORE_EXACT_DOMAINS = [
-  // 第一方模型 API；避免 anthropic.com / openai.com 宽泛后缀。
+  // 第一方模型 API；避免 anthropic.com 宽泛后缀。
   "api.anthropic.com",
-  "a-api.anthropic.com",
-  "api.openai.com",
 
-  // Antigravity / Gemini Code Assist / Gemini Developer API / Vertex AI
+  // 官方网络文档列出的产品功能域（code.claude.com/docs network-config）：
+  // claude.ai MCP connector 代理与桌面/网页资产代理（官方警告缺失会导致白屏）。
+  "mcp-proxy.anthropic.com",
+  "assets-proxy.anthropic.com",
+
+  // Antigravity / Gemini Code Assist / Gemini Developer API
   "cloudcode-pa.googleapis.com",
+  // Antigravity language_server 的 --cloud_code_endpoint；本机 Connections
+  // 与 TLS 握手失败证明该主机承载 Agent 会话，不是遥测。
   "daily-cloudcode-pa.googleapis.com",
   "cloudaicompanion.googleapis.com",
-  "geminicloudassist.googleapis.com",
   "generativelanguage.googleapis.com",
-  "aiplatform.googleapis.com"
+
+  // Google Antigravity 产品域；v5.10 从 suffix 收窄为 exact。
+  "antigravity.google"
+];
+
+const RETIRED_CORE_EXACT_DOMAINS = [
+  // v5.10 退出激活。a-api.anthropic.com 是官方 Desktop 遥测主机。
+  // geminicloudassist 是 Cloud Assist MCP，不是 Antigravity Agent 网关。
+  "a-api.anthropic.com",
+  "geminicloudassist.googleapis.com"
+];
+
+// 官方 help.openai.com/9247338 明文列出的 ChatGPT 应用主机；tcr9i 用途不明；
+// 不添加 Voice UDP 3478。
+const OPENAI_CORE_EXACT_DOMAINS = [
+  "chat.openai.com",
+  "android.chat.openai.com",
+  "desktop.chat.openai.com",
+  "ios.chat.openai.com",
+  "tcr9i.chat.openai.com"
+];
+
+// 第一方登录主机。auth.openai.com 使用有界后缀以覆盖 setup.auth.openai.com；
+// auth0.openai.com 是同级主机，使用精确规则，禁止扩大为 openai.com 后缀。
+const OPENAI_AUTH_SUFFIX_DOMAINS = [
+  "auth.openai.com"
+];
+
+const OPENAI_AUTH_EXACT_DOMAINS = [
+  "auth0.openai.com"
+];
+
+// 网页静态资源与认证独立，避免认证开关静默扩大页面资源流量。
+const OPENAI_WEB_ASSET_SUFFIX_DOMAINS = [
+  "oaistatic.com"
 ];
 
 // Gemini Web / AI Studio：只保留产品入口，不纳入共享 Google 服务清单。
@@ -194,41 +301,84 @@ const GEMINI_WEB_SUFFIX_DOMAINS = [
 ];
 
 const GEMINI_WEB_EXACT_DOMAINS = [
-  // Google AI Studio 浏览器端 RPC、权限与流式通道后端。
+  // Google AI Studio 浏览器端 RPC、权限与流式通道。无官方防火墙清单，UNVERIFIED。
   "alkalicore-pa.clients6.google.com",
   "alkalimakersuite-pa.clients6.google.com",
-  "webchannel-alkalimakersuite-pa.clients6.google.com",
+  "webchannel-alkalimakersuite-pa.clients6.google.com"
+];
 
-  // Vertex AI 多区域服务端点。
+const VERTEX_AI_EXACT_DOMAINS = [
+  // Vertex AI / Agent Platform：全局端点与 US/EU 多区域端点。
+  "aiplatform.googleapis.com",
   "aiplatform.us.rep.googleapis.com",
   "aiplatform.eu.rep.googleapis.com"
 ];
 
-const GEMINI_DOMAIN_REGEXES = [
+const VERTEX_AI_DOMAIN_REGEXES = [
   // Vertex AI 区域端点，例如 us-central1-aiplatform.googleapis.com。
   "^[a-z0-9-]+-aiplatform\\.googleapis\\.com$"
 ];
 
-// Cursor 仅保留 AI API / Tab / Agent / 索引 / 专属认证的窄范围后缀。
+// Cursor 仅保留 AI API / Tab / Agent / 专属认证 / Cloud Agent VM 的窄范围后缀。
 const CURSOR_SUFFIX_DOMAINS = [
-  "api2.cursor.sh",
   "api5.cursor.sh",
   "gcpp.cursor.sh",
-  "authentication.cursor.sh"
+
+  // 官方另列 prod. 前缀，因此保留后缀。
+  "authentication.cursor.sh",
+
+  // Cloud Agent 虚拟机服务（官方通配 *.cursorvm.com / *.*.cursorvm.com）。
+  "cursorvm.com"
 ];
 
 const CURSOR_EXACT_DOMAINS = [
+  "api2.cursor.sh",
   "api3.cursor.sh",
   "api4.cursor.sh",
+  "authenticate.cursor.sh",
   "authenticator.cursor.sh",
+
+  // 官方仅列出 adminportal42.cursor.sh。
+  "adminportal42.cursor.sh",
 
   // Cursor Cloud Agent / Bugbot AI API；不会匹配 cursor.com 其他页面。
   "api.cursor.com"
 ];
 
-const CURSOR_DOMAIN_REGEXES = [
-  // 代码库索引端点可能滚动编号，例如 repo42.cursor.sh。
+const RETIRED_DOMAIN_REGEXES = [
+  // v5.10 收窄为 DOMAIN,adminportal42.cursor.sh。
+  "^adminportal[0-9]+\\.cursor\\.sh$"
+];
+
+const CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES = [
+  // 官方精确主机为 repo42.cursor.sh；数字通配是项目前向兼容策略，不是官方通配合同。
   "^repo[0-9]+\\.cursor\\.sh$"
+];
+
+// Grok Build 核心：cli-chat-proxy.grok.com 承载推理 API（/v1/responses）、
+// 代码库与会话轨迹上传（/v1/storage*）；同主机也是 Grok 网页产品域，
+// 与 chatgpt.com / claude.ai 的产品域处理保持一致。
+// 官方网络文档另列的 marketplace.cursorapi.com、cursor-cdn.com、
+// downloads.cursor.com、anysphere-binaries.s3.us-east-1.amazonaws.com 属于
+// 市场/CDN/更新下载；Grok 的 api.mixpanel.com（分析）、x.ai（安装脚本）
+// 与 storage.googleapis.com（共享 GCS，见 CLAUDE_CODE_AUXILIARY）均不走家宽。
+const GROK_SUFFIX_DOMAINS = [
+  "grok.com",
+  // 官方区域端点 <region>.api.x.ai 与 mTLS 主机 mtls.api.x.ai。
+  "api.x.ai"
+];
+
+// routing.grok_web_assets = false 时注入的精确主机；覆盖 CLI 推理与会话同步。
+const GROK_STRICT_EXACT_DOMAINS = [
+  "grok.com",
+  "cli-chat-proxy.grok.com",
+  "code.grok.com"
+];
+
+// 官方企业部署文档（docs.x.ai/build/enterprise）列出的主机：
+// auth.x.ai 是 OAuth2/OIDC 认证（must-allow）；安装脚本域 x.ai 仍不走家宽。
+const GROK_EXACT_DOMAINS = [
+  "auth.x.ai"
 ];
 
 const OPENAI_SHARED_SUFFIX_DOMAINS = [
@@ -606,18 +756,54 @@ function validateReservedNameCollisions(config) {
   }
 }
 
-function findOutbound(config, name) {
-  const groups = namedItems(config["proxy-groups"], name);
-  const proxies = namedItems(config.proxies, name);
+function requireOutboundIndex(outboundIndex) {
+  if (
+    !outboundIndex ||
+    typeof outboundIndex !== "object" ||
+    !(outboundIndex.groups instanceof Map) ||
+    !(outboundIndex.proxies instanceof Map)
+  ) {
+    throw new Error(`[${AI_GROUP}] findOutbound 需要 outbound 索引`);
+  }
+}
 
-  if (groups.length > 1 || proxies.length > 1 || (groups.length === 1 && proxies.length === 1)) {
+// 键与 namedItems 一致：收录每个真值 item，用 item.name 原值（含空串）。
+function buildOutboundIndex(config) {
+  function indexItems(items, map) {
+    if (!Array.isArray(items)) return;
+    for (const item of items) {
+      if (!item) continue;
+      const existing = map.get(item.name);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        map.set(item.name, { count: 1, value: item });
+      }
+    }
+  }
+
+  const groups = new Map();
+  const proxies = new Map();
+  indexItems(config && config["proxy-groups"], groups);
+  indexItems(config && config.proxies, proxies);
+  return { groups, proxies };
+}
+
+function findOutbound(outboundIndex, name) {
+  requireOutboundIndex(outboundIndex);
+  const groupEntry = outboundIndex.groups.get(name);
+  const proxyEntry = outboundIndex.proxies.get(name);
+  const groupCount = groupEntry ? groupEntry.count : 0;
+  const proxyCount = proxyEntry ? proxyEntry.count : 0;
+
+  if (groupCount > 1 || proxyCount > 1 || (groupCount === 1 && proxyCount === 1)) {
     throw new Error(
       `[${AI_GROUP}] outbound 名称“${name}”存在歧义（同名组/节点或重复定义），` +
       "无法安全用于 dialer-proxy"
     );
   }
-  if (groups.length === 1) return { kind: "group", value: groups[0] };
-  if (proxies.length === 1) return { kind: "proxy", value: proxies[0] };
+  if (groupCount === 1) return { kind: "group", value: groupEntry.value };
+  if (proxyCount === 1) return { kind: "proxy", value: proxyEntry.value };
   return null;
 }
 
@@ -648,11 +834,12 @@ function profileOverrideCandidates(profileName) {
   return [];
 }
 
-function resolveCandidate(config, candidate) {
+function resolveCandidate(config, candidate, outboundIndex) {
+  requireOutboundIndex(outboundIndex);
   if (typeof candidate !== "string" || candidate.length === 0) return null;
   if (isForbiddenUpstreamName(candidate)) return null;
 
-  const exact = findOutbound(config, candidate);
+  const exact = findOutbound(outboundIndex, candidate);
   if (exact) return candidate;
 
   const normalizedCandidate = normalizeName(candidate);
@@ -663,7 +850,7 @@ function resolveCandidate(config, candidate) {
   );
 
   if (normalizedMatches.length === 1) {
-    findOutbound(config, normalizedMatches[0]); // 触发同名歧义检测
+    findOutbound(outboundIndex, normalizedMatches[0]); // 触发同名歧义检测
     return normalizedMatches[0];
   }
   if (normalizedMatches.length > 1) {
@@ -676,9 +863,10 @@ function resolveCandidate(config, candidate) {
   return null;
 }
 
-function resolveFromCandidates(config, candidates) {
+function resolveFromCandidates(config, candidates, outboundIndex) {
+  requireOutboundIndex(outboundIndex);
   for (const candidate of uniqueStrings(candidates)) {
-    const resolved = resolveCandidate(config, candidate);
+    const resolved = resolveCandidate(config, candidate, outboundIndex);
     if (resolved) return resolved;
   }
   return null;
@@ -717,14 +905,15 @@ function resolveHeuristicUpstream(config) {
   return matches.length === 1 ? matches[0].name : null;
 }
 
-function resolveUpstreamName(config, profileName) {
+function resolveUpstreamName(config, profileName, outboundIndex) {
+  requireOutboundIndex(outboundIndex);
   const overrideCandidates = profileOverrideCandidates(profileName);
   const globalCandidates = uniqueStrings([
     HOME_PROXY_TEMPLATE["dialer-proxy"],
     ...UPSTREAM_CANDIDATES
   ]);
 
-  const resolvedOverride = resolveFromCandidates(config, overrideCandidates);
+  const resolvedOverride = resolveFromCandidates(config, overrideCandidates, outboundIndex);
   if (resolvedOverride) return resolvedOverride;
 
   if (overrideCandidates.length > 0) {
@@ -734,11 +923,11 @@ function resolveUpstreamName(config, profileName) {
     );
   }
 
-  const resolvedGlobal = resolveFromCandidates(config, globalCandidates);
+  const resolvedGlobal = resolveFromCandidates(config, globalCandidates, outboundIndex);
   if (resolvedGlobal) return resolvedGlobal;
 
   const finalTarget = extractFinalRuleTarget(config.rules);
-  const resolvedFinal = resolveCandidate(config, finalTarget);
+  const resolvedFinal = resolveCandidate(config, finalTarget, outboundIndex);
   if (resolvedFinal) return resolvedFinal;
 
   const heuristic = resolveHeuristicUpstream(config);
@@ -857,6 +1046,15 @@ function groupHasAlternativeSource(group) {
 function removeInjectedReferencesFromGroup(group) {
   if (!group || !Array.isArray(group.proxies)) return;
   const blocked = injectedNames();
+  const removed = group.proxies.filter((name) => blocked.indexOf(name) !== -1);
+  if (removed.length > 0) {
+    warn(
+      `[${AI_GROUP}] 代理组“${group.name || "<未命名>"}”中的 ` +
+      `${removed.join("、")} 引用已被移除：上游组包含家宽链路会形成 ` +
+      `dialer-proxy 递归。AI 流量请用规则指向 ${AI_GROUP}，` +
+      `不要把 ${AI_GROUP} / ${HOME_PROXY_NAME} 放进上游代理组。`
+    );
+  }
   group.proxies = uniqueStrings(
     group.proxies.filter((name) => blocked.indexOf(name) === -1)
   );
@@ -899,24 +1097,16 @@ function buildGroupMap(config) {
   return map;
 }
 
-function warnForUdpDisabledLeaf(config, name, path) {
-  if (!WARN_ON_REACHABLE_UDP_DISABLED) return;
-  const outbound = findOutbound(config, name);
-  if (!outbound) return;
-
-  if (outbound.kind === "proxy" && outbound.value.udp === false) {
-    warn(
-      `[${AI_GROUP}] 可达节点“${name}”显式关闭 UDP（路径：${path.join(" -> ")}）。` +
-      "当上游组选择该节点时，WebRTC/STUN 可能失败或改走其他路径。"
-    );
-  }
-}
-
-function hardenReachableUpstreamGraph(config, upstreamName) {
+function hardenReachableUpstreamGraph(config, upstreamName, outboundIndex) {
+  requireOutboundIndex(outboundIndex);
   const groupMap = buildGroupMap(config);
   const visited = new Set();
   const visiting = new Set();
   const stack = [];
+  const collectUdpWarnings = WARN_ON_REACHABLE_UDP_DISABLED === true;
+  const udpDisabledNames = collectUdpWarnings ? new Set() : null;
+  const udpDisabledSamples = collectUdpWarnings ? [] : null;
+  let udpDisabledCount = 0;
 
   function visit(groupName) {
     if (!groupMap.has(groupName)) return;
@@ -950,8 +1140,19 @@ function hardenReachableUpstreamGraph(config, upstreamName) {
     for (const childName of children) {
       if (groupMap.has(childName)) {
         visit(childName);
-      } else {
-        warnForUdpDisabledLeaf(config, childName, [...stack, childName]);
+      } else if (collectUdpWarnings) {
+        const outbound = findOutbound(outboundIndex, childName);
+        if (outbound && outbound.kind === "proxy" && outbound.value.udp === false) {
+          if (udpDisabledNames.has(childName)) continue;
+          udpDisabledNames.add(childName);
+          udpDisabledCount += 1;
+          if (udpDisabledSamples.length < 8) {
+            udpDisabledSamples.push({
+              name: childName,
+              path: [...stack, childName]
+            });
+          }
+        }
       }
     }
 
@@ -961,10 +1162,23 @@ function hardenReachableUpstreamGraph(config, upstreamName) {
   }
 
   visit(upstreamName);
+
+  if (udpDisabledCount > 0) {
+    const sampleText = udpDisabledSamples
+      .map((sample) => `“${sample.name}”（路径：${sample.path.join(" -> ")}）`)
+      .join("、");
+    const overflow = udpDisabledCount > 8 ? `……（共 ${udpDisabledCount} 个）` : "";
+    warn(
+      `[${AI_GROUP}] ${udpDisabledCount} 个可达节点显式关闭 UDP：` +
+      `${sampleText}${overflow}。` +
+      "当上游组选择这些节点时，WebRTC/STUN 可能失败或改走其他路径。"
+    );
+  }
 }
 
-function validateTopLevelUpstream(config, upstreamName) {
-  const outbound = findOutbound(config, upstreamName);
+function validateTopLevelUpstream(config, upstreamName, outboundIndex) {
+  requireOutboundIndex(outboundIndex);
+  const outbound = findOutbound(outboundIndex, upstreamName);
   if (!outbound) {
     throw new Error(`[${AI_GROUP}] 上游“${upstreamName}”不存在`);
   }
@@ -995,11 +1209,27 @@ function validateTopLevelUpstream(config, upstreamName) {
 // 10. 域名、进程与路由规则生成
 // ============================================================
 
+function grokActiveSuffixDomains() {
+  if (!ROUTE_GROK_CORE) return [];
+  if (ROUTE_GROK_WEB_ASSETS) return GROK_SUFFIX_DOMAINS;
+  return GROK_SUFFIX_DOMAINS.filter((domain) => domain !== "grok.com");
+}
+
+function grokActiveExactDomains() {
+  if (!ROUTE_GROK_CORE) return [];
+  if (ROUTE_GROK_WEB_ASSETS) return GROK_EXACT_DOMAINS;
+  return [...GROK_EXACT_DOMAINS, ...GROK_STRICT_EXACT_DOMAINS];
+}
+
 function activeSuffixDomains() {
   return uniqueStrings([
     ...CORE_SUFFIX_DOMAINS,
+    ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_SUFFIX_DOMAINS : []),
+    ...(ROUTE_OPENAI_AUTH ? OPENAI_AUTH_SUFFIX_DOMAINS : []),
+    ...(ROUTE_OPENAI_WEB_ASSETS ? OPENAI_WEB_ASSET_SUFFIX_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_SUFFIX_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_SUFFIX_DOMAINS : []),
+    ...grokActiveSuffixDomains(),
     ...(ROUTE_OPENAI_SHARED_DEPENDENCIES ? OPENAI_SHARED_SUFFIX_DOMAINS : []),
     ...(ROUTE_CLAUDE_SHARED_DEPENDENCIES ? CLAUDE_SHARED_SUFFIX_DOMAINS : []),
     ...(ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY
@@ -1011,8 +1241,12 @@ function activeSuffixDomains() {
 function activeExactDomains() {
   return uniqueStrings([
     ...CORE_EXACT_DOMAINS,
+    ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_EXACT_DOMAINS : []),
+    ...(ROUTE_OPENAI_AUTH ? OPENAI_AUTH_EXACT_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_EXACT_DOMAINS : []),
+    ...(ROUTE_VERTEX_AI_ENDPOINTS ? VERTEX_AI_EXACT_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_EXACT_DOMAINS : []),
+    ...grokActiveExactDomains(),
     ...(ROUTE_OPENAI_SHARED_DEPENDENCIES ? OPENAI_SHARED_EXACT_DOMAINS : []),
     ...(ROUTE_CLAUDE_SHARED_DEPENDENCIES ? CLAUDE_SHARED_EXACT_DOMAINS : []),
     ...(ROUTE_ANTIGRAVITY_GOOGLE_AUTH ? ANTIGRAVITY_GOOGLE_AUTH_DOMAINS : []),
@@ -1026,16 +1260,29 @@ function activeExactDomains() {
 
 function activeDomainRegexes() {
   return uniqueStrings([
-    ...GEMINI_DOMAIN_REGEXES,
-    ...(ROUTE_CURSOR_CORE ? CURSOR_DOMAIN_REGEXES : [])
+    ...(ROUTE_VERTEX_AI_ENDPOINTS ? VERTEX_AI_DOMAIN_REGEXES : []),
+    ...(ROUTE_CURSOR_REPOSITORY_INDEXING
+      ? CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES
+      : [])
   ]);
 }
 
 function allPossibleSuffixDomains() {
   return uniqueStrings([
     ...CORE_SUFFIX_DOMAINS,
+    ...RETIRED_CORE_SUFFIX_DOMAINS,
+    ...OPENAI_CORE_SUFFIX_DOMAINS,
+    ...OPENAI_AUTH_SUFFIX_DOMAINS,
+    ...OPENAI_WEB_ASSET_SUFFIX_DOMAINS,
+    // 从不注入 DOMAIN-SUFFIX,chat.openai.com；仅清理误注入的 suffix 规则与 +.chat.openai.com。
+    "chat.openai.com",
     ...GEMINI_WEB_SUFFIX_DOMAINS,
     ...CURSOR_SUFFIX_DOMAINS,
+    // v5.10 将下列 suffix 收窄为 exact；保留以便清理旧规则与 +. 键。
+    "api2.cursor.sh",
+    "authenticate.cursor.sh",
+    "antigravity.google",
+    ...GROK_SUFFIX_DOMAINS,
     ...OPENAI_SHARED_SUFFIX_DOMAINS,
     ...CLAUDE_SHARED_SUFFIX_DOMAINS,
     ...ANTIGRAVITY_UPDATE_AND_TELEMETRY_SUFFIX_DOMAINS,
@@ -1046,8 +1293,18 @@ function allPossibleSuffixDomains() {
 function allPossibleExactDomains() {
   return uniqueStrings([
     ...CORE_EXACT_DOMAINS,
+    ...RETIRED_CORE_EXACT_DOMAINS,
+    ...OPENAI_CORE_EXACT_DOMAINS,
+    ...OPENAI_AUTH_EXACT_DOMAINS,
+    // v5.6 曾以 exact 形式注入 api.openai.com；保留以清理旧版托管规则。
+    "api.openai.com",
     ...GEMINI_WEB_EXACT_DOMAINS,
+    ...VERTEX_AI_EXACT_DOMAINS,
     ...CURSOR_EXACT_DOMAINS,
+    ...GROK_EXACT_DOMAINS,
+    ...GROK_STRICT_EXACT_DOMAINS,
+    // v5.10 将 api.x.ai 改为 suffix；保留 exact 以便清理旧规则。
+    "api.x.ai",
     ...OPENAI_SHARED_EXACT_DOMAINS,
     ...CLAUDE_SHARED_EXACT_DOMAINS,
     ...ANTIGRAVITY_GOOGLE_AUTH_DOMAINS,
@@ -1060,8 +1317,9 @@ function allPossibleExactDomains() {
 
 function allPossibleDomainRegexes() {
   return uniqueStrings([
-    ...GEMINI_DOMAIN_REGEXES,
-    ...CURSOR_DOMAIN_REGEXES
+    ...VERTEX_AI_DOMAIN_REGEXES,
+    ...RETIRED_DOMAIN_REGEXES,
+    ...CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES
   ]);
 }
 
@@ -1361,6 +1619,9 @@ function buildAiGroup(config) {
 }
 
 function hardenTun(config) {
+  // 新版 Clash Verge Rev 在全局脚本执行后会按“权威字段”把 tun/ipv6 还原为
+  // 应用设置页的值，此函数的改动在这类宿主上无效；TUN 的 dns-hijack 与
+  // IPv6 开关需在 Verge 设置页配置。保留实现以兼容旧版宿主。
   if (!HARDEN_EXISTING_TUN_DNS_HIJACK) return;
   if (!isPlainObject(config.tun) || config.tun.enable !== true) return;
 
@@ -1411,10 +1672,9 @@ function hardenSniffer(config) {
 }
 
 function ensureProcessLookup(config) {
-  if (!ENABLE_AI_PROCESS_FALLBACK) return;
-  if (!config["find-process-mode"] || config["find-process-mode"] === "off") {
-    config["find-process-mode"] = "strict";
-  }
+  // 查找进程与进程路由分开：始终写顶层 always，供监控读取进程 identity。
+  // Clash Verge 写在 profile.find-process-mode 的值内核不用；保留该嵌套键不删。
+  config["find-process-mode"] = "always";
 }
 
 // ============================================================
@@ -1432,12 +1692,13 @@ function main(config, profileName) {
   validateReservedNameCollisions(config);
 
   // 2. 为当前 Profile 动态解析一个真实存在的上游名称。
-  const upstreamName = resolveUpstreamName(config, profileName);
+  const outboundIndex = buildOutboundIndex(config);
+  const upstreamName = resolveUpstreamName(config, profileName, outboundIndex);
 
   // 3. 防止 include-all / 嵌套组把家宽节点重新纳入上游，形成递归链。
   hardenAllIncludeAllGroups(config["proxy-groups"]);
-  hardenReachableUpstreamGraph(config, upstreamName);
-  validateTopLevelUpstream(config, upstreamName);
+  hardenReachableUpstreamGraph(config, upstreamName, outboundIndex);
+  validateTopLevelUpstream(config, upstreamName, outboundIndex);
 
   // 4. 构建家宽 SOCKS5，dialer-proxy 始终是单一、已解析名称。
   const homeProxy = buildHomeProxy(config, upstreamName);
@@ -1460,17 +1721,22 @@ function main(config, profileName) {
   // 7. 重建严格 DNS 路径。
   config.dns = buildDnsConfig(config.dns, upstreamName);
 
-  // 8. 加固用户已经启用的 TUN 与域名嗅探；进程级全量代理默认关闭。
+  // 8. 加固已启用的 TUN 与域名嗅探。查找进程写顶层 always；进程路由默认关闭。
   hardenTun(config);
   hardenSniffer(config);
   ensureProcessLookup(config);
 
   // 9. 统一关闭 Mihomo IPv6；操作系统层仍需由 TUN/系统路由约束。
+  // 新版 Clash Verge Rev 会把 ipv6 还原为应用设置值（见 hardenTun 注释）。
   config.ipv6 = false;
 
   info(
     `[${AI_GROUP} v${SCRIPT_VERSION}] Profile“${profileName || "<未命名>"}”` +
     `：dialer-proxy -> ${upstreamName}`
+  );
+  info(
+    `[${AI_GROUP}] 提示：新版 Clash Verge Rev 会在脚本执行后还原 tun/ipv6 ` +
+    "等权威字段；TUN 的 dns-hijack 与 IPv6 开关请在 Verge 设置页配置。"
   );
 
   return config;
@@ -1481,6 +1747,8 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     main,
     resolveUpstreamName,
+    buildOutboundIndex,
+    findOutbound,
     buildDnsConfig,
     buildUpstreamDoh,
     buildInjectedRules,
@@ -1498,15 +1766,34 @@ if (typeof module !== "undefined" && module.exports) {
       DIRECT_DOH,
       PRIVATE_DNS,
       PRESERVE_UNMANAGED_NAMESERVER_POLICY,
+      ROUTE_OPENAI_CORE,
+      ROUTE_OPENAI_AUTH,
+      ROUTE_OPENAI_WEB_ASSETS,
+      OPENAI_CORE_SUFFIX_DOMAINS,
+      OPENAI_CORE_EXACT_DOMAINS,
+      OPENAI_AUTH_SUFFIX_DOMAINS,
+      OPENAI_AUTH_EXACT_DOMAINS,
+      OPENAI_WEB_ASSET_SUFFIX_DOMAINS,
       ROUTE_GEMINI_WEB_CORE,
+      ROUTE_VERTEX_AI_ENDPOINTS,
       ROUTE_CURSOR_CORE,
+      ROUTE_CURSOR_REPOSITORY_INDEXING,
+      ROUTE_GROK_CORE,
+      ROUTE_GROK_WEB_ASSETS,
       ROUTE_CURSOR_PROCESS_FALLBACK,
       GEMINI_WEB_SUFFIX_DOMAINS,
       GEMINI_WEB_EXACT_DOMAINS,
-      GEMINI_DOMAIN_REGEXES,
+      VERTEX_AI_EXACT_DOMAINS,
+      VERTEX_AI_DOMAIN_REGEXES,
       CURSOR_SUFFIX_DOMAINS,
       CURSOR_EXACT_DOMAINS,
-      CURSOR_DOMAIN_REGEXES
+      CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES,
+      GROK_SUFFIX_DOMAINS,
+      GROK_STRICT_EXACT_DOMAINS,
+      GROK_EXACT_DOMAINS,
+      RETIRED_CORE_SUFFIX_DOMAINS,
+      RETIRED_CORE_EXACT_DOMAINS,
+      RETIRED_DOMAIN_REGEXES
     }
   };
 }

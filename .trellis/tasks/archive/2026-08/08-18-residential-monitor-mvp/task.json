@@ -1,0 +1,35 @@
+{
+  "id": "residential-monitor-mvp",
+  "name": "residential-monitor-mvp",
+  "title": "家宽流量监控 Tauri 桌面应用完整 v1",
+  "description": "Windows 11 本地全连接监控产品：托盘连续采集、SQLite 历史、分析报告、导出、告警、保留、备份恢复与安装升级",
+  "status": "completed",
+  "dev_type": null,
+  "scope": "residential-monitor",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-18",
+  "completedAt": "2026-08-18",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-18-monitor-foundation-spike",
+    "08-18-monitor-collector-storage",
+    "08-18-monitor-desktop-realtime",
+    "08-18-monitor-reporting-data",
+    "08-18-monitor-alerting-diagnostics",
+    "08-18-monitor-release-hardening"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "目录名保留最初的 mvp slug 以维持任务指针与历史连续性；完整 v1 规划已批准，C0–C5 子任务均已创建但保持 planning，未授权启动任何实施。",
+  "meta": {
+    "description": "residential-monitor 完整 Windows 11 v1：全连接采集、用户优先级分类、覆盖/缺口、SQLite 分层历史、报告导出、健康与流量告警、托盘自启动、备份恢复和 NSIS 手动升级"
+  }
+}

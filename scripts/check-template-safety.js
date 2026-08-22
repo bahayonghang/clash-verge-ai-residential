@@ -26,9 +26,20 @@ const scanExtensions = new Set([
   ".py",
   ".toml",
   ".yml",
-  ".yaml"
+  ".yaml",
+  ".rs",
+  ".ts",
+  ".tsx",
+  ".css",
+  ".html"
 ]);
-const ignoredDirectories = new Set([".git", "node_modules"]);
+const ignoredDirectories = new Set([
+  ".git",
+  "node_modules",
+  "target",
+  "dist",
+  "bench-data"
+]);
 const ignoredLocalFiles = new Set([
   "clash-verge-ai-residential.local.toml",
   "clash-verge-ai-residential.local.js"

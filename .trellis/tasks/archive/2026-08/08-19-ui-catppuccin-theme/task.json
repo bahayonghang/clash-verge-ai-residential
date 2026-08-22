@@ -1,0 +1,28 @@
+{
+  "id": "ui-catppuccin-theme",
+  "name": "ui-catppuccin-theme",
+  "title": "Catppuccin 明暗主题",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "residential-monitor",
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-19",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-19-ui-catppuccin-layout",
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "Catppuccin 四口味 token、设置切换与持久化"
+  }
+}

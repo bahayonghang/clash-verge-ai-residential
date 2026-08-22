@@ -1,0 +1,30 @@
+{
+  "id": "live-connection-ux-optimization",
+  "name": "live-connection-ux-optimization",
+  "title": "优化实时连接界面",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": "residential-monitor",
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-20",
+  "completedAt": "2026-08-20",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-20-live-filter-workspace",
+    "08-20-live-table-width-stability",
+    "08-20-live-connection-hotspot-summary"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}

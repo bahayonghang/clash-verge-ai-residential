@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Vanilla TS，禁止 UI 框架、远程 URL 和 CDN。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "图表必须有对应数据表；前端不聚合、不重算 Top N；进页读最新成功日或小时档案。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "图表与导出只消费同一 ReportResult；list/get 档案 Command 形状。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "其余差额只做展示比，不得写回 DTO 或改导出。"}
+{"file": "residential-monitor/docs/reporting.md", "reason": "同一 ReportResult；自动档案进页策略与手动查询不覆盖档案。"}
+{"file": ".trellis/tasks/08-19-reports-page-layout/prd.md", "reason": "本任务需求与 AC。"}
+{"file": ".trellis/tasks/08-19-reports-page-layout/design.md", "reason": "展示模型、画饼条件、页面构图。"}

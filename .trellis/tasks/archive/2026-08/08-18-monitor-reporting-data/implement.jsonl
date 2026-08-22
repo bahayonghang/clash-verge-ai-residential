@@ -1,0 +1,13 @@
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "加载 ReportService 所有权、C1 StorageCoordinator、C2 Recovery Shell、保留与备份恢复的总体约束。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "落实真实规模 SQL corpus、snapshot token、取消、WAL、精确保留、备份与并发性能预算。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "保持观测下界、coverage、连接元数据、secret 与报告口径符合控制器能力边界。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "检查 SQLite 数据层、ReportResult、导出 projection、RecoveryFacade 与 UI 的端到端契约。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "确保 UI 与三种导出复用同一报告投影、metadata、脱敏和状态实现。"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "C3 实现前加载 backend 模块、错误与密钥取消规范。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C3 只能通过 StorageCoordinator / RecoveryFacade 扩展，不得另建 writer。"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "secret 隔离；长查询必须 interrupt；FileDialogPort 与 OperationProgress 由 C3 落地。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "报告页只解码 DTO，不自行聚合。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "Command 边界解码 ReportResult / 导出 / 恢复状态。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "只替换 reports 页；图表必须有数据表；缺口不画零。"}
+{"file": ".trellis/spec/residential-monitor/storage/index.md", "reason": "C3 追加 migration、短读事务、Online Backup。"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "WAL/FULL/单 writer；不得复制热库；低空间 fail closed。"}

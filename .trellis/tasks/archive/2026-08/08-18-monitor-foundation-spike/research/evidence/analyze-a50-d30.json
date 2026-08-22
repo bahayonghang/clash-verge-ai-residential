@@ -1,0 +1,46 @@
+{
+  "tables": [
+    {
+      "name": "c0_chain",
+      "rows": 1296000,
+      "bytes": 26206208,
+      "bytes_per_row": 20.22083950617284,
+      "page_count": 6398
+    },
+    {
+      "name": "c0_daily",
+      "rows": 30,
+      "bytes": 4096,
+      "bytes_per_row": 136.53333333333333,
+      "page_count": 1
+    },
+    {
+      "name": "c0_hourly",
+      "rows": 23040,
+      "bytes": 540672,
+      "bytes_per_row": 23.466666666666665,
+      "page_count": 132
+    },
+    {
+      "name": "c0_meta",
+      "rows": 2,
+      "bytes": 4096,
+      "bytes_per_row": 2048.0,
+      "page_count": 1
+    },
+    {
+      "name": "c0_minute",
+      "rows": 2160000,
+      "bytes": 39485440,
+      "bytes_per_row": 18.280296296296296,
+      "page_count": 9640
+    },
+    {
+      "name": "c0_session",
+      "rows": 432000,
+      "bytes": 56373248,
+      "bytes_per_row": 130.49362962962962,
+      "page_count": 13763
+    }
+  ]
+}

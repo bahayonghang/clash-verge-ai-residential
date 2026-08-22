@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "Runtime model and pre-dev checklist; confirm generated rules/DNS unchanged"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Fail-closed helper boundaries; findOutbound must not silently rebuild"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "CI gate, regression style, secret scan"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Idempotence and host fail-open if main throws"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Managed-rule ownership and no silent overwrite"}
+{"file": ".trellis/tasks/08-17-script-runtime-perf/research/performance-analysis.md", "reason": "Confirm research findings P2-P4 stay out of scope; verify PRD R2 summary warn and R3 routing invariants"}

@@ -1,0 +1,14 @@
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "加载 C4 的模块所有权、同事务 CommitBundle、Windows 通知、报告复用和发布前约束。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "约束告警热路径、prepared statements、outbox 有界扫描、WAL、ingestion SLO 和压力测试指标。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "用于健康告警和脱敏诊断正确区分 TCP 鉴权、管道 ACL、busy、协议不兼容与核心重启。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "告警跨核算、存储、报告、Windows 能力和前端，需统一 DTO、状态与数据流边界。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "强制复用 C3 ReportService/rollup 与既有 health 投影，避免第二套聚合和重复状态逻辑。"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "C4 backend checklist and module ownership"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C4 module location, Recovery Shell, no second writer"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "secret ban, cancellation, diagnostic export"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "frontend DTO and view-state checklist"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "versioned Channel and command decoding"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "alerts route replacement, no frontend aggregation"}
+{"file": ".trellis/spec/residential-monitor/storage/index.md", "reason": "storage quality gates"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "forward migration, WAL, checksum, user_version"}
+{"file": ".trellis/tasks/archive/2026-08/08-18-monitor-reporting-data/research/c3-gate-status.md", "reason": "C3 independent gate status and known limits"}

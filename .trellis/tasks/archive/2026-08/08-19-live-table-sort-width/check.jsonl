@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "后端质量门。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C2 边界与设置键。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "typecheck/lint/test/build。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "查询页权威；未知不画零。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "会话筛选与空态关闭合同。"}
+{"file": ".trellis/tasks/08-19-live-table-sort-width/prd.md", "reason": "AC1–AC8。"}
+{"file": ".trellis/tasks/08-19-live-table-sort-width/design.md", "reason": "合同对照。"}

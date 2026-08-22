@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "运行时模型（粘贴式扩展脚本 + Node CLI）与预开发检查清单"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "清单常量与转换单元的组织模式"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "宿主入口 main 与 sync-local-config.js CLI 边界、文件写入副作用约束"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "配置所有权与幂等性要求，TOML 补全必须幂等且不重写用户内容"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "纯 JS 运行时守卫与校验风格，补全器需同等严格"}
+{"file": "docs/routing-scope.md", "reason": "新域名验收规则：最窄匹配、官方证据、负向排除（marketplace/CDN/更新/分析）"}
+{"file": "docs/local-configuration.md", "reason": "本地 TOML 与渲染流程的用户文档，补全行为需同步更新"}

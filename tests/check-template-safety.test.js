@@ -43,7 +43,7 @@ function forbiddenSecrets() {
 test("安全模板和可提交文本通过扫描", () => {
   withTemporaryDirectory((directory) => {
     writeSafeTemplate(directory);
-    for (const extension of [".json", ".jsonl", ".md", ".py", ".toml", ".yml", ".yaml"]) {
+    for (const extension of [".json", ".jsonl", ".md", ".py", ".toml", ".yml", ".yaml", ".rs", ".ts"]) {
       fs.writeFileSync(path.join(directory, `safe${extension}`), "safe fixture\n", "utf8");
     }
 
@@ -64,7 +64,7 @@ test("公共模板中的真实代理字段会被拒绝", () => {
 test("所有可提交文本格式都会扫描常见凭据", () => {
   withTemporaryDirectory((directory) => {
     writeSafeTemplate(directory);
-    const extensions = [".js", ".json", ".jsonl", ".md", ".py", ".toml", ".yml", ".yaml"];
+    const extensions = [".js", ".json", ".jsonl", ".md", ".py", ".toml", ".yml", ".yaml", ".rs", ".ts"];
     for (const extension of extensions) {
       fs.writeFileSync(
         path.join(directory, `secret${extension}`),

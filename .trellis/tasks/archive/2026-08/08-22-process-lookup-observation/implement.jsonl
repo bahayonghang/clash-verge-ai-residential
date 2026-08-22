@@ -1,0 +1,6 @@
+{"file": "CONTEXT.md", "reason": "查找进程与进程路由不是同一概念。"}
+{"file": "docs/adr/0001-process-lookup-vs-process-routing.md", "reason": "脚本写顶层 always，不注入进程规则。"}
+{"file": "docs/configuration.md", "reason": "ai_process_fallback 与查找进程的现有说明。"}
+{"file": "docs/routing-scope.md", "reason": "默认不进程级路由。"}
+{"file": ".trellis/spec/guides/index.md", "reason": "改配置常量前读代码复用指南。"}
+{"file": ".trellis/tasks/08-22-process-attribution/research/runtime-process-coverage.md", "reason": "嵌套 profile 键未被内核使用。"}

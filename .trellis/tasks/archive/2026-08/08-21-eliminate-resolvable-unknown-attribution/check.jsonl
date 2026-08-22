@@ -1,0 +1,10 @@
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "verify lifecycle, epochs, and C2/C3 boundary contracts"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "verify strict decoding and DTO compatibility"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "verify live/historical state semantics"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "verify storage idempotence and materialized dimensions"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "verify complete cross-layer contract"}
+{"file": ".trellis/tasks/08-21-eliminate-resolvable-unknown-attribution/research/current-backend-storage-attribution.md", "reason": "recheck code-backed root causes"}
+{"file": ".trellis/tasks/08-21-eliminate-resolvable-unknown-attribution/research/frontend-query-unknown-semantics.md", "reason": "recheck UI/query semantics and tests"}
+{"file": ".trellis/tasks/08-21-eliminate-resolvable-unknown-attribution/research/mihomo-connection-contract.md", "reason": "recheck upstream field semantics"}
+{"file": ".trellis/tasks/08-21-eliminate-resolvable-unknown-attribution/research/local-database-unknown-audit.md", "reason": "compare post-change data against the screenshot baseline"}
+{"file": ".trellis/tasks/08-21-eliminate-resolvable-unknown-attribution/research/prior-unknown-task-residual-gaps.md", "reason": "prevent scope regression and false backfill claims"}

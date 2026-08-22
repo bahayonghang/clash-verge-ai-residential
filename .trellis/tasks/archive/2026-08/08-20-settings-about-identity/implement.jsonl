@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"AboutDto.signed === true 解码失败；发布地址只展示固定 URL；设置分区是会话视图状态。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"get_about 载荷 fail-closed；缺字段不得猜。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"C5 关于页字段与固定 Releases URL；不注册 updater、不新增 Windows Service。"}
+{"file":".trellis/tasks/08-20-settings-about-sidebar/research/about-and-sidebar-evidence.md","reason":"当前空卡、点击才加载、三段段落与 errorZh 发布地址的代码锚点。"}
+{"file":".trellis/tasks/08-20-settings-about-identity/prd.md","reason":"本子任务范围：自动加载、定义列表、静态 MIT/平台/隐私行。"}

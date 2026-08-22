@@ -1,0 +1,49 @@
+{
+  "protocol_version": 1,
+  "generated_at_utc": "2026-08-18T05:40:43.008608600+00:00",
+  "subject": "sqlite-binding",
+  "machine": {
+    "os": "windows",
+    "arch": "x86_64",
+    "cpu_cores": 24,
+    "hostname_redacted": true
+  },
+  "tool_versions": {
+    "rustc": "rustc-host",
+    "sqlite": "3.53.2",
+    "binding": "rusqlite",
+    "node": null,
+    "tauri": "2"
+  },
+  "inputs": {
+    "identifier": "io.github.bahayonghang.residential-monitor"
+  },
+  "observations": {
+    "binding": "rusqlite",
+    "checkpoint": true,
+    "foreign_keys": true,
+    "interrupt": true,
+    "license": "blessing / rusqlite MIT-compatible bundled SQLite",
+    "paged_backup": true,
+    "prepared_reuse": true,
+    "progress_handler": true,
+    "sqlite_version": "3.53.2",
+    "statement_status": true,
+    "strict": true,
+    "synchronous_full": true,
+    "wal": true
+  },
+  "threshold_source": "parent-prd-ac15-and-c0-implement",
+  "decision": "adopt",
+  "fallback_trigger": null,
+  "constraints_for_c1": [
+    "使用 rusqlite bundled，WAL + synchronous=FULL。",
+    "C1 必须调用 interrupt、progress、paged backup、checkpoint 和 statement status。",
+    "不得把 C0 候选 schema 复制为正式 migration。",
+    "若 sqlite_version < 3.51.3，C1 只能单 writer 加短读，不得宣称已获得 3.51.3 WAL 多连接修复。"
+  ],
+  "evidence_paths": [],
+  "artifact_sha256": {},
+  "redacted": true,
+  "approved_by": "user-2026-08-18"
+}

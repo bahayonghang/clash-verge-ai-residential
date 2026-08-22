@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "Runtime model and pre-dev checklist for the extension script"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Function shape and fail-closed helper patterns"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Host timeout, 1000-log cap, double-run idempotence"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "No module-level cache; index is per main() invocation"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "node:test patterns, just ci, no extra dependencies"}
+{"file": ".trellis/tasks/08-17-script-runtime-perf/research/performance-analysis.md", "reason": "Measured O(N*P) hotspot, console-cap failure, and planning-review contract: required index, Set+8 samples, namedItems key parity"}

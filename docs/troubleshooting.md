@@ -35,7 +35,13 @@ This can be expected under AI-only routing. Marketplace, update, download, media
 
 ## Cursor Marketplace or YouTube hits AI-家宽
 
-Cursor routing is disabled by default in v5.5, and Marketplace or YouTube is excluded even when Cursor core is enabled. Common causes of an unexpected match are:
+从 v5.6 起，Cursor 核心路由默认启用。从 v5.9.0 起，仓库索引主机 `repo[0-9]+.cursor.sh` 改由 `routing.cursor_repository_indexing` 控制，默认是 `false`，回落原 Profile / 机场上游。缺失的本地 TOML 字段会按 `false` 补全；显式设为 `true` 可恢复 v5.8.1 的 repo 家宽路由。即使启用 Cursor 核心路由，Marketplace 和 YouTube 仍不在分流范围内；如需让 Cursor 核心流量也使用机场上游，请在本地 TOML 中设置 `routing.cursor_core = false`。
+
+若 `repo42.cursor.sh` 仍命中 `AI-家宽`，先检查是否把 `routing.cursor_repository_indexing` 设为 `true`，以及订阅或 Merge 层是否残留用户自有的 `DOMAIN,repo42.cursor.sh,AI-家宽`。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`；该主机仍由 `cursor_core` 控制，Clash 域名规则无法在保留多数 Cursor API 的同时隔离这条回退路径。默认关闭索引家宽不能宣称已排除全部仓库上传。
+
+Clash Verge 脚本控制台只显示 `Script execution failed` 时，查看 `%APPDATA%\io.github.clash-verge-rev.clash-verge-rev\logs\latest.log`。`Script execution error: expected value at line 1 column 1` 表示 `main` 抛错后返回值为空。最常见原因是把公开模板 `clash-verge-ai-residential.js`（`HOME_PROXY_TEMPLATE` 为 `xxx`）粘进 Global Extend Script，而当前 Profile 没有预置 `家宽-SOCKS5` 节点。应粘贴 `just render-local` 生成的 `clash-verge-ai-residential.local.js`。
+
+意外命中的常见原因包括：
 
 - stale rules remain in a subscription, another script, or Global Extend Config (Merge);
 - a broad user rule such as `DOMAIN-SUFFIX,cursor.com,AI-家宽` exists outside this script;
@@ -71,3 +77,19 @@ Strict DNS rebuilding sends real non-AI overseas lookups through DoH bound to th
 ## Chat/voice or realtime feature fails
 
 The default AI-only policy does not capture generic STUN/TURN or all realtime UDP ports. Confirm the exact product host and the UDP capability of both the airport path and residential SOCKS5 service before enabling shared realtime switches.
+
+## 全新离线安装时配置验证失败（geosite.dat）
+
+重建后的 DNS 策略包含 `geosite:cn` 和 `geosite:private`，两者依赖 `geosite.dat`。Mihomo 首次使用时会下载该文件；设备离线且没有已有副本时，配置解析会失败，Clash Verge Rev 会报告验证错误。若发生在首次启动，应用会回退到最小默认配置。请让设备联网一次，使 Mihomo 能够获取地理数据库（大多数订阅配置也会触发相同下载）；也可以将有效的 `geosite.dat` 放入 Mihomo 工作目录，然后刷新 Profile。
+
+## 脚本中的 TUN DNS 劫持和 IPv6 设置未生效
+
+当前版本的 Clash Verge Rev 会在全局脚本运行后，将控制平面字段（`tun`、`ipv6`、模式、端口）恢复为应用设置值。因此，脚本补全的 TUN DNS 劫持和 `ipv6: false` 在这些宿主上不会生效；相关逻辑仅用于兼容旧版宿主。请改为在 Clash Verge Rev 设置页面配置 IPv6 开关和 TUN DNS 劫持。脚本重建的 DNS 服务器、`nameserver-policy` 和 fake-ip 字段不受影响；但启用 Clash Verge Rev 的 DNS 覆盖后，`dns.ipv6` 也会从应用设置恢复。
+
+## 警告提示已从上游组移除引用
+
+从解析后的 `dialer-proxy` 可达的上游图不得包含 `AI-家宽` 或 `家宽-SOCKS5`，否则链路会递归。脚本发现此类引用时会将其移除，并在警告中记录组名和被移除的条目。请使用目标为 `AI-家宽` 的规则路由 AI 流量，不要将该组嵌套在上游选择器中。若需要自定义 AI 选择器，请确保它不在 `家宽-SOCKS5` 的上游图中。
+
+## 私有 CIDR 规则覆盖自定义内网路由
+
+脚本会在用户规则之前插入回环地址和 RFC1918 网段的直连规则，因为这些规则必须位于所有进程回退规则之前。如果 Profile 有意通过企业代理组转发 `10.0.0.0/8` 等私有网段，注入的 `DIRECT` 规则会优先匹配。这是 fail-closed 设计取舍；请调整对受影响网段的路由预期，或为该 Profile 禁用脚本。

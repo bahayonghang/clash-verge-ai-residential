@@ -1,0 +1,28 @@
+{
+  "id": "monitor-alerting-diagnostics",
+  "name": "monitor-alerting-diagnostics",
+  "title": "家宽监控告警与诊断",
+  "description": "在 C3 报告与汇总能力之上交付健康和流量告警、可靠通知 outbox、告警中心与脱敏诊断",
+  "status": "completed",
+  "dev_type": null,
+  "scope": "residential-monitor",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-18",
+  "completedAt": "2026-08-18",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-18-residential-monitor-mvp",
+  "relatedFiles": [],
+  "notes": "C4 已实施。task.py start 以 degraded 会话身份成功。NSIS 安装态通知 / Focus Assist 真机与完整 30 天库重跑未执行。",
+  "meta": {
+    "description": "C4：健康告警、60 秒滚动速率与周期用量规则、同事务告警/outbox、Windows 通知、告警中心和脱敏诊断"
+  }
+}

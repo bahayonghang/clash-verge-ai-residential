@@ -1,0 +1,7 @@
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/design.md", "reason": "第 2.5 节对账表是验收基准：保留 39 / 退出激活 5 / 收窄 4 / 改类型 1，改动后激活规则应为 44 条"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/prd.md", "reason": "验收标准 1-8，特别是标准 5：无运行时证据的判断必须标记 UNVERIFIED，单元断言不得作为产品可用性依据"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/implement.md", "reason": "步骤 8 的正向/负向/开关组合/幂等清理/规则总数五组断言清单；步骤 11 的部署后取证矩阵"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/google-gemini-domains.md", "reason": "复核 vertex_ai_endpoints=false 时四条规则是否全部关闭，防止只关正则的实现回归"}
+{"file": "docs/routing-scope.md", "reason": "复核 Explicit exclusions 是否已收录 5 条退出激活域名与 assets.grok.com / docs.antigravity.google / download.antigravity.google"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/openai-codex-endpoints.md", "reason": "复核 Codex 后台覆盖与 chatgpt.com 收窄时是否漏掉 ws.chatgpt.com"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/review-findings.md", "reason": "复核第三次审阅列出的缺陷是否已在实现中处理"}

@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "复核无 UI 框架、无远程 URL，以及 typecheck/lint/test/build。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "复核 route 未增删，前端未重做核算或 Top N。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "复核 decoder/reducer 契约未被壳层改版改写。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "复核图标映射留在前端，bootstrap 路由表形状未变。"}

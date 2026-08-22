@@ -1,0 +1,9 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": "PRODUCT.md", "reason": "未知保持未知，不得把缺口画成零。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "采集与 C3 查询边界。"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "不得改写已发布 migration；未知 identity 哨兵。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "未知单独展示；图表必须有对应表。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "host 从控制器经账本到排名的跨层数据流。"}
+{"file": "residential-monitor/docs/reporting.md", "reason": "排名 __unknown__ 留在排名中，不参与下钻。"}
+{"file": ".trellis/tasks/08-21-unknown-host-en-sidebar/research/unknown-host-24h.md", "reason": "本机 24h 未知行组成与截图对照。"}
+{"file": ".trellis/tasks/08-21-unknown-host-attribution/design.md", "reason": "identity 回退、无 schema 变更、未知过滤。"}

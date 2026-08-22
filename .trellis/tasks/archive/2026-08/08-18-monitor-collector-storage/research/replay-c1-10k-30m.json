@@ -1,0 +1,19 @@
+{
+  "active": 10000,
+  "hz": 1,
+  "frames": 1800,
+  "duration_ms": 1802597,
+  "p50_ms": 19,
+  "p95_ms": 21,
+  "p99_ms": 43,
+  "max_ms": 184,
+  "prepare_reuse": 18000000,
+  "commits": 1800,
+  "dropped_unexplained": 0,
+  "synchronous": "FULL",
+  "all_counters_change": true,
+  "db_bytes": 290816,
+  "wal_bytes": 0,
+  "queue_depth_max": 1,
+  "profile": "c1"
+}

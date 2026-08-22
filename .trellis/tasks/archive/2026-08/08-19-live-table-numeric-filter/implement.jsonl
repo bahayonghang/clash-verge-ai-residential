@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "后端 checklist。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "筛选只留会话。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "条件在查询层。"}
+{"file": ".trellis/tasks/08-19-live-table-sort-width/design.md", "reason": "数值 field/mode/单位因子。"}
+{"file": ".trellis/tasks/08-19-live-table-numeric-filter/prd.md", "reason": "本子任务需求。"}
+{"file": ".trellis/tasks/08-19-live-table-numeric-filter/design.md", "reason": "本子任务边界。"}

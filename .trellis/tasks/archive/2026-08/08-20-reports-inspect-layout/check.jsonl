@@ -1,0 +1,5 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Quality commands and frontend bans"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "Reports page contracts the check must not regress"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "New helpers must extend live-table restore, not duplicate paint"}
+{"file": ".trellis/tasks/08-20-reports-inspect-layout/research/report-paint-reset.md", "reason": "Verify skip-paint and restore actually address the measured cause"}

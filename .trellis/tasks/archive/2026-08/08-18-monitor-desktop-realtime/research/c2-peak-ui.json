@@ -1,0 +1,10 @@
+{
+  "frames": 1800,
+  "active": 10000,
+  "rowCount": 10000,
+  "p50Ms": 19.8477,
+  "p95Ms": 23.3737,
+  "p99Ms": 25.5375,
+  "maxMs": 27.0306,
+  "notThirtyDayCapacity": true
+}

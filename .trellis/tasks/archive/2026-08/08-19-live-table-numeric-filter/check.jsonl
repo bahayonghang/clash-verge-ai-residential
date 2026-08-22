@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "AND、8 条、会话级。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "前端质量门。"}
+{"file": ".trellis/tasks/08-19-live-table-numeric-filter/prd.md", "reason": "AC6。"}
+{"file": ".trellis/tasks/08-19-live-table-sort-width/design.md", "reason": "换算与未知不命中。"}

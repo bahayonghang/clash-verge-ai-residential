@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "后端 checklist 与质量门。"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Vanilla TS、禁止远程资源。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "语言、查询筛选与 DTO 跨层。"}
+{"file": ".trellis/tasks/08-19-live-clash-columns/prd.md", "reason": "父任务需求与跨子任务验收。"}
+{"file": ".trellis/tasks/08-19-live-clash-columns/design.md", "reason": "子任务边界与缺省兼容。"}

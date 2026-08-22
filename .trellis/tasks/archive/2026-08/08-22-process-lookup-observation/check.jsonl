@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "根 just ci 与模板安全。"}
+{"file": "docs/adr/0001-process-lookup-vs-process-routing.md", "reason": "不得借查找进程打开进程路由。"}

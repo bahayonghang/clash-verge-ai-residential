@@ -1,0 +1,8 @@
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"启动策略跨越 Rust 生命周期、collector、Tauri Channel 与前端设置状态，需先画清边界和契约。"}
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"约束 Vanilla TypeScript、DTO 解码、质量门与禁止远程资源。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"自动连接状态与 Channel bootstrap/resync 必须消费既有版本化 DTO。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"设置二级导航、草稿、主题与实时状态必须遵守前端状态所有权。"}
+{"file":".trellis/spec/residential-monitor/backend/index.md","reason":"Rust 后端模块边界与 fmt/clippy/test 质量门。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"collector、稳定错误码、secret-free 日志与生命周期边界。"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"设置页 secret 回填、凭据保存与自动连接不得越过安全契约。"}
+{"file":".trellis/tasks/08-19-monitor-auto-connect-settings-redesign/research/current-state.md","reason":"共享的当前代码证据、并行托盘任务冲突和用户首启决策。"}

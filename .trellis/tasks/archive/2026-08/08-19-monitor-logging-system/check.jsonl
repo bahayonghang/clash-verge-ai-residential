@@ -1,0 +1,9 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "fmt/clippy/test 门。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "不改采集循环与 coverage。"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "日志与诊断扫描无 secret。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "logDir 与删除 DTO 解码。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "Recovery 无库时只改内存；不加删除入口。"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "无新表、无改写 migration。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "打开目录不收前端路径。"}
+{"file": ".trellis/tasks/08-19-monitor-logging-system/prd.md", "reason": "AC1–AC8。"}
+{"file": ".trellis/tasks/08-19-monitor-logging-system/design.md", "reason": "轮转上限、session 去重、explorer spawn。"}

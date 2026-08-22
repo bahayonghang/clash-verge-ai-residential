@@ -1,0 +1,10 @@
+{"file": "CONTEXT.md", "reason": "进程 identity、控制器未报告进程、跨维下钻、核算口径。"}
+{"file": "docs/adr/0002-unknown-process-drilldown.md", "reason": "进程未知行过滤与下钻。"}
+{"file": "docs/adr/0003-controller-only-process-identity.md", "reason": "禁止操作系统反查与历史回填。"}
+{"file": "PRODUCT.md", "reason": "未知保持未知；前端不重做核算。"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "未知哨兵不得写入 dimension_dict。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "LiveOverview 与 ReportFilters 边界解码。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "视图选择与 DTO 缓存。"}
+{"file": "residential-monitor/docs/reporting.md", "reason": "现有未知行与下钻契约。"}
+{"file": ".trellis/tasks/archive/2026-08/08-21-unknown-host-attribution/design.md", "reason": "主机未知哨兵过滤是本任务的对照实现。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "查询过滤与前端 filters 必须同语义。"}

@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "typecheck/lint/test/build 门；禁止 UI 框架和远程资源。"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "核对字体缓存只留会话、保存仍走本机键。"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "非法 uiFont 必须回落 system，不得猜测。"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "fmt/clippy -D warnings 与相关 cargo test。"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "外观写失败与列表失败的错误码/下一步动作。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "前后端族名校验与 CSS 变量应用是否一致。"}

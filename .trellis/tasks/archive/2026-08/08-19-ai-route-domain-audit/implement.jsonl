@@ -1,0 +1,12 @@
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/design.md", "reason": "互斥账本：49 条当前规则的逐条判定与目标规则文本；第 3 节定义两个新开关的精确语义；第 4 节列出必须保留在 allPossible* 中的迁移清理项"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/prd.md", "reason": "证据优先策略的决定与接受的风险；验收标准 2 要求逐条表分项之和等于 49"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/anthropic-domains.md", "reason": "assets-proxy 与 claudeusercontent 官方原文；a-api 按遥测退出；claudemcpcontent 出处已更正"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/claude-backend-endpoints.md", "reason": "Claude Desktop 精简放行清单与 3P egress 表：a-api 用途、claudemcpcontent 通配、a.claude.ai 等子域"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/google-gemini-domains.md", "reason": "Antigravity Enterprise 与多区域端点官方原文，决定 routing.vertex_ai_endpoints 必须默认 true 且覆盖四条规则；alkali* 与 daily-* 无出处的判定依据"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/cursor-domains.md", "reason": "官方精确主机清单：哪些 Cursor 后缀必需（api5 / gcpp / authentication / cursorvm）、哪些可收窄（api2 / authenticate / adminportal42）"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/xai-grok-domains.md", "reason": "api.x.ai 区域端点与 mtls 端点的官方出处；grok_web_assets=false 分支必须包含 code.grok.com 的依据"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/openai-domains.md", "reason": "OpenAI 侧判定依据；第三次检索后不得再用 9247338 通配单独证明必须保留 chatgpt.com 后缀"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/openai-codex-endpoints.md", "reason": "Codex ChatGPT 登录 vs API Key 的官方后台主机与路径；收窄 chatgpt.com 时必须同时保留 ws.chatgpt.com"}
+{"file": ".trellis/tasks/08-19-ai-route-domain-audit/research/review-findings.md", "reason": "第三次审阅列出的规划缺陷，实施前核对是否已按用户决定改账本"}
+{"file": "docs/routing-scope.md", "reason": "现行路由范围契约与新增域名的接受规则；步骤 9 需同步更新 Explicit exclusions 与 UNVERIFIED 小节"}
+{"file": "docs/configuration.md", "reason": "开关文档格式；步骤 7 新增两个 routing 开关需按同一格式记录"}

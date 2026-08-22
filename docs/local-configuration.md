@@ -25,7 +25,9 @@ udp = true
 dialer-proxy = "🚀节点选择"
 
 [routing]
-cursor_core = false
+cursor_core = true
+cursor_repository_indexing = false
+grok_core = true
 ```
 
 字段含义：
@@ -60,22 +62,29 @@ test -e clash-verge-ai-residential.local.toml || \
 
 ## 开关配置
 
-`[routing]` 和 `[runtime]` 都是可选表，并且允许只写需要覆盖的键；未写的键沿用公开脚本默认值。因此，旧版只含 `[home_proxy]` 的本地 TOML 仍可直接渲染。以下 TOML 键与 JavaScript 常量是一一映射，不要根据 `ROUTE_*` / `ENABLE_*` 前缀自行猜测键名。
+`[routing]` 和 `[runtime]` 都是可选表，并且允许只写需要覆盖的键。同步时，本地 TOML 缺失的开关键（包括整个缺失的表）会按示例文件的默认值自动补全并写回本地文件；已有键值、注释和行尾风格逐字保留，`[home_proxy]` 的凭据字段缺键仍会报错要求手填。因此，旧版只含 `[home_proxy]` 的本地 TOML 也可以直接渲染，渲染器会顺手补齐缺失开关。以下 TOML 键与 JavaScript 常量是一一映射，不要根据 `ROUTE_*` / `ENABLE_*` 前缀自行猜测键名。
 
 ### 路由范围
 
 | TOML 键 | JavaScript 常量 | 默认值 | 作用 | 依赖或风险 |
 | --- | --- | --- | --- | --- |
 | `routing.openai_shared_dependencies` | `ROUTE_OPENAI_SHARED_DEPENDENCIES` | `false` | 路由 OpenAI 的 WorkOS、客服、遥测、支付等共享依赖。 | 会扩大到非模型流量。 |
+| `routing.openai_core` | `ROUTE_OPENAI_CORE` | `true` | 路由 ChatGPT 产品、OpenAI 模型 API 和用户上传/生成内容。 | 关闭后 GPT 流量改走机场上游。 |
+| `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `false` | 路由第一方登录主机 `auth.openai.com`（含其子域）和精确主机 `auth0.openai.com`。 | 与核心流量、网页资源和共享第三方依赖相互独立；不会匹配整个 `openai.com`。 |
+| `routing.openai_web_assets` | `ROUTE_OPENAI_WEB_ASSETS` | `false` | 路由 `oaistatic.com` 网页静态资源后缀。 | 与第一方登录及共享第三方依赖独立；仅在页面资源确需同出口时开启。 |
 | `routing.claude_shared_dependencies` | `ROUTE_CLAUDE_SHARED_DEPENDENCIES` | `false` | 路由 Claude 的统计、客服、风控等共享依赖。 | 会扩大到非模型流量。 |
 | `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `false` | 路由 Antigravity 使用的共享 Google 登录入口。 | 影响其他 Google 产品的认证流量。 |
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | 路由 Service Usage、Resource Manager、IAM、API Hub 等项目 API。 | 属于项目配置而非推理。 |
 | `routing.antigravity_update_and_telemetry` | `ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY` | `false` | 路由 Antigravity 更新、扩展市场和遥测。 | 会扩大到更新和统计流量。 |
 | `routing.gemini_web_core` | `ROUTE_GEMINI_WEB_CORE` | `true` | 路由 Gemini Web 和 Google AI Studio 产品入口。 | 无。 |
-| `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `false` | 路由 Cursor AI API、Tab、Agent、索引和产品专属认证。 | Cursor 用户需显式开启。 |
+| `routing.vertex_ai_endpoints` | `ROUTE_VERTEX_AI_ENDPOINTS` | `true` | 路由四条 Vertex AI / Agent Platform 规则：`aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com`，以及区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$`。 | 不使用 Antigravity 企业推理或其他 Vertex AI 流量时可改为 `false`，这些主机改走机场上游。 |
+| `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `true` | 路由 Cursor AI API、Tab、Agent、授权/SSO 门户、Cloud Agent VM 和产品专属认证。 | 不需要 Cursor 核心流量走家宽时可显式改为 `false`。`api2.cursor.sh` 始终由本开关控制。 |
+| `routing.cursor_repository_indexing` | `ROUTE_CURSOR_REPOSITORY_INDEXING` | `false` | 路由 Cursor 仓库索引主机 `repo[0-9]+.cursor.sh`。 | 与 `routing.cursor_core` 独立。默认回落原 Profile / 机场上游；缺字段按 `false` 补全；显式 `true` 恢复 v5.8.1 的 repo 家宽路由。官方与本机 2026-08-17 日志共同确认的精确主机是 `repo42.cursor.sh`；数字通配是项目前向兼容策略，不是 Cursor 官方通配合同。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`，域名规则无法在保留多数 API 的同时隔离该路径，因此不能宣称已排除全部仓库上传。 |
+| `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | 路由 Grok Build（xAI grok CLI）推理 API（`cli-chat-proxy.grok.com`）、Grok 产品域、`auth.x.ai` 与 `api.x.ai`。 | 不需要 Grok 走家宽时可显式改为 `false`。 |
+| `routing.grok_web_assets` | `ROUTE_GROK_WEB_ASSETS` | `true` | 为 `true` 时注入 `DOMAIN-SUFFIX,grok.com`；为 `false` 时把该后缀换成精确主机 `grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`。`DOMAIN-SUFFIX,api.x.ai` 仍由 `routing.grok_core` 控制。 | 依赖 `routing.grok_core = true`。`false` 时 `assets.grok.com` 改走机场上游。 |
 | `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | 增加 Cursor 进程级兜底规则。 | 仅在 `routing.ai_process_fallback = true` 时生效，会捕获非 AI 请求。 |
 | `routing.claude_code_auxiliary` | `ROUTE_CLAUDE_CODE_AUXILIARY` | `false` | 路由 Claude Code 安装、更新、文档和包管理端点。 | 属于辅助流量而非推理。 |
-| `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | 为已知 AI 应用增加进程级兜底并启用进程查找。 | 会把进程中的非 AI 请求一并路由。 |
+| `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | 为已知 AI 应用增加进程级兜底。 | 会把进程中的非 AI 请求一并路由。查找进程由脚本写到 Mihomo 顶层 `find-process-mode: always`，与本开关无关。写在 `profile:` 下的值内核不用。 |
 | `routing.anthropic_ip_fallback` | `ENABLE_ANTHROPIC_IP_FALLBACK` | `true` | 使用 Anthropic 官方入站网段覆盖纯 IP 连接。 | 无。 |
 | `routing.shared_realtime_infrastructure` | `ROUTE_SHARED_REALTIME_INFRASTRUCTURE` | `false` | 路由通用 STUN/TURN 实时通信基础设施。 | 可能捕获其他应用的实时流量。 |
 | `routing.global_realtime_ports` | `ROUTE_GLOBAL_REALTIME_PORTS` | `false` | 按通用实时 UDP 端口增加规则。 | 仅在 `routing.shared_realtime_infrastructure = true` 时生效，范围很宽。 |
@@ -91,7 +100,7 @@ test -e clash-verge-ai-residential.local.toml || \
 | `runtime.enable_domain_sniffer` | `ENABLE_DOMAIN_SNIFFER` | `true` | 加固域名嗅探以补偿纯 IP 连接和 DNS 映射缺失。 | 不会全局改写目标地址。 |
 | `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | 为已经启用的 TUN 补齐 DNS 劫持项。 | 仅在 Profile 已启用 TUN 时生效。 |
 | `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | 为已有 TUN 开启 `strict-route`。 | 依赖 TUN 已启用且 `runtime.harden_existing_tun_dns_hijack = true`，可能影响虚拟机或特殊路由。 |
-| `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | 对可达子组或节点显式禁用 UDP 输出警告。 | 顶层上游禁用 UDP 仍会直接失败。 |
+| `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | 对可达叶子显式关闭 UDP 汇总为一条警告（最多 8 个样本）。 | 顶层上游禁用 UDP 仍会直接失败。 |
 
 ## 生成本地脚本
 
@@ -107,13 +116,19 @@ just render-local
 node scripts/sync-local-config.js
 ```
 
-`render-local` 表示单向渲染，而非双向同步：它读取公开的 `clash-verge-ai-residential.js` 与本地 TOML，生成 `clash-verge-ai-residential.local.js`，不会修改公开模板或反向写入 TOML。不要手动编辑生成的 `.local.js`；修改 TOML 后重新生成即可。
+`render-local` 表示单向渲染，而非双向同步：它读取公开的 `clash-verge-ai-residential.js` 与本地 TOML，生成 `clash-verge-ai-residential.local.js`，不会修改公开模板。唯一的例外是缺失开关的自动补全：本地 TOML 缺少的开关键会按示例默认值写回本地文件，方便你看到并调整所有可用开关；用户已写的键值、注释与行尾风格不会被改写。不要手动编辑生成的 `.local.js`；修改 TOML 后重新生成即可。
 
 在 Clash Verge Rev 中打开 **Profiles -> Global Extend Script**，双击脚本卡片，将**生成的本地脚本**全部粘贴并保存，然后刷新当前 Profile：
 
 ![Clash Verge Rev 的 Profiles 页面与 Global Extend Script 入口](../assets/clash-verge-rev-global-extend-script.png)
 
 `just sync` 仍作为兼容别名保留，但新文档和自动生成文件均使用 `just render-local`。
+
+### 从 Windows 复制到 Ubuntu
+
+可以把 Windows 上由 `just render-local` 生成的 `clash-verge-ai-residential.local.js` 直接复制到 Ubuntu 的 Clash Verge Rev Global Extend Script；脚本本身不包含 Windows 路径、Shell 命令或操作系统分支。生成的 `.local.js` 已嵌入 TOML 中的住宅代理地址与认证凭据，本身也是敏感文件；应通过受信通道传输、限制读权限，且不得提交到仓库、上传到公开网盘或在日志中展示。复制已渲染的 `.local.js` 后无需也不应再复制本地 TOML，但这并不降低 `.local.js` 自身的凭据保护要求。
+
+Ubuntu 的 Profile 仍必须能唯一解析脚本中的 `dialer-proxy` 名称，并提供可达的机场节点、UDP 能力和兼容的 Clash Verge/Mihomo 脚本环境。仓库的 Windows/Ubuntu Node 测试只验证语法、渲染与规则合同；复制后是否能在 Ubuntu 宿主执行、以及登录与模型请求是否命中同一出口，必须用脱敏 Connections 记录人工确认，目前为 **UNVERIFIED**。
 
 同步会在写入前拒绝以下配置：未知或重复的表/键、非布尔开关、缺少代理字段、无效 TOML 字符串、非 SOCKS5 类型、端口超出范围、空上游名称，或 `name` 与模板保留名称不一致。每个开关必须在公开模板中恰好匹配一个布尔常量声明，否则也会在写入前失败。错误会直接显示字段或行号，且不会留下半成品；修正 TOML 后重新运行即可。
 

@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"设置页必须保持 Vanilla TypeScript、质量门、Recovery 和禁止远程资源。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"连接状态、about、delete、backup DTO 必须沿既有解码和命令边界。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"设置 section / draft / theme / locale 与 secret 所有权需要遵守前端状态约束。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"设置按钮、错误状态、日志目录和危险操作不能越过 Rust 所有权。"}
+{"file":".trellis/tasks/08-19-monitor-auto-connect-settings-redesign/research/current-state.md","reason":"当前 renderSettings、事件委托、主题、secret 安全和视觉限制证据。"}

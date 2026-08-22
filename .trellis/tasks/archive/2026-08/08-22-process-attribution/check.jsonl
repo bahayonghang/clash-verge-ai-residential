@@ -1,0 +1,3 @@
+{"file": "PRODUCT.md", "reason": "缺口与未知不得写成零。"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "根脚本回归与密钥扫描。"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "监控质量门。"}

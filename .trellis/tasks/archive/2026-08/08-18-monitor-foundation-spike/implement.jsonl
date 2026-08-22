@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/guides/index.md", "reason": "确认 C0 规划与实现应加载的跨层和复用思考入口。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "约束 workload、binding、传输、Windows seam、证据与 C1 消费契约的跨层数据流。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "避免各 spike 重复实现错误映射、fixture、指标采集和契约解码。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "提供 TCP、named pipe、鉴权、ACL、busy、PID 与 mihomo API 的固定兼容证据。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "提供 Windows 生命周期、安全 seam、Tauri IPC 与模块所有权的已采用决策摘要。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "提供性能先于 schema、三档 30 天库、10k 峰值、FULL、prepared batch 和 SQLite 能力 gate。"}

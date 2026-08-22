@@ -6,6 +6,10 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const DEFAULT_TEMPLATE_PATH = path.join(root, "clash-verge-ai-residential.js");
 const DEFAULT_CONFIG_PATH = path.join(root, "clash-verge-ai-residential.local.toml");
+const DEFAULT_EXAMPLE_PATH = path.join(
+  root,
+  "clash-verge-ai-residential.local.toml.example"
+);
 const DEFAULT_OUTPUT_PATH = path.join(root, "clash-verge-ai-residential.local.js");
 const REQUIRED_KEYS = [
   "name",
@@ -19,12 +23,19 @@ const REQUIRED_KEYS = [
 ];
 const SWITCH_CONFIG_FIELDS = Object.freeze([
   { table: "routing", key: "openai_shared_dependencies", constant: "ROUTE_OPENAI_SHARED_DEPENDENCIES", type: "boolean" },
+  { table: "routing", key: "openai_core", constant: "ROUTE_OPENAI_CORE", type: "boolean" },
+  { table: "routing", key: "openai_auth", constant: "ROUTE_OPENAI_AUTH", type: "boolean" },
+  { table: "routing", key: "openai_web_assets", constant: "ROUTE_OPENAI_WEB_ASSETS", type: "boolean" },
   { table: "routing", key: "claude_shared_dependencies", constant: "ROUTE_CLAUDE_SHARED_DEPENDENCIES", type: "boolean" },
   { table: "routing", key: "antigravity_google_auth", constant: "ROUTE_ANTIGRAVITY_GOOGLE_AUTH", type: "boolean" },
   { table: "routing", key: "antigravity_project_apis", constant: "ROUTE_ANTIGRAVITY_PROJECT_APIS", type: "boolean" },
   { table: "routing", key: "antigravity_update_and_telemetry", constant: "ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY", type: "boolean" },
   { table: "routing", key: "gemini_web_core", constant: "ROUTE_GEMINI_WEB_CORE", type: "boolean" },
+  { table: "routing", key: "vertex_ai_endpoints", constant: "ROUTE_VERTEX_AI_ENDPOINTS", type: "boolean" },
   { table: "routing", key: "cursor_core", constant: "ROUTE_CURSOR_CORE", type: "boolean" },
+  { table: "routing", key: "cursor_repository_indexing", constant: "ROUTE_CURSOR_REPOSITORY_INDEXING", type: "boolean" },
+  { table: "routing", key: "grok_core", constant: "ROUTE_GROK_CORE", type: "boolean" },
+  { table: "routing", key: "grok_web_assets", constant: "ROUTE_GROK_WEB_ASSETS", type: "boolean" },
   { table: "routing", key: "cursor_process_fallback", constant: "ROUTE_CURSOR_PROCESS_FALLBACK", type: "boolean" },
   { table: "routing", key: "claude_code_auxiliary", constant: "ROUTE_CLAUDE_CODE_AUXILIARY", type: "boolean" },
   { table: "routing", key: "ai_process_fallback", constant: "ENABLE_AI_PROCESS_FALLBACK", type: "boolean" },
@@ -245,6 +256,116 @@ function parseHomeProxyToml(source) {
   return parseLocalToml(source).homeProxy;
 }
 
+function detectEol(source) {
+  const crlfCount = (source.match(/\r\n/g) || []).length;
+  const lineFeedCount = (source.match(/\n/g) || []).length;
+  return crlfCount > lineFeedCount - crlfCount ? "\r\n" : "\n";
+}
+
+function validateExampleSwitchDefaults(exampleConfig) {
+  for (const field of SWITCH_CONFIG_FIELDS) {
+    const table = exampleConfig[field.table];
+    if (!table || !Object.hasOwn(table, field.key)) {
+      throw new Error(
+        `示例 TOML 缺少 ${field.table}.${field.key}；请先补齐 example 再同步`
+      );
+    }
+    if (typeof table[field.key] !== field.type) {
+      throw new Error(
+        `示例 TOML 字段 ${field.table}.${field.key} 类型与 ${field.constant} 声明不符`
+      );
+    }
+  }
+}
+
+// 定位每个已声明表头在文本中的区块：表头行号与区块内最后一个非空行号。
+// 行标注复用 parseLocalToml 的表头正则，保证补全器与解析器看到相同结构。
+function locateTableBlocks(lines) {
+  const blocks = [];
+
+  for (const [index, rawLine] of lines.entries()) {
+    const line = stripComment(rawLine).trim();
+    const tableMatch = line.match(/^\[([A-Za-z0-9_-]+)\]$/);
+    if (tableMatch) {
+      blocks.push({ table: tableMatch[1], headerIndex: index, lastNonEmptyIndex: index });
+      continue;
+    }
+    if (blocks.length > 0 && line) {
+      blocks[blocks.length - 1].lastNonEmptyIndex = index;
+    }
+  }
+
+  return blocks;
+}
+
+// 文本级补全：只为 SWITCH_CONFIG_FIELDS 声明的开关键追加缺失行，
+// 不重排、不改写用户已有键值、注释与空行；home_proxy 凭据仍要求手填。
+function completeLocalToml(localSource, localConfig, exampleConfig) {
+  const missingFields = SWITCH_CONFIG_FIELDS.filter(
+    (field) => !Object.hasOwn(localConfig[field.table], field.key)
+  );
+  if (missingFields.length === 0) return null;
+
+  const hasBom = localSource.startsWith("\uFEFF");
+  const body = hasBom ? localSource.slice(1) : localSource;
+  const eol = detectEol(body);
+  const hadTrailingNewline = /(?:\r?\n)$/.test(body);
+  const lines = body.replace(/\r?\n$/, "").split(/\r?\n/);
+  if (lines.length === 1 && lines[0] === "") lines.pop();
+
+  const blocks = locateTableBlocks(lines);
+  const blockByTable = new Map(blocks.map((block) => [block.table, block]));
+
+  // 按表分组缺失键，保持 SWITCH_CONFIG_FIELDS 声明顺序。
+  const missingByTable = new Map();
+  for (const field of missingFields) {
+    if (!missingByTable.has(field.table)) missingByTable.set(field.table, []);
+    missingByTable.get(field.table).push(field);
+  }
+
+  const insertions = [];
+  for (const [table, fields] of missingByTable) {
+    const newLines = fields.map(
+      (field) => `${field.key} = ${exampleConfig[table][field.key]}`
+    );
+
+    const block = blockByTable.get(table);
+    if (block) {
+      // 插入区块内最后一个非空行之后，避免打断表头下方的说明注释。
+      insertions.push({ index: block.lastNonEmptyIndex + 1, lines: newLines });
+    } else {
+      // 整表缺失：文件末尾追加，空行分隔后重建表头。
+      const leadingBlank = lines.length > 0 && lines[lines.length - 1] !== ""
+        ? [""]
+        : [];
+      insertions.push({
+        index: lines.length,
+        lines: [...leadingBlank, `[${table}]`, ...newLines],
+        appendTable: true
+      });
+    }
+  }
+
+  // 从后往前插入，避免前面的插入点行号失真；同一插入点（例如已有表区块
+  // 尾部恰为文件末尾）必须先 splice 整表追加、后 splice 键追加，
+  // 键追加才会落在新表头之前而不是新表内部。
+  insertions.sort((a, b) => {
+    if (b.index !== a.index) return b.index - a.index;
+    return (b.appendTable ? 1 : 0) - (a.appendTable ? 1 : 0);
+  });
+  for (const insertion of insertions) {
+    lines.splice(insertion.index, 0, ...insertion.lines);
+  }
+
+  const completed = (hasBom ? "\uFEFF" : "") +
+    lines.join(eol) +
+    (hadTrailingNewline ? eol : "");
+  return {
+    source: completed,
+    addedKeys: missingFields.map((field) => `${field.table}.${field.key}`)
+  };
+}
+
 function extractHomeProxyName(templateSource) {
   const match = templateSource.match(/const\s+HOME_PROXY_NAME\s*=\s*("(?:\\.|[^"\\])*")\s*;/);
   if (!match) {
@@ -384,7 +505,8 @@ function writeFileAtomically(outputPath, content) {
 function syncLocalConfig({
   templatePath = DEFAULT_TEMPLATE_PATH,
   configPath = DEFAULT_CONFIG_PATH,
-  outputPath = DEFAULT_OUTPUT_PATH
+  outputPath = DEFAULT_OUTPUT_PATH,
+  examplePath = DEFAULT_EXAMPLE_PATH
 } = {}) {
   const resolvedTemplatePath = path.resolve(templatePath);
   const resolvedConfigPath = path.resolve(configPath);
@@ -400,7 +522,24 @@ function syncLocalConfig({
   }
 
   const templateSource = fs.readFileSync(resolvedTemplatePath, "utf8");
-  const config = parseLocalToml(fs.readFileSync(resolvedConfigPath, "utf8"));
+  const exampleConfig = parseLocalToml(
+    fs.readFileSync(path.resolve(examplePath), "utf8")
+  );
+  validateExampleSwitchDefaults(exampleConfig);
+
+  const localSource = fs.readFileSync(resolvedConfigPath, "utf8");
+  let config = parseLocalToml(localSource);
+  let addedKeys = [];
+
+  // 本地 TOML 缺失的开关键按 example 默认值补全后再渲染，
+  // 已有键值、注释与行尾风格保持逐字不变。
+  const completion = completeLocalToml(localSource, config, exampleConfig);
+  if (completion) {
+    writeFileAtomically(resolvedConfigPath, completion.source);
+    config = parseLocalToml(completion.source);
+    addedKeys = completion.addedKeys;
+  }
+
   validateLocalConfig(config, extractHomeProxyName(templateSource));
 
   const banner = [
@@ -417,7 +556,48 @@ function syncLocalConfig({
   );
   writeFileAtomically(resolvedOutputPath, output);
 
-  return { configPath: resolvedConfigPath, outputPath: resolvedOutputPath };
+  return {
+    configPath: resolvedConfigPath,
+    outputPath: resolvedOutputPath,
+    addedKeys,
+    addedDefaults: addedKeys.map((key) => {
+      const separator = key.indexOf(".");
+      const table = key.slice(0, separator);
+      const field = key.slice(separator + 1);
+      return { key, value: config[table][field] };
+    })
+  };
+}
+
+// 轻量 ANSI 着色：遵循 NO_COLOR 与 FORCE_COLOR 约定，仅在交互终端启用；
+// Windows 下要求宿主是 Windows Terminal、VS Code 等现代终端，避免传统
+// conhost 打印转义符原文。
+function colorEnabled(stream) {
+  if (process.env.NO_COLOR) return false;
+  if (process.env.FORCE_COLOR === "0") return false;
+  if (process.env.FORCE_COLOR) return true;
+  if (stream.isTTY !== true) return false;
+  if (process.platform === "win32") {
+    return Boolean(
+      process.env.WT_SESSION ||
+        process.env.TERM_PROGRAM ||
+        process.env.ConEmuANSI === "ON" ||
+        process.env.TERM
+    );
+  }
+  return true;
+}
+
+function createPainter(stream) {
+  const enabled = colorEnabled(stream);
+  const wrap = (code) => (text) => (enabled ? `\x1b[${code}m${text}\x1b[0m` : text);
+  return {
+    ok: wrap("32"),
+    warn: wrap("33"),
+    error: wrap("31"),
+    cyan: wrap("36"),
+    dim: wrap("2")
+  };
 }
 
 function main() {
@@ -426,14 +606,29 @@ function main() {
     configPath: configArgument ? path.resolve(process.cwd(), configArgument) : DEFAULT_CONFIG_PATH,
     outputPath: outputArgument ? path.resolve(process.cwd(), outputArgument) : DEFAULT_OUTPUT_PATH
   });
-  console.log(`已同步 ${path.basename(result.configPath)} -> ${path.basename(result.outputPath)}`);
+  const paint = createPainter(process.stdout);
+  const configName = path.basename(result.configPath);
+  const outputName = path.basename(result.outputPath);
+
+  if (result.addedDefaults.length > 0) {
+    console.log(
+      `${paint.warn("+")} 已按示例默认值补全 ${result.addedDefaults.length} 个缺失开关到 ${paint.cyan(configName)}：`
+    );
+    for (const { key, value } of result.addedDefaults) {
+      console.log(`    ${paint.cyan(key)} ${paint.dim(`= ${value}`)}`);
+    }
+  }
+  console.log(
+    `${paint.ok("✓")} 已同步 ${paint.cyan(configName)} ${paint.dim("→")} ${paint.cyan(outputName)}`
+  );
 }
 
 if (require.main === module) {
   try {
     main();
   } catch (error) {
-    console.error(error.message);
+    const paint = createPainter(process.stderr);
+    console.error(`${paint.error("✗")} ${error.message}`);
     process.exitCode = 1;
   }
 }
@@ -442,6 +637,8 @@ module.exports = {
   SWITCH_CONFIG_FIELDS,
   parseLocalToml,
   parseHomeProxyToml,
+  completeLocalToml,
+  detectEol,
   validateLocalConfig,
   validateHomeProxyConfig,
   renderHomeProxyTemplate,

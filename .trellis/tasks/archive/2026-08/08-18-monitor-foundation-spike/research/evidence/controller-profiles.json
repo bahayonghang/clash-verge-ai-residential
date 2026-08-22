@@ -1,0 +1,26 @@
+[
+  {
+    "name": "tcp-loopback-secret",
+    "transport": "tcp",
+    "status": "supported",
+    "sends_secret": true,
+    "tcp_fallback": false,
+    "notes_zh": "TCP External Controller 是受支持路径，secret 使用 Bearer。"
+  },
+  {
+    "name": "verge-2.5.2-fixed-pipe",
+    "transport": "named-pipe",
+    "status": "best-effort",
+    "sends_secret": false,
+    "tcp_fallback": true,
+    "notes_zh": "v2.5.2 固定管道 verge-mihomo；不发送 secret。"
+  },
+  {
+    "name": "verge-dynamic-sidecar-service",
+    "transport": "named-pipe",
+    "status": "best-effort",
+    "sends_secret": false,
+    "tcp_fallback": true,
+    "notes_zh": "动态 sidecar/service 管道名按运行模式派生，必须先验身份。"
+  }
+]

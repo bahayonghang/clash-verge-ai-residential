@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-18T00:00:00.000Z",
+  "title": "Design System: 家宽流量监控",
+  "extensions": {
+    "colorMeta": {
+      "accent": { "role": "primary", "displayName": "选中蓝", "canonical": "#3b82f6" },
+      "sidebar": { "role": "neutral", "displayName": "侧栏海军", "canonical": "#222733" },
+      "main": { "role": "neutral", "displayName": "主区灰", "canonical": "#c8c9d1" }
+    },
+    "motion": [
+      { "name": "nav", "value": "160ms ease-out", "purpose": "导航和按钮背景" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "主操作。",
+      "html": "<button class=\"ds-btn-primary\">运行报告</button>",
+      "css": ".ds-btn-primary { background: #3b82f6; color: #fff; padding: 0.4rem 0.8rem; border: 0; border-radius: 8px; } .ds-btn-primary:hover { background: #2563eb; } .ds-btn-primary:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }"
+    },
+    {
+      "name": "Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "侧栏页项。",
+      "html": "<button class=\"ds-nav-item\" aria-current=\"page\">概览</button>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 0.55rem; width: 100%; background: transparent; color: #e8eef6; border: 0; border-radius: 8px; padding: 0.48rem 0.55rem; } .ds-nav-item[aria-current=\"page\"] { background: #3b82f6; color: #fff; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Clash Verge 隔壁的观测台",
+    "overview": "桌面工作台。左侧深海军认页，右侧浅灰读数。蓝只出现在当前栏和主按钮。",
+    "keyCharacteristics": ["双色：深侧栏 / 浅主区", "蓝只打选中项和主操作", "本地生成图标", "系统无衬线 + 等宽数字"],
+    "rules": [{ "name": "The One Blue Rule", "body": "蓝只用于当前页和主操作。", "section": "colors" }],
+    "dos": ["Do 把产品名和页面标题放在左侧栏。", "Do 缺口、未知显示「未知」。"],
+    "donts": ["Don't 恢复顶栏横导航。", "Don't 把观测写成账单或把缺口画成零。"]
+  }
+}

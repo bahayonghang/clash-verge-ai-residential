@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"检查 typecheck/lint/test/build、无框架和 Recovery 约束。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"检查状态与数据管理 DTO 不被前端重算或伪造。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"检查 route、section、draft、secret、主题和删除语义。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"检查命令、错误、日志和 C5 危险操作边界未改变。"}
+{"file":".trellis/tasks/08-19-monitor-auto-connect-settings-redesign/research/current-state.md","reason":"对照当前实现与 SkillPort 参考边界检查 scope drift。"}

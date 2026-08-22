@@ -1,0 +1,32 @@
+{
+  "id": "live-clash-columns",
+  "name": "live-clash-columns",
+  "title": "实时连接 Clash 列、家宽筛选与中英界面",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-19",
+  "completedAt": "2026-08-19",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-19-ui-locale-zh-en",
+    "08-19-live-table-filter"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "package": "residential-monitor",
+    "notes": "parent: live columns + locale C"
+  }
+}

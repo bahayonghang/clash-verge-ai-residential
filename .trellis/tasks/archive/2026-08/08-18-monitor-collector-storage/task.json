@@ -1,0 +1,28 @@
+{
+  "id": "monitor-collector-storage",
+  "name": "monitor-collector-storage",
+  "title": "家宽监控采集核算与 SQLite",
+  "description": "在 C0 批准的基础选型和性能边界内交付 ControllerSession、AccountingEngine、core SQLite、幂等 durable writer、原子实时水位与恢复后端。",
+  "status": "completed",
+  "dev_type": null,
+  "scope": "residential-monitor",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-18",
+  "completedAt": "2026-08-18",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "08-18-residential-monitor-mvp",
+  "relatedFiles": [],
+  "notes": "前置依赖：C0 必须完成并获批性能预算、SQLite binding、协议 profile、CredentialStore port、limits 与 fallback；未满足时本任务不得启动。后置依赖：C2 依赖本任务的采集、核算、core schema、Channel 与 RecoveryFacade backend。当前只授权完善规划，未授权启动；不得运行 task.py start。",
+  "meta": {
+    "description": "C1：构建可崩溃恢复、零重复提交且缺口显式的采集与 core SQLite 内核。"
+  }
+}

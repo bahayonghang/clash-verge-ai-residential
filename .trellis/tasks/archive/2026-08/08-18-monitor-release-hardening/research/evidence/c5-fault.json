@@ -1,0 +1,72 @@
+[
+  {
+    "id": "controller-profiles",
+    "environment": "fixture",
+    "expectedHealth": "tcp_unauthorized",
+    "coverageWrittenAsZero": false,
+    "currentDbIntact": true,
+    "passed": true,
+    "diagnostic": "profiles=3",
+    "noteZh": "TCP 受支持，named pipe 尽力兼容。不发送 secret。"
+  },
+  {
+    "id": "future-schema",
+    "environment": "temp-sqlite",
+    "expectedHealth": "recovery-only",
+    "coverageWrittenAsZero": false,
+    "currentDbIntact": true,
+    "passed": true,
+    "diagnostic": "future schema",
+    "noteZh": "未来 schema fail closed，不启动 writer。"
+  },
+  {
+    "id": "backup-low-space",
+    "environment": "temp-sqlite",
+    "expectedHealth": "insufficient_space",
+    "coverageWrittenAsZero": false,
+    "currentDbIntact": true,
+    "passed": true,
+    "diagnostic": "insufficient_space",
+    "noteZh": "低空间 backup 不生成伪成功资产。"
+  },
+  {
+    "id": "restore-bad-candidate",
+    "environment": "temp-sqlite",
+    "expectedHealth": "storage_failure",
+    "coverageWrittenAsZero": false,
+    "currentDbIntact": true,
+    "passed": true,
+    "diagnostic": "storage_failure",
+    "noteZh": "坏候选不覆盖当前库。"
+  },
+  {
+    "id": "notification-unavailable",
+    "environment": "fake-sink",
+    "expectedHealth": "notification-unavailable",
+    "coverageWrittenAsZero": false,
+    "currentDbIntact": true,
+    "passed": true,
+    "diagnostic": "当前为进程内 FakeNotificationSink，未发送系统通知。",
+    "noteZh": "通知不可用时应用内记录仍完整。未发送系统通知。"
+  },
+  {
+    "id": "gap-not-zero-rate",
+    "environment": "c4-engine",
+    "expectedHealth": "not-evaluable-or-gap",
+    "coverageWrittenAsZero": false,
+    "currentDbIntact": true,
+    "passed": true,
+    "diagnostic": "delegated-to-c4-gap_is_not_zero_rate",
+    "noteZh": "C4 已证明缺口不是零速率。C5 不改写该语义。"
+  },
+  {
+    "id": "capability-not-zero",
+    "environment": "c3-query",
+    "expectedHealth": "capability_unsupported",
+    "coverageWrittenAsZero": false,
+    "currentDbIntact": true,
+    "passed": true,
+    "diagnostic": "capability_unsupported",
+    "noteZh": "能力不支持返回明确错误，不得给出伪 Top N 或零。"
+  }
+]

@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/guides/index.md", "reason": "核对 C0 检查是否覆盖仓库要求的思考 guides。"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "检查 spike 证据能否完整传递到 specs、CI 和 C1 决策，而非只验证局部 happy path。"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "检查候选 adapter、错误分类和测试 fixture 是否共享权威实现并避免漂移。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/controller-compatibility-audit.md", "reason": "复核兼容 profile、pipe 安全边界和 TCP fallback 是否与一手审计一致。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/desktop-monitor-implementation-context.md", "reason": "复核系统能力、凭据、安装标识、CSP、capability 与模块边界。"}
+{"file": ".trellis/tasks/08-18-residential-monitor-mvp/research/sqlite-performance-budget.md", "reason": "复核完整容量数据、B/row、DB/WAL、binding API、FULL 与峰值证据是否达到放行标准。"}

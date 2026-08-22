@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "cargoPackages": 416,
+  "npmPackages": 216,
+  "secretHits": [],
+  "installerPath": "residential-monitor/src-tauri/target/release/bundle/nsis/家宽流量监控_0.1.0_x64-setup.exe",
+  "installerSha256": "9bbe4b831f6a00b6ce3f34703fe823251423eec57a309db6e7e46a860ded5425",
+  "signed": false,
+  "noteZh": "依赖清单来自 lockfile。该 installer 是当前构建产物，不是 C0 冻结基线。未签名。"
+}

@@ -10,29 +10,91 @@ password = "xxx"
 udp = true
 dialer-proxy = "🚀节点选择"
 
-# 住宅链路范围开关。共享依赖、进程兜底和通用基础设施默认关闭。
+# 住宅链路范围开关：true 表示将对应规则、DNS 策略或兜底规则注入家宽代理链路。
+# 仅开启实际需要的产品流量；共享第三方服务、进程级代理和通用基础设施会扩大
+# 家宽的流量范围，默认均为关闭。
 [routing]
+
+# OpenAI / ChatGPT 的核心产品流量：ChatGPT 网页、模型 API 及用户上传、生成内容。
+openai_core = true
+# OpenAI 第一方登录：auth.openai.com（含 setup 子域）与 auth0.openai.com。
+# 默认关闭；按需与 ChatGPT 核心流量统一到家宽，不会开启共享第三方依赖。
+openai_auth = false
+# ChatGPT 网页静态资源 oaistatic.com；与登录、核心流量及共享第三方依赖独立。
+openai_web_assets = false
+# OpenAI 使用的共享第三方依赖：WorkOS、Intercom、Sentry、Datadog、Stripe 等。
+# 它们不是模型推理服务，开启后会把相应共享服务也路由至家宽。
 openai_shared_dependencies = false
+
+# Claude 的共享第三方流量：统计、客服、风控等；不包含 Claude 核心推理域名。
 claude_shared_dependencies = false
+
+# Antigravity 的可选非推理流量，按用途拆分，避免误将整套 Google 服务走家宽。
+# Google OAuth 登录：所有 Google 产品共用的授权入口。
 antigravity_google_auth = false
+# Google Cloud 项目管理 API：Service Usage、Resource Manager、IAM、API Hub 等。
 antigravity_project_apis = false
+# Antigravity 更新、扩展市场及遥测上报。
 antigravity_update_and_telemetry = false
+
+# Gemini 网页版与 Google AI Studio 的核心产品入口。
 gemini_web_core = true
-cursor_core = false
+# Vertex AI / Agent Platform 全局、多区域与区域端点。Antigravity 企业推理走这些主机。
+vertex_ai_endpoints = true
+
+# Cursor 的核心 AI 产品流量：AI API、Tab、Agent、Cloud Agent、产品专属认证等。
+cursor_core = true
+# Cursor 仓库索引上传主机（repo[0-9]+.cursor.sh）。与核心流量独立控制；
+# 开启会消耗家宽流量，且 Privacy Mode 不会停止索引上传。
+cursor_repository_indexing = false
+
+# Grok Build（xAI grok CLI）的推理 API、产品域、认证及直连 API。
+grok_core = true
+# Grok 网页静态资源。关闭后 grok.com 改为 grok.com、cli-chat-proxy.grok.com、
+# code.grok.com 精确主机；api.x.ai 后缀不受影响。
+grok_web_assets = true
+
+# 进程级兜底：按 Cursor 进程名代理其插件市场、GitHub、npm、MCP 和用户后端等
+# 全部连接。只有同时开启 ai_process_fallback 时此项才生效，通常不建议开启。
 cursor_process_fallback = false
+# Claude Code 的辅助流量：安装、更新、文档和包管理；不包括核心推理流量。
 claude_code_auxiliary = false
+# 为已知 AI 进程添加进程名匹配规则的总开关。会扩大代理范围。
+# 查找进程由脚本写到配置顶层 find-process-mode: always，与本开关无关。
 ai_process_fallback = false
+# Anthropic 官方入站 IP 网段兜底：覆盖域名嗅探失败或应用直接连接 IP 的情形。
 anthropic_ip_fallback = true
+
+# 通用实时通信基础设施：共享 STUN/TURN 服务可能被非 AI 应用复用。
 shared_realtime_infrastructure = false
+# 通用实时通信端口的全局捕获。仅在 shared_realtime_infrastructure = true 时生效；
+# 可能影响所有应用的实时通信，默认关闭。
 global_realtime_ports = false
+# 公共加密 DNS：公共 DoH/DoT 域名、IP 及 853 端口。属于全局共享服务，开启会
+# 扩大到非 AI DNS 流量。
 public_encrypted_dns = false
 
-# 上游解析、DNS、嗅探和已有 TUN 的运行时行为。
+# 运行时行为开关：控制上游代理选择、DNS 策略、域名嗅探及已有 TUN 的加固方式。
 [runtime]
+
+# 未找到候选上游时，允许采用当前 Profile 最后一条 MATCH/FINAL 规则指定的目标。
+# 关闭可避免规则不完整时静默回落，但可能导致无法确定上游而报错。
 allow_final_rule_upstream_fallback = true
+# 上述方式仍失败时，按代理组名称（如“节点选择”“proxy”）猜测上游。
+# 猜测可能选错出口，严格隐私链路建议保持关闭。
 allow_heuristic_upstream_fallback = false
+
+# 保留订阅中本脚本不管理的 nameserver-policy 条目。关闭时会移除它们，避免其
+# 优先级绕过本脚本的家宽 DNS 策略；如依赖自定义 DNS 分流才考虑开启。
 preserve_unmanaged_nameserver_policy = false
+# 启用域名嗅探和 DNS 映射，用于补偿纯 IP 连接或 DNS 映射缺失；不会覆盖目标地址。
 enable_domain_sniffer = true
+
+# 仅在原 Profile 已启用 TUN 时补充 DNS 劫持规则，不会自行开启 TUN。
 harden_existing_tun_dns_hijack = true
+# 为现有 TUN 启用 strict-route。可降低 Windows 多网卡环境的 DNS 泄漏，但可能影响
+# 虚拟机、局域网或特殊路由；仅在 harden_existing_tun_dns_hijack = true 时生效。
 enable_tun_strict_route = false
+
+# 若可达的代理组或节点显式关闭 UDP，则输出警告；顶层上游关闭 UDP 会直接拒绝配置。
 warn_on_reachable_udp_disabled = true
