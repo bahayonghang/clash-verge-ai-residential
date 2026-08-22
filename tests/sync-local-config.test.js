@@ -819,7 +819,7 @@ test("示例 TOML 缺少声明的开关键时同步失败并提示补齐", () =>
     const exampleSource = fs.readFileSync(examplePath, "utf8");
     fs.writeFileSync(
       brokenExamplePath,
-      exampleSource.replace("grok_core = true\n", ""),
+      exampleSource.replace(/grok_core = true\r?\n/, ""),
       "utf8"
     );
     fs.writeFileSync(configPath, validHomeProxyToml, "utf8");
