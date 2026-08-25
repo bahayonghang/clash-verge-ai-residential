@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 35
+- **Total Sessions**: 36
 - **Last Active**: 2026-08-25
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1097 | Active |
+| `journal-1.md` | ~1118 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 36 | 2026-08-25 | 家宽目的地址拆解与趋势明细优化 | `feccd1c` | `dev` |
 | 35 | 2026-08-25 | 彩色应用图标与安装态清晰度 | `9acb61977df55fc6ff58baf0ad24ea5a6de7151f` | `dev` |
 | 34 | 2026-08-22 | 解封 dev 合并 main：真实端口与存储重跑 | `a0f09a3`, `a6b1729` | `dev` |
 | 33 | 2026-08-22 | 进程归因：查找进程与进程页 | `281817a`, `199b8ff`, `f681c1e`, `cfef9c2` | `dev` |

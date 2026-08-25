@@ -1095,3 +1095,24 @@
 ### Next Steps
 
 - 若开始菜单仍显示旧图，刷新 Explorer 图标缓存后再看
+
+
+## Session 36: 家宽目的地址拆解与趋势明细优化
+
+**Date**: 2026-08-25
+**Task**: 家宽目的地址拆解与趋势明细优化
+**Branch**: `dev`
+
+### Summary
+
+让 C3 排名按请求方向在 Top N 截断前排序；家宽页按住宅子集内 Host 拆解上下行热点，趋势明细最新时间桶置顶，并补齐回归测试与跨层规范。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `feccd1c` | (see git log) |
+
+### Status
+
+[OK] **Completed**
