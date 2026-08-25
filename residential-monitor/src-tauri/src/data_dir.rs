@@ -56,37 +56,35 @@ pub fn resolve_and_migrate(
         return (legacy.to_path_buf(), MigrationOutcome::NotNeeded);
     };
     let target = exe_dir.join("data");
-    match migrate_legacy(legacy, &target) {
-        Ok(Some(outcome)) => (target, outcome),
-        Ok(None) => {
-            let _ = std::fs::create_dir_all(&target);
-            (target, MigrationOutcome::NotNeeded)
-        }
-        Err(()) => {
-            let _ = std::fs::create_dir_all(legacy);
-            (legacy.to_path_buf(), MigrationOutcome::Failed)
-        }
-    }
+    let outcome = migrate_legacy(legacy, &target);
+    let dir = if outcome == MigrationOutcome::Failed {
+        legacy.to_path_buf()
+    } else {
+        target
+    };
+    let _ = std::fs::create_dir_all(&dir);
+    (dir, outcome)
 }
 
-/// 把 legacy 数据搬进 target。成功返回 `Some(结果)`；`Ok(None)` 表示无需迁移。
+/// 把 legacy 数据搬进 target。`Failed` 时调用方沿用 legacy 目录，下次启动重试。
 ///
 /// 主库三件套（db + wal + shm）按组搬移，中途失败回滚已移动项，避免
 /// 「新目录半套 sidecar」与下次启动的陈旧 wal 配对。spool / archive-tick
 /// 是可再生的快照缓存，搬移失败不视为致命，原项留在 legacy。
-pub fn migrate_legacy(legacy: &Path, target: &Path) -> Result<Option<MigrationOutcome>, ()> {
+pub fn migrate_legacy(legacy: &Path, target: &Path) -> MigrationOutcome {
     if !legacy.join(DB_FILE).exists() {
-        return Ok(None);
+        return MigrationOutcome::NotNeeded;
     }
     if target.join(DB_FILE).exists() {
-        return Ok(Some(MigrationOutcome::TargetAlreadyFresh));
+        return MigrationOutcome::TargetAlreadyFresh;
     }
     if std::fs::rename(legacy, target).is_ok() {
-        return Ok(Some(MigrationOutcome::Renamed));
+        return MigrationOutcome::Renamed;
     }
     // 整目录 rename 失败（目标已存在、跨卷或占用）：逐项搬移。
-    std::fs::create_dir_all(target).map_err(|_| ())?;
-    move_db_group(legacy, target)?;
+    if std::fs::create_dir_all(target).is_err() || move_db_group(legacy, target).is_err() {
+        return MigrationOutcome::Failed;
+    }
     for dir in DATA_DIRS {
         let from = legacy.join(dir);
         if from.exists() {
@@ -96,8 +94,10 @@ pub fn migrate_legacy(legacy: &Path, target: &Path) -> Result<Option<MigrationOu
             }
         }
     }
-    std::fs::remove_dir_all(legacy).map_err(|_| ())?;
-    Ok(Some(MigrationOutcome::MovedItemWise))
+    if std::fs::remove_dir_all(legacy).is_err() {
+        return MigrationOutcome::Failed;
+    }
+    MigrationOutcome::MovedItemWise
 }
 
 /// 搬 sidecar 与主库；任一项失败则把已移动项搬回 legacy。
