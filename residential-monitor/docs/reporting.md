@@ -3,6 +3,7 @@
 - 应用内图表、数据表和 CSV / JSON / HTML 使用同一个 `ReportResult`。图表是 Recharts 封装；占比环图与趋势图旁保留同口径数据表。悬停或钉住高亮只读当前结果，不改 grouping、不自动重查。
 - `report_snapshot_token` 返回前关闭 SQLite 读事务。
 - 空区间总量可以为 0。缺口、未知和能力不支持不得写成 0。
+- 覆盖并集口径：重叠 / 相邻的 gap 行先合并再计缺口（`gap_union_sec`），开放行按窗口末端闭合。0.2.x 断连期逐帧写入的重复 gap 行由保留层 `coverage_open_gap_v1` 修复收敛。
 - 30 天 raw 支持组合过滤和下钻。13 个月精确层只支持单维。更老的 core daily 只保留总量、历史主分类和 coverage。
 - `granularity` 合法值为 `minute1` / `minute2` / `minute5` / `minute10` / `hour` / `day` / `month`。分钟档只在 raw 保留期内可用，不升粒度。
 - 主机 identity 优先级为 `metadata.host` → `sniffHost` → 目的 IP，写入 `connection_session.host`。三者都空时排名 `identity` 为 `__unknown__`；前端按维度显示「未归因主机」，不会把它与连接中、覆盖 gap 或未报告进程混为一谈。

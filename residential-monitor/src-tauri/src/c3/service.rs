@@ -1,10 +1,10 @@
 //! 统一 ReportService：短读快照内物化，返回前关闭事务。
 
 use crate::c3::query::{
-    decode_cursor, empty_result, encode_cursor, plan_capability, plan_capability_ex,
-    validate_query, AttributionQuality, CoverageSlice, DataTier, DimensionKind, PolicyMetadata,
-    RankingRow, ReportError, ReportQuery, ReportResult, ReportTotals, SeriesPoint, SessionRow,
-    TargetPolicy, HOURLY_DIM_V2_LAYER, UNKNOWN_LABEL_ZH,
+    decode_cursor, empty_result, encode_cursor, gap_union_sec, plan_capability,
+    plan_capability_ex, validate_query, AttributionQuality, CoverageSlice, DataTier,
+    DimensionKind, PolicyMetadata, RankingRow, ReportError, ReportQuery, ReportResult,
+    ReportTotals, SeriesPoint, SessionRow, TargetPolicy, HOURLY_DIM_V2_LAYER, UNKNOWN_LABEL_ZH,
 };
 use crate::c3::snapshot::ReportSnapshotStore;
 use crate::c3::sql::{
@@ -613,16 +613,11 @@ fn fill_coverage_daily(
 
 fn summarize_coverage(query: &ReportQuery, result: &mut ReportResult) {
     let span = (query.range_end_utc - query.range_start_utc).max(0);
-    let gap = result
-        .coverage
-        .slices
-        .iter()
-        .filter(|item| item.kind == "gap")
-        .map(|item| {
-            let end = item.ended_utc.unwrap_or(query.range_end_utc);
-            (end.min(query.range_end_utc) - item.started_utc.max(query.range_start_utc)).max(0)
-        })
-        .sum();
+    let gap = gap_union_sec(
+        query.range_start_utc,
+        query.range_end_utc,
+        &result.coverage.slices,
+    );
     result.coverage.gap_sec = gap;
     result.coverage.covered_sec = (span - gap).max(0);
 }

@@ -617,11 +617,37 @@ fn persist_slice(connection: &Connection, slice: &AlertCommitSlice) -> Result<()
         )?;
     }
     for item in &slice.coverage {
-        connection.execute(
-            "insert into coverage_interval(kind, reason, started_utc, ended_utc) values (?1, ?2, ?3, ?4)",
-            params![item.kind, item.reason, slice.utc, Option::<i64>::None],
-        )?;
+        let open_exists: bool = connection
+            .query_row(
+                "select exists(select 1 from coverage_interval
+                  where kind = ?1 and reason = ?2 and ended_utc is null)",
+                params![item.kind, item.reason],
+                |row| row.get(0),
+            )?;
+        if !open_exists {
+            connection.execute(
+                "insert into coverage_interval(kind, reason, started_utc, ended_utc) values (?1, ?2, ?3, ?4)",
+                params![item.kind, item.reason, slice.utc, Option::<i64>::None],
+            )?;
+        }
     }
+    // 恢复采集的切片不再携带上一状态的 kind，据此闭合遗留的开放行。
+    // 正常帧 coverage 为空 → 关闭全部开放行；断连帧带 gap → gap 保持开放。
+    let kinds: Vec<&str> = slice.coverage.iter().map(|item| item.kind).collect();
+    let sql = if kinds.is_empty() {
+        "update coverage_interval set ended_utc = ?1 where ended_utc is null".to_string()
+    } else {
+        let placeholders = kinds.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+        format!(
+            "update coverage_interval set ended_utc = ?1
+              where ended_utc is null and kind not in ({placeholders})"
+        )
+    };
+    let mut bind: Vec<&dyn rusqlite::ToSql> = vec![&slice.utc];
+    for kind in &kinds {
+        bind.push(kind);
+    }
+    connection.execute(&sql, bind.as_slice())?;
     Ok(())
 }
 
@@ -1781,6 +1807,85 @@ mod storage_attribution_lifecycle_tests {
         assert_eq!(
             enriched,
             (Some("a.test".into()), Some("browser.exe".into()), 7, 11)
+        );
+    }
+}
+#[cfg(test)]
+mod coverage_persist_tests {
+    use super::*;
+    use crate::accounting::CoverageChange;
+    use tempfile::tempdir;
+
+    fn open_rows(connection: &Connection) -> Vec<(String, i64, Option<i64>)> {
+        let mut statement = connection
+            .prepare("select kind, started_utc, ended_utc from coverage_interval order by interval_id")
+            .expect("prepare");
+        statement
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
+            .expect("map")
+            .collect::<Result<Vec<_>, _>>()
+            .expect("rows")
+    }
+
+    #[test]
+    fn gap_frames_dedupe_to_single_open_row() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("dedupe.sqlite3")).expect("open");
+        let gap = vec![CoverageChange {
+            kind: "gap",
+            reason: "disconnect_or_sleep",
+        }];
+        coordinator.persist_live_facts(&[], &[], &gap, 100).expect("first");
+        coordinator.persist_live_facts(&[], &[], &gap, 200).expect("second");
+        coordinator.persist_live_facts(&[], &[], &gap, 300).expect("third");
+        assert_eq!(
+            open_rows(coordinator.connection()),
+            vec![("gap".to_string(), 100, None)],
+            "断连风暴只留一行，started 为断连起点"
+        );
+    }
+
+    #[test]
+    fn resume_closes_open_gap() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("resume.sqlite3")).expect("open");
+        let gap = vec![CoverageChange {
+            kind: "gap",
+            reason: "disconnect_or_sleep",
+        }];
+        coordinator.persist_live_facts(&[], &[], &gap, 100).expect("gap");
+        coordinator.persist_live_facts(&[], &[], &[], 300).expect("resume");
+        assert_eq!(
+            open_rows(coordinator.connection()),
+            vec![("gap".to_string(), 100, Some(300))],
+            "恢复采集的帧闭合开放 gap"
+        );
+    }
+
+    #[test]
+    fn kind_switch_closes_previous_open_row() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("switch.sqlite3")).expect("open");
+        let closed = vec![CoverageChange {
+            kind: "closed",
+            reason: "pause_or_shutdown",
+        }];
+        let gap = vec![CoverageChange {
+            kind: "gap",
+            reason: "disconnect_or_sleep",
+        }];
+        coordinator.persist_live_facts(&[], &[], &closed, 50).expect("pause");
+        coordinator.persist_live_facts(&[], &[], &gap, 100).expect("disconnect");
+        assert_eq!(
+            open_rows(coordinator.connection()),
+            vec![
+                ("closed".to_string(), 50, Some(100)),
+                ("gap".to_string(), 100, None),
+            ],
+            "kind 切换时闭合上一状态的开放行"
         );
     }
 }

@@ -326,6 +326,87 @@ pub struct CoverageSlice {
     pub ended_utc: Option<i64>,
 }
 
+/// 缺口按区间并集累加：重叠与相邻的 gap 行先合并再求和，开放行按窗口末端闭合。
+/// 结果裁剪到 `[win_start, win_end]`。读取侧（share / summarize）共用，避免口径漂移。
+pub fn gap_union_sec(win_start: i64, win_end: i64, slices: &[CoverageSlice]) -> i64 {
+    let mut spans: Vec<(i64, i64)> = slices
+        .iter()
+        .filter(|item| item.kind == "gap")
+        .map(|item| {
+            (
+                item.started_utc.max(win_start),
+                item.ended_utc.unwrap_or(win_end).min(win_end),
+            )
+        })
+        .filter(|(start, end)| end > start)
+        .collect();
+    spans.sort_unstable();
+    let mut total = 0i64;
+    let mut cursor: Option<(i64, i64)> = None;
+    for (start, end) in spans {
+        match cursor {
+            Some((open_start, open_end)) if start <= open_end => {
+                cursor = Some((open_start, open_end.max(end)));
+            }
+            Some((open_start, open_end)) => {
+                total += open_end - open_start;
+                cursor = Some((start, end));
+            }
+            None => cursor = Some((start, end)),
+        }
+    }
+    if let Some((open_start, open_end)) = cursor {
+        total += open_end - open_start;
+    }
+    total
+}
+
+#[cfg(test)]
+mod gap_union_tests {
+    use super::*;
+
+    fn slice(kind: &str, start: i64, end: Option<i64>) -> CoverageSlice {
+        CoverageSlice {
+            kind: kind.into(),
+            reason: "disconnect_or_sleep".into(),
+            started_utc: start,
+            ended_utc: end,
+        }
+    }
+
+    #[test]
+    fn overlapping_open_gaps_count_once() {
+        // 0.2.x 断连风暴形状：29k 条重叠开放行只算一份窗口末端。
+        let slices: Vec<_> = (0..29).map(|i| slice("gap", i, None)).collect();
+        assert_eq!(gap_union_sec(0, 100, &slices), 100);
+    }
+
+    #[test]
+    fn disjoint_gaps_sum_and_closed_rows_are_clipped() {
+        let slices = vec![
+            slice("gap", 10, Some(20)),
+            slice("gap", 15, Some(25)),
+            slice("gap", 40, Some(70)),
+            slice("covered", 0, Some(100)),
+        ];
+        assert_eq!(gap_union_sec(0, 100, &slices), 45);
+    }
+
+    #[test]
+    fn open_gap_extends_only_to_window_end() {
+        let slices = vec![slice("gap", 50, None)];
+        assert_eq!(gap_union_sec(0, 60, &slices), 10);
+        // 断连自窗口前开始且仍未恢复：整个窗口都是缺口。
+        assert_eq!(gap_union_sec(60, 120, &slices), 60);
+        assert_eq!(gap_union_sec(120, 180, &slices), 60);
+    }
+
+    #[test]
+    fn empty_slices_are_zero() {
+        assert_eq!(gap_union_sec(0, 100, &[]), 0);
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CoverageView {

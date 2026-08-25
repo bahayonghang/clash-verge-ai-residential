@@ -1,7 +1,8 @@
 //! 家宽占可归因观测的份额。未知由 coverage 决定，不由 totals 是否为 0 决定。
 
 use crate::c3::query::{
-    timezone_offset_secs, CoverageSlice, ReportError, MAX_RANGE_SECS, REPORT_DTO_VERSION,
+    gap_union_sec, timezone_offset_secs, CoverageSlice, ReportError, MAX_RANGE_SECS,
+    REPORT_DTO_VERSION,
 };
 use crate::c3::sql::{COVERAGE_RAW, SHARE_RESIDENTIAL_RAW};
 use crate::storage::open_interruptible_reader;
@@ -118,14 +119,7 @@ fn covered_sec_from_slices(start: i64, end: i64, slices: &[CoverageSlice]) -> i6
         return 0;
     }
     let span = (end - start).max(0);
-    let gap: i64 = slices
-        .iter()
-        .filter(|item| item.kind == "gap")
-        .map(|item| {
-            let ended = item.ended_utc.unwrap_or(end);
-            (ended.min(end) - item.started_utc.max(start)).max(0)
-        })
-        .sum();
+    let gap = gap_union_sec(start, end, slices);
     (span - gap).max(0)
 }
 
