@@ -9,6 +9,7 @@ pub mod c5;
 pub mod candidate_schema;
 pub mod controller;
 pub mod credential;
+pub mod data_dir;
 pub mod evidence;
 pub mod i18n;
 pub mod identity;
@@ -304,10 +305,7 @@ fn boot_facade() -> Option<AppFacade> {
         );
         return None;
     }
-    let data_dir = std::env::var("RESIDENTIAL_MONITOR_DATA_DIR")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|_| std::env::temp_dir().join(crate::identity::IDENTIFIER));
-    let _ = std::fs::create_dir_all(&data_dir);
+    let data_dir = data_dir::prepare_data_dir();
     let mut facade = AppFacade::boot(data_dir, &args, claim);
     #[cfg(windows)]
     attach_windows_credentials(&mut facade);
