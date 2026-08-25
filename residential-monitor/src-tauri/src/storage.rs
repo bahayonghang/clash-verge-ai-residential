@@ -617,13 +617,12 @@ fn persist_slice(connection: &Connection, slice: &AlertCommitSlice) -> Result<()
         )?;
     }
     for item in &slice.coverage {
-        let open_exists: bool = connection
-            .query_row(
-                "select exists(select 1 from coverage_interval
+        let open_exists: bool = connection.query_row(
+            "select exists(select 1 from coverage_interval
                   where kind = ?1 and reason = ?2 and ended_utc is null)",
-                params![item.kind, item.reason],
-                |row| row.get(0),
-            )?;
+            params![item.kind, item.reason],
+            |row| row.get(0),
+        )?;
         if !open_exists {
             connection.execute(
                 "insert into coverage_interval(kind, reason, started_utc, ended_utc) values (?1, ?2, ?3, ?4)",
@@ -1818,7 +1817,9 @@ mod coverage_persist_tests {
 
     fn open_rows(connection: &Connection) -> Vec<(String, i64, Option<i64>)> {
         let mut statement = connection
-            .prepare("select kind, started_utc, ended_utc from coverage_interval order by interval_id")
+            .prepare(
+                "select kind, started_utc, ended_utc from coverage_interval order by interval_id",
+            )
             .expect("prepare");
         statement
             .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
@@ -1836,9 +1837,15 @@ mod coverage_persist_tests {
             kind: "gap",
             reason: "disconnect_or_sleep",
         }];
-        coordinator.persist_live_facts(&[], &[], &gap, 100).expect("first");
-        coordinator.persist_live_facts(&[], &[], &gap, 200).expect("second");
-        coordinator.persist_live_facts(&[], &[], &gap, 300).expect("third");
+        coordinator
+            .persist_live_facts(&[], &[], &gap, 100)
+            .expect("first");
+        coordinator
+            .persist_live_facts(&[], &[], &gap, 200)
+            .expect("second");
+        coordinator
+            .persist_live_facts(&[], &[], &gap, 300)
+            .expect("third");
         assert_eq!(
             open_rows(coordinator.connection()),
             vec![("gap".to_string(), 100, None)],
@@ -1855,8 +1862,12 @@ mod coverage_persist_tests {
             kind: "gap",
             reason: "disconnect_or_sleep",
         }];
-        coordinator.persist_live_facts(&[], &[], &gap, 100).expect("gap");
-        coordinator.persist_live_facts(&[], &[], &[], 300).expect("resume");
+        coordinator
+            .persist_live_facts(&[], &[], &gap, 100)
+            .expect("gap");
+        coordinator
+            .persist_live_facts(&[], &[], &[], 300)
+            .expect("resume");
         assert_eq!(
             open_rows(coordinator.connection()),
             vec![("gap".to_string(), 100, Some(300))],
@@ -1877,8 +1888,12 @@ mod coverage_persist_tests {
             kind: "gap",
             reason: "disconnect_or_sleep",
         }];
-        coordinator.persist_live_facts(&[], &[], &closed, 50).expect("pause");
-        coordinator.persist_live_facts(&[], &[], &gap, 100).expect("disconnect");
+        coordinator
+            .persist_live_facts(&[], &[], &closed, 50)
+            .expect("pause");
+        coordinator
+            .persist_live_facts(&[], &[], &gap, 100)
+            .expect("disconnect");
         assert_eq!(
             open_rows(coordinator.connection()),
             vec![
