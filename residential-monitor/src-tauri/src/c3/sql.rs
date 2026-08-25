@@ -1,9 +1,9 @@
 //! 命名 SQL corpus。值全部参数化；前端不传 SQL。
 //!
-//! 带 `{filters}` 的模板由 `render_sql` 替换一次。片段只由枚举驱动，
-//! 用户值只进绑定参数。
+//! 带 `{filters}` 的模板由 `render_sql` 替换一次；排名模板再由
+//! `render_rank_sql` 用枚举白名单替换 `{order_by}`。用户值只进绑定参数。
 
-use crate::c3::query::{DimensionKind, ReportFilters};
+use crate::c3::query::{DimensionKind, ReportFilters, SortField, SortSpec};
 use rusqlite::types::Value;
 
 /// 维度值缺失时排名 identity 的哨兵。真实 `dimension_dict.value` 不得等于该字面量。
@@ -55,7 +55,7 @@ select case when coalesce(s.host, '') = '' then '__unknown__' else s.host end,
  where m.utc_minute >= ? and m.utc_minute < ?
  {filters}
  group by 1
- order by sum(m.download) desc, 1 asc
+ {order_by}
  limit ?
 ";
 
@@ -74,7 +74,7 @@ select case when coalesce(d.value, '') = '' then '__unknown__' else d.value end,
  where m.utc_minute >= ? and m.utc_minute < ?
  {filters}
  group by 1
- order by sum(m.download) desc, 1 asc
+ {order_by}
  limit ?
 ";
 
@@ -88,7 +88,7 @@ select coalesce(last_chain_hop(a.chain_key), (select value from dimension_dict w
  where m.utc_minute >= ? and m.utc_minute < ?
  {filters}
  group by 1
- order by sum(m.download) desc, 1 asc
+ {order_by}
  limit ?
 ";
 
@@ -102,7 +102,7 @@ select coalesce(chain_identity(a.chain_key), '__unknown__'),
  where m.utc_minute >= ? and m.utc_minute < ?
  {filters}
  group by chain_identity(a.chain_key)
- order by sum(m.download) desc, 1 asc
+ {order_by}
  limit ?
 ";
 
@@ -166,7 +166,7 @@ select case when coalesce(d.value, '') = '' then '__unknown__' else d.value end,
    and h.dimension_kind = ?
  {filters}
  group by 1
- order by sum(h.download) desc, 1 asc
+ {order_by}
  limit ?
 ";
 
@@ -182,7 +182,7 @@ select case when coalesce(d.value, '') = '' then '__unknown__' else d.value end,
    and h.dimension_kind = 'host'
  {filters}
  group by h.category_id
- order by sum(h.download) desc, 1 asc
+ {order_by}
  limit ?
 ";
 
@@ -215,7 +215,7 @@ select case when coalesce(d.value, '') = '' then '__unknown__' else d.value end,
    and h.dimension_kind = ?
  {filters}
  group by 1
- order by sum(h.download) desc, 1 asc
+ {order_by}
  limit ?
 ";
 
@@ -231,7 +231,7 @@ select case when coalesce(d.value, '') = '' then '__unknown__' else d.value end,
    and h.dimension_kind = 'host'
  {filters}
  group by h.category_id
- order by sum(h.download) desc, 1 asc
+ {order_by}
  limit ?
 ";
 
@@ -291,6 +291,32 @@ pub fn lookup(name: &str) -> Option<&'static str> {
 
 pub fn render_sql(sql: &str, filters_sql: &str) -> String {
     sql.replace("{filters}", filters_sql)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RankLayer {
+    Raw,
+    Dimension,
+}
+
+/// 排名字段和方向只来自反序列化后的枚举；调用方不能传入 SQL 片段。
+pub fn render_rank_sql(sql: &str, filters_sql: &str, sort: &SortSpec, layer: RankLayer) -> String {
+    let direction = if sort.descending { "desc" } else { "asc" };
+    let aggregate_alias = match layer {
+        RankLayer::Raw => "m",
+        RankLayer::Dimension => "h",
+    };
+    let order_by = match sort.field {
+        SortField::Upload => format!("order by sum({aggregate_alias}.upload) {direction}, 1 asc"),
+        SortField::Download => {
+            format!("order by sum({aggregate_alias}.download) {direction}, 1 asc")
+        }
+        SortField::Name | SortField::Identity => format!("order by 1 {direction}"),
+    };
+    let rendered = render_sql(sql, filters_sql).replace("{order_by}", &order_by);
+    debug_assert!(!rendered.contains("{filters}"));
+    debug_assert!(!rendered.contains("{order_by}"));
+    rendered
 }
 
 /// raw 层 `dimension_dict.dimension_kind`。
@@ -470,6 +496,77 @@ mod sql_corpus_tests {
             assert!(!name.is_empty());
             assert!(sql.contains('?'), "{name} 必须参数化");
             assert!(!sql.to_ascii_lowercase().contains("offset "));
+        }
+    }
+
+    #[test]
+    fn rank_order_is_enum_rendered_for_every_field_and_direction() {
+        for layer in [RankLayer::Raw, RankLayer::Dimension] {
+            let template = match layer {
+                RankLayer::Raw => RANK_RAW,
+                RankLayer::Dimension => RANK_HOURLY,
+            };
+            for field in [
+                SortField::Upload,
+                SortField::Download,
+                SortField::Name,
+                SortField::Identity,
+            ] {
+                for descending in [false, true] {
+                    let rendered = render_rank_sql(
+                        template,
+                        " and 1 = 1",
+                        &SortSpec { field, descending },
+                        layer,
+                    );
+                    assert!(!rendered.contains("{filters}"));
+                    assert!(!rendered.contains("{order_by}"));
+                    assert!(rendered.contains("and 1 = 1"));
+                    let direction = if descending { "desc" } else { "asc" };
+                    match field {
+                        SortField::Upload | SortField::Download => {
+                            let column = if field == SortField::Upload {
+                                "upload"
+                            } else {
+                                "download"
+                            };
+                            let alias = if layer == RankLayer::Raw { "m" } else { "h" };
+                            assert!(rendered.contains(&format!(
+                                "order by sum({alias}.{column}) {direction}, 1 asc"
+                            )));
+                        }
+                        SortField::Name | SortField::Identity => {
+                            assert!(rendered.contains(&format!("order by 1 {direction}")));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn every_rank_template_resolves_internal_slots() {
+        for (name, template, layer) in [
+            ("rank_raw", RANK_RAW, RankLayer::Raw),
+            ("rank_raw_attr", RANK_RAW_ATTR, RankLayer::Raw),
+            ("rank_raw_rule", RANK_RAW_RULE, RankLayer::Raw),
+            ("rank_raw_chain", RANK_RAW_CHAIN, RankLayer::Raw),
+            ("rank_hourly", RANK_HOURLY, RankLayer::Dimension),
+            (
+                "rank_hourly_category",
+                RANK_HOURLY_CATEGORY,
+                RankLayer::Dimension,
+            ),
+            ("rank_daily", RANK_DAILY_DIM, RankLayer::Dimension),
+            (
+                "rank_daily_category",
+                RANK_DAILY_CATEGORY,
+                RankLayer::Dimension,
+            ),
+        ] {
+            let rendered = render_rank_sql(template, "", &SortSpec::default(), layer);
+            assert!(!rendered.contains('{'), "{name} has an unresolved slot");
+            assert!(rendered.contains("order by"), "{name} has no order");
         }
     }
 

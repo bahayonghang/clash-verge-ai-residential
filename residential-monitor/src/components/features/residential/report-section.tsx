@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { ReportQuery } from "../../../dto";
-import { emptyReportFilters } from "../../../format/rank";
 import { buildReportQuery, granularityForTimeRange } from "../../../hooks/use-report";
 import { useReportArchive } from "../../../hooks/use-report-archive";
 import { t, type UiLocale } from "../../../i18n";
@@ -11,6 +10,23 @@ import { CapabilityNote } from "../dimension/capability-note";
 import { CapabilityPanel } from "../reports/capability-panel";
 import { CoveragePanel } from "../reports/coverage-panel";
 import { ExportPanel } from "../reports/export-panel";
+import { residentialReportFilters } from "./aggregate-model";
+
+export function buildResidentialManualQuery(
+  timeRange: TimeRange,
+  targetPolicy: ReportQuery["targetPolicy"]
+): ReportQuery {
+  return {
+    ...buildReportQuery({
+      grouping: "host",
+      timeRange,
+      granularity: granularityForTimeRange(timeRange.preset),
+      topN: 20,
+      filters: residentialReportFilters()
+    }),
+    targetPolicy
+  };
+}
 
 export function ReportSection({ locale, timeRange }: { locale: UiLocale; timeRange: TimeRange }) {
   const archive = useReportArchive(locale);
@@ -21,16 +37,10 @@ export function ReportSection({ locale, timeRange }: { locale: UiLocale; timeRan
   const showCurrentNote = Boolean(report && !report.drilldownCapability.currentPolicy);
 
   function run(): void {
-    const query: ReportQuery = {
-      ...buildReportQuery({
-        grouping: "category",
-        timeRange,
-        granularity: granularityForTimeRange(timeRange.preset),
-        topN: 20,
-        filters: emptyReportFilters()
-      }),
-      targetPolicy: currentOn ? "current" : "historical"
-    };
+    const query = buildResidentialManualQuery(
+      timeRange,
+      currentOn ? "current" : "historical"
+    );
     void archive.runQuery(query);
   }
 

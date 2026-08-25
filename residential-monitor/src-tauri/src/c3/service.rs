@@ -1,18 +1,19 @@
 //! 统一 ReportService：短读快照内物化，返回前关闭事务。
 
 use crate::c3::query::{
-    decode_cursor, empty_result, encode_cursor, gap_union_sec, plan_capability,
-    plan_capability_ex, validate_query, AttributionQuality, CoverageSlice, DataTier,
-    DimensionKind, PolicyMetadata, RankingRow, ReportError, ReportQuery, ReportResult,
-    ReportTotals, SeriesPoint, SessionRow, TargetPolicy, HOURLY_DIM_V2_LAYER, UNKNOWN_LABEL_ZH,
+    decode_cursor, empty_result, encode_cursor, gap_union_sec, plan_capability, plan_capability_ex,
+    validate_query, AttributionQuality, CoverageSlice, DataTier, DimensionKind, PolicyMetadata,
+    RankingRow, ReportError, ReportQuery, ReportResult, ReportTotals, SeriesPoint, SessionRow,
+    TargetPolicy, HOURLY_DIM_V2_LAYER, UNKNOWN_LABEL_ZH,
 };
 use crate::c3::snapshot::ReportSnapshotStore;
 use crate::c3::sql::{
     dimension_filter_clause, dimension_kind_sql, dimension_kind_sql_layer, filter_clause,
-    merge_sql_params, render_sql, COVERAGE_DAILY, COVERAGE_RAW, RANK_DAILY_CATEGORY,
-    RANK_DAILY_DIM, RANK_HOURLY, RANK_HOURLY_CATEGORY, RANK_RAW, RANK_RAW_ATTR, RANK_RAW_CHAIN,
-    RANK_RAW_RULE, SERIES_DAILY_CORE, SERIES_DAILY_DIM, SERIES_HOURLY, SERIES_RAW,
-    TOTALS_DAILY_CORE, TOTALS_DAILY_DIM, TOTALS_HOURLY, TOTALS_RAW, UNKNOWN_IDENTITY,
+    merge_sql_params, render_rank_sql, render_sql, RankLayer, COVERAGE_DAILY, COVERAGE_RAW,
+    RANK_DAILY_CATEGORY, RANK_DAILY_DIM, RANK_HOURLY, RANK_HOURLY_CATEGORY, RANK_RAW,
+    RANK_RAW_ATTR, RANK_RAW_CHAIN, RANK_RAW_RULE, SERIES_DAILY_CORE, SERIES_DAILY_DIM,
+    SERIES_HOURLY, SERIES_RAW, TOTALS_DAILY_CORE, TOTALS_DAILY_DIM, TOTALS_HOURLY, TOTALS_RAW,
+    UNKNOWN_IDENTITY,
 };
 use crate::storage::{open_interruptible_reader, StorageCoordinator};
 use rusqlite::types::Value;
@@ -59,7 +60,20 @@ impl ReportService {
 
     pub fn explain_named(connection: &Connection, name: &str) -> Result<Vec<String>, ReportError> {
         let sql = crate::c3::sql::lookup(name).ok_or(ReportError::InvalidQuery("unknown sql"))?;
-        let sql = render_sql(sql, "");
+        let sql = if sql.contains("{order_by}") {
+            render_rank_sql(
+                sql,
+                "",
+                &crate::c3::query::SortSpec::default(),
+                if sql.contains("connection_minute m") {
+                    RankLayer::Raw
+                } else {
+                    RankLayer::Dimension
+                },
+            )
+        } else {
+            render_sql(sql, "")
+        };
         let mut statement = connection
             .prepare(&format!("explain query plan {sql}"))
             .map_err(|_| ReportError::Failed("eqp"))?;
@@ -380,21 +394,21 @@ fn fill_raw_rank(
 ) -> Result<(), ReportError> {
     let (sql, prefix) = match query.grouping {
         DimensionKind::Host => (
-            render_sql(RANK_RAW, fragment),
+            render_rank_sql(RANK_RAW, fragment, &query.sort, RankLayer::Raw),
             vec![Value::from(start_min), Value::from(end_min)],
         ),
         DimensionKind::Chain => (
-            render_sql(RANK_RAW_CHAIN, fragment),
+            render_rank_sql(RANK_RAW_CHAIN, fragment, &query.sort, RankLayer::Raw),
             vec![Value::from(start_min), Value::from(end_min)],
         ),
         DimensionKind::Rule => (
-            render_sql(RANK_RAW_RULE, fragment),
+            render_rank_sql(RANK_RAW_RULE, fragment, &query.sort, RankLayer::Raw),
             vec![Value::from(start_min), Value::from(end_min)],
         ),
         DimensionKind::Process | DimensionKind::Network | DimensionKind::Category => {
             let kind = dimension_kind_sql(query.grouping);
             (
-                render_sql(RANK_RAW_ATTR, fragment),
+                render_rank_sql(RANK_RAW_ATTR, fragment, &query.sort, RankLayer::Raw),
                 vec![
                     Value::Text(kind.into()),
                     Value::Text(kind.into()),
@@ -491,12 +505,17 @@ fn fill_dimension_layer(
     result.series = load_series(connection, &rendered_series, &totals_params, 1)?;
     let (rendered_rank, rank_prefix) = if query.grouping == DimensionKind::Category {
         (
-            render_sql(rank_category_sql, &fragment),
+            render_rank_sql(
+                rank_category_sql,
+                &fragment,
+                &query.sort,
+                RankLayer::Dimension,
+            ),
             vec![Value::from(start), Value::from(end)],
         )
     } else {
         (
-            render_sql(rank_sql, &fragment),
+            render_rank_sql(rank_sql, &fragment, &query.sort, RankLayer::Dimension),
             vec![
                 Value::from(start),
                 Value::from(end),
@@ -984,7 +1003,7 @@ mod report_service_tests {
 #[allow(clippy::field_reassign_with_default)]
 mod dimension_capability_tests {
     use super::*;
-    use crate::c3::query::Granularity;
+    use crate::c3::query::{Granularity, SortField};
     use crate::c3::retention::{RetentionMode, RetentionService};
     use crate::c3::space::SpaceBudget;
     use crate::c3::sql::{RESIDENTIAL_ACCOUNTING_FILTER, UNKNOWN_IDENTITY};
@@ -1022,6 +1041,40 @@ mod dimension_capability_tests {
                 ",
             )
             .expect("extra seed");
+    }
+
+    fn seed_residential_sort_fixture(connection: &Connection) {
+        connection
+            .execute_batch(
+                "
+                insert or ignore into dimension_dict(dimension_kind, dimension_id, value) values
+                    ('host', 101, 'upload.example'),
+                    ('host', 102, 'download.example'),
+                    ('host', 103, 'outside.example'),
+                    ('host', 104, '8.8.4.4'),
+                    ('category', 101, '家宽测试');
+                insert or ignore into connection_session(session_pk, epoch_id, connection_id, started_utc, host)
+                values
+                    (101, 1, 'upload-first', 600, 'upload.example'),
+                    (102, 1, 'download-first', 600, 'download.example'),
+                    (103, 1, 'outside', 600, 'outside.example'),
+                    (104, 1, 'ip-fallback', 600, '8.8.4.4');
+                insert or ignore into connection_session_attr(
+                    session_pk, host_id, policy_version, primary_category_id, started_utc, ended_utc
+                ) values
+                    (101, 101, 1, 101, 600, null),
+                    (102, 102, 1, 101, 600, null),
+                    (103, 103, 1, null, 600, null),
+                    (104, 104, 1, 101, 600, null);
+                insert or ignore into connection_minute(utc_minute, session_pk, upload, download)
+                values
+                    (10, 101, 1000, 1),
+                    (10, 102, 1, 1000),
+                    (10, 103, 9000, 9000),
+                    (10, 104, 40, 50);
+                ",
+            )
+            .expect("residential sort fixture");
     }
 
     fn run_now(
@@ -1290,6 +1343,70 @@ mod dimension_capability_tests {
     }
 
     #[test]
+    fn residential_host_rank_sorts_before_raw_top_n_and_conserves_filtered_traffic() {
+        let (_dir, coordinator, mut store) = setup();
+        seed_residential_sort_fixture(coordinator.connection());
+        let mut query = base_query();
+        query.grouping = DimensionKind::Host;
+        query.filters.category = Some(RESIDENTIAL_ACCOUNTING_FILTER.into());
+        query.top_n = 1;
+        query.sort.field = SortField::Upload;
+        let upload = run_now(&coordinator, &mut store, query.clone(), 3_600);
+        assert_eq!(upload.rankings[0].identity, "upload.example");
+        assert!(!upload
+            .rankings
+            .iter()
+            .any(|row| row.identity == "outside.example"));
+
+        query.sort.field = SortField::Download;
+        let download = run_now(&coordinator, &mut store, query.clone(), 3_600);
+        assert_eq!(download.rankings[0].identity, "download.example");
+
+        query.sort = Default::default();
+        let default_download = run_now(&coordinator, &mut store, query.clone(), 3_600);
+        assert_eq!(default_download.rankings[0].identity, "download.example");
+
+        query.top_n = 100;
+        let complete = run_now(&coordinator, &mut store, query, 3_600);
+        assert!(complete
+            .rankings
+            .iter()
+            .any(|row| row.identity == "8.8.4.4"));
+        assert!(!complete
+            .rankings
+            .iter()
+            .any(|row| row.identity == "outside.example"));
+        assert_eq!(
+            complete.rankings.iter().map(|row| row.upload).sum::<i64>(),
+            complete.totals.upload
+        );
+        assert_eq!(
+            complete
+                .rankings
+                .iter()
+                .map(|row| row.download)
+                .sum::<i64>(),
+            complete.totals.download
+        );
+        assert_eq!(
+            complete
+                .series
+                .iter()
+                .map(|point| point.upload)
+                .sum::<i64>(),
+            complete.totals.upload
+        );
+        assert_eq!(
+            complete
+                .series
+                .iter()
+                .map(|point| point.download)
+                .sum::<i64>(),
+            complete.totals.download
+        );
+    }
+
+    #[test]
     fn drilldown_filter_chain_and_rule_take_subset() {
         let (_dir, coordinator, mut store) = setup();
         let global = run_now(&coordinator, &mut store, base_query(), 3_600);
@@ -1478,6 +1595,35 @@ mod dimension_capability_tests {
         raw_rule_keys.sort();
         dim_rule_keys.sort();
         assert_eq!(raw_rule_keys, dim_rule_keys);
+    }
+
+    #[test]
+    fn residential_host_rank_sorts_before_dimension_top_n() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("sort-dim.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        seed_residential_sort_fixture(coordinator.connection());
+        enable_v2_from_epoch(&coordinator);
+        materialize(&mut coordinator, 40 * 86_400);
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let mut query = base_query();
+        query.grouping = DimensionKind::Host;
+        query.filters.category = Some(RESIDENTIAL_ACCOUNTING_FILTER.into());
+        query.top_n = 1;
+        query.sort.field = SortField::Upload;
+        let upload = run_now(&coordinator, &mut store, query.clone(), 40 * 86_400);
+        assert_eq!(upload.data_tier, DataTier::HourlyDimension);
+        assert_eq!(upload.rankings[0].identity, "upload.example");
+
+        query.sort.field = SortField::Download;
+        let download = run_now(&coordinator, &mut store, query, 40 * 86_400);
+        assert_eq!(download.data_tier, DataTier::HourlyDimension);
+        assert_eq!(download.rankings[0].identity, "download.example");
+        assert!(!download
+            .rankings
+            .iter()
+            .any(|row| row.identity == "outside.example"));
     }
 
     #[test]

@@ -19,17 +19,30 @@ describe("家宽页装配", () => {
     expect(app).toContain('className={route === "live" ? "contents" : "hidden"}');
   });
 
-  it("实时段 residential_only，聚合段 grouping Category", () => {
+  it("实时段 residential_only，聚合与报告按家宽子集拆分 Host", () => {
     const monitor = source("monitor-section.tsx");
     const aggregate = source("aggregate-section.tsx");
     const report = source("report-section.tsx");
     expect(monitor).toContain("residentialOnly: true");
     expect(monitor).toContain("useLivePage");
-    expect(aggregate).toContain('grouping: "category"');
-    expect(report).toContain('grouping: "category"');
-    expect(report).toContain('targetPolicy: currentOn ? "current" : "historical"');
+    expect(aggregate).toContain('grouping: "host"');
+    expect(aggregate).toContain("residentialReportFilters()");
+    expect(aggregate).toContain("matchesResidentialRankQuery");
+    expect(report).toContain('grouping: "host"');
+    expect(report).toContain("residentialReportFilters()");
+    expect(report).toContain('currentOn ? "current" : "historical"');
     expect(report).toContain("drilldownCapability.currentPolicy");
     expect(report).toContain("residential.report.current_off");
+  });
+
+  it("趋势图保留旧到新输入，趋势表使用独立新到旧投影", () => {
+    const aggregate = source("aggregate-section.tsx");
+    const table = source("trend-table.tsx");
+    expect(aggregate).toContain("data={series}");
+    expect(aggregate).toContain("<TrendTable");
+    expect(table).toContain("newestFirstSeries(series)");
+    expect(table).toContain("sticky top-0");
+    expect(table).toContain("overflow-auto rounded-md border");
   });
 
   it("未配置 targets 走中文下一步，不画 0", () => {
