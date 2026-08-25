@@ -1,0 +1,3 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": "residential-monitor/src-tauri/src/c5/purge.rs", "reason": "C5 删除清单从 data_dir 派生，验收 A4 需覆盖"}
+{"file": "residential-monitor/docs/data-directory.md", "reason": "文档与代码一致性检查"}

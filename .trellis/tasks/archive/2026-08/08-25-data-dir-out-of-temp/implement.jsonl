@@ -1,0 +1,6 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": "residential-monitor/src-tauri/src/lib.rs", "reason": "boot_facade 数据目录解析点 307-310 行，替换为 prepare_data_dir"}
+{"file": "residential-monitor/src-tauri/src/c2/facade.rs", "reason": "AppFacade::boot 以 data_dir 派生 db_path/report-spool，确认单点改动"}
+{"file": "residential-monitor/src-tauri/tauri.conf.json", "reason": "NSIS bundle 配置，加 installerHooks"}
+{"file": "residential-monitor/docs/data-directory.md", "reason": "默认路径文档，需同步改写"}
+{"file": ".trellis/tasks/08-25-home-ip-traffic-breakdown/research/findings.md", "reason": "问题来源与现场证据"}
