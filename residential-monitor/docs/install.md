@@ -28,6 +28,7 @@ just monitor-build
 ## 安装后检查
 
 - Start Menu 出现产品名。
+- Start Menu 与任务栏图标是彩色屋顶+柱状图，边缘清楚，不是放大后的灰房子。
 - 关闭窗口只隐藏到托盘。
 - 第二实例只聚焦现有窗口。
 - WebView2 由安装包 bootstrapper 处理。

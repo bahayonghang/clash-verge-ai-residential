@@ -11,7 +11,9 @@
     "lint": "eslint src",
     "test": "vitest run",
     "build": "vite build",
-    "check": "npm run typecheck && npm run lint && npm test && npm run build",
+    "check:icons": "node scripts/check-icons.mjs",
+    "icons": "node scripts/build-icons.mjs",
+    "check": "npm run check:icons && npm run typecheck && npm run lint && npm test && npm run build",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
   },

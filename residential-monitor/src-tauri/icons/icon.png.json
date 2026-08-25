@@ -1,4 +1,4 @@
 {
-  "prompt": "Keep the same white rounded-square tile and the same dark navy house-with-wifi glyph. Crop so the white tile fills the entire 1:1 canvas. No text. Derived from mark-app.jpg for taskbar and tray.",
-  "source": "residential-monitor/src/assets/icons/mark-app.jpg"
+  "prompt": "Windows 11 desktop app icon, 1:1 square, full-bleed blue gradient. A purple house-roof chevron over five rounded vertical bars in cyan, blue, violet, amber, and teal. No chimney, no rounded-corner mask, no text.",
+  "source": "residential-monitor/src-tauri/icons/icon-source.png"
 }

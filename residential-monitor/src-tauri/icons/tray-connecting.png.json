@@ -1,5 +1,6 @@
 {
-  "prompt": "Keep the same white rounded-square tile and navy house-with-wifi glyph. Add a solid blue status dot at the bottom-right with a dark navy ring. No text. Derived from icon.png for the Windows tray.",
+  "prompt": "Same C roof-and-bars mark as icon.png. Add a solid blue status dot at the bottom-right with a dark navy ring. No text. Derived from icon.png for the Windows tray.",
   "source": "residential-monitor/src-tauri/icons/icon.png",
-  "visual": "connecting"
+  "visual": "connecting",
+  "method": "composite"
 }

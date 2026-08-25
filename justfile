@@ -31,6 +31,10 @@ monitor-check:
     cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace
     npm run check:secrets
 
+# 从 icon-source.png 生成 Windows ICO 与 PNG。不覆盖 tray-*.png。
+monitor-icons:
+    npm --prefix residential-monitor run icons
+
 # 开发态桌面壳。
 monitor-dev: monitor-sync-version
     npm --prefix residential-monitor run tauri:dev
