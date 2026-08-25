@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 34
-- **Last Active**: 2026-08-22
+- **Total Sessions**: 35
+- **Last Active**: 2026-08-25
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1062 | Active |
+| `journal-1.md` | ~1097 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 35 | 2026-08-25 | 彩色应用图标与安装态清晰度 | `9acb61977df55fc6ff58baf0ad24ea5a6de7151f` | `dev` |
 | 34 | 2026-08-22 | 解封 dev 合并 main：真实端口与存储重跑 | `a0f09a3`, `a6b1729` | `dev` |
 | 33 | 2026-08-22 | 进程归因：查找进程与进程页 | `281817a`, `199b8ff`, `f681c1e`, `cfef9c2` | `dev` |
 | 32 | 2026-08-21 | 完成 OpenAI 认证路由开关 | `f30cbabef3a6824c4a6f0f5ea427034e254db039`, `4dffa4d2ffeb443262c2d0a642aa8d4e0eb7b8b2` | `dev` |
