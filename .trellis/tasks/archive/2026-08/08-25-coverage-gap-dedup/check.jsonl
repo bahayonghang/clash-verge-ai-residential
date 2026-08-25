@@ -1,0 +1,3 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": "residential-monitor/src-tauri/src/accounting.rs", "reason": "CoverageChange 产生源头，确认写入侧修复不重复计账"}
+{"file": "residential-monitor/docs/reporting.md", "reason": "报告口径文档，若语义变化需同步"}
