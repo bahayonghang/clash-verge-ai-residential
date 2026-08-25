@@ -1,0 +1,6 @@
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"审查 sort 字段是否在 LIMIT 前生效、默认兼容、稳定 tie-break 与过滤守恒。"}
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"审查 ORDER BY 渲染是否仅由枚举驱动、过滤值是否仍参数化、各保留层是否一致。"}
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"审查可排序表头、语义测试、视觉检查与前端质量门是否符合项目入口规范。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"审查前端是否消费严格 queryEcho/ReportResult，未用客户端候选集冒充精确 Top N。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"审查家宽页面口径、旧请求切换状态、趋势图升序与表格降序、空态和视觉证据。"}
+{"file":".trellis/tasks/08-25-residential-address-breakdown-trend-table/research/findings.md","reason":"逐项复核症状根因、范围边界及用户两项诉求是否完整闭合。"}

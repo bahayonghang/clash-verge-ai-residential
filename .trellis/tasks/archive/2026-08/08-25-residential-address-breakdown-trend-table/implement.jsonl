@@ -1,0 +1,6 @@
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"实现 C3 ReportQuery 排序、命名 SQL、安全枚举映射与 Top N 截断前排序契约。"}
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"修改 C3 SQLite 查询形态时保持参数化、短读事务、命名 SQL 与守恒边界。"}
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"遵循 residential-monitor 前端目录、可排序表头与实施前检查入口。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"复用严格 ReportQuery/ReportResult DTO 与 Host/归因语义，不在组件内重造契约。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"实现家宽筛选+Host 分组、权威 Top N、图表/表格同源与陈旧请求状态。"}
+{"file":".trellis/tasks/08-25-residential-address-breakdown-trend-table/research/findings.md","reason":"提供当前错误查询形态、sort no-op、Host fallback、趋势顺序和任务边界的代码证据。"}
