@@ -252,7 +252,8 @@ function discoverPreviousInstallDir(
   for (const name of names) {
     add(queryUninstallLocation(name, spawn));
     if (localAppData) {
-      add(path.win32.join(localAppData, name));
+      // 文件系统探测用宿主分隔符：Ubuntu CI 上 win32.join 会拼出不存在的路径。
+      add(path.join(localAppData, name));
     }
   }
   const destKey = destDir ? normalizeWinPath(destDir) : null;
