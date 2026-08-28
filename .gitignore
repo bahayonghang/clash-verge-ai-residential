@@ -27,6 +27,9 @@ Thumbs.db
 .codex/
 .claude/
 .cursor/
+.omp/
+.grok/
+.kimi-code/
 
 # residential-monitor generated artifacts
 residential-monitor/node_modules/
