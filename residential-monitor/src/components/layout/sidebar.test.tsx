@@ -55,11 +55,10 @@ describe("Sidebar", () => {
     expect(html).toContain('data-route="settings-data"');
   });
 
-  it("英文品牌为两行锁，导航与底栏标签单行完整", () => {
+  it("英文品牌为 ResiWatch 单行，导航与底栏标签单行完整", () => {
     const html = renderSidebar({ locale: "en", width: 220 });
-    expect(html).toContain('data-brand="en-stack"');
-    expect(html).toContain("Residential");
-    expect(html).toContain("Traffic Monitor");
+    expect(html).toContain("ResiWatch");
+    expect(html).not.toContain('data-brand="en-stack"');
     expect(html).toContain("Observed lower bound, not a bill.");
     expect(html).not.toContain("The secret does not appear on this page.");
     expect(html).toContain("Live connections");
@@ -67,9 +66,9 @@ describe("Sidebar", () => {
     expect(html).toContain("min-w-0 truncate");
   });
 
-  it("中文产品名单行，不使用英文两行锁", () => {
+  it("中文界面产品名同样是 ResiWatch", () => {
     const html = renderSidebar({ locale: "zh", width: 220 });
-    expect(html).toContain("家宽流量监控");
+    expect(html).toContain("ResiWatch");
     expect(html).not.toContain('data-brand="en-stack"');
     expect(html).toContain("设置 / 数据管理");
   });

@@ -1325,7 +1325,7 @@ pub fn run() {
             run_user_vacuum
         ])
         .run(tauri::generate_context!())
-        .expect("启动家宽流量监控失败");
+        .expect("启动 ResiWatch 失败");
 }
 
 #[cfg(test)]

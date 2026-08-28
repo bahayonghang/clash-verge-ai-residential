@@ -80,7 +80,7 @@ pub fn health_action(locale: UiLocale, session: &str) -> &'static str {
 
 fn entry(key: &str) -> Option<(&'static str, &'static str)> {
     Some(match key {
-        "product.display_name" => ("家宽流量监控", "Residential Traffic Monitor"),
+        "product.display_name" => ("ResiWatch", "ResiWatch"),
         "product.slogan" => (
             "观测下界，不是账单。secret 不会出现在此页面。",
             "Observed lower bound, not a bill. The secret does not appear on this page.",
@@ -105,7 +105,7 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
             "这是测试通知，不会写入告警历史。",
             "This is a test notification. It does not write alert history.",
         ),
-        "notify.alert_title" => ("家宽流量监控告警", "Residential Traffic Monitor alert"),
+        "notify.alert_title" => ("ResiWatch 告警", "ResiWatch alert"),
         "notify.alert_body" => ("告警事件", "Alert event"),
         "dialog.report_export.title" => ("导出分析报告", "Export report"),
         "dialog.report_export.file" => ("report.csv", "report.csv"),
@@ -411,11 +411,8 @@ mod i18n_tests {
 
     #[test]
     fn catalog_differs_by_locale() {
-        assert_eq!(t(UiLocale::Zh, "product.display_name"), "家宽流量监控");
-        assert_eq!(
-            t(UiLocale::En, "product.display_name"),
-            "Residential Traffic Monitor"
-        );
+        assert_eq!(t(UiLocale::Zh, "product.display_name"), "ResiWatch");
+        assert_eq!(t(UiLocale::En, "product.display_name"), "ResiWatch");
         assert_ne!(
             t(UiLocale::Zh, "session.connected"),
             t(UiLocale::En, "session.connected")

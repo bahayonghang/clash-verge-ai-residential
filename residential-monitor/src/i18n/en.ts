@@ -1,5 +1,5 @@
 export const EN: Record<string, string> = {
-  "product.display_name": "Residential Traffic Monitor",
+  "product.display_name": "ResiWatch",
   "product.slogan": "Observed lower bound, not a bill. The secret does not appear on this page.",
   "product.slogan_sidebar": "Observed lower bound, not a bill.",
   "route.overview": "Overview",

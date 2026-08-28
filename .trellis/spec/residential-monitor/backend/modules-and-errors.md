@@ -32,6 +32,7 @@
 - Recovery Shell：`restoreAvailable` 为 `true`。restore 不初始化 `ReportService`；失败必须保留当前可用库。
 - C4 前向表：`alert_rule`、`alert_instance`、`alert_event`、`notification_outbox`。不得改写 C1 / C3 已发布 migration。
 - AUMID 与 identifier 相同：`io.github.bahayonghang.residential-monitor`。About 固定 Releases URL，不注册 updater plugin，不新增 Windows Service。
+- current-user 安装目录为 `%LOCALAPPDATA%\ResiWatch`，与 Tauri NSIS `productName` + `installMode: currentUser` 默认一致。`just tinstall` 通过 NSIS `/D=` 显式传入该路径，不沿用注册表里指向 `%TEMP%` 或旧产品名目录的上次位置。`installer.nsh` 的 `NSIS_HOOK_PREINSTALL` 在 `$INSTDIR` 位于 `$TEMP` 下时改写到该目录并搬走 `data\`。数据目录仍是 `<安装目录>\data`。identifier 与 exe 仍是 `residential-monitor`。
 - 调试：`just tdev`（`tauri dev`）。出包：`just monitor-build`（只生成 NSIS，不安装）。安装：`just tinstall`（会改本机 current-user 安装态）。C5 自动门：`just monitor-c5-auto`。未再确认前不要执行 `tinstall`、本机 Credential Manager 真机测试或登录自启动写入。
 - C5 完整 30 天库、24 小时 soak、安装态通知 / 签名 / GitHub Release 不得由 fixture 或 smoke 冒充完成。C0 升级基线缺失时 `monitor-bench c5-baseline` 退出码 2。
 

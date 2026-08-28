@@ -12,7 +12,7 @@ just monitor-build
 
 `just monitor-build` 与 `just tinstall` 会先把 `residential-monitor/package.json` 的 `version` 写入 `tauri.conf.json`、`Cargo.toml`、`Cargo.lock` 和 `package-lock.json`。NSIS 安装包名、关于页和 Windows 文件版本都读这些文件。只改 `package.json` 不会改变已有安装包。
 
-`just tinstall` 会在本机以 NSIS `/S` 静默执行 current-user 安装。安装包文件名必须包含当前 `package.json` 版本，目录里残留的旧版本安装包不会被选用。若 `residential-monitor` 正在运行，安装前先结束该进程。安装结束后配方退出，不启动应用。未再确认前不要运行。
+`just tinstall` 会在本机以 NSIS `/S /D=%LOCALAPPDATA%\ResiWatch` 静默执行 current-user 安装。安装包文件名必须包含当前 `package.json` 版本，目录里残留的旧版本安装包不会被选用。若 `residential-monitor` 正在运行，安装前先结束该进程。若注册表里上次安装目录在 `%TEMP%` 下或旧产品名目录，安装后会把 `data\` 迁到新目录。安装结束后配方退出，不启动应用。未再确认前不要运行。
 
 ## 稳定标识
 
@@ -20,8 +20,9 @@ just monitor-build
 |---|---|
 | identifier | `io.github.bahayonghang.residential-monitor` |
 | AUMID | 与 identifier 相同 |
-| 产品名 | 家宽流量监控 |
+| 产品名 | ResiWatch |
 | 二进制 | `residential-monitor` |
+| 安装目录 | `%LOCALAPPDATA%\ResiWatch` |
 | 凭据 target | `io.github.bahayonghang.residential-monitor/controller` |
 | 自启动参数 | `--background` |
 

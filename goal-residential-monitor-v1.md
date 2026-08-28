@@ -35,7 +35,7 @@ status: draft
 
 # Contract
 
-目标结果：在 residential-monitor 交付完整 Windows 11 v1 家宽流量监控桌面应用，并完成 C0 到 C5 六个子任务各自 prd.md 可观察验收标准与 implement.md Gate。应用采集 Clash Verge Rev 与 mihomo 的全部连接事实，按用户重点目标分类，提供实时监控、历史报告、导出、告警、保留、备份恢复与 NSIS current-user 安装升级。产品只提供观测下界，不冒充代理商账单。
+目标结果：在 residential-monitor 交付完整 Windows 11 v1 ResiWatch 桌面应用，并完成 C0 到 C5 六个子任务各自 prd.md 可观察验收标准与 implement.md Gate。应用采集 Clash Verge Rev 与 mihomo 的全部连接事实，按用户重点目标分类，提供实时监控、历史报告、导出、告警、保留、备份恢复与 NSIS current-user 安装升级。产品只提供观测下界，不冒充代理商账单。
 
 验证：每个子任务只使用该任务 prd.md 可观察验收标准与 implement.md Gate 作为完成枚举源。命令以 C0 implement.md 计划中的稳定命令面为准，名称若调整必须同步规范、CI、帮助文本和证据。落地后每个子任务结束至少运行：
 

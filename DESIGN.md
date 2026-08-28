@@ -1,5 +1,5 @@
 ---
-name: 家宽流量监控
+name: ResiWatch
 description: 深色侧栏工作台，neko 令牌
 colors:
   background: "#0b0f19"
@@ -70,7 +70,7 @@ components:
     padding: "0.95rem 1.1rem"
 ---
 
-# Design System: 家宽流量监控
+# Design System: ResiWatch
 
 ## Overview
 

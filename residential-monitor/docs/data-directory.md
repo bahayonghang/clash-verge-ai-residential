@@ -1,6 +1,7 @@
 # 数据目录
 
 默认数据目录是应用安装目录下的 `data` 子目录（exe 同级，跟随安装位置）。
+current-user 安装目录是 `%LOCALAPPDATA%\ResiWatch`。不要装到 `%TEMP%`：重启或 Storage Sense 会清掉二进制和数据。
 
 0.2.0 及之前版本默认写在 `%TEMP%\io.github.bahayonghang.residential-monitor`；
 升级后首次启动会把旧目录整体迁移到新位置（同卷 rename，逐项搬移时做 size 校验），
