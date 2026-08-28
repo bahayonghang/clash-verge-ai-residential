@@ -48,7 +48,7 @@ function writeTree(root, version, options = {}) {
   fs.writeFileSync(path.join(monitor, "package-lock.json"), lock, "utf8");
   fs.writeFileSync(
     path.join(tauri, "tauri.conf.json"),
-    `{${eol}  "productName": "家宽流量监控",${eol}  "version": "${options.tauriVersion || version}"${eol}}${eol}`,
+    `{${eol}  "productName": "ResiWatch",${eol}  "version": "${options.tauriVersion || version}"${eol}}${eol}`,
     "utf8"
   );
   const cargoToml = [

@@ -6,7 +6,7 @@ describe("decodeAbout 关于页", () => {
     expect(() =>
       decodeAbout({
         schemaVersion: 1,
-        productName: "家宽流量监控",
+        productName: "ResiWatch",
         binaryName: "residential-monitor",
         identifier: "io.github.bahayonghang.residential-monitor",
         aumid: "io.github.bahayonghang.residential-monitor",

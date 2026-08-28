@@ -173,7 +173,7 @@ describe("decodeShellStatus", () => {
   it("接受未签名 about", () => {
     const decoded = decodeAbout({
       schemaVersion: 1,
-      productName: "家宽流量监控",
+      productName: "ResiWatch",
       binaryName: "residential-monitor",
       identifier: "io.github.bahayonghang.residential-monitor",
       aumid: "io.github.bahayonghang.residential-monitor",

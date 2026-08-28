@@ -1060,3 +1060,59 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 35: 彩色应用图标与安装态清晰度
+
+**Date**: 2026-08-25
+**Task**: 彩色应用图标与安装态清晰度
+**Branch**: `dev`
+
+### Summary
+
+把仅含 16×16 的灰白房子 ICO 换成彩色屋顶+柱标记，并生成 16/24/32/48/64/256 层 ICO。just tinstall 后从已装 exe 抽出各尺寸，开始菜单快捷方式指向新图标。
+
+### Main Changes
+
+- 方案 C 真源 icon-source.png；tauri icon 生成多尺寸 ICO；侧栏 mark-app.png；托盘四态叠状态点
+- just monitor-icons 与 check-icons.mjs 断言 ICO 层数
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9acb61977df55fc6ff58baf0ad24ea5a6de7151f` | (see git log) |
+
+### Testing
+
+- [OK] npm --prefix residential-monitor run check 通过
+- [OK] just tinstall 后 PrivateExtractIcons 抽出 16/32/48/256 为彩色屋顶柱
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 若开始菜单仍显示旧图，刷新 Explorer 图标缓存后再看
+
+
+## Session 36: 家宽目的地址拆解与趋势明细优化
+
+**Date**: 2026-08-25
+**Task**: 家宽目的地址拆解与趋势明细优化
+**Branch**: `dev`
+
+### Summary
+
+让 C3 排名按请求方向在 Top N 截断前排序；家宽页按住宅子集内 Host 拆解上下行热点，趋势明细最新时间桶置顶，并补齐回归测试与跨层规范。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `feccd1c` | (see git log) |
+
+### Status
+
+[OK] **Completed**

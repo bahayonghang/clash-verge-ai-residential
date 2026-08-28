@@ -12,7 +12,7 @@ v1 之后改用上一正式 Release。不注册 updater plugin。About 页只提
 
 ## 普通卸载
 
-NSIS 普通卸载删除二进制和快捷方式，保留 LocalAppData 数据、备份、设置和 Credential Manager 项。这不是卸载失败。
+NSIS 普通卸载删除二进制和快捷方式，保留安装目录下的 `data\`、备份、设置和 Credential Manager 项。这不是卸载失败。
 
 ## 应用内删除
 
@@ -22,6 +22,7 @@ NSIS 普通卸载删除二进制和快捷方式，保留 LocalAppData 数据、�
 
 ## 卸载后手动清理
 
-1. `%LOCALAPPDATA%\io.github.bahayonghang.residential-monitor`
-2. Windows 凭据管理器中的 `io.github.bahayonghang.residential-monitor/controller`
-3. 登录自启动中带 `--background` 的产品项（若用户曾经启用）
+1. `%LOCALAPPDATA%\ResiWatch\data`（主库与 spool）
+2. `%LOCALAPPDATA%\io.github.bahayonghang.residential-monitor`（日志）
+3. Windows 凭据管理器中的 `io.github.bahayonghang.residential-monitor/controller`
+4. 登录自启动中带 `--background` 的产品项（若用户曾经启用）

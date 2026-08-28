@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "托盘四态资源名与窗口图标分离仍成立"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "无远程 URL；check 脚本进 monitor-check"}
+{"file": "DESIGN.md", "reason": "图标仍本地生成"}
+{"file": ".trellis/tasks/08-25-colorful-app-icon/prd.md", "reason": "A1–A7：ICO 层数、PNG 侧栏、托盘点、安装态"}
+{"file": "residential-monitor/docs/install.md", "reason": "安装后 Start Menu 产品名检查仍有效"}

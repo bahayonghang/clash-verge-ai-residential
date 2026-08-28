@@ -20,8 +20,9 @@
 - `LiveOverview.observationPhase` 明确区分 unconfigured / connecting / baselinePending / current / paused / disconnected / resyncRequired / decodeFailed。每次 `connectionDelta` 携带同 tick overview；前端不得只更新 rows 而把 bootstrap 的 connecting 快照永久保留。
 - `AppFacade::query` 必须经 `MonitorHub::query_snapshot` 一次锁定同时取出 rows 与 overview（含 `last_sample_utc`）。`query_connections_with_targets_at` 先过滤完整 matched 集合，再按 `(value desc, identity asc)` 选 `topDownload` / `topUpload`，然后才 sort / cursor / limit 分页。`limit` 与 cursor 不得改变 summary。空匹配热点为 `None`，不写 0。热点 DTO 不含 `process_path` 或原始规则。
 - Tauri `Channel` 只放在 `lib.rs` 订阅表，不进入 `AppFacade`。
-- 托盘 id `main`。Tauri 2 默认左键弹菜单，必须 `show_menu_on_left_click(false)`。左键 Up 与左键双击打开窗口，右键才是菜单。四态由 `c2::desktop::tray_chrome(collector_running, session, storage_ok)` 决定，资源是 `icons/tray-*.png`。窗口 `icon.png` 不随状态变。`just tdev` 重启后通知区才换图标。
+- 托盘 id `main`。Tauri 2 默认左键弹菜单，必须 `show_menu_on_left_click(false)`。左键 Up 与左键双击打开窗口，右键才是菜单。四态由 `c2::desktop::tray_chrome(collector_running, session, storage_ok)` 决定，资源是 `icons/tray-*.png`。窗口 `icon.png` 不随状态变。产品标记真源是 `icons/icon-source.png`（铺满正方形、不预做圆角）。`icon.ico` 必须含 16/32/48/256 层且 256 为 PNG 压缩，用 `just monitor-icons` 从真源生成，禁止提交单层 16×16 ICO。`scripts/check-icons.mjs` 断言层数。`just tdev` 重启后通知区才换图标。
 - C3 代码位于 `residential-monitor/src-tauri/src/c3/`。C3 只通过 `StorageCoordinator` / `RecoveryFacade` 访问 SQLite，不得另建 writer 或通用 Repository。`ReportArchiveService` 拥有 `report_archive` 读写与过期删除，含 `persist_manual`。C2 不得直接写该表。
+- C3 排名必须在 `LIMIT top_n` 前应用 `ReportQuery.sort`。排序字段与方向只由 `SortField` / `SortSpec` 枚举白名单生成，不接收调用方 SQL；upload / download 同值时固定以 identity 升序破同值。raw、hourly dimension、daily dimension 与 category 特例保持同一契约，默认仍为 download desc。
 - 家宽判定只在 `src-tauri/src/residential.rs`：`residential_tags` / `is_residential_target`（核算，精确 target）与 `is_residential_filter`（实时筛选，精确 target 或节点名含「家宽」）。两者不得合并。`accounting::classify` 只调核算函数；`c2/query` 的「只看家宽」只调筛选函数。前端不得复制家宽字符串匹配。
 - `list_routes` 与引导 DTO 共用 `c2/shell.rs` 的 `default_routes_for`。十段顺序：`overview`、`live`、`residential`、`host`、`rule`、`chain`、`process`、`reports`、`alerts`、`settings-data`。禁止再维护第二份路由表。
 - `collector_loop_tick` 在 `apply_tick_result` 之后调用 `archive_tick`。`ReportService::run` 不得持 `Mutex<AppFacade>`。每 tick 最多 1 份档案。临时 snapshot 必须打开独立目录（`data_dir/archive-tick`），不得 `ReportSnapshotStore::open(data_dir)`，否则 `cleanup_orphans` 会删掉门面仍有效的 spool token。
@@ -31,8 +32,55 @@
 - Recovery Shell：`restoreAvailable` 为 `true`。restore 不初始化 `ReportService`；失败必须保留当前可用库。
 - C4 前向表：`alert_rule`、`alert_instance`、`alert_event`、`notification_outbox`。不得改写 C1 / C3 已发布 migration。
 - AUMID 与 identifier 相同：`io.github.bahayonghang.residential-monitor`。About 固定 Releases URL，不注册 updater plugin，不新增 Windows Service。
+- current-user 安装目录为 `%LOCALAPPDATA%\ResiWatch`，与 Tauri NSIS `productName` + `installMode: currentUser` 默认一致。`just tinstall` 通过 NSIS `/D=` 显式传入该路径，不沿用注册表里指向 `%TEMP%` 或旧产品名目录的上次位置。`installer.nsh` 的 `NSIS_HOOK_PREINSTALL` 在 `$INSTDIR` 位于 `$TEMP` 下时改写到该目录并搬走 `data\`。数据目录仍是 `<安装目录>\data`。identifier 与 exe 仍是 `residential-monitor`。
 - 调试：`just tdev`（`tauri dev`）。出包：`just monitor-build`（只生成 NSIS，不安装）。安装：`just tinstall`（会改本机 current-user 安装态）。C5 自动门：`just monitor-c5-auto`。未再确认前不要执行 `tinstall`、本机 Credential Manager 真机测试或登录自启动写入。
 - C5 完整 30 天库、24 小时 soak、安装态通知 / 签名 / GitHub Release 不得由 fixture 或 smoke 冒充完成。C0 升级基线缺失时 `monitor-bench c5-baseline` 退出码 2。
+
+## Scenario: C3 排名排序先于 Top N
+
+### 1. Scope / Trigger
+- Trigger: `ReportQuery.sort`、任何 C3 排名 SQL 模板，或 raw / hourly / daily / category 排名路径发生变化。
+
+### 2. Signatures
+- `render_rank_sql(sql: &str, filters_sql: &str, sort: &SortSpec, layer: RankLayer) -> String`
+- `fill_raw_rank(..., query: &ReportQuery, ...)`
+- `fill_dimension_layer(..., query: &ReportQuery, ...)`
+
+### 3. Contracts
+- `{filters}` 只接收由 `ReportFilters` 枚举/字段生成的内部 SQL 片段；用户值只走绑定参数。
+- `{order_by}` 只由 `SortField::{Upload, Download, Name, Identity}`、`SortSpec.descending` 与 `RankLayer::{Raw, Dimension}` 渲染，调用方不能传 SQL。
+- upload / download 用对应层的聚合列排序，并以 identity 升序稳定破同值；name / identity 直接按第一选择列排序。
+- 所有排名模板必须在 `LIMIT ?` 前完成 ORDER BY。默认 `SortSpec` 继续等价于 download desc。
+
+### 4. Validation & Error Matrix
+- 模板残留 `{filters}` 或 `{order_by}` → 测试失败；不得把带槽位 SQL 交给 SQLite。
+- sort 字段超出 DTO 枚举 → 查询边界拒绝，不得回落到调用方字符串。
+- raw 查询使用 dimension 别名，或反之 → SQL/EQP 测试失败。
+- 非家宽高流量行出现在 `filters.category = "__residential__"` 结果 → 集成测试失败。
+
+### 5. Good/Base/Bad Cases
+- Good: `top_n=1 + upload desc` 与 `top_n=1 + download desc` 可返回不同冠军。
+- Base: 未显式指定 sort 时仍返回 download desc，并保留 identity 稳定次序。
+- Bad: 先按 download 固定截取 Top N，再在 Rust 或前端按 upload 重排候选。
+
+### 6. Tests Required
+- SQL corpus：8 个排名模板无残留槽位；四个字段 × 两个方向均只渲染白名单 ORDER BY。
+- service raw tier：构造上传冠军与下载冠军不同的 fixture，断言 `top_n=1` 首行分别正确。
+- service dimension tier：对同一 fixture 物化 hourly dimension 后重复方向断言。
+- residential host：断言非家宽高流量行被过滤、域名/IP 分行，完整 Top N 时 rankings / series 与 totals 守恒。
+
+### 7. Wrong vs Correct
+#### Wrong
+```rust
+let mut rows = run_download_top_n(query.top_n)?;
+rows.sort_by_key(|row| Reverse(row.upload));
+```
+
+#### Correct
+```rust
+let sql = render_rank_sql(template, filters_sql, &query.sort, RankLayer::Raw);
+// SQL ORDER BY 已在 LIMIT ? 前生效。
+```
 
 ## Scenario: run_report persist_manual and snapshot LRU
 

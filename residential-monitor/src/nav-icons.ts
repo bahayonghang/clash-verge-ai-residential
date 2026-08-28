@@ -1,5 +1,5 @@
 import type { RouteId } from "./dto";
-import markApp from "./assets/icons/mark-app.jpg";
+import markApp from "./assets/icons/mark-app.png";
 import iconOverview from "./assets/icons/overview.jpg";
 import iconLive from "./assets/icons/live.jpg";
 import iconResidential from "./assets/icons/residential.svg";

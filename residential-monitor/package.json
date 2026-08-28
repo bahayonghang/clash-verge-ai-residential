@@ -1,9 +1,9 @@
 {
   "name": "residential-monitor",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "Windows 11 家宽流量监控桌面应用",
+  "description": "Windows 11 ResiWatch desktop app",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,9 @@
     "lint": "eslint src",
     "test": "vitest run",
     "build": "vite build",
-    "check": "npm run typecheck && npm run lint && npm test && npm run build",
+    "check:icons": "node scripts/check-icons.mjs",
+    "icons": "node scripts/build-icons.mjs",
+    "check": "npm run check:icons && npm run typecheck && npm run lint && npm test && npm run build",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
   },

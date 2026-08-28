@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "托盘 id main、tray-*.png 四态、窗口 icon.png 不随状态变"}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "本地资源、禁止 CDN；侧栏品牌图属于壳"}
+{"file": "DESIGN.md", "reason": "图表色井与「本地生成图标」约束"}
+{"file": "PRODUCT.md", "reason": "产品名、Windows 11 NSIS、操作态桌面壳"}
+{"file": ".trellis/tasks/08-25-colorful-app-icon/research/candidates/README.md", "reason": "方案 C 选定与真源文件名"}
+{"file": ".trellis/tasks/08-25-colorful-app-icon/prd.md", "reason": "ICO 层数、侧栏 PNG、安装态验收"}
+{"file": ".trellis/tasks/08-25-colorful-app-icon/design.md", "reason": "tauri icon 配方、资源流、16px 简化层"}

@@ -1,7 +1,7 @@
 //! 发布后不得修改的稳定标识。
 
 pub const IDENTIFIER: &str = "io.github.bahayonghang.residential-monitor";
-pub const PRODUCT_NAME: &str = "家宽流量监控";
+pub const PRODUCT_NAME: &str = "ResiWatch";
 pub const BINARY_NAME: &str = "residential-monitor";
 pub const AUMID: &str = IDENTIFIER;
 pub const AUTOSTART_ARGUMENT: &str = "--background";
@@ -30,6 +30,6 @@ mod windows_identity_tests {
         assert!(!RELEASES_URL.contains("secret"));
         assert!(CREDENTIAL_TARGET.starts_with(IDENTIFIER));
         assert_eq!(local_app_data_leaf(), IDENTIFIER);
-        assert_eq!(PRODUCT_NAME, "家宽流量监控");
+        assert_eq!(PRODUCT_NAME, "ResiWatch");
     }
 }

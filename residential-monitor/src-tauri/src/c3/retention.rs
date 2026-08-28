@@ -34,6 +34,7 @@ pub struct RetentionPreview {
 pub struct RetentionService;
 
 const CHAIN_IDENTITY_V1_LAYER: &str = "chain_identity_v1";
+const COVERAGE_OPEN_GAP_V1_LAYER: &str = "coverage_open_gap_v1";
 
 impl RetentionService {
     pub fn preview(
@@ -72,6 +73,7 @@ impl RetentionService {
             return Err(ReportError::Cancelled("retention"));
         }
         repair_chain_identity_v1(coordinator)?;
+        repair_coverage_open_gaps_v1(coordinator)?;
         materialize_hourly(coordinator, now_utc, raw_retain_days)?;
         materialize_daily_from_hourly(coordinator, now_utc)?;
         materialize_core(coordinator, now_utc)?;
@@ -277,6 +279,204 @@ fn write_chain_repair_marker(
         )
         .map_err(|_| ReportError::Failed("chain repair marker"))?;
     Ok(())
+}
+
+/// 0.2.x 断连期每帧写一条开放 gap 行（本机 29,187 条 / 8.3 小时），读取侧
+/// 并集化后仍留冗余。按 (kind, reason) 把多行开放组收敛为一行：保留最小
+/// started_utc 的行并闭合于最大 started_utc（最后一行出现时刻 ≈ 实际恢复
+/// 采集时刻）。单行开放组不动，交给写入侧在恢复采集时闭合。
+fn repair_coverage_open_gaps_v1(coordinator: &mut StorageCoordinator) -> Result<(), ReportError> {
+    let connection = coordinator.connection_mut();
+    let already_applied: bool = connection
+        .query_row(
+            "select exists(select 1 from retention_watermark where layer = ?1)",
+            [COVERAGE_OPEN_GAP_V1_LAYER],
+            |row| row.get(0),
+        )
+        .map_err(|_| ReportError::Failed("coverage repair marker read"))?;
+    if already_applied {
+        return Ok(());
+    }
+
+    connection
+        .execute_batch("begin immediate")
+        .map_err(|_| ReportError::StorageBusy("coverage repair begin"))?;
+    let result = (|| {
+        // 先记下多行开放组（组内行数与最大 started），后续删除会改变组内最小值，
+        // 不能用关联子查询边删边算。
+        connection
+            .execute(
+                "create temp table if not exists coverage_repair_groups(
+                    kind text not null,
+                    reason text not null,
+                    max_started integer not null,
+                    primary key(kind, reason))",
+                [],
+            )
+            .map_err(|_| ReportError::Failed("coverage repair temp table"))?;
+        connection
+            .execute("delete from coverage_repair_groups", [])
+            .map_err(|_| ReportError::Failed("coverage repair temp reset"))?;
+        connection
+            .execute(
+                "insert into coverage_repair_groups(kind, reason, max_started)
+                 select kind, reason, max(started_utc)
+                   from coverage_interval
+                  where ended_utc is null
+                  group by kind, reason
+                 having count(*) > 1",
+                [],
+            )
+            .map_err(|_| ReportError::Failed("coverage repair groups"))?;
+        // 1) 删除组内非最早行。
+        connection
+            .execute(
+                "delete from coverage_interval
+                  where ended_utc is null
+                    and started_utc > (select min(c2.started_utc) from coverage_interval c2
+                                        where c2.kind = coverage_interval.kind
+                                          and c2.reason = coverage_interval.reason
+                                          and c2.ended_utc is null)",
+                [],
+            )
+            .map_err(|_| ReportError::Failed("coverage repair trim"))?;
+        // 2) 同秒重复帧只留最早写入的一行。
+        connection
+            .execute(
+                "delete from coverage_interval
+                  where ended_utc is null
+                    and interval_id > (select min(c2.interval_id) from coverage_interval c2
+                                        where c2.kind = coverage_interval.kind
+                                          and c2.reason = coverage_interval.reason
+                                          and c2.ended_utc is null)",
+                [],
+            )
+            .map_err(|_| ReportError::Failed("coverage repair dedupe"))?;
+        // 3) 闭合多行组留下的那一行（单行开放组不在 groups 内，保持开放）。
+        connection
+            .execute(
+                "update coverage_interval
+                    set ended_utc = (select g.max_started from coverage_repair_groups g
+                                      where g.kind = coverage_interval.kind
+                                        and g.reason = coverage_interval.reason)
+                  where ended_utc is null
+                    and exists(select 1 from coverage_repair_groups g
+                                where g.kind = coverage_interval.kind
+                                  and g.reason = coverage_interval.reason)",
+                [],
+            )
+            .map_err(|_| ReportError::Failed("coverage repair close burst"))?;
+        connection
+            .execute("drop table coverage_repair_groups", [])
+            .map_err(|_| ReportError::Failed("coverage repair temp drop"))?;
+        connection
+            .execute(
+                "insert into retention_watermark(layer, watermark_utc, delete_watermark_utc)
+                 values (?1, 0, 0)",
+                params![COVERAGE_OPEN_GAP_V1_LAYER],
+            )
+            .map_err(|_| ReportError::Failed("coverage repair marker"))?;
+        Ok(())
+    })();
+    match result {
+        Ok(()) => connection
+            .execute_batch("commit")
+            .map_err(|_| ReportError::Failed("coverage repair commit")),
+        Err(error) => {
+            let _ = connection.execute_batch("rollback");
+            Err(error)
+        }
+    }
+}
+
+#[cfg(test)]
+mod coverage_repair_tests {
+    use super::*;
+    use crate::storage::StorageCoordinator;
+    use tempfile::tempdir;
+
+    fn open_gap_rows(connection: &rusqlite::Connection) -> Vec<(i64, Option<i64>)> {
+        let mut statement = connection
+            .prepare("select started_utc, ended_utc from coverage_interval order by interval_id")
+            .expect("prepare");
+        statement
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+            .expect("map")
+            .collect::<Result<Vec<_>, _>>()
+            .expect("rows")
+    }
+
+    #[test]
+    fn coverage_repair_merges_burst_and_keeps_single_open() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("coverage-repair.sqlite3")).expect("open");
+        coordinator
+            .connection_mut()
+            .execute_batch(
+                "insert into coverage_interval(kind, reason, started_utc, ended_utc) values
+                 ('gap', 'disconnect_or_sleep', 100, null),
+                 ('gap', 'disconnect_or_sleep', 101, null),
+                 ('gap', 'disconnect_or_sleep', 102, null),
+                 ('gap', 'disconnect_or_sleep', 104, null),
+                 ('closed', 'pause_or_shutdown', 60, null),
+                 ('gap', 'disconnect_or_sleep', 50, 60)",
+            )
+            .expect("seed");
+        repair_coverage_open_gaps_v1(&mut coordinator).expect("repair");
+        let rows = open_gap_rows(coordinator.connection());
+        assert_eq!(
+            rows,
+            vec![(100, Some(104)), (60, None), (50, Some(60))],
+            "爆发组收敛为一行并闭合，单行开放组与已闭合行不动"
+        );
+        let marker: i64 = coordinator
+            .connection()
+            .query_row(
+                "select count(*) from retention_watermark where layer = 'coverage_open_gap_v1'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("marker");
+        assert_eq!(marker, 1);
+        // 幂等：二次运算是空操作。
+        repair_coverage_open_gaps_v1(&mut coordinator).expect("repair twice");
+        assert_eq!(open_gap_rows(coordinator.connection()), rows);
+    }
+
+    #[test]
+    fn coverage_repair_rolls_back_on_failure() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("coverage-rollback.sqlite3")).expect("open");
+        coordinator
+            .connection_mut()
+            .execute_batch(
+                "insert into coverage_interval(kind, reason, started_utc, ended_utc) values
+                 ('gap', 'disconnect_or_sleep', 100, null),
+                 ('gap', 'disconnect_or_sleep', 101, null);
+                 create trigger reject_coverage_marker
+                 before insert on retention_watermark
+                 when new.layer = 'coverage_open_gap_v1'
+                 begin
+                   select raise(abort, 'injected');
+                 end",
+            )
+            .expect("seed");
+        let error = repair_coverage_open_gaps_v1(&mut coordinator).expect_err("injected failure");
+        assert_eq!(error.code(), "storage_failure");
+        let rows = open_gap_rows(coordinator.connection());
+        assert_eq!(rows.len(), 2, "失败回滚，行数不变");
+        let marker: i64 = coordinator
+            .connection()
+            .query_row(
+                "select count(*) from retention_watermark where layer = 'coverage_open_gap_v1'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("marker");
+        assert_eq!(marker, 0, "失败不写 watermark");
+    }
 }
 
 fn raw_chain_totals(

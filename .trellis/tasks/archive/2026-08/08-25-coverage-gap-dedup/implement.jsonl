@@ -1,0 +1,6 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": "residential-monitor/src-tauri/src/storage.rs", "reason": "persist_slice 覆盖行落库点 619-624，去重与闭合的写入侧"}
+{"file": "residential-monitor/src-tauri/src/c3/share.rs", "reason": "covered_sec_from_slices 逐行求和缺陷点"}
+{"file": "residential-monitor/src-tauri/src/c3/service.rs", "reason": "summarize_coverage 概览缺口计算点"}
+{"file": "residential-monitor/src-tauri/src/c3/retention.rs", "reason": "repair_chain_identity_v1 先例与新修复层接入点"}
+{"file": ".trellis/tasks/archive/2026-08/08-25-home-ip-traffic-breakdown/research/findings.md", "reason": "缺陷证据与数字"}

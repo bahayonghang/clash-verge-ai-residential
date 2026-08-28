@@ -154,7 +154,7 @@ GitHub Actions 会在 Ubuntu 的 Node.js 18、20、22 和 Windows 的 Node.js 22
 
 自动化不能模拟 Clash Verge Rev JavaScript 引擎、Mihomo 内核或真实订阅 Profile。涉及宿主集成、DNS 或路由的变更仍须使用脱敏后的真实 Profile 手工验证；提交日志和截图前必须移除代理地址、凭据、订阅 URL 与未脱敏 Connections 记录。
 
-## 家宽流量监控桌面应用
+## ResiWatch 桌面应用
 
 独立子项目 [`residential-monitor/`](residential-monitor/README.md) 提供 Windows 11 NSIS current-user 桌面监控。它不修改本仓库的 Clash 扩展脚本，也不读取 `*.local.toml`。v1 只支持 Windows 11，无应用内自动更新，无遥测。
 

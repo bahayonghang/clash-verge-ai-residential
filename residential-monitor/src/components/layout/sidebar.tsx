@@ -87,16 +87,8 @@ export function ShellResizeHandle({
 }
 
 function BrandTitle({ locale }: { locale: UiLocale }) {
-  if (locale === "en") {
-    return (
-      <h1 data-brand="en-stack" className="min-w-0 text-[1.05rem] leading-tight font-bold">
-        <span className="block">Residential</span>
-        <span className="block">Traffic Monitor</span>
-      </h1>
-    );
-  }
   return (
-    <h1 className="min-w-0 text-[1.05rem] leading-tight font-bold">
+    <h1 className="min-w-0 truncate text-[1.05rem] leading-tight font-bold">
       {t(locale, "product.display_name")}
     </h1>
   );

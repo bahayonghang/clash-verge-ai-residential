@@ -1,16 +1,25 @@
 import { useState } from "react";
 import type { ReportResult, ResidentialShare } from "../../../dto";
-import { rankDisplayLabel, rankingShare, rankingTraffic, TOP_N_OPTIONS, type TopNOption } from "../../../format/rank";
-import { formatBytes, formatUtc } from "../../../format/units";
+import { formatRankLabel, rankingShare, TOP_N_OPTIONS, type TopNOption } from "../../../format/rank";
+import { formatBytes } from "../../../format/units";
 import { granularityForTimeRange, useReport } from "../../../hooks/use-report";
 import { t, type UiLocale } from "../../../i18n";
 import type { TimeRange } from "../../../lib/time-range";
 import { RankBar } from "../../charts/rank-bar";
 import { TrendArea } from "../../charts/trend-area";
 import { OverviewCard } from "../../common/overview-card";
+import { SortableTh } from "../../common/sortable-th";
 import { CapabilityNote, resolvedCapabilityNote } from "../dimension/capability-note";
+import {
+  directionTraffic,
+  matchesResidentialRankQuery,
+  residentialReportFilters,
+  shouldShowResidentialRankLoading,
+  type ResidentialDirection
+} from "./aggregate-model";
 import { CaliberNote } from "./caliber-note";
 import { ShareReadout } from "./share-readout";
+import { TrendTable } from "./trend-table";
 
 export function AggregateSection({
   locale,
@@ -26,13 +35,25 @@ export function AggregateSection({
   shareError: string | null;
 }) {
   const [topN, setTopN] = useState<TopNOption>(20);
+  const [direction, setDirection] = useState<ResidentialDirection>("download");
   const granularity = granularityForTimeRange(timeRange.preset);
   const report = useReport({
-    grouping: "category",
+    grouping: "host",
     timeRange,
     granularity,
-    topN
+    topN,
+    filters: residentialReportFilters(),
+    sort: { field: direction, descending: true }
   });
+  const rankResult = matchesResidentialRankQuery(report.result, direction, topN)
+    ? report.result
+    : null;
+  const rankLoading = shouldShowResidentialRankLoading(
+    report.loading,
+    report.errorZh,
+    report.result !== null,
+    rankResult !== null
+  );
   return (
     <section className="space-y-4" aria-labelledby="residential-aggregate-title">
       <div>
@@ -42,7 +63,16 @@ export function AggregateSection({
         <CaliberNote locale={locale} kind="accounting" />
       </div>
       <ShareReadout locale={locale} share={share} loading={shareLoading} errorZh={shareError} />
-      <RankBlock locale={locale} result={report.result} loading={report.loading} errorZh={report.errorZh} topN={topN} onTopN={setTopN} />
+      <RankBlock
+        locale={locale}
+        result={rankResult}
+        loading={rankLoading}
+        errorZh={report.errorZh}
+        topN={topN}
+        onTopN={setTopN}
+        direction={direction}
+        onDirection={setDirection}
+      />
       <TrendBlock locale={locale} result={report.result} loading={report.loading} errorZh={report.errorZh} />
     </section>
   );
@@ -54,7 +84,9 @@ function RankBlock({
   loading,
   errorZh,
   topN,
-  onTopN
+  onTopN,
+  direction,
+  onDirection
 }: {
   locale: UiLocale;
   result: ReportResult | null;
@@ -62,8 +94,11 @@ function RankBlock({
   errorZh: string | null;
   topN: TopNOption;
   onTopN: (next: TopNOption) => void;
+  direction: ResidentialDirection;
+  onDirection: (next: ResidentialDirection) => void;
 }) {
   const unknown = t(locale, "common.unknown");
+  const missingHost = t(locale, "dimension.missing.host");
   const exactTopN = result?.drilldownCapability.exactTopN !== false;
   const noteZh = resolvedCapabilityNote(
     locale,
@@ -73,30 +108,55 @@ function RankBlock({
   const data =
     result && exactTopN
       ? result.rankings.map((row) => ({
-          label: rankDisplayLabel(row.identity, row.label, unknown),
-          value: rankingTraffic(row)
+          label: formatRankLabel(row.identity, row.label, unknown, missingHost),
+          value: directionTraffic(row, direction)
         }))
       : [];
+  const total = result?.totals[direction] ?? 0;
   return (
     <OverviewCard
       title={t(locale, "residential.rank")}
       icon={null}
       action={
-        <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5">
-          {TOP_N_OPTIONS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              className={
-                topN === option
-                  ? "h-7 rounded-md bg-background px-2.5 text-xs font-medium text-primary shadow-sm"
-                  : "h-7 rounded-md px-2.5 text-xs text-muted-foreground"
-              }
-              onClick={() => onTopN(option)}
-            >
-              {option}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <div
+            className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5"
+            role="group"
+            aria-label={t(locale, "residential.rank.direction")}
+          >
+            {(["download", "upload"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={direction === option}
+                className={
+                  direction === option
+                    ? "h-7 rounded-md bg-background px-2.5 text-xs font-medium text-primary shadow-sm"
+                    : "h-7 rounded-md px-2.5 text-xs text-muted-foreground"
+                }
+                onClick={() => onDirection(option)}
+              >
+                {t(locale, `residential.rank.direction.${option}`)}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5">
+            {TOP_N_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={topN === option}
+                className={
+                  topN === option
+                    ? "h-7 rounded-md bg-background px-2.5 text-xs font-medium text-primary shadow-sm"
+                    : "h-7 rounded-md px-2.5 text-xs text-muted-foreground"
+                }
+                onClick={() => onTopN(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
         </div>
       }
     >
@@ -116,9 +176,21 @@ function RankBlock({
             <thead>
               <tr className="border-b border-border/60 text-left text-muted-foreground">
                 <th className="py-2 font-medium">{t(locale, "overview.col.name")}</th>
-                <th className="py-2 font-medium">{t(locale, "overview.col.upload")}</th>
-                <th className="py-2 font-medium">{t(locale, "overview.col.download")}</th>
-                <th className="py-2 font-medium">{t(locale, "report.col.share")}</th>
+                <SortableTh
+                  label={t(locale, "overview.col.upload")}
+                  ariaSort={direction === "upload" ? "descending" : "none"}
+                  numeric
+                  onClick={() => onDirection("upload")}
+                />
+                <SortableTh
+                  label={t(locale, "overview.col.download")}
+                  ariaSort={direction === "download" ? "descending" : "none"}
+                  numeric
+                  onClick={() => onDirection("download")}
+                />
+                <th className="px-2 py-2 text-right font-medium">
+                  {t(locale, `residential.rank.share.${direction}`)}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -130,15 +202,15 @@ function RankBlock({
                 </tr>
               ) : (
                 (result?.rankings ?? []).map((row) => {
-                  const label = rankDisplayLabel(row.identity, row.label, unknown);
-                  const share = rankingShare(row.download, result?.totals.download ?? 0);
+                  const label = formatRankLabel(row.identity, row.label, unknown, missingHost);
+                  const share = rankingShare(directionTraffic(row, direction), total);
                   return (
                     <tr key={row.identity} data-identity={row.identity} className="border-b border-border/40 last:border-0">
                       <td className="py-2">{label}</td>
-                      <td className="py-2 tabular-nums">{formatBytes(row.upload, unknown)}</td>
-                      <td className="py-2 tabular-nums">{formatBytes(row.download, unknown)}</td>
-                      <td className="py-2 tabular-nums">
-                        {result && result.totals.download > 0 ? `${(share * 100).toFixed(1)}%` : unknown}
+                      <td className="px-2 py-2 text-right tabular-nums">{formatBytes(row.upload, unknown)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums">{formatBytes(row.download, unknown)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums">
+                        {result && total > 0 ? `${(share * 100).toFixed(1)}%` : unknown}
                       </td>
                     </tr>
                   );
@@ -163,7 +235,6 @@ function TrendBlock({
   loading: boolean;
   errorZh: string | null;
 }) {
-  const unknown = t(locale, "common.unknown");
   const series = result?.series ?? [];
   return (
     <OverviewCard title={t(locale, "overview.trend")} icon={null}>
@@ -174,34 +245,7 @@ function TrendBlock({
         loading={loading && series.length === 0}
         emptyHint={errorZh ?? undefined}
       />
-      <div className="mt-3 max-h-56 overflow-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border/60 text-left text-muted-foreground">
-              <th className="py-2 font-medium">{t(locale, "report.col.time")}</th>
-              <th className="py-2 font-medium">{t(locale, "report.col.upload")}</th>
-              <th className="py-2 font-medium">{t(locale, "report.col.download")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {series.length === 0 ? (
-              <tr>
-                <td className="py-3 text-muted-foreground" colSpan={3}>
-                  {loading ? t(locale, "report.running") : t(locale, "chart.empty")}
-                </td>
-              </tr>
-            ) : (
-              series.map((point) => (
-                <tr key={point.bucketUtc} className="border-b border-border/40 last:border-0">
-                  <td className="py-2">{formatUtc(point.bucketUtc)}</td>
-                  <td className="py-2 tabular-nums">{formatBytes(point.upload, unknown)}</td>
-                  <td className="py-2 tabular-nums">{formatBytes(point.download, unknown)}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <TrendTable locale={locale} series={series} loading={loading} />
     </OverviewCard>
   );
 }
