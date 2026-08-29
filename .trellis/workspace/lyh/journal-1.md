@@ -1116,3 +1116,25 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 37: 完成 ResiWatch Windows 登录自启动
+
+**Date**: 2026-08-29
+**Task**: 完成 ResiWatch Windows 登录自启动
+**Branch**: `dev`
+
+### Summary
+
+接入官方 Rust 自启动插件与设置页控制，完成自动质量门、current-user NSIS 安装核验及用户人工登录周期验证，并归档任务。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `71ac80c` | (see git log) |
+| `c6f8f13` | (see git log) |
+
+### Status
+
+[OK] **Completed**
