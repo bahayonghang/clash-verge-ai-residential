@@ -261,6 +261,10 @@ export interface ControllerSettings {
   secretMode: string;
 }
 
+export interface AutostartStateDto {
+  enabled: boolean;
+}
+
 export interface RecoveryStatus {
   schemaVersion: number;
   appVersion: string;
@@ -459,6 +463,17 @@ export function decodeAbout(value: unknown): AboutDto {
     throw new Error("未签名候选不得标记为 signed");
   }
   return value as unknown as AboutDto;
+}
+
+export function decodeAutostartState(value: unknown): AutostartStateDto {
+  if (
+    !isRecord(value) ||
+    !Object.prototype.hasOwnProperty.call(value, "enabled") ||
+    typeof value.enabled !== "boolean"
+  ) {
+    throw new Error("AutostartStateDto 无效");
+  }
+  return { enabled: value.enabled };
 }
 
 export function decodeDeletePreview(value: unknown): DeletePreview {

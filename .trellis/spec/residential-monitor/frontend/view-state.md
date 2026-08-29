@@ -27,6 +27,7 @@
 - Top N 扇形图分母为 `totals.download`。其余 = 总量 − 排名下行，仅正差额同时出现在图和表，不写回 `ReportResult`，不进导出。
 - React 壳不整页替换 `innerHTML`。`route === "reports"` 时 `connectionDelta` / `healthChanged` / `summaryChanged` / `alertChanged` 不得触发 `run_report`，除非 `errorZh` 相对上次已变。探查钉住与 `report-notes` 展开留在 React state。实时表用 `hidden` keep-alive 保住 `.live-table-wrap` 滚动与列宽。
 - `route === "settings-data"` 时 `connectionDelta` / `summaryChanged` / `alertChanged` 不得刷新设置表单，除非 `errorZh` 相对上次已变。`healthChanged` 与 `bootstrap` 仍更新连接健康。进入连接分区时补一次 live 查询；停留设置页期间 `collectorRunning` 停在上次 tray 值。
+- 登录自启动状态是独立 session-only 请求状态，不属于 `ControllerSettings`。进入连接分区读取 OS；loading/saving 禁止操作，saving 重进跳过读取，set 的写后回读拥有提交权。开启必须经内联 `role="alertdialog"` 二次确认并支持 Escape/焦点返回；取消不写，关闭直达。失败保留最近确认值并提供重试，不做 optimistic toggle。
 - 报告图探查只读当前 `ReportResult`：悬停或键盘焦点显示名称、流量、份额；点击钉住；Escape 取消。禁止按探查改 grouping 或自动 `run_report`。
 - 自动档案列表可见约 8 行；类型筛选走 `list_report_archives.kind`。
 - 进入 `reports` 时 `list_report_archives`，优先展示最新成功日档案，否则最新成功小时档案，不自动选手动行。分析报告「运行报告」、告警跳转与家宽「生成报告」在成功后写入 `report_archive`（`kind=manual`），按 `generated_utc` 保留 7 天；同一窗口同一 query 再跑则覆盖。概览 / 聚合页 `useReport` 现查不写档案。

@@ -32,10 +32,12 @@ export function SettingsPage({
   const loadAbout = settings.loadAbout;
   const loadDataDir = settings.loadDataDir;
   const refreshCollector = settings.refreshCollector;
+  const loadAutostart = settings.loadAutostart;
   const onEnterConnection = useCallback(() => {
     void loadSecret();
     void refreshCollector();
-  }, [loadSecret, refreshCollector]);
+    void loadAutostart();
+  }, [loadAutostart, loadSecret, refreshCollector]);
   const onLoadAbout = useCallback(
     (force: boolean) => {
       void loadAbout(force);
@@ -121,6 +123,9 @@ export function SettingsPage({
               onPause={() => void settings.pauseCollector()}
               onResume={() => void settings.resumeCollector()}
               onCompleteWizard={() => void settings.completeWizard()}
+              autostart={settings.autostart}
+              onRefreshAutostart={() => void settings.loadAutostart()}
+              onSetAutostartEnabled={(enabled) => void settings.setAutostartEnabled(enabled)}
               onEnter={onEnterConnection}
             />
           ) : null}

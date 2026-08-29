@@ -34,7 +34,60 @@
 - AUMID 与 identifier 相同：`io.github.bahayonghang.residential-monitor`。About 固定 Releases URL，不注册 updater plugin，不新增 Windows Service。
 - current-user 安装目录为 `%LOCALAPPDATA%\ResiWatch`，与 Tauri NSIS `productName` + `installMode: currentUser` 默认一致。`just tinstall` 通过 NSIS `/D=` 显式传入该路径，不沿用注册表里指向 `%TEMP%` 或旧产品名目录的上次位置。`installer.nsh` 的 `NSIS_HOOK_PREINSTALL` 在 `$INSTDIR` 位于 `$TEMP` 下时改写到该目录并搬走 `data\`。数据目录仍是 `<安装目录>\data`。identifier 与 exe 仍是 `residential-monitor`。
 - 调试：`just tdev`（`tauri dev`）。出包：`just monitor-build`（只生成 NSIS，不安装）。安装：`just tinstall`（会改本机 current-user 安装态）。C5 自动门：`just monitor-c5-auto`。未再确认前不要执行 `tinstall`、本机 Credential Manager 真机测试或登录自启动写入。
+- Windows 登录自启动由官方 Rust `tauri-plugin-autostart` 和 command-lifetime `TauriAutostartPort` 拥有，唯一参数来自 `identity::AUTOSTART_ARGUMENT`（`--background`）。前端只调用 `get_autostart_state` / `set_autostart_enabled` 自有 commands；不得安装 JS guest binding 或授予 `autostart:*` capability。`AppFacade` 不持有 adapter，`FakeAutostart` 只存在于 `#[cfg(test)]`。
+- 自启动以 OS 状态为唯一真源，不写 SQLite/UI preference。set 必须 `enable|disable -> is_enabled` 回读；读取/写入失败只暴露 `autostart_unavailable` 与错误类，日志不得包含 executable path、注册表位置或平台原文。自动测试只注入 fake，不得实例化真实 manager 或写 HKCU。
+- `just tinstall`、真实启动项写入和 Windows 登录验证必须另行授权；需核对安装路径、唯一 `--background`、隐藏窗口/托盘/唯一 collector 及关闭后不再登录启动。未取得该证据时保持 **UNVERIFIED**，不得归档相关验收门。
 - C5 完整 30 天库、24 小时 soak、安装态通知 / 签名 / GitHub Release 不得由 fixture 或 smoke 冒充完成。C0 升级基线缺失时 `monitor-bench c5-baseline` 退出码 2。
+
+## Scenario: Windows 登录自启动系统能力
+
+### 1. Scope / Trigger
+- Trigger: 修改 `tauri-plugin-autostart` 初始化、`AutostartPort`、自启动 commands、`--background` 生命周期或安装态验收路径。
+
+### 2. Signatures
+- `AutostartPort::{set_enabled, is_enabled} -> Result<_, AutostartError>`
+- `apply_autostart(port: &dyn AutostartPort, enabled: bool) -> Result<bool, AutostartError>`
+- `get_autostart_state() -> Result<AutostartStateDto, AppErrorDto>`
+- `set_autostart_enabled(enabled: bool) -> Result<AutostartStateDto, AppErrorDto>`
+
+### 3. Contracts
+- Tauri builder 注册官方 Rust 插件，参数只取 `identity::AUTOSTART_ARGUMENT == "--background"`；初始化、安装和普通启动均不得隐式 enable。
+- command-lifetime `TauriAutostartPort` 是生产适配器；`AppFacade` 不持有系统 adapter，`FakeAutostart` 只在 `#[cfg(test)]`。
+- OS 是唯一真源，不写 SQLite 或 UI preference。set 严格执行 `enable|disable -> is_enabled`，返回回读值。
+- WebView 只调用应用自有 commands；不安装 JS guest binding，不授予 `autostart:*` capability。
+- `--background` 复用既有 single-instance、隐藏窗口、托盘和唯一 collector 路径，不创建第二 writer。
+
+### 4. Validation & Error Matrix
+- 启动项不存在 → get 返回 `enabled=false`，不得调用 enable/disable。
+- enable/disable 或写后 readback 失败 → `autostart_unavailable`；日志只记录 operation 与稳定错误类。
+- 原始错误包含 executable path、Run key 或平台文本 → IPC 与日志均不得包含原文。
+- 自动测试 → 只注入 fake，不实例化真实 manager、不写 HKCU。
+- `just tinstall`、启动项写入或真实登录 → 必须先取得用户授权，并区分命令采集证据与用户人工登录证据。
+
+### 5. Good/Base/Bad Cases
+- Good: 用户确认开启，plugin enable 成功且回读 true；真实登录以 `--background` 隐藏进入托盘并保持唯一 collector。
+- Base: 新安装无启动项，安装器不写 Run key，设置页回读 false。
+- Bad: 初始化插件时自动 enable；把请求值当成功状态；前端直接调用 guest plugin；单测写真实 Run key。
+
+### 6. Tests Required
+- Rust port/core：默认只读、enable/disable、写后回读、write/readback failure。
+- IPC/log：注入 path/registry/platform 原文，断言稳定 code/错误类且敏感原文缺失。
+- 静态边界：生产 `AppFacade` 无 Fake、builder 参数唯一、前端无 guest dependency、capability 无 `autostart:*`。
+- 安装态门：用命令核对安装器默认不启用及 executable/参数；启用与关闭各完成一次真实登录验证。未取得证据时保持 **UNVERIFIED**。
+
+### 7. Wrong vs Correct
+#### Wrong
+```rust
+manager.enable()?;
+Ok(AutostartStateDto { enabled: true })
+```
+
+#### Correct
+```rust
+apply_autostart(&port, enabled)
+    .map(|enabled| AutostartStateDto { enabled })
+// apply_autostart 在写入后以 is_enabled 回读 OS 真值。
+```
 
 ## Scenario: C3 排名排序先于 Top N
 

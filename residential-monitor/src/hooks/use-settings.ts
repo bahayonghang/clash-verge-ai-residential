@@ -15,6 +15,12 @@ import {
 import { t, type UiLocale } from "../i18n";
 import { fetchTraySummary, isTauriRuntime } from "../ipc/live-session";
 import { invokeErrorZh } from "../lib/utils";
+import {
+  AutostartRequestController,
+  INITIAL_AUTOSTART_STATE,
+  TAURI_AUTOSTART_BACKEND,
+  type AutostartRequestState
+} from "./autostart-request";
 
 const DEFAULT_CONTROLLER_ADDRESS = "127.0.0.1:9097";
 const DEFAULT_TARGETS = "家宽";
@@ -70,6 +76,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   retention: RetentionPreview | null;
   dataDir: string;
   progress: OperationProgress | null;
+  autostart: AutostartRequestState;
   errorZh: string | null;
   setAddress: (value: string) => void;
   setTargets: (value: string) => void;
@@ -82,6 +89,8 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   pauseCollector: () => Promise<void>;
   resumeCollector: () => Promise<void>;
   refreshCollector: () => Promise<void>;
+  loadAutostart: () => Promise<void>;
+  setAutostartEnabled: (enabled: boolean) => Promise<void>;
   loadAbout: (force: boolean) => Promise<void>;
   openReleases: () => Promise<string | null>;
   previewDelete: () => Promise<void>;
@@ -115,7 +124,20 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   const [retention, setRetention] = useState<RetentionPreview | null>(null);
   const [dataDir, setDataDir] = useState("");
   const [progress, setProgress] = useState<OperationProgress | null>(null);
+  const [autostart, setAutostart] = useState<AutostartRequestState>(INITIAL_AUTOSTART_STATE);
+  const autostartRequest = useRef<AutostartRequestController | null>(null);
+  if (autostartRequest.current === null) {
+    autostartRequest.current = new AutostartRequestController(
+      locale,
+      TAURI_AUTOSTART_BACKEND,
+      setAutostart
+    );
+  }
   const [errorZh, setErrorZh] = useState<string | null>(null);
+
+  useEffect(() => {
+    autostartRequest.current?.setLocale(locale);
+  }, [locale]);
 
   useEffect(() => {
     if (!boot) {
@@ -289,6 +311,14 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
       }
       setCollectorRunning(null);
     }
+  }, []);
+
+  const loadAutostart = useCallback(async (): Promise<void> => {
+    await autostartRequest.current?.load();
+  }, []);
+
+  const setAutostartEnabled = useCallback(async (enabled: boolean): Promise<void> => {
+    await autostartRequest.current?.setEnabled(enabled);
   }, []);
 
   const pauseCollector = useCallback(async (): Promise<void> => {
@@ -684,6 +714,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     retention,
     dataDir,
     progress,
+    autostart,
     errorZh,
     setAddress,
     setTargets,
@@ -696,6 +727,8 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     pauseCollector,
     resumeCollector,
     refreshCollector,
+    loadAutostart,
+    setAutostartEnabled,
     loadAbout,
     openReleases,
     previewDelete,

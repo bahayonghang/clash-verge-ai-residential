@@ -5,7 +5,7 @@ use crate::app_log::{self, Level};
 use crate::c0_contract::{all_table_allowlist, forbidden_table_fragments};
 use crate::c2::close::{CloseRegistry, CloseState, ControlResult};
 use crate::c2::contract::SCHEMA_VERSION;
-use crate::c2::desktop::{DesktopRuntime, FakeAutostart, InstanceClaim, LaunchMode, ShutdownPhase};
+use crate::c2::desktop::{DesktopRuntime, InstanceClaim, LaunchMode, ShutdownPhase};
 use crate::c2::hub::{
     health_from, session_status_name, LiveOverview, MonitorHub, MonitorStreamMessage,
     ObservationPhase,
@@ -193,7 +193,6 @@ pub struct AppFacade {
     pub workflow: SettingsWorkflow,
     pub closes: CloseRegistry,
     pub operations: OperationRegistry,
-    pub autostart: FakeAutostart,
     pub session: ControllerSession,
     pub data_dir: PathBuf,
     pub session_status: SessionStatus,
@@ -368,7 +367,6 @@ impl AppFacade {
                     workflow: SettingsWorkflow::new(FakeCredentialStore::new(), true),
                     closes: CloseRegistry::new(),
                     operations: OperationRegistry::new(),
-                    autostart: FakeAutostart::new(),
                     session: ControllerSession::new(String::new()),
                     data_dir: data_dir.clone(),
                     session_status: SessionStatus::Connecting,
@@ -420,7 +418,6 @@ impl AppFacade {
             workflow: SettingsWorkflow::new(FakeCredentialStore::new(), false),
             closes: CloseRegistry::new(),
             operations: OperationRegistry::new(),
-            autostart: FakeAutostart::new(),
             session: ControllerSession::new(String::new()),
             data_dir: data_dir.clone(),
             session_status: SessionStatus::EndpointMissing,

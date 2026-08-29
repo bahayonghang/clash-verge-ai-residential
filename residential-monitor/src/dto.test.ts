@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   decodeAbout,
   decodeAlertCenter,
+  decodeAutostartState,
   decodeDeleteReport,
   decodeDiagnostics,
   decodeReportArchivePage,
@@ -74,6 +75,14 @@ function validReportPayload() {
 }
 
 describe("decodeShellStatus", () => {
+  it("严格解码 Windows 登录自启动状态", () => {
+    expect(decodeAutostartState({ enabled: true })).toEqual({ enabled: true });
+    expect(decodeAutostartState({ enabled: false, extra: "ignored" })).toEqual({ enabled: false });
+    expect(() => decodeAutostartState({})).toThrow(/AutostartStateDto/);
+    expect(() => decodeAutostartState({ enabled: "true" })).toThrow(/AutostartStateDto/);
+    expect(() => decodeAutostartState({ enabled: null })).toThrow(/AutostartStateDto/);
+  });
+
   it("接受完整 DTO", () => {
     const decoded = decodeShellStatus({
       schemaVersion: 1,

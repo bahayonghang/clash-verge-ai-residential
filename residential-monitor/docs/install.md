@@ -36,3 +36,9 @@ just monitor-build
 - 数据位于用户 LocalAppData 下的 identifier 目录。
 
 正式通知、登录自启动和 Credential Manager 真机写入属于安装态验收，开发态通过不能替代。
+
+## Windows 登录自启动
+
+安装程序不会创建或启用登录启动项。安装后可在「设置 → 连接与监控 → 启动与后台运行」查看 Windows 当前用户的实际状态；从关闭切换到开启需要二次确认。启用后，启动项由官方 Tauri Autostart 插件管理，参数固定为 `--background`，登录时主窗口应保持隐藏并进入既有托盘与唯一采集器流程。应用不把该状态复制到 SQLite。
+
+当前代码已通过 fake/注入端口的自动测试。2026-08-29 的命令采集确认安装器不会隐式启用，并核对启用后的 HKCU Run key 为 `%LOCALAPPDATA%\ResiWatch\residential-monitor.exe --background`。用户另行人工报告：设置页启用/关闭回读符合预期；启用后的真实登录主窗口隐藏、托盘可用且只有一个 collector；关闭后的下一次登录不会自动启动。登录周期不以命令或单测代替。

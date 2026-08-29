@@ -7,6 +7,50 @@
 - 时间展示用用户本地时区；持久时间保持 UTC integer。
 - `BootstrapDto.uiLocale` 缺字段时按 `zh`。`BootstrapDto.uiTheme` 缺字段时按 `mocha`。`BootstrapDto.uiFont` 缺字段或含 CSS 元字符时按 `system`；合法值为 `system`、旧别名 `yahei` / `serif` / `mono`，或校验后的本机族名。`BootstrapDto.uiFontSize` 缺字段时按 `md`。`BootstrapDto.uiDensity` 缺字段时按 `comfortable`。`BootstrapDto.uiSidebarWidth` 缺字段或非有限数字时按 `220`，并 clamp 到 160–352。`BootstrapDto.logDir` 缺字段时「打开日志目录」禁用，显示「日志目录未知」，不猜本机路径。`messageZh` 字段名保持不变，内容为当前语言。
 
+## Scenario: Windows login autostart state
+
+### 1. Scope / Trigger
+- Trigger: 进入设置「连接与监控」、重试读取、确认开启或直接关闭登录自启动。
+
+### 2. Signatures
+- `get_autostart_state() -> { enabled: boolean }`
+- `set_autostart_enabled(enabled: boolean) -> { enabled: boolean }`
+
+### 3. Contracts
+- `enabled` 必须是 own-property 且为 boolean；缺失、`null`、字符串或数字均拒绝。
+- OS 是唯一状态源，不进 `BootstrapDto`、SQLite 或 UI preference。set 响应是后端写后回读值，前端不得用请求值乐观提交。
+- 自启动使用独立请求序号。saving 时重进分区跳过 get；过期 get 不得覆盖后端 set 的最终回读。失败保留最近确认值。
+- 非 Tauri 预览保持未加载/禁用，不调用 backend。
+
+### 4. Validation & Error Matrix
+- `enabled` 缺失、`null` 或非 boolean → decoder 拒绝，不猜测。
+- 非 Tauri runtime → 保持未加载和禁用，显示 preview unavailable，不调用 invoke。
+- loading/saving 或确认区打开 → 禁止重复读写；saving 重进分区直接跳过 load。
+- enable/disable/readback 失败 → 保留最近确认值，显示本地化重试入口。
+- 较早请求晚返回 → request token 不匹配，丢弃响应。
+
+### 5. Good/Base/Bad Cases
+- Good: 确认开启后等待后端 readback true，再显示 checked；关闭 readback false 后显示未选中。
+- Base: 初次进入先 loading，回读 false 后启用开关；取消确认不调用后端。
+- Bad: optimistic toggle；复用 secret/collector 的请求序号；确认期间重试读取并让写入丢失。
+
+### 6. Tests Required
+- decoder：true/false、缺字段、非 boolean。
+- request controller：load、readback、failure retain、saving re-entry、duplicate write、stale response、非 Tauri fallback。
+- component：loading/saving disabled、开启确认/取消、关闭直达、retry、checked/ARIA、中英文 copy、Escape 与焦点返回。
+
+### 7. Wrong vs Correct
+#### Wrong
+```ts
+setAutostart({ enabled: requested, loaded: true, saving: false });
+```
+
+#### Correct
+```ts
+const result = decodeAutostartState(await backend.write(requested));
+if (token === requestSeq) commit({ enabled: result.enabled, loaded: true, saving: false });
+```
+
 ## Scenario: list local UI fonts
 
 ### 1. Scope / Trigger

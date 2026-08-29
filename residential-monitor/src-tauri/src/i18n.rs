@@ -272,6 +272,10 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
         "action.fix_db" => ("先修复数据库", "Repair the database first"),
         "action.restore_db" => ("先恢复数据库", "Restore the database first"),
         "action.retry" => ("重试", "Retry"),
+        "action.retry_autostart" => (
+            "重试读取 Windows 登录自启动状态",
+            "Retry reading Windows login autostart",
+        ),
         "action.check_disk" => ("检查磁盘后重试", "Check the disk, then retry"),
         "action.open_data_dir" => (
             "打开数据目录检查文件",
@@ -279,6 +283,10 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
         ),
         "action.open_log_dir" => ("打开日志目录", "Open the log directory"),
         "error.open_log_dir" => ("无法打开日志目录。", "Cannot open the log directory."),
+        "error.autostart_unavailable" => (
+            "Windows 登录自启动状态暂不可用。",
+            "Windows login autostart is temporarily unavailable.",
+        ),
         "action.change_loopback" => ("改用 127.0.0.1:端口", "Use 127.0.0.1 and a port"),
         "action.retry_later" => ("稍后重试", "Retry later"),
         "action.change_path" => ("更换路径后重试", "Change the path, then retry"),
@@ -417,6 +425,17 @@ mod i18n_tests {
             t(UiLocale::Zh, "session.connected"),
             t(UiLocale::En, "session.connected")
         );
+    }
+
+    #[test]
+    fn autostart_error_keys_resolve_in_both_locales() {
+        for key in ["error.autostart_unavailable", "action.retry_autostart"] {
+            let zh = t(UiLocale::Zh, key);
+            let en = t(UiLocale::En, key);
+            assert!(!zh.is_empty(), "{key} missing zh");
+            assert!(!en.is_empty(), "{key} missing en");
+            assert_ne!(zh, en, "{key} not translated");
+        }
     }
 
     #[test]
