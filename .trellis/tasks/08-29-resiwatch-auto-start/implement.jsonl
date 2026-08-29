@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"生产组合根、Rust 系统能力、安装态授权边界与完整 Rust 质量门。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"自有 Tauri command 的严格 DTO 解码与失败关闭契约。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"设置视图状态、过期响应丢弃与失败保留上次确认结果。"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"UI command 到 Rust adapter 再到 OS readback 的跨层数据流检查。"}
+{"file":".trellis/tasks/08-29-resiwatch-auto-start/research/autostart-gap.md","reason":"当前 Fake 生产路径、缺失 IPC/UI、既有生命周期和官方插件方案证据。"}
