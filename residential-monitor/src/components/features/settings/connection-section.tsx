@@ -113,7 +113,6 @@ export function ConnectionSection({
             id="controller-address"
             className={fieldClass}
             value={address}
-            placeholder="127.0.0.1:9097"
             autoComplete="off"
             onChange={(event) => onAddress(event.target.value)}
           />

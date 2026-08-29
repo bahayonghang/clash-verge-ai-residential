@@ -16,6 +16,9 @@ import { t, type UiLocale } from "../i18n";
 import { fetchTraySummary, isTauriRuntime } from "../ipc/live-session";
 import { invokeErrorZh } from "../lib/utils";
 
+const DEFAULT_CONTROLLER_ADDRESS = "127.0.0.1:9097";
+const DEFAULT_TARGETS = "家宽";
+
 export interface ProbeView {
   messageZh: string;
   state: string;
@@ -95,8 +98,8 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   cancelOperation: () => Promise<void>;
 } {
   const seq = useRef(0);
-  const [address, setAddress] = useState(boot?.settings.address ?? "");
-  const [targets, setTargets] = useState("家宽");
+  const [address, setAddress] = useState(boot?.settings.address || DEFAULT_CONTROLLER_ADDRESS);
+  const [targets, setTargets] = useState(DEFAULT_TARGETS);
   const [secret, setSecret] = useState("");
   const secretLoaded = useRef(false);
   const [settings, setSettings] = useState<ControllerSettings | null>(boot?.settings ?? null);
@@ -118,7 +121,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     if (!boot) {
       return;
     }
-    setAddress(boot.settings.address);
+    setAddress(boot.settings.address || DEFAULT_CONTROLLER_ADDRESS);
     setSettings(boot.settings);
   }, [boot]);
 
