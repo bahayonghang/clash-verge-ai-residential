@@ -160,6 +160,8 @@ GitHub Actions 会在 Ubuntu 的 Node.js 18、20、22 和 Windows 的 Node.js 22
 
 ## 文档
 
+中文 Markdown 仍可在 GitHub 直接打开。英文源在 [`docs/en/`](docs/en/)。
+
 - [`docs/local-configuration.md`](docs/local-configuration.md)：本地 TOML、`just render-local` 与凭据保护教程。
 - [`docs/configuration.md`](docs/configuration.md)：开关和 Clash Verge 设置。
 - [`docs/routing-scope.md`](docs/routing-scope.md)：AI-only 路由准入与排除标准。
@@ -167,6 +169,15 @@ GitHub Actions 会在 Ubuntu 的 Node.js 18、20、22 和 Windows 的 Node.js 22
 - [`docs/dns-and-leak-model.md`](docs/dns-and-leak-model.md)：DNS 路径和不能单独解决的泄漏面。
 - [`docs/troubleshooting.md`](docs/troubleshooting.md)：常见故障定位。
 - [`SECURITY.md`](SECURITY.md)：安全报告与凭据泄漏处置。
+
+本地文档站（VitePress，Node.js 22+，不发布 GitHub Pages）：
+
+```bash
+npm --prefix docs install
+just docs-dev
+```
+
+没有 `just` 时用 `npm run docs:dev`。构建用 `just docs-build`。扩展脚本的 `just ci` 仍是 Node 18+，不安装文档依赖。
 
 ## Domain 变更规则
 

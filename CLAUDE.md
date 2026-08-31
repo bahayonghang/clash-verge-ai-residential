@@ -10,12 +10,14 @@ traffic (Claude, ChatGPT, Gemini, Cursor, …) through a residential SOCKS5 chai
 stays on their airport proxy. Node ≥18, zero dependencies, no bundler/transpiler or third-party test framework.
 
 ## Commands
-
 - `just ci` (= `npm run ci`) — full gate: `node --check` syntax lint + regression tests + secret scan.
   Run before every commit.
 - `npm test` — runs the explicitly listed suites with Node's built-in `node:test` runner; no third-party framework.
 - `just render-local` — regenerate the local profile from `*.local.toml`. First run copies
   `*.local.toml.example` → `*.local.toml` and exits 1 asking you to fill it in.
+- `just docs-dev` / `just docs-build` — local VitePress docs site (Node.js 22+, deps in
+  `docs/package.json`). Not part of `just ci`. Default locale is Chinese at `docs/*.md`;
+  English sources are `docs/en/`.
 
 ## Must not break
 
@@ -29,7 +31,8 @@ stays on their airport proxy. Node ≥18, zero dependencies, no bundler/transpil
 
 ## Conventions
 
-- **Language split:** code comments, error messages, and `docs/` are **Chinese**; `CHANGELOG.md`,
+- **Language split:** code comments, error messages, and `docs/` (except `docs/en/`) are
+  **Chinese**; `docs/en/` is the English docs-site tree. `CHANGELOG.md`,
   `package.json`, CI, and PR/issue templates are **English**. Match the file you're in.
 - **Commits:** `<type>: [AI] <gitmoji> <Chinese subject>` (e.g. `feat: [AI] ✨ 添加本地配置渲染`).
 - 2-space indent, double quotes, `"use strict"`, CommonJS. No linter/formatter configured — keep

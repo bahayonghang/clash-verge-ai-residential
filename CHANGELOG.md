@@ -6,6 +6,7 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 
 ### Added
 
+- Local bilingual VitePress docs site under `docs/` (`just docs-dev` / `just docs-build`, Node.js 22+). Chinese is the default locale at existing `docs/*.md` paths; English pages live in `docs/en/`. `docs/adr/` is unchanged and is not part of the site. The extension `just ci` gate still does not install VitePress.
 - The desktop shell ships real system file dialogs and Windows toast notifications. Backup, restore, backup validation, report export, and diagnostics export open a native save/open dialog (the `pick_file` command no longer holds the facade lock while a dialog is open). Alerts and the test-notification button emit real Windows toasts via `tauri-plugin-notification`; set `RESIDENTIAL_MONITOR_ALLOW_TOAST=0` (or `false`) to turn them off. See `residential-monitor/docs/notifications.md`. Test doubles (`FakeFileDialog` / `FakeNotificationSink`) are now test-only and no longer appear in production composition roots or user-visible copy.
 - Dedicated residential page with live monitor, category aggregation, share of attributed observation, and report export. New command `residential_share`. Coverage with `covered_sec == 0` returns four `None` fields, not 0%.
 - Ported the reports, alerts, settings/data, recovery, and unavailable pages onto the React shell. Share charts use Recharts. Export, retention, backup, alert-rule, and about behavior stay the same.
