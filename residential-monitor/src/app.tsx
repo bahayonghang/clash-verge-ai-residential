@@ -1,24 +1,16 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { AlertsPage } from "./components/features/alerts";
-import { DimensionPage } from "./components/features/dimension/dimension-page";
-import { LivePage } from "./components/features/live";
-import { OverviewPage } from "./components/features/overview";
-import { RecoveryPage } from "./components/features/recovery";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { UnavailablePage } from "./components/features/recovery/unavailable";
-import { ReportsPage } from "./components/features/reports";
-import { ResidentialPage } from "./components/features/residential";
-import { SettingsPage } from "./components/features/settings";
 import { Header } from "./components/layout/header";
 import { Shell } from "./components/layout/shell";
 import { Card, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
 import { Skeleton } from "./components/ui/skeleton";
 import type { BootstrapDto, LiveOverview, ReportQuery, RouteId } from "./dto";
-import type { MonitorState } from "./ipc/reducer";
 import { useBootstrap } from "./hooks/use-bootstrap";
 import { useMonitorStream } from "./hooks/use-monitor-stream";
 import { usePreferences } from "./hooks/use-preferences";
 import { useSidebarResize } from "./hooks/use-sidebar-resize";
 import { t, type UiLocale } from "./i18n";
+import type { MonitorState } from "./ipc/reducer";
 import { healthOf } from "./lib/health";
 import {
   defaultTimeRange,
@@ -27,6 +19,41 @@ import {
   timeRangeFromPreset,
   type TimeRange
 } from "./lib/time-range";
+
+const OverviewPage = lazy(() =>
+  import("./components/features/overview").then((module) => ({ default: module.OverviewPage }))
+);
+const LivePage = lazy(() =>
+  import("./components/features/live").then((module) => ({ default: module.LivePage }))
+);
+const ResidentialPage = lazy(() =>
+  import("./components/features/residential").then((module) => ({ default: module.ResidentialPage }))
+);
+const DimensionPage = lazy(() =>
+  import("./components/features/dimension/dimension-page").then((module) => ({
+    default: module.DimensionPage
+  }))
+);
+const ReportsPage = lazy(() =>
+  import("./components/features/reports").then((module) => ({ default: module.ReportsPage }))
+);
+const AlertsPage = lazy(() =>
+  import("./components/features/alerts").then((module) => ({ default: module.AlertsPage }))
+);
+const SettingsPage = lazy(() =>
+  import("./components/features/settings").then((module) => ({ default: module.SettingsPage }))
+);
+const RecoveryPage = lazy(() =>
+  import("./components/features/recovery").then((module) => ({ default: module.RecoveryPage }))
+);
+
+function PageFallback() {
+  return (
+    <div className="flex h-full items-center justify-center p-6">
+      <Skeleton className="h-8 w-48" />
+    </div>
+  );
+}
 
 export function App() {
   const { boot, error: bootError } = useBootstrap();
@@ -120,7 +147,9 @@ export function App() {
       }
     >
       {recovery ? (
-        <RecoveryPage locale={locale} boot={boot} />
+        <Suspense fallback={<PageFallback />}>
+          <RecoveryPage locale={locale} boot={boot} />
+        </Suspense>
       ) : (
         <Workspace
           route={route}
@@ -171,19 +200,25 @@ function Workspace({
   onResubscribe: () => void;
   onJumpReport: (query: ReportQuery) => void;
 }) {
-  const livePage = (
+  const [liveMounted, setLiveMounted] = useState(route === "live");
+  if (route === "live" && !liveMounted) {
+    setLiveMounted(true);
+  }
+  const livePage = liveMounted ? (
     <div className={route === "live" ? "contents" : "hidden"}>
-      <LivePage
-        locale={locale}
-        boot={boot}
-        stream={stream}
-        autoRefresh={autoRefresh}
-        active={route === "live"}
-        onRouteChange={onRouteChange}
-        onResubscribe={onResubscribe}
-      />
+      <Suspense fallback={route === "live" ? <PageFallback /> : null}>
+        <LivePage
+          locale={locale}
+          boot={boot}
+          stream={stream}
+          autoRefresh={autoRefresh}
+          active={route === "live"}
+          onRouteChange={onRouteChange}
+          onResubscribe={onResubscribe}
+        />
+      </Suspense>
     </div>
-  );
+  ) : null;
   const descriptor = boot.routes.find((item) => item.id === route);
   if (descriptor && !descriptor.available) {
     return (
@@ -257,7 +292,7 @@ function Workspace({
   return (
     <>
       {livePage}
-      {rest}
+      <Suspense fallback={<PageFallback />}>{rest}</Suspense>
     </>
   );
 }
