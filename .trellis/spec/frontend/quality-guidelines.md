@@ -4,12 +4,15 @@
 
 - Target Node.js 18+ for repository scripts and tests while keeping
   `clash-verge-ai-residential.js` compatible with the Clash Verge Rev extension
-  host.
+  host. The VitePress docs site in `docs/package.json` requires Node.js 22+ and
+  is a separate toolchain.
 - Use zero third-party dependencies, CommonJS, `"use strict"`, 2-space
-  indentation, double quotes, and semicolons. There is no formatter or linter;
-  match the surrounding source and rely on syntax checks.
-- Keep code comments, error messages, and `docs/` in Chinese. Keep this Trellis
-  spec, `package.json`, CI, and GitHub templates in English.
+  indentation, double quotes, and semicolons for the extension and root
+  scripts. There is no formatter or linter; match the surrounding source and
+  rely on syntax checks.
+- Keep code comments, error messages, and `docs/` (except `docs/en/`) in
+  Chinese. `docs/en/` is the English docs-site tree. Keep this Trellis spec,
+  `package.json`, CI, and GitHub templates in English.
 - Preserve the AI-only routing boundary and fail-closed proxy-chain behavior.
 
 ## Test Pattern
@@ -41,6 +44,10 @@ successful-output and rejection coverage in `tests/sync-local-config.test.js`,
 including proof that the public template is unchanged and failed validation
 does not create a partial output. Generated-script behavior should be probed in
 a separate Node process when a public default is overridden.
+`SWITCH_CONFIG_FIELDS` rows must appear as markdown table cells in both
+`docs/configuration.md` and `docs/local-configuration.md` (`| \`table.key\` | \`CONSTANT\` | \`default\` |`).
+Removing the table from `docs/configuration.md` fails that test even if
+`docs/local-configuration.md` still has it.
 
 ## Validation Gate
 
