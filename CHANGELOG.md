@@ -24,11 +24,11 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 - `ReportFilters` now apply to raw totals, series, and rankings, including category. `filters.chain` matches the last chain hop. `filters.rule` matches the SQL rule key.
 - Dimension-layer `exact_top_n` is false when the grouping has no five-dimension materialization. Queries before the `hourly_dim_v2` watermark return `capability_unsupported`.
 - The Windows product name, Start Menu shortcut, window title, and current-user install directory are `ResiWatch`. The identifier and exe stay `residential-monitor`. The sidebar slogan is the short bound-not-bill sentence.
+- Desktop UI route pages load with `React.lazy`. React, Recharts, and Radix emit separate Rollup chunks. The Vite 500 kB chunk warning is the regression guard again; do not raise `chunkSizeWarningLimit` to hide a merged entry.
 
 ### Fixed
 
 - `just tinstall` installs to `%LOCALAPPDATA%\ResiWatch` with NSIS `/D=`. A previous install path under `%TEMP%` or the old Chinese product folder is not reused; data moves to the new `data\` directory.
-- `just tinstall` / `tauri build` no longer emit the Vite 500 kB chunk warning. The desktop WebView loads from disk, so the budget is 1024 kB.
 - Windows MSVC no longer prints `linker_messages` for `residential_monitor_lib`. The crate type is `rlib` only; `cdylib` / `staticlib` were mobile leftovers.
 - Host rank bars no longer clip long FQDNs on the left of the Y-axis.
 
