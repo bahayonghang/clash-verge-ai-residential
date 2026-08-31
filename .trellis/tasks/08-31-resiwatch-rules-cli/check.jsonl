@@ -1,0 +1,7 @@
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"核对新增 named SQL、截断语义、独占锁与离线前置条件、不使用 ReportSnapshotStore 是否符合存储契约。"}
+{"file":".trellis/spec/residential-monitor/backend/index.md","reason":"本任务会更新该契约，检查须以更新后的 dbcli 边界、run_uncached 与 query_residential_share_on 复核实现。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"核对错误分类、退出码与模块边界。"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"核对取消传播、不可中断声明与脱敏输出是否落实。"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"核对安装器与生成器的零依赖、语法检查、回归测试与凭据扫描是否接入既有 CI 串。"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"核对 CLI 输入 JSON、单事务审计投影与 skill 三者的边界与数据流是否一致。"}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"核对是否出现重复的家宽归属判定或重写的维护逻辑。"}
