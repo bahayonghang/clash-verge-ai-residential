@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "IPC 只在 hooks；标题层级与测试契约"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "家宽手动报告口径、全局 timeRange、generatedUtc"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "新 HTML DTO 必须 own-property 解码"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C3 拥有 archive/export；C2 不写 report_archive"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "HTML 渲染走 reject_secret；长操作可取消"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "token / 档案 / HTML 跨层合约"}
+{"file": ".trellis/tasks/08-31-residential-html-report/research/current-report-section.md", "reason": "家宽报告区现状与缺口"}
