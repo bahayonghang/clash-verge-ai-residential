@@ -8,8 +8,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "check": "node --check clash-verge-ai-residential.js && node --check tests/regression.test.js && node --check tests/sync-local-config.test.js && node --check tests/check-template-safety.test.js && node --check tests/sync-monitor-version.test.js && node --check tests/nsis-silent-install.test.js && node --check scripts/check-template-safety.js && node --check scripts/sync-local-config.js && node --check scripts/sync-monitor-version.js && node --check scripts/nsis-silent-install.js",
-    "test": "node --test tests/regression.test.js tests/sync-local-config.test.js tests/check-template-safety.test.js tests/sync-monitor-version.test.js tests/nsis-silent-install.test.js",
+    "check": "node --check clash-verge-ai-residential.js && node --check tests/regression.test.js && node --check tests/sync-local-config.test.js && node --check tests/check-template-safety.test.js && node --check tests/sync-monitor-version.test.js && node --check tests/nsis-silent-install.test.js && node --check tests/install-agent-skills.test.js && node --check scripts/check-template-safety.js && node --check scripts/sync-local-config.js && node --check scripts/sync-monitor-version.js && node --check scripts/nsis-silent-install.js && node --check scripts/install-agent-skills.js && node --check skills/residential-rule-tuning/scripts/build-inputs.js",
+    "test": "node --test tests/regression.test.js tests/sync-local-config.test.js tests/check-template-safety.test.js tests/sync-monitor-version.test.js tests/nsis-silent-install.test.js tests/install-agent-skills.test.js",
     "check:secrets": "node scripts/check-template-safety.js",
     "ci": "npm run check && npm run test && npm run check:secrets"
   }

@@ -48,3 +48,7 @@ The five canonical roles use matching label strings: `needs-triage`, `needs-info
 ### Domain docs
 
 single-context. See `docs/agents/domain.md`.
+
+### 家宽规则优化
+
+源文件在 `skills/residential-rule-tuning/`。用 `just install-skills` 安装到本仓库已存在的平台 skill 目录。见 `docs/agents/residential-rule-tuning.md`。
