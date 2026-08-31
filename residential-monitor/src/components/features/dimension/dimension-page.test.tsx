@@ -16,7 +16,8 @@ describe("聚合页骨架", () => {
     expect(app).toContain("case \"process\"");
     expect(app).toContain("kind={route}");
     expect(app).toContain("overview={overview}");
-    expect(app.match(/DimensionPage/g)?.length).toBe(2);
+    // lazy() 声明、default 映射、使用各一处；不得复制成四份页面
+    expect(app.match(/DimensionPage/g)?.length).toBe(3);
     expect(page).toContain("kind: DimensionKind");
     expect(page).toContain("setSelected(null)");
     expect(page).not.toContain("function HostPage");
