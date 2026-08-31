@@ -11,9 +11,9 @@ use crate::c3::sql::{
     dimension_filter_clause, dimension_kind_sql, dimension_kind_sql_layer, filter_clause,
     merge_sql_params, render_rank_sql, render_sql, RankLayer, COVERAGE_DAILY, COVERAGE_RAW,
     RANK_DAILY_CATEGORY, RANK_DAILY_DIM, RANK_HOURLY, RANK_HOURLY_CATEGORY, RANK_RAW,
-    RANK_RAW_ATTR, RANK_RAW_CHAIN, RANK_RAW_RULE, SERIES_DAILY_CORE, SERIES_DAILY_DIM,
-    SERIES_HOURLY, SERIES_RAW, TOTALS_DAILY_CORE, TOTALS_DAILY_DIM, TOTALS_HOURLY, TOTALS_RAW,
-    UNKNOWN_IDENTITY,
+    RANK_RAW_ATTR, RANK_RAW_CHAIN, RANK_RAW_RULE, RESIDENTIAL_ACCOUNTING_FILTER, SERIES_DAILY_CORE,
+    SERIES_DAILY_DIM, SERIES_HOURLY, SERIES_RAW, TOTALS_DAILY_CORE, TOTALS_DAILY_DIM,
+    TOTALS_HOURLY, TOTALS_RAW, UNKNOWN_IDENTITY,
 };
 use crate::storage::{open_interruptible_reader, StorageCoordinator};
 use rusqlite::types::Value;
@@ -168,6 +168,7 @@ fn build_result(
             query.range_end_utc,
         )?,
     }
+    mark_unrecoverable_residential_history(query, &mut result);
     result.attribution_quality = load_attribution_quality(connection, query, &result)?;
     if result.attribution_quality.known_upload + result.attribution_quality.missing_upload
         != result.totals.upload
@@ -192,6 +193,17 @@ fn build_result(
         result.coverage.status = "covered".into();
     }
     Ok(result)
+}
+
+fn mark_unrecoverable_residential_history(query: &ReportQuery, result: &mut ReportResult) {
+    let residential = query.filters.category.as_deref() == Some(RESIDENTIAL_ACCOUNTING_FILTER);
+    let outside_raw = result.data_tier != DataTier::Raw;
+    let no_materialized_category = result.totals.upload == 0 && result.totals.download == 0;
+    if residential && outside_raw && no_materialized_category {
+        result.drilldown_capability.exact_top_n = false;
+        result.drilldown_capability.note_zh =
+            "该区间已超出 raw 链路保留范围，且没有可用的历史家宽分类；结果未知，不是 0。".into();
+    }
 }
 
 fn load_attribution_quality(
@@ -1340,6 +1352,124 @@ mod dimension_capability_tests {
                 .sum::<i64>(),
             filtered.totals.download
         );
+    }
+
+    #[test]
+    fn residential_raw_recovery_restores_null_categories_without_multiplying_traffic() {
+        let (_dir, coordinator, mut store) = setup();
+        seed_residential_sort_fixture(coordinator.connection());
+        coordinator
+            .connection()
+            .execute_batch(
+                "insert or replace into target_item(set_id, position, name) values
+                    (1, 0, '家宽'), (1, 1, '备用');
+                 update connection_session_attr
+                    set primary_category_id = null
+                  where session_pk in (101, 102, 104);
+                 insert into connection_chain(session_pk, position, node) values
+                    (101, 0, 'AI-家宽'),
+                    (101, 1, '家宽-SOCKS5'),
+                    (101, 2, '备用'),
+                    (102, 0, 'PROXY>家宽节点'),
+                    (103, 0, 'DIRECT'),
+                    (104, 0, 'AI-家宽');",
+            )
+            .expect("legacy raw fixture");
+
+        let mut global_query = base_query();
+        global_query.grouping = DimensionKind::Host;
+        global_query.top_n = 100;
+        let global = run_now(&coordinator, &mut store, global_query, 3_600);
+
+        let mut query = base_query();
+        query.grouping = DimensionKind::Host;
+        query.filters.category = Some(RESIDENTIAL_ACCOUNTING_FILTER.into());
+        query.top_n = 1;
+        query.sort.field = SortField::Upload;
+        let upload = run_now(&coordinator, &mut store, query.clone(), 3_600);
+        assert_eq!(upload.rankings[0].identity, "upload.example");
+
+        query.sort.field = SortField::Download;
+        let download = run_now(&coordinator, &mut store, query.clone(), 3_600);
+        assert_eq!(download.rankings[0].identity, "download.example");
+
+        query.top_n = 100;
+        let complete = run_now(&coordinator, &mut store, query, 3_600);
+        assert!(complete
+            .rankings
+            .iter()
+            .any(|row| row.identity == "c.example"));
+        assert!(!complete
+            .rankings
+            .iter()
+            .any(|row| row.identity == "outside.example"));
+        assert_eq!(
+            complete.rankings.iter().map(|row| row.upload).sum::<i64>(),
+            complete.totals.upload
+        );
+        assert_eq!(
+            complete
+                .rankings
+                .iter()
+                .map(|row| row.download)
+                .sum::<i64>(),
+            complete.totals.download
+        );
+        assert_eq!(
+            complete
+                .series
+                .iter()
+                .map(|point| point.upload)
+                .sum::<i64>(),
+            complete.totals.upload
+        );
+        assert_eq!(
+            complete
+                .series
+                .iter()
+                .map(|point| point.download)
+                .sum::<i64>(),
+            complete.totals.download
+        );
+        assert_eq!(
+            global.totals.upload - complete.totals.upload,
+            9_000,
+            "未分类且不命中 target 的行仍排除"
+        );
+        assert_eq!(global.totals.download - complete.totals.download, 9_000);
+    }
+
+    #[test]
+    fn residential_history_without_raw_or_materialized_category_is_unsupported() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("legacy-null.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        coordinator
+            .connection()
+            .execute_batch(
+                "update connection_session_attr set primary_category_id = null;
+                 delete from traffic_hourly_dimension;
+                 insert into target_item(set_id, position, name) values (1, 0, '家宽');
+                 insert into connection_chain(session_pk, position, node) values
+                    (1, 0, 'AI-家宽'), (2, 0, 'PROXY>家宽节点');
+                 insert or replace into retention_watermark(layer, watermark_utc, delete_watermark_utc)
+                 values ('hourly_dim_v2', 0, 0);",
+            )
+            .expect("legacy null fixture");
+        materialize(&mut coordinator, 40 * 86_400);
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let mut query = base_query();
+        query.grouping = DimensionKind::Host;
+        query.filters.category = Some(RESIDENTIAL_ACCOUNTING_FILTER.into());
+        let result = run_now(&coordinator, &mut store, query, 40 * 86_400);
+        assert_eq!(result.data_tier, DataTier::HourlyDimension);
+        assert_eq!(result.totals.upload, 0);
+        assert!(!result.drilldown_capability.exact_top_n);
+        assert!(result
+            .drilldown_capability
+            .note_zh
+            .contains("结果未知，不是 0"));
     }
 
     #[test]

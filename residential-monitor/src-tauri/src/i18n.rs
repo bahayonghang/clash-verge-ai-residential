@@ -120,16 +120,16 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
         "dialog.filter.json" => ("JSON 文件", "JSON files"),
         "export.html_title" => ("家宽流量报告", "Residential traffic report"),
         "residential.caliber.filter" => (
-            "筛选口径：命中已配置 target，或节点名含「家宽」。",
-            "Filter caliber: a configured target, or a node name that contains 家宽.",
+            "共享口径：target 为「家宽」时匹配含该词的节点，其它 target 精确匹配。",
+            "Shared rule: target 家宽 matches nodes containing that term; other targets match exactly.",
         ),
         "residential.caliber.accounting" => (
-            "核算口径：仅命中已配置 target。",
-            "Accounting caliber: a configured target only.",
+            "共享口径：历史统计与实时筛选使用相同的 target 匹配语义。",
+            "Shared rule: historical statistics and live filtering use the same target semantics.",
         ),
         "residential.caliber.diff" => (
-            "实时段用筛选口径，聚合段用核算口径，两者容纳集可能不等。",
-            "The monitor uses the filter caliber. Aggregation uses the accounting caliber. The selected sets can differ.",
+            "实时与历史统计使用同一目标语义；raw 期内未分类记录通过已保存链路恢复。",
+            "Live and historical views share one target rule; unclassified rows recover from saved chains during raw retention.",
         ),
         "residential.share.unknown" => ("未知", "Unknown"),
         "residential.share.zero_den" => (

@@ -52,6 +52,7 @@ export function ResidentialPage({
           <AggregateSection
             locale={locale}
             timeRange={timeRange}
+            autoRefresh={autoRefresh}
             share={share.share}
             shareLoading={share.loading}
             shareError={share.errorZh}

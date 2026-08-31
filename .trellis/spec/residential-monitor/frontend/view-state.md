@@ -1,6 +1,7 @@
 # 视图状态
 
 - store 只保存导航、筛选、分页和后端 DTO 缓存。实时筛选（只看家宽、字段条件）和表头排序只留当前会话。
+- 全局 `timeRange` 是唯一历史窗口时钟：自动刷新开启时每分钟按当前 preset 重算；选择 preset 与从暂停恢复时立即重算；暂停时冻结绝对 start/end；`today` 必须在跨本地午夜后的下一 tick 改用新零点。时钟只由 App 建立并在暂停/卸载时清理，隐藏页与各查询 hook 不得各建第二套 timer。
 - 实时筛选分 draft / applied：按键只改 draft；Enter、失焦或显式应用才写入 `liveQuery` 并查询。Escape / 取消恢复为已应用条件。单调 request token 丢弃过期响应。条件文本必须 escape。
 - 实时表列宽与显隐写入本机设置键 `live_table_layout`，不进控制器 JSON。非法或缺失回落默认模板。Recovery 无库时只改内存。
 - 实时表以 `<colgroup>` 像素宽度为唯一尺寸源；wrapper 提供横向滚动。拖动或键盘只改目标列。pointercancel / 失焦 / 捕获丢失回滚；松手成功才持久化一次。
@@ -9,9 +10,9 @@
 - `uiFont` 为 `system`、旧别名 `yahei` / `serif` / `mono`，或一条通过校验的本机族名，默认 `system`。`uiFontSize` 为 `sm`、`md` 或 `lg`，默认 `md`。`uiDensity` 为 `comfortable` 或 `compact`，默认 `comfortable`。设置页切换后立即应用到 `document.documentElement` 的 `--ui-font`。分别写入本机设置键 `ui_font`、`ui_font_size`、`ui_density`，不进控制器 JSON。非法或缺失回落默认。Recovery 无库时只改内存。本机字体列表来自 `list_ui_fonts`，只留当前会话缓存，筛选键不得 `paint`。
 - `uiSidebarWidth` 为 160–352 的整数 CSS 像素，默认 220。写入本机键 `ui_sidebar_width`，不进控制器 JSON。拖动应用壳 `.shell` 右缘或键盘调整；拖动期间禁止整页 `paint`，并与实时表列宽拖动互斥。pointercancel / 失焦 / 捕获丢失回滚到开始宽度；松手成功才持久化一次。非法或缺失回落 220。Recovery 无库时只改内存。设置二级导航不提供独立宽度。
 - 不在前端实现分类、守恒、Top N 或导出统计。实时方向热点只渲染 `query_live_connections` 返回的 `summary`，不从当前页 rows 重算。
-- 家宽聚合与手动报告固定使用 `filters.category = "__residential__"` 选择核算家宽子集，再以 `grouping = "host"` 拆解目的域名 / IP。家宽排名方向为 session-only；切换 upload / download 必须发起后端权威 Top N 查询，并用 `queryEcho` 校验 grouping、filter、sort 与 topN，禁止把旧下载候选重排后冒充上传 Top N。
+- 家宽聚合与手动报告固定使用 `filters.category = "__residential__"` 选择后端共享家宽子集，再以 `grouping = "host"` 拆解目的域名 / IP。前端不得区分或复制实时/核算字符串口径。家宽排名方向为 session-only；切换 upload / download 必须发起后端权威 Top N 查询，并用 `queryEcho` 校验 grouping、filter、sort 与 topN，禁止把旧下载候选重排后冒充上传 Top N。
 - 缺口、未知和未归因差额必须单独展示，不能画成零。
-- Overview 顶部是「实时 · 当前控制器」，趋势/Top 是「历史 · 已存储数据 · 时间窗」。当前 connecting 与历史 ready 可同时成立；历史区域继续显示 report coverage 与 generated time，不能用 live health 解释历史 Unknown。
+- Overview 顶部是「实时 · 当前控制器」，趋势/Top 是「历史 · 已存储数据 · 时间窗」。当前 connecting 与历史 ready 可同时成立；历史区域必须从实际 `queryEcho.rangeStartUtc/rangeEndUtc` 显示统计窗口，并显示 `generatedUtc` 与自动刷新/暂停状态，不能用当前 preset 的理想值或 live health 解释历史 Unknown。
 - 实时数值只在 `observationPhase === "current"` 时把 0 当真实零。connecting 显示等待连接，baselinePending 显示建立差分基线；paused/disconnected/resyncRequired/decodeFailed 隐藏 current。若保留 last-known 数值或 rows，必须标为 stale / 上次值。
 - 报告 `coverage` 与 `attributionQuality` 是两个独立轴。Top 与维度页显示 exact attribution quality；`__unknown__` 按 grouping 显示未归因主机、未报告链路、控制器未报告进程或未保存/未报告规则，missing bytes 不隐藏。
 - 主机 identity 优先级为 `host` → `sniffHost` → 目的 IP。`filters.host == "__unknown__"` 表示空 host。主机页在 `crossDimension` 下可对未知行下钻；其它维未知行仍不可下钻。IP identity 在排名标签上加 `IP` 标记。
@@ -50,6 +51,7 @@
 - 聚合与手动报告请求固定为 `grouping="host"`、`filters.category="__residential__"`；方向请求为 upload/download desc，方向状态只留当前会话。
 - 排名只渲染完整匹配当前 grouping、category filter、sort field、descending 与 topN 的 `queryEcho`。旧结果可被 hook 保留，但不得冒充当前方向结果。
 - 新请求仍运行且回显不匹配时显示 loading；请求失败后显示错误空态，不得因旧结果仍在而永久 loading。
+- 聚合标题附近必须显示实际 queryEcho 窗口、generated time 与状态。状态至少区分首次加载、刷新中保留旧结果、请求失败、无 coverage、窗口零命中、自动刷新暂停与 ready；共享查询错误只显示一次，不得在排名和趋势重复堆叠。不新增第二个刷新按钮。
 - RankBar 数值与份额分母跟随当前方向；行仍同时展示 upload/download，IP identity 使用共享 `formatRankLabel`。
 - `TrendArea` 消费后端原始升序 series；趋势表复制后按 `bucketUtc` 降序。不得原地排序共享数组。
 
@@ -68,6 +70,8 @@
 - model：queryEcho 对 grouping、住宅 filter、sort field、descending、topN 的任一漂移均返回 false。
 - model/section：请求中、匹配响应、无保留响应、失败且保留旧响应四种 loading/error 组合。
 - aggregate：方向切换请求、方向流量/份额、`aria-sort` 与 IP 标签。
+- aggregate state：断言窗口/更新时间来自 `queryEcho` / `generatedUtc`，覆盖刷新旧结果、失败、无 coverage、零命中、暂停和 ready，错误只出现一次。
+- time range：fake timer 覆盖 24h 长驻、暂停/恢复、today 跨午夜、preset 切换与 cleanup；旧窗口响应继续由 report/share sequence guard 丢弃。
 - report：手动运行与导出都使用 host + residential filter。
 - trend：断言传给图表的数组仍升序且引用内容未被修改，表格首行 bucket 最大；覆盖空/单桶/多桶和中英文表头。
 

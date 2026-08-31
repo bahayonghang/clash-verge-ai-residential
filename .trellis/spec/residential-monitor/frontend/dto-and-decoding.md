@@ -277,7 +277,7 @@ const page = decodeLiveConnectionPage(raw); // summary.topDownload 已由 Rust �
 ### 3. Contracts
 - `schemaVersion` 必须为 `1`。
 - 四个流量字段为 `Option<u64>`：`residentialUpload` / `residentialDownload` / `attributedUpload` / `attributedDownload`。
-- 家宽分子：`a.primary_category_id IS NOT NULL`（核算口径，精确 target）。
+- 家宽分子：与 raw 报告 `filters.category="__residential__"` 注入同一个 legacy-safe membership predicate；已分类行直接命中，仅对 category 为空且链路按当前 target 语义命中的行恢复，多个节点 / target 不倍增。
 - 分母：同区间无分类过滤的可归因观测（含未分类连接）。
 - 先查 `COVERAGE_RAW`。`covered_sec == 0` 时四个字段全部为 `None`。`covered_sec > 0` 时填实测值，此时 `0` 表示区间内无家宽流量。
 - `namedSql` 回显常量名，至少含 `share_residential_raw`。

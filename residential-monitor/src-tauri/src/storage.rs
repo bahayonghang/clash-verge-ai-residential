@@ -588,10 +588,18 @@ impl StorageCoordinator {
 }
 
 fn persist_slice(connection: &Connection, slice: &AlertCommitSlice) -> Result<(), StorageError> {
+    let policy_version = connection
+        .query_row(
+            "select policy_version from target_set where set_id = 1",
+            [],
+            |row| row.get::<_, i64>(0),
+        )
+        .optional()?
+        .unwrap_or(0);
     for row in &slice.live_rows {
         let (epoch, id) = split_identity(&row.identity);
         let session_pk = ensure_session_on(connection, epoch, id, slice.utc, row.host.as_deref())?;
-        intern_and_attr(connection, session_pk, row, slice.utc)?;
+        intern_and_attr(connection, session_pk, row, policy_version, slice.utc)?;
         if !row.chains.is_empty() {
             connection.execute(
                 "delete from connection_chain where session_pk = ?1",
@@ -723,6 +731,7 @@ fn intern_and_attr(
     connection: &Connection,
     session_pk: i64,
     row: &crate::c2::hub::LiveConnectionView,
+    policy_version: i64,
     utc: i64,
 ) -> Result<(), StorageError> {
     let canonical_host: Option<String> = connection.query_row(
@@ -744,13 +753,14 @@ fn intern_and_attr(
         "insert into connection_session_attr(
             session_pk, host_id, process_id, rule_id, network_id, chain_key,
             policy_version, primary_category_id, started_utc, ended_utc
-         ) values (?1, ?2, ?3, ?4, ?5, ?6, 0, ?7, ?8, null)
+         ) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, null)
          on conflict(session_pk) do update set
             host_id = coalesce(excluded.host_id, connection_session_attr.host_id),
             process_id = coalesce(excluded.process_id, connection_session_attr.process_id),
             rule_id = coalesce(excluded.rule_id, connection_session_attr.rule_id),
             network_id = coalesce(excluded.network_id, connection_session_attr.network_id),
             chain_key = coalesce(excluded.chain_key, connection_session_attr.chain_key),
+            policy_version = excluded.policy_version,
             primary_category_id = excluded.primary_category_id",
         params![
             session_pk,
@@ -759,6 +769,7 @@ fn intern_and_attr(
             rule_id,
             network_id,
             chain_key,
+            policy_version,
             category_id,
             utc
         ],

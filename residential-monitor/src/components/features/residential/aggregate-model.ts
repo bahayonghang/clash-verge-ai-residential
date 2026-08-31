@@ -3,6 +3,17 @@ import { emptyReportFilters, RESIDENTIAL_ACCOUNTING_FILTER } from "../../../form
 
 export type ResidentialDirection = "upload" | "download";
 
+export type ResidentialAggregateState =
+  | "loading"
+  | "refreshing"
+  | "error"
+  | "uncovered"
+  | "unsupported"
+  | "empty"
+  | "paused"
+  | "ready"
+  | "pending";
+
 export function residentialReportFilters(): ReportFilters {
   return {
     ...emptyReportFilters(),
@@ -51,4 +62,31 @@ export function newestFirstSeries(
   series: ReportResult["series"]
 ): ReportResult["series"] {
   return [...series].sort((left, right) => right.bucketUtc - left.bucketUtc);
+}
+
+export function residentialAggregateState(
+  result: ReportResult | null,
+  loading: boolean,
+  errorZh: string | null,
+  autoRefresh: boolean
+): ResidentialAggregateState {
+  if (errorZh) {
+    return "error";
+  }
+  if (loading) {
+    return result ? "refreshing" : "loading";
+  }
+  if (!result) {
+    return autoRefresh ? "pending" : "paused";
+  }
+  if (result.coverage.coveredSec === 0) {
+    return "uncovered";
+  }
+  if (!result.drilldownCapability.exactTopN) {
+    return "unsupported";
+  }
+  if (result.totals.upload === 0 && result.totals.download === 0) {
+    return "empty";
+  }
+  return autoRefresh ? "ready" : "paused";
 }

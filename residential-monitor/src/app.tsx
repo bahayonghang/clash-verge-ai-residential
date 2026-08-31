@@ -20,7 +20,13 @@ import { usePreferences } from "./hooks/use-preferences";
 import { useSidebarResize } from "./hooks/use-sidebar-resize";
 import { t, type UiLocale } from "./i18n";
 import { healthOf } from "./lib/health";
-import { defaultTimeRange, timeRangeFromPreset, type TimeRange } from "./lib/time-range";
+import {
+  defaultTimeRange,
+  rollTimeRange,
+  startRollingTimeRange,
+  timeRangeFromPreset,
+  type TimeRange
+} from "./lib/time-range";
 
 export function App() {
   const { boot, error: bootError } = useBootstrap();
@@ -48,6 +54,15 @@ export function App() {
       skip.textContent = t(preferences.prefs.locale, "a11y.skip");
     }
   }, [preferences.prefs.locale]);
+
+  useEffect(() => {
+    if (!autoRefresh) {
+      return;
+    }
+    return startRollingTimeRange(() => {
+      setTimeRange((current) => rollTimeRange(current));
+    });
+  }, [autoRefresh]);
 
   if (!boot) {
     return (

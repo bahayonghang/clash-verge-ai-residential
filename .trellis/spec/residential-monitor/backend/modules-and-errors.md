@@ -23,7 +23,7 @@
 - 托盘 id `main`。Tauri 2 默认左键弹菜单，必须 `show_menu_on_left_click(false)`。左键 Up 与左键双击打开窗口，右键才是菜单。四态由 `c2::desktop::tray_chrome(collector_running, session, storage_ok)` 决定，资源是 `icons/tray-*.png`。窗口 `icon.png` 不随状态变。产品标记真源是 `icons/icon-source.png`（铺满正方形、不预做圆角）。`icon.ico` 必须含 16/32/48/256 层且 256 为 PNG 压缩，用 `just monitor-icons` 从真源生成，禁止提交单层 16×16 ICO。`scripts/check-icons.mjs` 断言层数。`just tdev` 重启后通知区才换图标。
 - C3 代码位于 `residential-monitor/src-tauri/src/c3/`。C3 只通过 `StorageCoordinator` / `RecoveryFacade` 访问 SQLite，不得另建 writer 或通用 Repository。`ReportArchiveService` 拥有 `report_archive` 读写与过期删除，含 `persist_manual`。C2 不得直接写该表。
 - C3 排名必须在 `LIMIT top_n` 前应用 `ReportQuery.sort`。排序字段与方向只由 `SortField` / `SortSpec` 枚举白名单生成，不接收调用方 SQL；upload / download 同值时固定以 identity 升序破同值。raw、hourly dimension、daily dimension 与 category 特例保持同一契约，默认仍为 download desc。
-- 家宽判定只在 `src-tauri/src/residential.rs`：`residential_tags` / `is_residential_target`（核算，精确 target）与 `is_residential_filter`（实时筛选，精确 target 或节点名含「家宽」）。两者不得合并。`accounting::classify` 只调核算函数；`c2/query` 的「只看家宽」只调筛选函数。前端不得复制家宽字符串匹配。
+- 家宽判定只在 `src-tauri/src/residential.rs`，实时筛选与核算写入共用一套 matcher：target 精确为 `RESIDENTIAL_SELECTOR`（`家宽`）时匹配包含该词的链路节点，其它自定义 target 只做节点全值精确匹配，空 target 集不匹配。`residential_tags` 保持 target 配置顺序并以首个命中项作为 primary；`is_residential_target` / `is_residential_filter` 不得另建分支。`accounting::classify` 与 `c2/query` 均只调用共享实现，前端不得复制字符串匹配。
 - `list_routes` 与引导 DTO 共用 `c2/shell.rs` 的 `default_routes_for`。十段顺序：`overview`、`live`、`residential`、`host`、`rule`、`chain`、`process`、`reports`、`alerts`、`settings-data`。禁止再维护第二份路由表。
 - `collector_loop_tick` 在 `apply_tick_result` 之后调用 `archive_tick`。`ReportService::run` 不得持 `Mutex<AppFacade>`。每 tick 最多 1 份档案。临时 snapshot 必须打开独立目录（`data_dir/archive-tick`），不得 `ReportSnapshotStore::open(data_dir)`，否则 `cleanup_orphans` 会删掉门面仍有效的 spool token。
 - Recovery Shell 与 shutdown 跳过档案调度，不初始化 `ReportArchiveService` 循环。
@@ -109,7 +109,7 @@ apply_autostart(&port, enabled)
 - 模板残留 `{filters}` 或 `{order_by}` → 测试失败；不得把带槽位 SQL 交给 SQLite。
 - sort 字段超出 DTO 枚举 → 查询边界拒绝，不得回落到调用方字符串。
 - raw 查询使用 dimension 别名，或反之 → SQL/EQP 测试失败。
-- 非家宽高流量行出现在 `filters.category = "__residential__"` 结果 → 集成测试失败。
+- category 为空且链路不命中 target 的高流量行出现在 `filters.category = "__residential__"` 结果 → 集成测试失败；category 非空的历史归属仍保持权威。
 
 ### 5. Good/Base/Bad Cases
 - Good: `top_n=1 + upload desc` 与 `top_n=1 + download desc` 可返回不同冠军。
@@ -120,7 +120,7 @@ apply_autostart(&port, enabled)
 - SQL corpus：8 个排名模板无残留槽位；四个字段 × 两个方向均只渲染白名单 ORDER BY。
 - service raw tier：构造上传冠军与下载冠军不同的 fixture，断言 `top_n=1` 首行分别正确。
 - service dimension tier：对同一 fixture 物化 hourly dimension 后重复方向断言。
-- residential host：断言非家宽高流量行被过滤、域名/IP 分行，完整 Top N 时 rankings / series 与 totals 守恒。
+- residential host：断言 legacy-null + 已保存链路可恢复、多个 target / 节点不倍增、非命中高流量行被过滤、域名/IP 分行，完整 Top N 时 rankings / series 与 totals 守恒。
 
 ### 7. Wrong vs Correct
 #### Wrong

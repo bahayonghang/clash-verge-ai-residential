@@ -4,7 +4,7 @@ use crate::c3::query::{
     gap_union_sec, timezone_offset_secs, CoverageSlice, ReportError, MAX_RANGE_SECS,
     REPORT_DTO_VERSION,
 };
-use crate::c3::sql::{COVERAGE_RAW, SHARE_RESIDENTIAL_RAW};
+use crate::c3::sql::{render_residential_membership_sql, COVERAGE_RAW, SHARE_RESIDENTIAL_RAW};
 use crate::storage::open_interruptible_reader;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
@@ -141,8 +141,9 @@ fn load_share_bytes(
 ) -> Result<(u64, u64, u64, u64), ReportError> {
     let start_min = range_start_utc.div_euclid(60);
     let end_min = range_end_utc.div_euclid(60);
+    let sql = render_residential_membership_sql(SHARE_RESIDENTIAL_RAW);
     connection
-        .query_row(SHARE_RESIDENTIAL_RAW, params![start_min, end_min], |row| {
+        .query_row(&sql, params![start_min, end_min], |row| {
             Ok((
                 as_u64(row.get(0)?),
                 as_u64(row.get(1)?),
@@ -286,5 +287,28 @@ mod residential_share_tests {
         assert!(share.residential_upload.is_some());
         assert!(share.attributed_download.is_some());
         assert_ne!(share.residential_download, Some(0));
+    }
+
+    #[test]
+    fn legacy_null_categories_recover_from_chain_without_double_counting() {
+        let (_dir, coordinator) = setup();
+        coordinator
+            .connection()
+            .execute_batch(
+                "insert into target_item(set_id, position, name) values
+                    (1, 0, '家宽'), (1, 1, '备用');
+                 update connection_session_attr set primary_category_id = null;
+                 insert into connection_chain(session_pk, position, node) values
+                    (1, 0, 'AI-家宽'),
+                    (1, 1, '家宽-SOCKS5'),
+                    (1, 2, '备用'),
+                    (2, 0, 'PROXY>家宽节点');",
+            )
+            .expect("legacy chain fixture");
+        let share = query(&coordinator, 1000, 2500);
+        assert_eq!(share.residential_upload, Some(30));
+        assert_eq!(share.residential_download, Some(90));
+        assert_eq!(share.residential_upload, share.attributed_upload);
+        assert_eq!(share.residential_download, share.attributed_download);
     }
 }

@@ -9,8 +9,15 @@ use rusqlite::types::Value;
 /// 维度值缺失时排名 identity 的哨兵。真实 `dimension_dict.value` 不得等于该字面量。
 pub const UNKNOWN_IDENTITY: &str = "__unknown__";
 
-/// 核算口径过滤哨兵：命中任一重点目标（`primary_category_id` 非空）。不是字典值。
+/// 家宽子集过滤哨兵。不是字典值。
 pub const RESIDENTIAL_ACCOUNTING_FILTER: &str = "__residential__";
+
+/// raw 层家宽归属的唯一 SQL 谓词。
+///
+/// 已写入的历史 category 保持权威；只有 category 为空的 legacy raw 行才以当前 target
+/// 与已保存链路恢复。`EXISTS` 保证多个 target / 链路节点不会倍增流量。内置 `家宽`
+/// target 与 [`crate::residential::RESIDENTIAL_SELECTOR`] 一样做包含匹配，其它 target 精确匹配。
+pub const RESIDENTIAL_RAW_MEMBERSHIP_SQL: &str = "(a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0)))))";
 
 /// 进程 identity 缺失。与字段归因、未知下钻共用。
 pub const PROCESS_MISSING_SQL: &str = "a.process_id is null or not exists (select 1 from dimension_dict q where q.dimension_kind='process' and q.dimension_id=a.process_id)";
@@ -125,11 +132,11 @@ select kind, reason, started_utc, ended_utc
  order by started_utc, interval_id
 ";
 
-/// 一次扫描同时得到家宽分子与可归因观测分母。家宽子集 = `primary_category_id IS NOT NULL`。
+/// 一次扫描同时得到家宽分子与可归因观测分母。
 pub const SHARE_RESIDENTIAL_RAW: &str = "
 select
-  coalesce(sum(case when a.primary_category_id is not null then m.upload end), 0),
-  coalesce(sum(case when a.primary_category_id is not null then m.download end), 0),
+  coalesce(sum(case when {residential_membership} then m.upload end), 0),
+  coalesce(sum(case when {residential_membership} then m.download end), 0),
   coalesce(sum(m.upload), 0),
   coalesce(sum(m.download), 0)
 from connection_minute m
@@ -293,6 +300,13 @@ pub fn render_sql(sql: &str, filters_sql: &str) -> String {
     sql.replace("{filters}", filters_sql)
 }
 
+/// 将 share 模板中的家宽归属槽位替换为与报告过滤相同的 raw 谓词。
+pub fn render_residential_membership_sql(sql: &str) -> String {
+    let rendered = sql.replace("{residential_membership}", RESIDENTIAL_RAW_MEMBERSHIP_SQL);
+    debug_assert!(!rendered.contains("{residential_membership}"));
+    rendered
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RankLayer {
     Raw,
@@ -377,7 +391,8 @@ pub fn filter_clause(filters: &ReportFilters) -> (String, Vec<String>) {
     }
     if let Some(value) = &filters.category {
         if value == RESIDENTIAL_ACCOUNTING_FILTER {
-            fragment.push_str(" and a.primary_category_id is not null");
+            fragment.push_str(" and ");
+            fragment.push_str(RESIDENTIAL_RAW_MEMBERSHIP_SQL);
         } else {
             fragment.push_str(" and a.primary_category_id = (select dimension_id from dimension_dict where dimension_kind = 'category' and value = ?)");
             params.push(value.clone());
@@ -627,14 +642,17 @@ mod sql_corpus_tests {
     }
 
     #[test]
-    fn residential_accounting_filter_matches_non_null_category() {
+    fn residential_accounting_filter_uses_legacy_safe_raw_membership() {
         let filters = ReportFilters {
             category: Some(RESIDENTIAL_ACCOUNTING_FILTER.into()),
             ..ReportFilters::default()
         };
         let (fragment, params) = filter_clause(&filters);
         assert!(fragment.contains("a.primary_category_id is not null"));
-        assert!(!fragment.contains("dimension_dict"));
+        assert!(fragment.contains("a.primary_category_id is null and exists"));
+        assert!(fragment.contains("connection_chain"));
+        assert!(fragment.contains("target_item"));
+        assert!(fragment.contains("instr(rc.node, '家宽')"));
         assert!(params.is_empty());
         let (dim, dim_params) = dimension_filter_clause(&filters, DimensionKind::Process);
         assert!(dim.contains("h.category_id != 0"));
@@ -642,10 +660,47 @@ mod sql_corpus_tests {
     }
 
     #[test]
-    fn share_residential_raw_is_named_and_uses_category_null() {
-        let sql = lookup("share_residential_raw").expect("share_residential_raw");
-        assert!(sql.contains("primary_category_id is not null"));
+    fn share_and_filter_use_the_same_residential_membership_predicate() {
+        let template = lookup("share_residential_raw").expect("share_residential_raw");
+        let sql = render_residential_membership_sql(template);
+        assert_eq!(sql.matches(RESIDENTIAL_RAW_MEMBERSHIP_SQL).count(), 2);
+        assert!(!sql.contains("{residential_membership}"));
         assert!(sql.contains('?'));
+        assert!(RESIDENTIAL_RAW_MEMBERSHIP_SQL.contains(crate::residential::RESIDENTIAL_SELECTOR));
+    }
+
+    #[test]
+    fn residential_membership_plan_uses_session_key_lookup() {
+        let connection = rusqlite::Connection::open_in_memory().expect("open");
+        connection
+            .execute_batch(
+                "create table connection_minute(utc_minute integer, session_pk integer, upload integer, download integer);
+                 create table connection_session(session_pk integer primary key, host text);
+                 create table connection_session_attr(session_pk integer primary key, primary_category_id integer);
+                 create table connection_chain(session_pk integer, position integer, node text, primary key(session_pk, position));
+                 create table target_item(set_id integer, position integer, name text, primary key(set_id, position));",
+            )
+            .expect("schema");
+        let filters = ReportFilters {
+            category: Some(RESIDENTIAL_ACCOUNTING_FILTER.into()),
+            ..ReportFilters::default()
+        };
+        let (fragment, _) = filter_clause(&filters);
+        let sql = format!("explain query plan {}", render_sql(TOTALS_RAW, &fragment));
+        let mut statement = connection.prepare(&sql).expect("prepare");
+        let details: Vec<String> = statement
+            .query_map(rusqlite::params![0, 1], |row| row.get(3))
+            .expect("query plan")
+            .collect::<Result<_, _>>()
+            .expect("plan rows");
+        assert!(
+            details.iter().any(|detail| {
+                detail.contains("connection_chain")
+                    && detail.contains("session_pk")
+                    && (detail.contains("INDEX") || detail.contains("PRIMARY KEY"))
+            }),
+            "plan={details:?}"
+        );
     }
 
     #[test]

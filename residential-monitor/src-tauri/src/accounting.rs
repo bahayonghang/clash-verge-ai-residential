@@ -487,7 +487,12 @@ fn empty_known_zero() -> AccountingBatch {
 #[cfg(test)]
 mod accounting_replay_tests {
     use super::*;
+    use crate::c3::retention::{RetentionMode, RetentionService};
+    use crate::c3::space::SpaceBudget;
     use crate::controller::{ConnectionFact, ConnectionMeta};
+    use crate::storage::StorageCoordinator;
+    use std::sync::{atomic::AtomicBool, Arc};
+    use tempfile::tempdir;
 
     #[test]
     fn project_live_resolves_sniff_host_and_destination_ip() {
@@ -571,6 +576,102 @@ mod accounting_replay_tests {
         assert_eq!(second.attributed_download, Some(10));
         assert_eq!(second.facts[0].primary.as_deref(), Some("家宽"));
         assert_eq!(second.facts[0].upload, 5);
+    }
+
+    #[test]
+    fn semantic_target_flows_through_accounting_and_storage() {
+        let mut engine = AccountingEngine::new();
+        engine.reset_epoch(7);
+        engine.set_targets(vec!["家宽".into(), "备用".into()]);
+        let first_connections = vec![
+            fact("matched", 5, 5, &["AI-家宽", "备用"]),
+            fact("other", 5, 5, &["DIRECT"]),
+        ];
+        let second_connections = vec![
+            fact("matched", 7, 8, &["AI-家宽", "备用"]),
+            fact("other", 7, 8, &["DIRECT"]),
+        ];
+        engine.apply(snap(10, 10, first_connections), 1, 120);
+        let rows = engine.project_live(&second_connections);
+        let batch = engine.apply(snap(14, 16, second_connections), 2, 120);
+        assert_eq!(engine.policy_version(), 1);
+        assert_eq!(rows[0].tags, vec!["家宽", "备用"]);
+        assert_eq!(batch.facts[0].primary.as_deref(), Some("家宽"));
+        assert!(batch.facts[1].primary.is_none());
+
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("semantic.sqlite3")).expect("open");
+        assert_eq!(
+            coordinator
+                .save_targets(&["家宽".into(), "备用".into()])
+                .expect("save targets"),
+            1
+        );
+        coordinator
+            .persist_live_facts(&batch.facts, &rows, &[], 120)
+            .expect("persist");
+        let stored: Vec<(String, Option<String>, i64)> = {
+            let mut statement = coordinator
+                .connection()
+                .prepare(
+                    "select s.connection_id, d.value, a.policy_version
+                       from connection_session s
+                       left join connection_session_attr a on a.session_pk = s.session_pk
+                       left join dimension_dict d
+                         on d.dimension_kind = 'category' and d.dimension_id = a.primary_category_id
+                      order by s.connection_id",
+                )
+                .expect("prepare");
+            statement
+                .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))
+                .expect("query")
+                .collect::<Result<_, _>>()
+                .expect("rows")
+        };
+        assert_eq!(
+            stored,
+            vec![
+                ("matched".into(), Some("家宽".into()), 1),
+                ("other".into(), None, 1)
+            ]
+        );
+
+        coordinator
+            .connection()
+            .execute(
+                "insert or replace into retention_watermark(layer, watermark_utc, delete_watermark_utc)
+                 values ('hourly_dim_v2', 0, 0)",
+                [],
+            )
+            .expect("enable v2 materialization");
+        let cancel = Arc::new(AtomicBool::new(false));
+        RetentionService::run(
+            &mut coordinator,
+            40 * 86_400,
+            30,
+            RetentionMode::MaterializeOnly,
+            &SpaceBudget::unlimited(),
+            &cancel,
+        )
+        .expect("materialize");
+        let category_id: i64 = coordinator
+            .connection()
+            .query_row(
+                "select dimension_id from dimension_dict where dimension_kind = 'category' and value = '家宽'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("category id");
+        for table in ["traffic_hourly_dimension", "traffic_daily_dimension"] {
+            let sql =
+                format!("select coalesce(sum(download), 0) from {table} where category_id = ?1");
+            let download: i64 = coordinator
+                .connection()
+                .query_row(&sql, [category_id], |row| row.get(0))
+                .expect("materialized category");
+            assert!(download > 0, "{table} must retain the semantic category");
+        }
     }
 
     #[test]

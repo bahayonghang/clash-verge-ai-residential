@@ -12,6 +12,8 @@ const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
+export const TIME_RANGE_ROLL_INTERVAL_MS = MINUTE;
+
 export function timeRangeFromPreset(preset: TimeRangePreset, now = Date.now()): TimeRange {
   const endUtc = now;
   if (preset === "today") {
@@ -36,4 +38,15 @@ export function timeRangeFromPreset(preset: TimeRangePreset, now = Date.now()): 
 
 export function defaultTimeRange(now = Date.now()): TimeRange {
   return timeRangeFromPreset("24h", now);
+}
+
+export function rollTimeRange(range: TimeRange, now = Date.now()): TimeRange {
+  return timeRangeFromPreset(range.preset, now);
+}
+
+/** 立即对齐一次并按分钟滚动；返回的清理函数用于暂停或卸载。 */
+export function startRollingTimeRange(onTick: () => void): () => void {
+  onTick();
+  const timer = globalThis.setInterval(onTick, TIME_RANGE_ROLL_INTERVAL_MS);
+  return () => globalThis.clearInterval(timer);
 }
