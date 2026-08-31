@@ -17,6 +17,16 @@ help:
 ci: monitor-check
     npm run ci
 
+# 本地 VitePress 文档站。需要 Node.js 22+，依赖在 docs/package.json。
+docs-dev:
+    npm --prefix docs run dev
+
+docs-build:
+    npm --prefix docs run build
+
+docs-preview:
+    npm --prefix docs run preview
+
 # 以 residential-monitor/package.json 为准，写入 Tauri 安装包、Cargo 与 lockfile 版本。
 monitor-sync-version:
     node scripts/sync-monitor-version.js

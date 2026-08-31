@@ -3,6 +3,10 @@ node_modules/
 coverage/
 .nyc_output/
 
+# VitePress local cache and build output
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
 # Local credentials and generated Clash profiles
 .env
 .env.*
