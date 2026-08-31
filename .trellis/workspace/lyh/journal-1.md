@@ -1160,3 +1160,27 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 39: 家宽历史库 CLI 与规则优化 Skill
+
+**Date**: 2026-08-31
+**Task**: 家宽历史库 CLI 与规则优化 Skill
+**Branch**: `dev`
+
+### Summary
+
+落地 monitor-db 只读查询与受控维护 CLI、可安装的 residential-rule-tuning skill、install-all 本机安装配方，以及 tinstall 安装后启动应用。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bb9f754` | (see git log) |
+| `01c93d6` | (see git log) |
+| `7ce72eb` | (see git log) |
+| `015a43c` | (see git log) |
+
+### Status
+
+[OK] **Completed**
