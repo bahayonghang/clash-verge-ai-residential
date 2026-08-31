@@ -13,7 +13,7 @@ just tdev              开发态桌面壳。启动前按 package.json 同步版�
 just monitor-check     子项目质量门。版本漂移则失败
 just monitor-sync-version  按 package.json 写入 Tauri/Cargo 版本
 just monitor-build     同步版本后生成 NSIS，不安装
-just tinstall          同步版本、构建并静默安装到 %LOCALAPPDATA%\ResiWatch。运行中的应用会先结束。不启动应用。会改本机安装态，需再确认
+just tinstall          同步版本、构建并静默安装到 %LOCALAPPDATA%\ResiWatch。运行中的应用会先结束。安装完成后启动应用。会改本机安装态，需再确认
 just monitor-c5-auto   C5 自动硬化门。不含 30 天库、24 小时 soak、本机安装
 ```
 

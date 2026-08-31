@@ -337,6 +337,23 @@ function stopMonitorProcess(spawn = childProcess.spawnSync) {
   throw new Error(`无法结束正在运行的 ${BINARY_NAME}，安装会覆盖锁定文件。`);
 }
 
+function startMonitorApp(destDir, spawn = childProcess.spawn) {
+  const exe = path.win32.join(destDir, `${BINARY_NAME}.exe`);
+  if (!fs.existsSync(exe)) {
+    throw new Error(`安装完成但未找到 ${exe}`);
+  }
+  const child = spawn(exe, [], {
+    cwd: destDir,
+    detached: true,
+    stdio: "ignore",
+    windowsHide: false
+  });
+  if (typeof child.unref === "function") {
+    child.unref();
+  }
+  return child;
+}
+
 function runSetup(setupPath, destDir, spawn = childProcess.spawnSync) {
   // NSIS /D= 必须是最后一个参数，路径两边不能加引号。
   const command = `& ${quotePsSingle(setupPath)} /S /D=${destDir}`;
@@ -393,6 +410,8 @@ function main(root = DEFAULT_ROOT, env = process.env) {
   }
   removeLegacyProductTraces(LEGACY_PRODUCT_NAMES, env);
   console.log("安装完成。");
+  startMonitorApp(destDir);
+  console.log(`已启动 ${path.win32.join(destDir, `${BINARY_NAME}.exe`)}`);
 }
 
 if (require.main === module) {
@@ -419,5 +438,6 @@ module.exports = {
   readPackageVersion,
   readPreviousInstallDir,
   readProductName,
+  startMonitorApp,
   stripOuterQuotes
 };
