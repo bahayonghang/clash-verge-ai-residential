@@ -8,6 +8,7 @@ export function StatCard({
   value,
   subvalue,
   color,
+  colorToken,
   loading = false,
   unavailable = false,
   className
@@ -16,20 +17,28 @@ export function StatCard({
   label: string;
   value: string;
   subvalue?: string;
-  color: string;
+  /** 兼容既有 hex 调用方；新代码优先用 colorToken 走主题令牌。 */
+  color?: string;
+  /** 映射 var(--chart-N)，深浅四主题下均正确。 */
+  colorToken?: 1 | 2 | 3 | 4 | 5;
   loading?: boolean;
   unavailable?: boolean;
   className?: string;
 }) {
+  const tokenColor = colorToken ? `var(--chart-${colorToken})` : undefined;
+  const iconColor = tokenColor ?? color ?? "var(--chart-1)";
+  const iconBackground = tokenColor
+    ? `color-mix(in srgb, ${tokenColor} 8%, transparent)`
+    : `${iconColor}15`;
   return (
     <div className={cn("flex flex-col rounded-xl border bg-card p-3.5 shadow-xs", className)}>
       <div
         className="mb-2.5 flex h-8 w-8 items-center justify-center rounded-md"
-        style={{ backgroundColor: `${color}15` }}
+        style={{ backgroundColor: iconBackground }}
       >
         <span
           className="flex h-4 w-4 items-center justify-center [&_svg]:h-4 [&_svg]:w-4"
-          style={{ color }}
+          style={{ color: iconColor }}
         >
           {icon}
         </span>

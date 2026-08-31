@@ -33,7 +33,7 @@ export function ResidentialPage({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-lg font-semibold">{t(locale, "route.residential")}</h1>
+        <h1 className="text-xl font-semibold">{t(locale, "route.residential")}</h1>
         <p className="text-xs text-muted-foreground">{t(locale, "residential.caliber.diff")}</p>
       </div>
       <MonitorSection

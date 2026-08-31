@@ -5,8 +5,14 @@ import { formatBytes, formatUtc } from "../../../format/units";
 import { granularityForTimeRange, useReport } from "../../../hooks/use-report";
 import { t, type UiLocale } from "../../../i18n";
 import type { TimeRange } from "../../../lib/time-range";
-import { RankBar } from "../../charts/rank-bar";
+import { CHART_COLORS, RankBar } from "../../charts/rank-bar";
 import { TrendArea } from "../../charts/trend-area";
+import {
+  DataTableEmptyRow,
+  DataTableTd,
+  DataTableTh,
+  dataTableClasses
+} from "../../common/data-table";
 import { OverviewCard } from "../../common/overview-card";
 import { SortableTh } from "../../common/sortable-th";
 import {
@@ -69,7 +75,7 @@ export function AggregateSection({
   return (
     <section className="space-y-4" aria-labelledby="residential-aggregate-title">
       <div>
-        <h2 id="residential-aggregate-title" className="text-sm font-semibold">
+        <h2 id="residential-aggregate-title" className="text-base font-semibold">
           {t(locale, "residential.aggregate")}
         </h2>
         <CaliberNote locale={locale} kind="accounting" />
@@ -209,7 +215,11 @@ function RankBlock({
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5">
+          <div
+            className="flex items-center gap-0.5 rounded-lg bg-muted/50 p-0.5"
+            role="group"
+            aria-label={t(locale, "report.topn")}
+          >
             {TOP_N_OPTIONS.map((option) => (
               <button
                 key={option}
@@ -239,47 +249,58 @@ function RankBlock({
         />
       ) : null}
       {exactTopN ? (
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className={`mt-3 ${dataTableClasses.wrapper}`}>
+          <table className={dataTableClasses.table}>
             <thead>
-              <tr className="border-b border-border/60 text-left text-muted-foreground">
-                <th className="py-2 font-medium">{t(locale, "overview.col.name")}</th>
+              <tr className={dataTableClasses.headRow}>
+                <DataTableTh>{t(locale, "overview.col.name")}</DataTableTh>
                 <SortableTh
                   label={t(locale, "overview.col.upload")}
                   ariaSort={direction === "upload" ? "descending" : "none"}
                   numeric
+                  subtle
                   onClick={() => onDirection("upload")}
                 />
                 <SortableTh
                   label={t(locale, "overview.col.download")}
                   ariaSort={direction === "download" ? "descending" : "none"}
                   numeric
+                  subtle
                   onClick={() => onDirection("download")}
                 />
-                <th className="px-2 py-2 text-right font-medium">
+                <DataTableTh numeric className="px-2">
                   {t(locale, `residential.rank.share.${direction}`)}
-                </th>
+                </DataTableTh>
               </tr>
             </thead>
             <tbody>
               {(result?.rankings ?? []).length === 0 ? (
-                <tr>
-                  <td className="py-3 text-muted-foreground" colSpan={4}>
-                    {loading ? t(locale, "report.running") : emptyHint}
-                  </td>
-                </tr>
+                <DataTableEmptyRow colSpan={4}>
+                  {loading ? t(locale, "report.running") : emptyHint}
+                </DataTableEmptyRow>
               ) : (
-                (result?.rankings ?? []).map((row) => {
+                (result?.rankings ?? []).map((row, index) => {
                   const label = formatRankLabel(row.identity, row.label, unknown, missingHost);
                   const share = rankingShare(directionTraffic(row, direction), total);
                   return (
-                    <tr key={row.identity} data-identity={row.identity} className="border-b border-border/40 last:border-0">
-                      <td className="py-2">{label}</td>
-                      <td className="px-2 py-2 text-right tabular-nums">{formatBytes(row.upload, unknown)}</td>
-                      <td className="px-2 py-2 text-right tabular-nums">{formatBytes(row.download, unknown)}</td>
-                      <td className="px-2 py-2 text-right tabular-nums">
+                    <tr key={row.identity} data-identity={row.identity} className={dataTableClasses.row}>
+                      <DataTableTd>
+                        <span
+                          aria-hidden="true"
+                          className="mr-2 inline-block size-1.5 rounded-full align-middle"
+                          style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                        />
+                        {label}
+                      </DataTableTd>
+                      <DataTableTd numeric className="px-2">
+                        {formatBytes(row.upload, unknown)}
+                      </DataTableTd>
+                      <DataTableTd numeric className="px-2">
+                        {formatBytes(row.download, unknown)}
+                      </DataTableTd>
+                      <DataTableTd numeric className="px-2">
                         {result && total > 0 ? `${(share * 100).toFixed(1)}%` : unknown}
-                      </td>
+                      </DataTableTd>
                     </tr>
                   );
                 })
@@ -312,7 +333,9 @@ function TrendBlock({
         loading={loading && series.length === 0}
         emptyHint={emptyHint}
       />
-      <TrendTable locale={locale} series={series} loading={loading} />
+      <div className="mt-4 border-t border-border/40">
+        <TrendTable locale={locale} series={series} loading={loading} />
+      </div>
     </OverviewCard>
   );
 }

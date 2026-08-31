@@ -15,7 +15,7 @@ export function TrendTable({
   const unknown = t(locale, "common.unknown");
   const rows = newestFirstSeries(series);
   return (
-    <div className="mt-3 max-h-56 overflow-auto rounded-md border border-border/60">
+    <div className="mt-3 max-h-56 overflow-auto rounded-md border border-border/40">
       <table className="w-full min-w-[36rem] border-collapse text-sm">
         <thead className="sticky top-0 z-10 bg-card">
           <tr className="border-b border-border text-muted-foreground">

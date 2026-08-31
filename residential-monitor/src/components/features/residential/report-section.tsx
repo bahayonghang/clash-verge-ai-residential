@@ -5,6 +5,7 @@ import { useReportArchive } from "../../../hooks/use-report-archive";
 import { t, type UiLocale } from "../../../i18n";
 import type { TimeRange } from "../../../lib/time-range";
 import { Button } from "../../ui/button";
+import { Card } from "../../ui/card";
 import { Switch } from "../../ui/switch";
 import { CapabilityNote } from "../dimension/capability-note";
 import { CapabilityPanel } from "../reports/capability-panel";
@@ -47,53 +48,67 @@ export function ReportSection({ locale, timeRange }: { locale: UiLocale; timeRan
   return (
     <section className="space-y-4" aria-labelledby="residential-report-title">
       <div>
-        <h2 id="residential-report-title" className="text-sm font-semibold">
+        <h2 id="residential-report-title" className="text-base font-semibold">
           {t(locale, "residential.report")}
         </h2>
-        <p className="text-xs text-muted-foreground">{t(locale, "residential.report.policy.note")}</p>
+        <p className="mt-1 text-xs text-muted-foreground/80">
+          {t(locale, "residential.report.policy.note")}
+        </p>
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2 text-sm">
-          <Switch
-            checked={currentOn}
-            disabled={!currentAllowed}
-            onCheckedChange={(checked) => setWantCurrent(checked)}
+      <Card className="gap-3 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm">
+            <Switch
+              checked={currentOn}
+              disabled={!currentAllowed}
+              onCheckedChange={(checked) => setWantCurrent(checked)}
+            />
+            {t(locale, currentOn ? "residential.report.policy.current" : "residential.report.policy.historical")}
+          </label>
+          <Button type="button" disabled={archive.loading} onClick={run}>
+            {t(locale, "report.run")}
+          </Button>
+        </div>
+        {showCurrentNote ? (
+          <CapabilityNote
+            locale={locale}
+            noteZh={report?.drilldownCapability.noteZh || t(locale, "residential.report.current_off")}
           />
-          {t(locale, currentOn ? "residential.report.policy.current" : "residential.report.policy.historical")}
-        </label>
-        <Button type="button" disabled={archive.loading} onClick={run}>
-          {t(locale, "report.run")}
-        </Button>
-      </div>
-      {showCurrentNote ? (
-        <CapabilityNote
-          locale={locale}
-          noteZh={report?.drilldownCapability.noteZh || t(locale, "residential.report.current_off")}
-        />
-      ) : null}
-      <p className="text-sm" data-state={report ? "connected" : "no_data"}>
-        {archive.statusZh}
-      </p>
-      {archive.errorZh ? (
-        <p className="text-sm text-destructive" role="alert">
-          {archive.errorZh}
+        ) : null}
+        <p
+          className="text-sm text-muted-foreground"
+          data-state={report ? "connected" : "no_data"}
+          role="status"
+        >
+          {archive.statusZh}
         </p>
-      ) : null}
+        {archive.errorZh ? (
+          <p className="text-sm text-destructive" role="alert">
+            {archive.errorZh}
+          </p>
+        ) : null}
+        {report ? (
+          <p className="text-xs text-muted-foreground/80">
+            {t(locale, "residential.report.policy")} {report.policyMetadata.targetPolicy}
+            {report.policyMetadata.policyVersion != null ? ` · v${report.policyMetadata.policyVersion}` : ""}
+          </p>
+        ) : null}
+      </Card>
       {report ? (
-        <p className="text-xs text-muted-foreground">
-          {t(locale, "residential.report.policy")} {report.policyMetadata.targetPolicy}
-          {report.policyMetadata.policyVersion != null ? ` · v${report.policyMetadata.policyVersion}` : ""}
-        </p>
+        <div className="rounded-xl border bg-card p-4 shadow-xs">
+          <CoveragePanel locale={locale} report={report} />
+        </div>
       ) : null}
-      <CoveragePanel locale={locale} report={report} />
       <CapabilityPanel locale={locale} report={report} />
-      <ExportPanel
-        locale={locale}
-        preview={archive.exportPreview}
-        disabled={!archive.report}
-        onPreview={(spec) => void archive.previewExport(spec)}
-        onExport={(spec) => void archive.exportReport(spec)}
-      />
+      <div className="rounded-xl border bg-card p-4 shadow-xs">
+        <ExportPanel
+          locale={locale}
+          preview={archive.exportPreview}
+          disabled={!archive.report}
+          onPreview={(spec) => void archive.previewExport(spec)}
+          onExport={(spec) => void archive.exportReport(spec)}
+        />
+      </div>
     </section>
   );
 }

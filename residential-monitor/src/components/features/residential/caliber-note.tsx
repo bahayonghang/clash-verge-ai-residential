@@ -11,7 +11,7 @@ export function CaliberNote({
 }) {
   const key = kind === "filter" ? "residential.caliber.filter" : "residential.caliber.accounting";
   return (
-    <p data-caliber={kind} className="text-xs text-muted-foreground" role="note">
+    <p data-caliber={kind} className="text-xs text-muted-foreground/80" role="note">
       {t(locale, key)}
     </p>
   );
