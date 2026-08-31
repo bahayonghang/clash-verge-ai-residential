@@ -1208,3 +1208,38 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 41: 家宽页创建并弹窗查看 HTML 报告
+
+**Date**: 2026-08-31
+**Task**: 家宽页创建并弹窗查看 HTML 报告
+**Branch**: `dev`
+
+### Summary
+
+家宽页改为创建 HTML 报告并用大弹窗查看；进页回看最新家宽手动档案。排版重构任务已按要求归档。
+
+### Main Changes
+
+- 主按钮改为创建报告，右侧查看报告打开 iframe 弹窗
+- HTML 由 ExportService 渲染，档案回看不占用多余 snapshot
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `62cc590` | (see git log) |
+| `ba32577` | (see git log) |
+
+### Testing
+
+- [OK] just ci
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 在 just tdev 下点一次创建与查看，确认弹窗内容
