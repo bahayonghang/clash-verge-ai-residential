@@ -1,3 +1,24 @@
+---
+name: residential-rule-tuning
+description: >
+  用 ResiWatch 历史库证据收窄 AI-家宽 路由范围，减少不必要的家宽流量。
+  Use when 减少家宽流量, 关掉长期无命中的路由开关, 判断域名规则是否还该走家宽,
+  从本机 monitor.sqlite3 读 host 排名/份额/死规则/越界流量,
+  改 clash-verge-ai-residential.local.toml 的 routing.*,
+  评估公开模板域名清单是否该收窄, 或运行 /residential-rule-tuning;
+  also for 家宽规则优化, ResiWatch audit/rank/share, monitor-db, dead rules, and uncovered hosts.
+  Exclude 改桌面端 UI, 解除 AUTO_DELETE_ENABLED, 把观测量当成运营商账单,
+  手改 *.local.js, 以及与 AI-家宽 路由无关的 Clash 配置。
+when-to-use: >
+  减少家宽流量; 关闭死规则; 审计 AI-家宽 域名; ResiWatch monitor.sqlite3;
+  routing.* 调优; 公开模板域名收窄; residential rule tuning
+argument-hint: "[since until | --redact]"
+compatibility: Requires Node >=18, just, monitor-db, and a local ResiWatch monitor.sqlite3
+metadata:
+  author: bahayonghang
+  short-description: 用 ResiWatch 历史库收窄 AI-家宽 路由
+---
+
 # 家宽规则优化
 
 用 ResiWatch 历史库证据收窄 `AI-家宽` 路由范围，减少不必要的家宽流量。
