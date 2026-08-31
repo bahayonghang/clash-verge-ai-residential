@@ -1,0 +1,5 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "家宽页所属包的前端规范入口，含 Pre-Development Checklist"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "共享组件增强（StatCard/DataTable/SortableTh）须遵守的组件规范"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "质量门与测试约定"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "视图状态与空态/加载态约定，DOM 结构调整不得破坏"}
