@@ -1138,3 +1138,25 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 38: 修复家宽历史地址累计统计
+
+**Date**: 2026-08-31
+**Task**: 修复家宽历史地址累计统计
+**Branch**: `dev`
+
+### Summary
+
+统一家宽归属语义并恢复 raw 历史地址统计，修复滚动时间窗口与历史状态展示；完整自动门通过，原生 WebView 组合保留 UNVERIFIED。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `477a10ef38c8a171349810144f088747e8051851` | (see git log) |
+| `e06e83c25ea19604e5c488aa15018d083e0f8dc6` | (see git log) |
+
+### Status
+
+[OK] **Completed**

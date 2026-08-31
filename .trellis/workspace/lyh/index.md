@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 37
-- **Last Active**: 2026-08-29
+- **Total Sessions**: 38
+- **Last Active**: 2026-08-31
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1140 | Active |
+| `journal-1.md` | ~1162 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 38 | 2026-08-31 | 修复家宽历史地址累计统计 | `477a10ef38c8a171349810144f088747e8051851`, `e06e83c25ea19604e5c488aa15018d083e0f8dc6` | `dev` |
 | 37 | 2026-08-29 | 完成 ResiWatch Windows 登录自启动 | `71ac80c`, `c6f8f13` | `dev` |
 | 36 | 2026-08-25 | 家宽目的地址拆解与趋势明细优化 | `feccd1c` | `dev` |
 | 35 | 2026-08-25 | 彩色应用图标与安装态清晰度 | `9acb61977df55fc6ff58baf0ad24ea5a6de7151f` | `dev` |
