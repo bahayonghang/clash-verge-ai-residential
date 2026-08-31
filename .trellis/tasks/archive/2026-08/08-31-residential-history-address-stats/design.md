@@ -114,4 +114,3 @@ Rust 侧只定义一次 predicate / renderer，再注入命名 SQL；禁止在 r
 - 后端 `modules-and-errors.md`：把“实时与核算不得合并”改为 D1 的共享 matcher、raw legacy fallback 和保留层边界。
 - 存储 `sqlite-contract.md`：记录唯一 raw membership predicate、`EXISTS` 不倍增、索引 / deadline 与无批量改库边界。
 - 前端 `view-state.md`：记录相对时间滚动、暂停快照、窗口元信息和家宽空态契约。
-
