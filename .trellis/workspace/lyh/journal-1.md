@@ -1184,3 +1184,27 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 40: VitePress 中英双语文档站
+
+**Date**: 2026-08-31
+**Task**: VitePress 中英双语文档站
+**Branch**: `dev`
+
+### Summary
+
+用 VitePress 把根 docs/ 做成本地中英双语文档站。默认中文，英文在 docs/en/。ADR 不进站。文档依赖隔离在 docs/package.json，just ci 仍零依赖 Node 18。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `02ba7fa` | (see git log) |
+| `bdc7ada` | (see git log) |
+| `de187f1` | (see git log) |
+| `d1a4335` | (see git log) |
+
+### Status
+
+[OK] **Completed**
