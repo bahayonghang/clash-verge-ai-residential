@@ -81,6 +81,26 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+export function decodeHtmlDocument(value: unknown): string {
+  if (!value || typeof value !== "object" || !("html" in value)) {
+    throw new Error("HtmlDocument 无效");
+  }
+  const html = (value as { html: unknown }).html;
+  if (typeof html !== "string" || html.length === 0) {
+    throw new Error("HtmlDocument.html 无效");
+  }
+  return html;
+}
+
+export async function renderReportHtml(token: string): Promise<string> {
+  return decodeHtmlDocument(
+    await invoke<unknown>("render_report_html", {
+      token,
+      spec: { ...defaultExportSpec(), format: "html" as const }
+    })
+  );
+}
+
 function decodePreview(value: unknown): ExportPreview {
   if (!isRecord(value) || typeof value.rowCount !== "number" || !Array.isArray(value.sampleLabels)) {
     throw new Error("ExportPreview 无效");
@@ -114,6 +134,7 @@ export function useReportArchive(locale: UiLocale): {
   selectArchive: (archiveId: string) => Promise<void>;
   runManual: () => Promise<void>;
   runQuery: (query: ReportQuery) => Promise<void>;
+  restoreResidentialManual: () => Promise<void>;
   previewExport: (spec: ExportSpec) => Promise<void>;
   exportReport: (spec: ExportSpec) => Promise<void>;
   getStored: (token: string) => Promise<void>;
@@ -309,6 +330,45 @@ export function useReportArchive(locale: UiLocale): {
   const runManual = useCallback(async (): Promise<void> => {
     await runQuery(buildQuery());
   }, [buildQuery, runQuery]);
+
+  const restoreResidentialManual = useCallback(async (): Promise<void> => {
+    const token = ++seq.current;
+    const fallback = t(locale, "report.fail");
+    if (!isTauriRuntime()) {
+      return;
+    }
+    setLoading(true);
+    setStatusZh(t(locale, "report.running"));
+    try {
+      const raw = await invoke<unknown>("get_latest_residential_manual");
+      if (token !== seq.current) {
+        if (raw != null) {
+          try {
+            void releaseReportToken(decodeReportResult(raw).reportSnapshotToken);
+          } catch {
+            /* 过期响应释放失败不覆盖 */
+          }
+        }
+        return;
+      }
+      if (raw == null) {
+        setLoading(false);
+        return;
+      }
+      const decoded = decodeReportResult(raw);
+      applyDecoded(decoded, t(locale, "residential.report.ready"), "manual", null);
+    } catch (caught: unknown) {
+      if (token !== seq.current) {
+        return;
+      }
+      setErrorZh(invokeErrorZh(caught, fallback));
+      setStatusZh(fallback);
+    } finally {
+      if (token === seq.current) {
+        setLoading(false);
+      }
+    }
+  }, [applyDecoded, locale]);
 
   const selectArchive = useCallback(
     async (archiveId: string): Promise<void> => {
@@ -507,6 +567,7 @@ export function useReportArchive(locale: UiLocale): {
     selectArchive,
     runManual,
     runQuery,
+    restoreResidentialManual,
     previewExport,
     exportReport,
     getStored,

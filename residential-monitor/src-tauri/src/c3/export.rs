@@ -1,6 +1,6 @@
 //! 流式导出：只消费 snapshot token，不重新查询。
 
-use crate::c3::query::{ReportError, ReportResult};
+use crate::c3::query::{ReportError, ReportResult, TargetPolicy};
 use crate::c3::space::SpaceBudget;
 use crate::i18n::{t, UiLocale};
 use serde::{Deserialize, Serialize};
@@ -62,6 +62,12 @@ pub struct ExportPreview {
     pub metadata_zh: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HtmlDocument {
+    pub html: String,
+}
+
 pub struct ExportService;
 
 impl ExportService {
@@ -79,6 +85,17 @@ impl ExportService {
             sample_labels: labels,
             metadata_zh: metadata_line(result),
         })
+    }
+
+    pub fn render_html(
+        result: &ReportResult,
+        spec: &ExportSpec,
+        cancel: &Arc<AtomicBool>,
+    ) -> Result<String, ReportError> {
+        reject_secret(result)?;
+        let mut buf = Vec::new();
+        write_html(&mut buf, result, spec, cancel)?;
+        String::from_utf8(buf).map_err(|_| ReportError::Failed("html utf8"))
     }
 
     pub fn export_to_path(
@@ -245,26 +262,57 @@ fn write_html<W: Write>(
 ) -> Result<(), ReportError> {
     check_cancel(cancel)?;
     let locale = spec.ui_locale;
+    let tz = &result.query_echo.display_timezone;
     write!(
         writer,
         "<!DOCTYPE html><html lang=\"{}\"><head><meta charset=\"utf-8\"><title>{}</title>\
-<style>body{{font-family:sans-serif;background:#12161c;color:#e8eef6}}table{{border-collapse:collapse}}\
-td,th{{border-bottom:1px solid #2a3340;padding:6px;font-variant-numeric:tabular-nums}}\
+<style>body{{font-family:sans-serif;background:#12161c;color:#e8eef6;margin:24px;max-width:960px}}\
+table{{border-collapse:collapse;width:100%}}\
+td,th{{border-bottom:1px solid #2a3340;padding:6px;font-variant-numeric:tabular-nums;text-align:left}}\
+td:nth-child(n+2),th:nth-child(n+2){{text-align:right}}\
+pre{{white-space:pre-wrap;color:#9aa7b5;font-size:12px}}\
 @media print{{body{{background:#fff;color:#000}}td,th{{border-bottom:1px solid #000}}}}</style></head><body>",
         locale.html_lang(),
         t(locale, "export.html_title")
     )
     .map_err(|_| ReportError::Failed("html"))?;
+    let window = t(locale, "export.html_window")
+        .replacen(
+            "{}",
+            &format_html_time(result.query_echo.range_start_utc, tz),
+            1,
+        )
+        .replacen(
+            "{}",
+            &format_html_time(result.query_echo.range_end_utc, tz),
+            1,
+        );
+    let generated = t(locale, "export.html_generated").replacen(
+        "{}",
+        &format_html_time(result.generated_utc, tz),
+        1,
+    );
+    let version = result
+        .policy_metadata
+        .policy_version
+        .map(|value| format!("v{value}"))
+        .unwrap_or_default();
+    let policy = t(locale, "export.html_policy")
+        .replacen("{}", policy_label(result.policy_metadata.target_policy), 1)
+        .replacen("{}", &version, 1);
     let totals = t(locale, "export.html_totals")
         .replacen("{}", &result.totals.upload.to_string(), 1)
         .replacen("{}", &result.totals.download.to_string(), 1)
         .replacen("{}", &html_escape(&result.coverage.status), 1);
     writeln!(
         writer,
-        "<h1>{}</h1><p>{}</p><p>{}</p>",
-        t(locale, "export.html_title"),
-        html_escape(&metadata_line(result)),
-        totals
+        "<h1>{}</h1><p>{}</p><p>{}</p><p>{}</p><p>{}</p><pre>{}</pre>",
+        html_escape(t(locale, "export.html_title")),
+        html_escape(&window),
+        html_escape(&generated),
+        html_escape(&policy),
+        totals,
+        html_escape(&metadata_line(result))
     )
     .map_err(|_| ReportError::Failed("html"))?;
     if spec.include_rankings {
@@ -291,13 +339,22 @@ td,th{{border-bottom:1px solid #2a3340;padding:6px;font-variant-numeric:tabular-
         writeln!(writer, "</tbody></table>").map_err(|_| ReportError::Failed("html"))?;
     }
     if spec.include_series {
-        writeln!(writer, "<h2>趋势</h2><table><thead><tr><th>UTC</th><th>上行</th><th>下行</th></tr></thead><tbody>")
-            .map_err(|_| ReportError::Failed("html"))?;
+        writeln!(
+            writer,
+            "<h2>{}</h2><table><thead><tr><th>{}</th><th>{}</th><th>{}</th></tr></thead><tbody>",
+            t(locale, "export.html_series"),
+            t(locale, "export.col_time"),
+            t(locale, "export.col_upload"),
+            t(locale, "export.col_download")
+        )
+        .map_err(|_| ReportError::Failed("html"))?;
         for point in &result.series {
             writeln!(
                 writer,
                 "<tr><td>{}</td><td>{}</td><td>{}</td></tr>",
-                point.bucket_utc, point.upload, point.download
+                html_escape(&format_html_time(point.bucket_utc, tz)),
+                point.upload,
+                point.download
             )
             .map_err(|_| ReportError::Failed("html"))?;
         }
@@ -305,6 +362,25 @@ td,th{{border-bottom:1px solid #2a3340;padding:6px;font-variant-numeric:tabular-
     }
     writeln!(writer, "</body></html>").map_err(|_| ReportError::Failed("html"))?;
     Ok(())
+}
+
+fn format_html_time(ts: i64, timezone: &str) -> String {
+    let Some(utc) = chrono::DateTime::from_timestamp(ts, 0) else {
+        return ts.to_string();
+    };
+    if timezone.eq_ignore_ascii_case("utc") {
+        return utc.format("%Y-%m-%d %H:%M:%S UTC").to_string();
+    }
+    utc.with_timezone(&chrono::Local)
+        .format("%Y-%m-%d %H:%M:%S")
+        .to_string()
+}
+
+fn policy_label(policy: TargetPolicy) -> &'static str {
+    match policy {
+        TargetPolicy::Current => "current",
+        TargetPolicy::Historical => "historical",
+    }
 }
 
 fn metadata_line(result: &ReportResult) -> String {
@@ -446,7 +522,20 @@ mod export_tests {
         assert!(html_text.contains("下行 20"));
         assert!(html_text.contains("policy_version="));
         assert!(html_text.contains("@media print"));
+        assert!(html_text.contains("创建时间"));
+        assert!(html_text.contains("统计窗口"));
         assert!(!html_text.contains("http://"));
+        assert!(!html_text.to_ascii_lowercase().contains("<script"));
+        let rendered = ExportService::render_html(
+            &result,
+            &ExportSpec {
+                format: ExportFormat::Html,
+                ..ExportSpec::default()
+            },
+            &cancel,
+        )
+        .expect("render");
+        assert_eq!(rendered, html_text);
         assert!(!csv_text.to_ascii_lowercase().contains("bearer "));
         assert!(!csv_text.to_ascii_lowercase().contains("password="));
         assert!(!json_text.to_ascii_lowercase().contains("secret="));

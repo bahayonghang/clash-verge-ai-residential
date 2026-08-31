@@ -6,6 +6,7 @@ use crate::c3::query::{
     ReportResult, DIMENSION_RETAIN_DAYS, REPORT_DTO_VERSION,
 };
 use crate::c3::snapshot::ReportSnapshotStore;
+use crate::c3::sql::RESIDENTIAL_ACCOUNTING_FILTER;
 use crate::c3::ReportService;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
@@ -240,6 +241,38 @@ impl ReportArchiveService {
             items,
             next,
         })
+    }
+
+    pub fn is_residential_manual_report(result: &ReportResult) -> bool {
+        result.query_echo.grouping == DimensionKind::Host
+            && result.query_echo.filters.category.as_deref() == Some(RESIDENTIAL_ACCOUNTING_FILTER)
+    }
+
+    pub fn load_latest_residential_manual(
+        connection: &Connection,
+    ) -> Result<Option<ReportResult>, ReportError> {
+        let mut statement = connection
+            .prepare(
+                "select result_json from report_archive
+                  where kind = 'manual' and status = 'ok' and result_json is not null
+                  order by generated_utc desc, archive_id desc",
+            )
+            .map_err(map_sqlite)?;
+        let mut rows = statement.query([]).map_err(map_sqlite)?;
+        while let Some(row) = rows.next().map_err(map_sqlite)? {
+            let json: String = row.get(0).map_err(map_sqlite)?;
+            let Ok(mut result) = serde_json::from_str::<ReportResult>(&json) else {
+                continue;
+            };
+            if result.schema_version != REPORT_DTO_VERSION {
+                continue;
+            }
+            result.reconcile_legacy_attribution_quality();
+            if Self::is_residential_manual_report(&result) {
+                return Ok(Some(result));
+            }
+        }
+        Ok(None)
     }
 
     pub fn load_frozen(
@@ -1085,5 +1118,43 @@ mod archive_service_tests {
             .expect("list");
         assert_eq!(page.items.len(), 1);
         assert_eq!(page.items[0].generated_utc, now);
+    }
+
+    #[test]
+    fn load_latest_residential_manual_skips_auto_and_other_manual() {
+        let dir = tempdir().expect("dir");
+        let coordinator = StorageCoordinator::open(&dir.path().join("a.sqlite3")).expect("open");
+        let now = 20 * 86_400;
+        let hour_job = job_at(ArchiveKind::Hour, now - 7_200, now - 3_600);
+        let mut hour = dummy_ok(hour_job.query.clone(), now - 10);
+        hour.query_echo.filters.category = Some(RESIDENTIAL_ACCOUNTING_FILTER.into());
+        ReportArchiveService::persist_outcome(
+            coordinator.connection(),
+            &hour_job,
+            Ok(hour),
+            now - 10,
+        )
+        .expect("hour");
+        let mut other = dummy_ok(
+            default_auto_report_query(Granularity::Hour, now - 3_600, now),
+            now - 5,
+        );
+        other.query_echo.grouping = DimensionKind::Host;
+        ReportArchiveService::persist_manual(coordinator.connection(), other, now - 5)
+            .expect("other");
+        let mut residential = dummy_ok(
+            default_auto_report_query(Granularity::Hour, now - 1_800, now),
+            now,
+        );
+        residential.query_echo.grouping = DimensionKind::Host;
+        residential.query_echo.filters.category = Some(RESIDENTIAL_ACCOUNTING_FILTER.into());
+        residential.totals.download = 99;
+        ReportArchiveService::persist_manual(coordinator.connection(), residential, now)
+            .expect("residential");
+        let loaded = ReportArchiveService::load_latest_residential_manual(coordinator.connection())
+            .expect("load")
+            .expect("hit");
+        assert_eq!(loaded.totals.download, 99);
+        assert!(ReportArchiveService::is_residential_manual_report(&loaded));
     }
 }

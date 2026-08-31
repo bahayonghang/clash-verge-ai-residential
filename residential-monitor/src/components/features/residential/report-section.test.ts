@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RESIDENTIAL_ACCOUNTING_FILTER } from "../../../format/rank";
-import { buildResidentialManualQuery } from "./report-section";
+import { buildResidentialManualQuery, isResidentialManualReport } from "./report-section";
 
 describe("家宽手动报告查询", () => {
   it("按家宽子集内的 Host 生成并保留上下行字段", () => {
@@ -29,5 +29,23 @@ describe("家宽手动报告查询", () => {
     expect(query.targetPolicy).toBe("current");
     expect(query.grouping).toBe("host");
     expect(query.filters.category).toBe(RESIDENTIAL_ACCOUNTING_FILTER);
+  });
+
+  it("只把 host + 家宽 filter 认作家宽手动报告", () => {
+    const query = buildResidentialManualQuery(
+      { preset: "24h", startUtc: 0, endUtc: 86_400_000 },
+      "historical"
+    );
+    expect(isResidentialManualReport({ queryEcho: query })).toBe(true);
+    expect(
+      isResidentialManualReport({
+        queryEcho: { ...query, grouping: "rule" }
+      })
+    ).toBe(false);
+    expect(
+      isResidentialManualReport({
+        queryEcho: { ...query, filters: { ...query.filters, category: null } }
+      })
+    ).toBe(false);
   });
 });

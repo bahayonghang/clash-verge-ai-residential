@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickLatestArchive } from "./use-report-archive";
+import { decodeHtmlDocument, pickLatestArchive } from "./use-report-archive";
 
 describe("pickLatestArchive", () => {
   it("优先日档案，否则小时档案", () => {
@@ -90,5 +90,13 @@ describe("pickLatestArchive", () => {
         next: null
       })?.archiveId
     ).toBe("h1");
+  });
+});
+
+describe("decodeHtmlDocument", () => {
+  it("只接受非空 html 字段", () => {
+    expect(decodeHtmlDocument({ html: "<html></html>" })).toBe("<html></html>");
+    expect(() => decodeHtmlDocument({ html: "" })).toThrow(/HtmlDocument.html/);
+    expect(() => decodeHtmlDocument({})).toThrow(/HtmlDocument/);
   });
 });

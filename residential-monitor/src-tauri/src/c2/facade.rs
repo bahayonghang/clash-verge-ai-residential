@@ -20,7 +20,7 @@ use crate::c2::shell::{
 };
 use crate::c3::archive::{ReportArchivePage, ReportArchiveService};
 use crate::c3::backup::BackupRestoreService;
-use crate::c3::export::{ExportPreview, ExportService, ExportSpec};
+use crate::c3::export::{ExportPreview, ExportService, ExportSpec, HtmlDocument};
 use crate::c3::query::{ReportError, ReportQuery, ReportResult, RAW_RETAIN_DAYS_DEFAULT};
 use crate::c3::retention::{RetentionMode, RetentionPreview, RetentionService};
 use crate::c3::share::{query_residential_share, ResidentialShare};
@@ -1254,6 +1254,37 @@ impl AppFacade {
     ) -> Result<ExportPreview, AppErrorDto> {
         let result = self.get_report(token)?;
         ExportService::preview(&result, spec).map_err(map_report)
+    }
+
+    pub fn render_report_html(
+        &mut self,
+        token: &str,
+        spec: &ExportSpec,
+    ) -> Result<HtmlDocument, AppErrorDto> {
+        let result = self.get_report(token)?;
+        let mut spec = spec.clone();
+        spec.ui_locale = self.ui_locale;
+        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        ExportService::render_html(&result, &spec, &cancel)
+            .map(|html| HtmlDocument { html })
+            .map_err(map_report)
+    }
+
+    pub fn get_latest_residential_manual(&mut self) -> Result<Option<ReportResult>, AppErrorDto> {
+        let frozen = {
+            let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
+            ReportArchiveService::load_latest_residential_manual(storage.connection())
+                .map_err(map_report)?
+        };
+        let Some(frozen) = frozen else {
+            return Ok(None);
+        };
+        let now = chrono::Utc::now().timestamp();
+        let query = frozen.query_echo.clone();
+        self.snapshots
+            .insert(&query, frozen, now, false)
+            .map(Some)
+            .map_err(map_report)
     }
 
     pub fn export_report(

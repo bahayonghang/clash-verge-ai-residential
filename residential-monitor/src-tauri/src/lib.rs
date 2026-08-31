@@ -46,7 +46,7 @@ use c2::shell::{
 };
 use c2::subscriptions::SubscriptionRegistry;
 use c3::archive::{ReportArchivePage, ReportArchiveService};
-use c3::export::{ExportPreview, ExportSpec};
+use c3::export::{ExportPreview, ExportSpec, HtmlDocument};
 use c3::query::{ReportQuery, ReportResult};
 use c3::retention::RetentionPreview;
 use c3::share::ResidentialShare;
@@ -830,6 +830,25 @@ fn export_report(
 }
 
 #[tauri::command]
+fn render_report_html(
+    state: State<Mutex<AppFacade>>,
+    token: String,
+    spec: ExportSpec,
+) -> Result<HtmlDocument, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .render_report_html(&token, &spec)
+}
+
+#[tauri::command]
+fn get_latest_residential_manual(
+    state: State<Mutex<AppFacade>>,
+) -> Result<Option<ReportResult>, AppErrorDto> {
+    state.lock().expect("state").get_latest_residential_manual()
+}
+
+#[tauri::command]
 fn retention_preview(state: State<Mutex<AppFacade>>) -> Result<RetentionPreview, AppErrorDto> {
     state.lock().expect("state").retention_preview()
 }
@@ -1376,6 +1395,8 @@ pub fn run() {
             release_report,
             preview_export,
             export_report,
+            render_report_html,
+            get_latest_residential_manual,
             retention_preview,
             run_retention,
             create_backup,

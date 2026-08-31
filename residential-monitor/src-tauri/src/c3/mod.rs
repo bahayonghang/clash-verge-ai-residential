@@ -17,7 +17,7 @@ pub mod sql;
 
 pub use archive::ReportArchiveService;
 pub use backup::BackupRestoreService;
-pub use export::{ExportService, ExportSpec};
+pub use export::{ExportService, ExportSpec, HtmlDocument};
 pub use query::{
     default_auto_report_query, local_day_bounds, local_hour_bounds, local_month_bounds,
     plan_capability, plan_capability_ex, timezone_offset_secs, validate_query, CapabilityPlan,

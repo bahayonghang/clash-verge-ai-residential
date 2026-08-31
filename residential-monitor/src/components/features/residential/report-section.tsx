@@ -1,9 +1,13 @@
-import { useState } from "react";
-import type { ReportQuery } from "../../../dto";
-import { buildReportQuery, granularityForTimeRange } from "../../../hooks/use-report";
-import { useReportArchive } from "../../../hooks/use-report-archive";
+import { useEffect, useId, useState } from "react";
+import type { ReportQuery, ReportResult } from "../../../dto";
+import { RESIDENTIAL_ACCOUNTING_FILTER } from "../../../format/rank";
+import { formatUtc } from "../../../format/units";
+import { buildReportQuery, granularityForTimeRange, snapTimeRangeToMinute } from "../../../hooks/use-report";
+import { renderReportHtml, useReportArchive } from "../../../hooks/use-report-archive";
 import { t, type UiLocale } from "../../../i18n";
+import { isTauriRuntime } from "../../../ipc/live-session";
 import type { TimeRange } from "../../../lib/time-range";
+import { invokeErrorZh } from "../../../lib/utils";
 import { Button } from "../../ui/button";
 import { Card } from "../../ui/card";
 import { Switch } from "../../ui/switch";
@@ -29,19 +33,103 @@ export function buildResidentialManualQuery(
   };
 }
 
+export function isResidentialManualReport(result: Pick<ReportResult, "queryEcho">): boolean {
+  return (
+    result.queryEcho.grouping === "host" &&
+    result.queryEcho.filters.category === RESIDENTIAL_ACCOUNTING_FILTER
+  );
+}
+
+function presetLabel(locale: UiLocale, timeRange: TimeRange): string {
+  if (timeRange.preset === "today") {
+    return t(locale, "time.preset.today");
+  }
+  return `${t(locale, "time.recent_prefix")} ${t(locale, `time.preset.${timeRange.preset}`)}`;
+}
+
+function statusLine(
+  locale: UiLocale,
+  loading: boolean,
+  report: ReportResult | null,
+  statusZh: string
+): string {
+  if (loading) {
+    return statusZh;
+  }
+  if (!report) {
+    return t(locale, "residential.report.none");
+  }
+  return t(locale, "residential.report.ready");
+}
+
 export function ReportSection({ locale, timeRange }: { locale: UiLocale; timeRange: TimeRange }) {
   const archive = useReportArchive(locale);
+  const titleId = useId();
   const [wantCurrent, setWantCurrent] = useState(false);
+  const [html, setHtml] = useState<string | null>(null);
+  const [htmlError, setHtmlError] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const report = archive.report;
   const currentAllowed = report ? report.drilldownCapability.currentPolicy : true;
   const currentOn = wantCurrent && currentAllowed;
   const showCurrentNote = Boolean(report && !report.drilldownCapability.currentPolicy);
+  const snapped = snapTimeRangeToMinute(timeRange);
+  const windowStart = Math.floor(snapped.startUtc / 1000);
+  const windowEnd = Math.floor(snapped.endUtc / 1000);
+
+  useEffect(() => {
+    void archive.restoreResidentialManual();
+    // 进页只回看一次家宽手动档案。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!report || !isTauriRuntime()) {
+      setHtml(null);
+      return;
+    }
+    let cancelled = false;
+    setHtml(null);
+    setHtmlError(null);
+    void renderReportHtml(report.reportSnapshotToken)
+      .then((next) => {
+        if (cancelled) {
+          return;
+        }
+        setHtml(next);
+      })
+      .catch((caught: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        setHtml(null);
+        setHtmlError(invokeErrorZh(caught, t(locale, "report.export_fail")));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [locale, report]);
+
+  useEffect(() => {
+    if (!viewerOpen) {
+      return;
+    }
+    function onKey(event: KeyboardEvent): void {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setViewerOpen(false);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewerOpen]);
 
   function run(): void {
     const query = buildResidentialManualQuery(
       timeRange,
       currentOn ? "current" : "historical"
     );
+    setViewerOpen(false);
     void archive.runQuery(query);
   }
 
@@ -66,9 +154,37 @@ export function ReportSection({ locale, timeRange }: { locale: UiLocale; timeRan
             {t(locale, currentOn ? "residential.report.policy.current" : "residential.report.policy.historical")}
           </label>
           <Button type="button" disabled={archive.loading} onClick={run}>
-            {t(locale, "report.run")}
+            {t(locale, "residential.report.create")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="ml-auto"
+            disabled={!html}
+            onClick={() => setViewerOpen(true)}
+          >
+            {t(locale, "residential.report.view")}
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground/80">
+          {t(locale, "residential.report.window")} {presetLabel(locale, timeRange)} ·{" "}
+          <time>{formatUtc(windowStart)}</time>
+          {" → "}
+          <time>{formatUtc(windowEnd)}</time>
+        </p>
+        {report ? (
+          <>
+            <p className="text-xs text-muted-foreground/80">
+              {t(locale, "residential.report.created")} <time>{formatUtc(report.generatedUtc)}</time>
+            </p>
+            <p className="text-xs text-muted-foreground/80">
+              {t(locale, "residential.report.frozen")}{" "}
+              <time>{formatUtc(report.queryEcho.rangeStartUtc)}</time>
+              {" → "}
+              <time>{formatUtc(report.queryEcho.rangeEndUtc)}</time>
+            </p>
+          </>
+        ) : null}
         {showCurrentNote ? (
           <CapabilityNote
             locale={locale}
@@ -80,11 +196,11 @@ export function ReportSection({ locale, timeRange }: { locale: UiLocale; timeRan
           data-state={report ? "connected" : "no_data"}
           role="status"
         >
-          {archive.statusZh}
+          {statusLine(locale, archive.loading, report, archive.statusZh)}
         </p>
-        {archive.errorZh ? (
+        {archive.errorZh || htmlError ? (
           <p className="text-sm text-destructive" role="alert">
-            {archive.errorZh}
+            {archive.errorZh ?? htmlError}
           </p>
         ) : null}
         {report ? (
@@ -109,6 +225,35 @@ export function ReportSection({ locale, timeRange }: { locale: UiLocale; timeRan
           onExport={(spec) => void archive.exportReport(spec)}
         />
       </div>
+      {viewerOpen && html ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          onClick={() => setViewerOpen(false)}
+        >
+          <div
+            className="flex h-[90vh] w-[min(96vw,1100px)] flex-col overflow-hidden rounded-xl border bg-card shadow-lg"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+              <h3 id={titleId} className="text-sm font-semibold">
+                {t(locale, "residential.report.viewer_title")}
+              </h3>
+              <Button type="button" variant="outline" size="sm" onClick={() => setViewerOpen(false)}>
+                {t(locale, "a11y.close")}
+              </Button>
+            </div>
+            <iframe
+              title={t(locale, "residential.report.viewer_title")}
+              sandbox=""
+              srcDoc={html}
+              className="min-h-0 flex-1 bg-background"
+            />
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
