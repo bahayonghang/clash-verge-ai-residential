@@ -2960,6 +2960,7 @@ dependencies = [
  "hyper",
  "hyper-util",
  "rand",
+ "regex",
  "rusqlite",
  "serde",
  "serde_json",

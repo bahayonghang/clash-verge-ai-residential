@@ -10,6 +10,7 @@ pub mod candidate_schema;
 pub mod controller;
 pub mod credential;
 pub mod data_dir;
+pub mod dbcli;
 pub mod evidence;
 pub mod i18n;
 pub mod identity;

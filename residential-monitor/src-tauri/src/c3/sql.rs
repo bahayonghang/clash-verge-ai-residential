@@ -144,6 +144,28 @@ left join connection_session_attr a on a.session_pk = m.session_pk
 where m.utc_minute >= ?1 and m.utc_minute < ?2
 ";
 
+/// audit 全量投影行数上限。返回行数等于该值时视为截断，守恒字段写 null。
+pub const AUDIT_MAX_ROWS: i64 = 200_000;
+
+pub const AUDIT_RESIDENTIAL_HOST_RULE_PROCESS: &str = "
+select
+  case when coalesce(h.value,'') = '' then '__unknown__' else h.value end,
+  coalesce(r.value, '__unknown__'),
+  case when coalesce(p.value,'') = '' then '__unknown__' else p.value end,
+  coalesce(sum(m.upload), 0), coalesce(sum(m.download), 0),
+  count(distinct m.session_pk)
+from connection_minute m
+join connection_session s on s.session_pk = m.session_pk
+left join connection_session_attr a on a.session_pk = m.session_pk
+left join dimension_dict h on h.dimension_kind = 'host'    and h.dimension_id = a.host_id
+left join dimension_dict r on r.dimension_kind = 'rule'    and r.dimension_id = a.rule_id
+left join dimension_dict p on p.dimension_kind = 'process' and p.dimension_id = a.process_id
+where m.utc_minute >= ?1 and m.utc_minute < ?2 and {residential_membership}
+group by 1, 2, 3
+order by 4 + 5 desc
+limit ?3
+";
+
 pub const TOTALS_HOURLY: &str = "
 select coalesce(sum(upload), 0), coalesce(sum(download), 0),
        coalesce(sum(connection_count), 0), coalesce(sum(active_duration_sec), 0)
@@ -275,6 +297,10 @@ pub fn corpus() -> &'static [(&'static str, &'static str)] {
         ("sessions_keyset", SESSIONS_KEYSET),
         ("coverage_raw", COVERAGE_RAW),
         ("share_residential_raw", SHARE_RESIDENTIAL_RAW),
+        (
+            "audit_residential_host_rule_process",
+            AUDIT_RESIDENTIAL_HOST_RULE_PROCESS,
+        ),
         ("totals_hourly_dimension", TOTALS_HOURLY),
         ("series_hourly_dimension", SERIES_HOURLY),
         ("rank_hourly_dimension", RANK_HOURLY),

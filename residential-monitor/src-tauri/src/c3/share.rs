@@ -34,7 +34,16 @@ pub fn query_residential_share(
 ) -> Result<ResidentialShare, ReportError> {
     validate_share_range(range_start_utc, range_end_utc, display_timezone)?;
     let reader = open_interruptible_reader(db_path).map_err(map_storage)?;
-    build_share(&reader, range_start_utc, range_end_utc, now_utc)
+    query_residential_share_on(&reader, range_start_utc, range_end_utc, now_utc)
+}
+
+pub fn query_residential_share_on(
+    connection: &Connection,
+    range_start_utc: i64,
+    range_end_utc: i64,
+    now_utc: i64,
+) -> Result<ResidentialShare, ReportError> {
+    build_share(connection, range_start_utc, range_end_utc, now_utc)
 }
 
 fn validate_share_range(

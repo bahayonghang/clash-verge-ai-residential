@@ -14,3 +14,5 @@
 - secret 不得进入 URL、日志、SQLite、Channel、预览、导出、诊断或 Release 资产说明。导出与诊断前扫描 `bearer ` / `password=` / `secret=`。
 - C4 诊断只含白名单字段；完整域名、IP、进程路径和 Credential Manager 内容不得进入诊断包。
 - C5 `confirm_delete_local_data` 只清除当前进程凭据引用。未再确认前不调用 Windows Credential Manager 真机删除。
+- `monitor-db` 查询路径必须把取消标志接到 SQLite `progress_handler`（`attach_cancel`）。`vacuum` 与 `purge` 不可中断，运行时输出必须写明失败后状态与人工恢复步骤。
+- `--redact` 下 host 与进程 identity 只输出 sha256 前 8 位加长度。完整进程路径任何模式都不进入 CLI 输出。

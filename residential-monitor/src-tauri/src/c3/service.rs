@@ -35,26 +35,14 @@ impl ReportService {
         cancel: &Arc<AtomicBool>,
         deadline: Option<Duration>,
     ) -> Result<ReportResult, ReportError> {
-        validate_query(&query)?;
-        let plan = plan_capability(&query, now_utc, raw_retain_days)?;
-        let limit = deadline.unwrap_or(Duration::from_millis(plan.deadline_ms));
-        let reader = open_interruptible_reader(db_path).map_err(map_storage)?;
-        attach_cancel(&reader, cancel, Instant::now(), limit)?;
-        reader
-            .execute_batch("begin deferred")
-            .map_err(|_| ReportError::StorageBusy("begin"))?;
-        let built = build_result(&reader, &query, now_utc, raw_retain_days, cancel);
-        let close = reader.execute_batch("commit");
-        let txn_open = !reader.is_autocommit();
-        if txn_open {
-            let _ = reader.execute_batch("rollback");
-        }
-        drop(reader);
-        let result = built?;
-        close.map_err(|_| ReportError::Failed("commit snapshot"))?;
-        if txn_open {
-            return Err(ReportError::Failed("read transaction still open"));
-        }
+        let result = run_uncached(
+            db_path,
+            query.clone(),
+            now_utc,
+            raw_retain_days,
+            cancel,
+            deadline,
+        )?;
         store.insert(&query, result, now_utc, false)
     }
 
@@ -96,7 +84,38 @@ impl ReportService {
     }
 }
 
-fn attach_cancel(
+pub fn run_uncached(
+    db_path: &Path,
+    query: ReportQuery,
+    now_utc: i64,
+    raw_retain_days: i64,
+    cancel: &Arc<AtomicBool>,
+    deadline: Option<Duration>,
+) -> Result<ReportResult, ReportError> {
+    validate_query(&query)?;
+    let plan = plan_capability(&query, now_utc, raw_retain_days)?;
+    let limit = deadline.unwrap_or(Duration::from_millis(plan.deadline_ms));
+    let reader = open_interruptible_reader(db_path).map_err(map_storage)?;
+    attach_cancel(&reader, cancel, Instant::now(), limit)?;
+    reader
+        .execute_batch("begin deferred")
+        .map_err(|_| ReportError::StorageBusy("begin"))?;
+    let built = build_result(&reader, &query, now_utc, raw_retain_days, cancel);
+    let close = reader.execute_batch("commit");
+    let txn_open = !reader.is_autocommit();
+    if txn_open {
+        let _ = reader.execute_batch("rollback");
+    }
+    drop(reader);
+    let result = built?;
+    close.map_err(|_| ReportError::Failed("commit snapshot"))?;
+    if txn_open {
+        return Err(ReportError::Failed("read transaction still open"));
+    }
+    Ok(result)
+}
+
+pub(crate) fn attach_cancel(
     connection: &Connection,
     cancel: &Arc<AtomicBool>,
     started: Instant,
