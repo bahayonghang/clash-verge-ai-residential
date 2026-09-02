@@ -469,6 +469,8 @@ mod export_tests {
             download: 20,
             connection_count: 1,
             active_duration_sec: 60,
+            primary_exit: None,
+            exit_mixed: false,
         });
         result
     }

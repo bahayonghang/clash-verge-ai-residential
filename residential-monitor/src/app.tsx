@@ -272,6 +272,7 @@ function Workspace({
           kind={route}
           timeRange={timeRange}
           overview={overview}
+          boot={boot}
         />
       );
       break;

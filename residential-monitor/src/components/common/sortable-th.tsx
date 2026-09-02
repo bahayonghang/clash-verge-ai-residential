@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronsUpDown, ChevronUp } from "lucide-react";
+import type { ReactNode } from "react";
 import { cn } from "../../lib/utils";
 
 export type SortAria = "none" | "ascending" | "descending";
@@ -9,7 +10,8 @@ export function SortableTh({
   onClick,
   numeric = false,
   subtle = false,
-  className
+  className,
+  children
 }: {
   label: string;
   ariaSort: SortAria;
@@ -18,6 +20,7 @@ export function SortableTh({
   /** 对齐共享表格表头档差（text-xs font-medium），默认保持原样避免外溢。 */
   subtle?: boolean;
   className?: string;
+  children?: ReactNode;
 }) {
   const Icon =
     ariaSort === "descending" ? ChevronDown : ariaSort === "ascending" ? ChevronUp : ChevronsUpDown;
@@ -49,6 +52,7 @@ export function SortableTh({
           )}
         />
       </button>
+      {children}
     </th>
   );
 }

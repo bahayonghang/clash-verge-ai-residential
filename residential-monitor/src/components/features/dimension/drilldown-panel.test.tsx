@@ -39,7 +39,9 @@ function report(over: Partial<ReportResult> = {}): ReportResult {
         upload: 1,
         download: 2,
         connectionCount: 1,
-        activeDurationSec: 1
+        activeDurationSec: 1,
+        primaryExit: null,
+        exitMixed: false
       }
     ],
     coverage: { status: "ok", coveredSec: 60, gapSec: 0, slices: [] },

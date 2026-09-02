@@ -292,6 +292,7 @@ export interface BootstrapDto {
   uiDensity?: UiDensity;
   uiSidebarWidth?: number;
   liveTableLayout?: { widths: Record<string, number>; hidden: string[] };
+  dimensionRankTableLayout?: { widths: Record<string, number> };
   logDir?: string;
 }
 
@@ -366,6 +367,8 @@ export interface ReportResult {
     download: number;
     connectionCount: number;
     activeDurationSec: number;
+    primaryExit: string | null;
+    exitMixed: boolean;
   }>;
   coverage: {
     status: string;
@@ -769,7 +772,13 @@ export function decodeReportResult(value: unknown): ReportResult {
           own(item, "activeDurationSec", "rankings"),
           `rankings[${index}].activeDurationSec`,
           true
-        )
+        ),
+        primaryExit: Object.prototype.hasOwnProperty.call(item, "primaryExit")
+          ? reportNullableString(item.primaryExit, `rankings[${index}].primaryExit`)
+          : null,
+        exitMixed: Object.prototype.hasOwnProperty.call(item, "exitMixed")
+          ? reportBoolean(item.exitMixed, `rankings[${index}].exitMixed`)
+          : false
       };
     }),
     coverage: {

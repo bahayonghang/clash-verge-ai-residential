@@ -33,6 +33,11 @@ use crate::c4::types::{
 };
 use crate::controller::{reject_non_loopback_ip, ControllerInput, SessionStatus};
 use crate::credential::FakeCredentialStore;
+use crate::dimension_rank_table_layout::{
+    encode_setting as encode_dimension_rank_layout, parse_setting as parse_dimension_rank_layout,
+    sanitize_layout as sanitize_dimension_rank_layout, DimensionRankTableLayout,
+    LAYOUT_SETTING_KEY as DIMENSION_RANK_LAYOUT_KEY,
+};
 use crate::i18n::{t, UiLocale, SETTING_KEY};
 use crate::live_table_layout::{
     encode_setting, parse_setting, sanitize_layout, LiveTableLayout, LAYOUT_SETTING_KEY,
@@ -177,6 +182,7 @@ pub struct BootstrapDto {
     pub ui_density: UiDensity,
     pub ui_sidebar_width: i32,
     pub live_table_layout: LiveTableLayout,
+    pub dimension_rank_table_layout: DimensionRankTableLayout,
     pub log_dir: String,
 }
 
@@ -214,6 +220,7 @@ pub struct AppFacade {
     pub ui_density: UiDensity,
     pub ui_sidebar_width: i32,
     pub live_table_layout: LiveTableLayout,
+    pub dimension_rank_table_layout: DimensionRankTableLayout,
     last_logged_session: Option<SessionStatus>,
 }
 
@@ -232,6 +239,7 @@ struct StorageState {
     ui_density: UiDensity,
     ui_sidebar_width: i32,
     live_table_layout: LiveTableLayout,
+    dimension_rank_table_layout: DimensionRankTableLayout,
     engine: AccountingEngine,
     alerts: AlertEngine,
 }
@@ -305,6 +313,13 @@ impl StorageState {
                 .flatten()
                 .as_deref(),
         );
+        let dimension_rank_table_layout = parse_dimension_rank_layout(
+            storage
+                .get_setting(DIMENSION_RANK_LAYOUT_KEY)
+                .ok()
+                .flatten()
+                .as_deref(),
+        );
         let mut engine = AccountingEngine::new();
         if let Ok((_, targets)) = storage.load_targets() {
             if !targets.is_empty() {
@@ -332,6 +347,7 @@ impl StorageState {
             ui_density,
             ui_sidebar_width,
             live_table_layout,
+            dimension_rank_table_layout,
             engine,
             alerts,
         })
@@ -388,6 +404,7 @@ impl AppFacade {
                     ui_density: state.ui_density,
                     ui_sidebar_width: state.ui_sidebar_width,
                     live_table_layout: state.live_table_layout,
+                    dimension_rank_table_layout: state.dimension_rank_table_layout,
                     last_logged_session: None,
                 }
             }
@@ -439,6 +456,7 @@ impl AppFacade {
             ui_density: UiDensity::Comfortable,
             ui_sidebar_width: SIDEBAR_WIDTH_DEFAULT,
             live_table_layout: LiveTableLayout::default(),
+            dimension_rank_table_layout: DimensionRankTableLayout::default(),
             last_logged_session: None,
         }
     }
@@ -463,6 +481,7 @@ impl AppFacade {
         self.ui_density = state.ui_density;
         self.ui_sidebar_width = state.ui_sidebar_width;
         self.live_table_layout = state.live_table_layout;
+        self.dimension_rank_table_layout = state.dimension_rank_table_layout;
         self.engine = state.engine;
         self.alerts = state.alerts;
         if self.settings.address.trim().is_empty() {
@@ -502,6 +521,7 @@ impl AppFacade {
             ui_density: self.ui_density,
             ui_sidebar_width: self.ui_sidebar_width,
             live_table_layout: self.live_table_layout.clone(),
+            dimension_rank_table_layout: self.dimension_rank_table_layout.clone(),
             log_dir: app_log::dir().to_string_lossy().into_owned(),
         })
     }
@@ -635,6 +655,22 @@ impl AppFacade {
                 .map_err(|_| self.err("storage", "error.layout", "action.check_disk", true))?;
         }
         self.live_table_layout = layout.clone();
+        Ok(layout)
+    }
+
+    pub fn save_dimension_rank_table_layout(
+        &mut self,
+        layout: DimensionRankTableLayout,
+    ) -> Result<DimensionRankTableLayout, AppErrorDto> {
+        let layout = sanitize_dimension_rank_layout(layout);
+        if let Some(storage) = &self.storage {
+            let encoded = encode_dimension_rank_layout(&layout)
+                .ok_or_else(|| self.err("encode", "error.encode", "action.check_disk", true))?;
+            storage
+                .put_setting(DIMENSION_RANK_LAYOUT_KEY, &encoded)
+                .map_err(|_| self.err("storage", "error.layout", "action.check_disk", true))?;
+        }
+        self.dimension_rank_table_layout = layout.clone();
         Ok(layout)
     }
 
@@ -2151,6 +2187,70 @@ mod c2_facade_contract_tests {
         assert_eq!(
             second.bootstrap().expect("boot").live_table_layout.hidden,
             vec!["process".to_string()]
+        );
+    }
+
+    #[test]
+    fn dimension_rank_table_layout_persists_without_touching_live() {
+        let dir = tempdir().expect("dir");
+        let mut first = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let live_before = first.live_table_layout.clone();
+        let mut layout = DimensionRankTableLayout::default();
+        layout.widths.insert("name".into(), 320);
+        layout.widths.insert("rank".into(), 12);
+        let saved = first
+            .save_dimension_rank_table_layout(layout)
+            .expect("save");
+        assert_eq!(saved.widths.get("name"), Some(&320));
+        assert!(!saved.widths.contains_key("rank"));
+        assert_eq!(first.live_table_layout, live_before);
+        drop(first);
+        let second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(
+            second.dimension_rank_table_layout.widths.get("name"),
+            Some(&320)
+        );
+        assert_eq!(second.live_table_layout, live_before);
+        assert_eq!(
+            second
+                .bootstrap()
+                .expect("boot")
+                .dimension_rank_table_layout
+                .widths
+                .get("name"),
+            Some(&320)
+        );
+    }
+
+    #[test]
+    fn dimension_rank_layout_without_storage_stays_in_memory() {
+        let dir = tempdir().expect("dir");
+        let path = dir.path().join("monitor.sqlite3");
+        {
+            let connection = rusqlite::Connection::open(&path).expect("open");
+            connection
+                .execute_batch("pragma user_version = 99")
+                .expect("ver");
+        }
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(facade.branch, BootBranch::RecoveryOnly);
+        assert!(facade.storage.is_none());
+        let mut layout = DimensionRankTableLayout::default();
+        layout.widths.insert("name".into(), 300);
+        let saved = facade
+            .save_dimension_rank_table_layout(layout)
+            .expect("save");
+        assert_eq!(saved.widths.get("name"), Some(&300));
+        assert_eq!(
+            facade.dimension_rank_table_layout.widths.get("name"),
+            Some(&300)
+        );
+        drop(facade);
+        let second = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(second.branch, BootBranch::RecoveryOnly);
+        assert_eq!(
+            second.dimension_rank_table_layout.widths.get("name"),
+            Some(&280)
         );
     }
 

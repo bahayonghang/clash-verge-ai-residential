@@ -303,6 +303,10 @@ pub struct RankingRow {
     pub download: i64,
     pub connection_count: i64,
     pub active_duration_sec: i64,
+    #[serde(default)]
+    pub primary_exit: Option<String>,
+    #[serde(default)]
+    pub exit_mixed: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -906,6 +910,12 @@ fn raw_named_sql(query: &ReportQuery) -> Vec<&'static str> {
         crate::c3::sql::raw_rank_sql(query.grouping),
         "coverage_raw",
     ];
+    if matches!(
+        query.grouping,
+        DimensionKind::Host | DimensionKind::Rule | DimensionKind::Process
+    ) {
+        names.push(crate::c3::sql::raw_exit_sql_name(query.grouping));
+    }
     if query.include_sessions {
         names.push("sessions_keyset");
     }

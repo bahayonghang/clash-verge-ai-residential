@@ -8,6 +8,8 @@ import {
   type RecoveryStatus,
   type RouteDescriptor
 } from "../dto";
+import { parseDimensionRankTableLayout } from "../dimension-rank-table-layout";
+import { parseLiveTableLayout } from "../live-table-layout";
 import { parseUiLocale, t } from "../i18n";
 import { decodeOverview } from "../ipc/decoder";
 import { isTauriRuntime } from "../ipc/live-session";
@@ -118,6 +120,8 @@ export function previewBootstrap(): BootstrapDto {
     uiFontSize: "md",
     uiDensity: "comfortable",
     uiSidebarWidth: SHELL_WIDTH_DEFAULT,
+    liveTableLayout: parseLiveTableLayout(undefined),
+    dimensionRankTableLayout: parseDimensionRankTableLayout(undefined),
     logDir: ""
   };
 }
@@ -158,6 +162,8 @@ export function decodeBootstrap(value: unknown): BootstrapDto {
     uiFontSize: parseUiFontSize(value.uiFontSize),
     uiDensity: parseUiDensity(value.uiDensity),
     uiSidebarWidth: parseUiSidebarWidth(value.uiSidebarWidth),
+    liveTableLayout: parseLiveTableLayout(value.liveTableLayout),
+    dimensionRankTableLayout: parseDimensionRankTableLayout(value.dimensionRankTableLayout),
     logDir: typeof value.logDir === "string" ? value.logDir : ""
   };
 }

@@ -39,7 +39,9 @@ function report(over: Partial<ReportResult> = {}): ReportResult {
         upload: 10,
         download: 90,
         connectionCount: 1,
-        activeDurationSec: 1
+        activeDurationSec: 1,
+        primaryExit: "DIRECT",
+        exitMixed: false
       },
       {
         identity: UNKNOWN_RANK_IDENTITY,
@@ -47,7 +49,9 @@ function report(over: Partial<ReportResult> = {}): ReportResult {
         upload: 5,
         download: 20,
         connectionCount: 1,
-        activeDurationSec: 1
+        activeDurationSec: 1,
+        primaryExit: null,
+        exitMixed: false
       }
     ],
     coverage: { status: "ok", coveredSec: 60, gapSec: 0, slices: [] },
@@ -220,7 +224,157 @@ describe("排名表未知行与能力", () => {
     expect(thead).toMatch(/aria-sort="none"/);
     expect((thead.match(/<button/g) ?? []).length).toBe(4);
     expect(thead).toContain(">排名</th>");
-    expect(thead).toContain(">份额</th>");
+    expect(thead).toContain("份额");
+    expect(thead).toContain("归属");
     expect(thead).toContain(">下钻</th>");
   });
 });
+
+describe("排名表归属列", () => {
+  it("仅 DIRECT 时归属为 DIRECT 且无混合", () => {
+    const html = renderToStaticMarkup(
+      <RankTable
+        locale="zh"
+        kind="host"
+        result={report()}
+        loading={false}
+        errorZh={null}
+        selectedIdentity={null}
+        onSelect={() => undefined}
+      />
+    );
+    expect(html).toContain('data-exit="DIRECT"');
+    expect(html).toContain('data-exit-mixed="0"');
+    expect(html).not.toContain("混合");
+    expect(html).toContain("归属");
+    const tableClass = html.match(/<table[^>]*class="([^"]*)"/)?.[1] ?? "";
+    expect(tableClass.split(/\s+/)).not.toContain("w-full");
+    expect(html).toContain("tabular-nums");
+    expect(html).toContain("hover:bg-muted/40");
+  });
+
+  it("混合出口在主出口后标混合", () => {
+    const html = renderToStaticMarkup(
+      <RankTable
+        locale="zh"
+        kind="host"
+        result={report({
+          rankings: [
+            {
+              identity: "mix.example",
+              label: "mix.example",
+              upload: 1,
+              download: 90,
+              connectionCount: 1,
+              activeDurationSec: 1,
+              primaryExit: "PROXY",
+              exitMixed: true
+            }
+          ]
+        })}
+        loading={false}
+        errorZh={null}
+        selectedIdentity={null}
+        onSelect={() => undefined}
+      />
+    );
+    expect(html).toContain('data-exit="PROXY"');
+    expect(html).toContain('data-exit-mixed="1"');
+    expect(html).toContain("PROXY · 混合");
+  });
+
+  it("无非空 chain_key 时归属为未知而不是 DIRECT", () => {
+    const html = renderToStaticMarkup(
+      <RankTable
+        locale="zh"
+        kind="host"
+        result={report({
+          rankings: [
+            {
+              identity: "blank.example",
+              label: "blank.example",
+              upload: 1,
+              download: 90,
+              connectionCount: 1,
+              activeDurationSec: 1,
+              primaryExit: null,
+              exitMixed: false
+            }
+          ]
+        })}
+        loading={false}
+        errorZh={null}
+        selectedIdentity={null}
+        onSelect={() => undefined}
+      />
+    );
+    expect(html).not.toContain('data-exit="DIRECT"');
+    expect(html).toContain('data-exit-mixed="0"');
+    expect(html).toContain("未知");
+  });
+
+  it("链路表不渲染归属列，主机规则进程有归属且在下钻左侧", () => {
+    const chain = renderToStaticMarkup(
+      <RankTable
+        locale="zh"
+        kind="chain"
+        result={report()}
+        loading={false}
+        errorZh={null}
+        selectedIdentity={null}
+        onSelect={() => undefined}
+      />
+    );
+    expect(chain).not.toContain("归属");
+    expect(chain).toContain(">下钻</th>");
+    for (const kind of ["host", "rule", "process"] as const) {
+      const html = renderToStaticMarkup(
+        <RankTable
+          locale="zh"
+          kind={kind}
+          result={report()}
+          loading={false}
+          errorZh={null}
+          selectedIdentity={null}
+          onSelect={() => undefined}
+        />
+      );
+      const head = html.slice(html.indexOf("<thead"), html.indexOf("</thead>"));
+      expect(head.indexOf("归属")).toBeGreaterThan(-1);
+      expect(head.indexOf("归属")).toBeLessThan(head.indexOf("下钻"));
+    }
+  });
+
+  it("Hourly 无出口时归属未知，表格仍显示", () => {
+    const html = renderToStaticMarkup(
+      <RankTable
+        locale="zh"
+        kind="host"
+        result={report({
+          dataTier: "HourlyDimension",
+          rankings: [
+            {
+              identity: "old.example",
+              label: "old.example",
+              upload: 1,
+              download: 90,
+              connectionCount: 1,
+              activeDurationSec: 1,
+              primaryExit: null,
+              exitMixed: false
+            }
+          ]
+        })}
+        loading={false}
+        errorZh={null}
+        selectedIdentity={null}
+        onSelect={() => undefined}
+      />
+    );
+    expect(html).toContain("<table");
+    expect(html).not.toContain('data-exit="DIRECT"');
+    expect(html).toContain("未知");
+    expect(html).toContain('data-identity="old.example"');
+  });
+});
+

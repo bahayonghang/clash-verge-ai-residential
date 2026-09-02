@@ -5,7 +5,7 @@
 - 每条 Channel 消息必须检查 `schemaVersion`、`kind` 和单调 `seq`。
 - 禁止把 mihomo 原始 JSON 或 SQL 行传到视图层。
 - 时间展示用用户本地时区；持久时间保持 UTC integer。
-- `BootstrapDto.uiLocale` 缺字段时按 `zh`。`BootstrapDto.uiTheme` 缺字段时按 `mocha`。`BootstrapDto.uiFont` 缺字段或含 CSS 元字符时按 `system`；合法值为 `system`、旧别名 `yahei` / `serif` / `mono`，或校验后的本机族名。`BootstrapDto.uiFontSize` 缺字段时按 `md`。`BootstrapDto.uiDensity` 缺字段时按 `comfortable`。`BootstrapDto.uiSidebarWidth` 缺字段或非有限数字时按 `220`，并 clamp 到 160–352。`BootstrapDto.logDir` 缺字段时「打开日志目录」禁用，显示「日志目录未知」，不猜本机路径。`messageZh` 字段名保持不变，内容为当前语言。
+- `BootstrapDto.uiLocale` 缺字段时按 `zh`。`BootstrapDto.uiTheme` 缺字段时按 `mocha`。`BootstrapDto.uiFont` 缺字段或含 CSS 元字符时按 `system`；合法值为 `system`、旧别名 `yahei` / `serif` / `mono`，或校验后的本机族名。`BootstrapDto.uiFontSize` 缺字段时按 `md`。`BootstrapDto.uiDensity` 缺字段时按 `comfortable`。`BootstrapDto.uiSidebarWidth` 缺字段或非有限数字时按 `220`，并 clamp 到 160–352。`BootstrapDto.liveTableLayout` 与 `BootstrapDto.dimensionRankTableLayout` 缺字段时按各自默认模板，不拒绝整份 bootstrap；`decodeBootstrap` 必须两字段都解析，不得为加新键而丢掉 `liveTableLayout`。`BootstrapDto.logDir` 缺字段时「打开日志目录」禁用，显示「日志目录未知」，不猜本机路径。`messageZh` 字段名保持不变，内容为当前语言。
 
 ## Scenario: Windows login autostart state
 
@@ -236,6 +236,7 @@ const page = decodeLiveConnectionPage(raw); // summary.topDownload 已由 Rust �
 ### 3. Contracts
 - `ReportResult.schemaVersion` 必须为 `1`。
 - `ReportResult.attributionQuality` 必须完整解码 known/missing upload/download/connections 与 complete/partial/unavailable；数字为非负安全整数，且 known + missing 必须精确等于 totals。rankings 每个字段也逐项验证，禁止 `as unknown as ReportResult` 绕过边界。
+- `rankings[].primaryExit` 缺字段视为 `null`；存在且非 `string | null` 则拒绝整份结果。`rankings[].exitMixed` 缺字段视为 `false`；存在且非 boolean 则拒绝。无非空 `chain_key` 或非 Raw 层时 `primaryExit` 为 `null`，不得写成 `DIRECT`。不升 `schemaVersion`。
 - UI、CSV、JSON、HTML 只消费同一 `reportSnapshotToken`，不得为导出重新查询。
 - 大结果不经实时 Channel。
 - `restore` 可在 `recovery-only` 分支执行，不初始化 `ReportService`。
@@ -265,6 +266,47 @@ const page = decodeLiveConnectionPage(raw); // summary.topDownload 已由 Rust �
 前端自己按表格重算 Top N，或导出时再跑一遍 SQL。
 #### Correct
 图表、数据表和导出都读当前 `ReportResult`。
+
+## Scenario: dimension rank attribution and table layout
+
+### 1. Scope / Trigger
+- Trigger: 维度排名表渲染归属列，或拖宽后 `save_dimension_rank_table_layout`。
+
+### 2. Signatures
+- `run_report(query) -> ReportResult` 的 `rankings[]`
+- `save_dimension_rank_table_layout(layout: { widths: Record<string, number> }) -> DimensionRankTableLayout`
+- `BootstrapDto.dimensionRankTableLayout`
+
+### 3. Contracts
+- `primaryExit: string | null`：Raw 层 host/rule/process 为下载最多的非空 `chain_key`；平局 `chain_key` 升序。Chain grouping 与 Hourly/Daily/Core 为 `null`。
+- `exitMixed: boolean`：该 identity 窗内 ≥2 个不同非空 `chain_key`。空 `chain_key` 不是出口。
+- 旧 archive 缺字段：`primaryExit=null`、`exitMixed=false`。字段存在但类型非法 → 拒绝整份 `ReportResult`。不升 `schemaVersion`。
+- 布局键 `dimension_rank_table_layout`，不复用 `live_table_layout`。数据列 `name|upload|download|connections|share|attribution`；`rank`/`drill` 不入库。save 用请求序号，过期响应丢弃。会话内跨四页共用已提交宽度。
+
+### 4. Validation & Error Matrix
+- `primaryExit` 非 `string|null` → 拒绝报告
+- `exitMixed` 非 boolean → 拒绝报告
+- 布局未知列丢弃，宽 clamp 48–640；encode 超长 → save 失败，窗口仍用新宽
+- Recovery 无库 → 内存默认，save 失败只留当前窗口
+
+### 5. Good/Base/Bad Cases
+- Good: 仅 `DIRECT` → `primaryExit="DIRECT"`、`exitMixed=false`
+- Base: 缺字段旧 JSON 解码为未知，不崩回看
+- Bad: 空 `chain_key` 写成 `DIRECT`；解码时丢掉 `liveTableLayout`
+
+### 6. Tests Required
+- Rust：纯 DIRECT、混合、空 chain_key、Hourly 仍 null、Rule 用 `rank_raw_rule_exits`、布局不污染 live
+- TS：缺字段默认、非法类型拒绝、链路页无归属列、bootstrap 缺布局键仍接受
+
+### 7. Wrong vs Correct
+#### Wrong
+```ts
+const exit = row.chainKey ?? "DIRECT";
+```
+#### Correct
+```ts
+const text = row.primaryExit == null ? unknown : row.exitMixed ? `${row.primaryExit} · ${mixed}` : row.primaryExit;
+```
 
 ## Scenario: residential_share
 

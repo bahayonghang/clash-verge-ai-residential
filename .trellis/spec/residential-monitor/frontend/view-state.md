@@ -5,6 +5,7 @@
 - 实时筛选分 draft / applied：按键只改 draft；Enter、失焦或显式应用才写入 `liveQuery` 并查询。Escape / 取消恢复为已应用条件。单调 request token 丢弃过期响应。条件文本必须 escape。
 - 实时表列宽与显隐写入本机设置键 `live_table_layout`，不进控制器 JSON。非法或缺失回落默认模板。Recovery 无库时只改内存。
 - 实时表以 `<colgroup>` 像素宽度为唯一尺寸源；wrapper 提供横向滚动。拖动或键盘只改目标列。pointercancel / 失焦 / 捕获丢失回滚；松手成功才持久化一次。
+- 维度排名表列宽写入本机设置键 `dimension_rank_table_layout`，不进控制器 JSON，不复用 `live_table_layout`。数据列 `name` / `upload` / `download` / `connections` / `share` / `attribution` 可拖宽；排名序号与下钻不入库。非法或缺失回落默认。Recovery 无库时只改内存。以 `<colgroup>` 像素宽度为唯一尺寸源；wrapper 提供横向滚动。pointercancel / 失焦 / 捕获丢失回滚；松手成功才 `save_dimension_rank_table_layout` 一次。拖过的宽度在会话内跨四页共用，不因 `key={route}` 重挂载回到过期 bootstrap。前端只渲染后端 `primaryExit` / `exitMixed`，不按 session 重算出口。未知或缺失 `chain_key` 不得画成 `DIRECT` 或 0。
 - `uiLocale` 为 `zh` 或 `en`，默认 `zh`。设置页切换后立即重绘 WebView。删除确认短语固定为 `删除全部本地数据`。
 - `uiTheme` 为 `latte`、`frappe`、`macchiato` 或 `mocha`，默认 `mocha`。设置页切换后立即换肤。值写入本机设置键 `ui_theme`，不进控制器 JSON。非法或缺失回落 Mocha。Recovery 无库时只改内存。
 - `uiFont` 为 `system`、旧别名 `yahei` / `serif` / `mono`，或一条通过校验的本机族名，默认 `system`。`uiFontSize` 为 `sm`、`md` 或 `lg`，默认 `md`。`uiDensity` 为 `comfortable` 或 `compact`，默认 `comfortable`。设置页切换后立即应用到 `document.documentElement` 的 `--ui-font`。分别写入本机设置键 `ui_font`、`ui_font_size`、`ui_density`，不进控制器 JSON。非法或缺失回落默认。Recovery 无库时只改内存。本机字体列表来自 `list_ui_fonts`，只留当前会话缓存，筛选键不得 `paint`。

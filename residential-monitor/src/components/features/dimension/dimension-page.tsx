@@ -9,7 +9,7 @@ import {
   type DimensionKind,
   type TopNOption
 } from "../../../format/rank";
-import type { LiveOverview } from "../../../dto";
+import type { BootstrapDto, LiveOverview } from "../../../dto";
 import { t, type UiLocale } from "../../../i18n";
 import type { TimeRange } from "../../../lib/time-range";
 import { granularityForTimeRange, useReport } from "../../../hooks/use-report";
@@ -28,12 +28,14 @@ export function DimensionPage({
   locale,
   kind,
   timeRange,
-  overview
+  overview,
+  boot
 }: {
   locale: UiLocale;
   kind: DimensionKind;
   timeRange: TimeRange;
   overview: LiveOverview;
+  boot?: BootstrapDto;
 }) {
   const [topN, setTopN] = useState<TopNOption>(20);
   const [selected, setSelected] = useState<{ identity: string; label: string } | null>(null);
@@ -119,6 +121,7 @@ export function DimensionPage({
         loading={parent.loading}
         errorZh={parent.errorZh}
         selectedIdentity={selected?.identity ?? null}
+        layoutSeed={boot?.dimensionRankTableLayout}
         onSelect={(identity, label) => {
           if (isUnknownIdentity(identity) && kind !== "host" && kind !== "process") {
             return;

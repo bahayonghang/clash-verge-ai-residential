@@ -9,15 +9,16 @@ use crate::c3::query::{
 use crate::c3::snapshot::ReportSnapshotStore;
 use crate::c3::sql::{
     dimension_filter_clause, dimension_kind_sql, dimension_kind_sql_layer, filter_clause,
-    merge_sql_params, render_rank_sql, render_sql, RankLayer, COVERAGE_DAILY, COVERAGE_RAW,
-    RANK_DAILY_CATEGORY, RANK_DAILY_DIM, RANK_HOURLY, RANK_HOURLY_CATEGORY, RANK_RAW,
-    RANK_RAW_ATTR, RANK_RAW_CHAIN, RANK_RAW_RULE, RESIDENTIAL_ACCOUNTING_FILTER, SERIES_DAILY_CORE,
-    SERIES_DAILY_DIM, SERIES_HOURLY, SERIES_RAW, TOTALS_DAILY_CORE, TOTALS_DAILY_DIM,
-    TOTALS_HOURLY, TOTALS_RAW, UNKNOWN_IDENTITY,
+    merge_sql_params, raw_exit_sql, render_exit_sql, render_rank_sql, render_sql, RankLayer,
+    COVERAGE_DAILY, COVERAGE_RAW, RANK_DAILY_CATEGORY, RANK_DAILY_DIM, RANK_HOURLY,
+    RANK_HOURLY_CATEGORY, RANK_RAW, RANK_RAW_ATTR, RANK_RAW_CHAIN, RANK_RAW_RULE,
+    RESIDENTIAL_ACCOUNTING_FILTER, SERIES_DAILY_CORE, SERIES_DAILY_DIM, SERIES_HOURLY, SERIES_RAW,
+    TOTALS_DAILY_CORE, TOTALS_DAILY_DIM, TOTALS_HOURLY, TOTALS_RAW, UNKNOWN_IDENTITY,
 };
 use crate::storage::{open_interruptible_reader, StorageCoordinator};
 use rusqlite::types::Value;
 use rusqlite::{params, params_from_iter, Connection, OptionalExtension};
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -451,7 +452,98 @@ fn fill_raw_rank(
     };
     let params = merge_sql_params(prefix, filter_params, [Value::from(i64::from(query.top_n))]);
     result.rankings = load_rankings(connection, &sql, &params)?;
+    if matches!(
+        query.grouping,
+        DimensionKind::Host | DimensionKind::Rule | DimensionKind::Process
+    ) {
+        fill_rank_exits(
+            connection,
+            query,
+            result,
+            start_min,
+            end_min,
+            fragment,
+            filter_params,
+        )?;
+    }
     Ok(())
+}
+
+fn fill_rank_exits(
+    connection: &Connection,
+    query: &ReportQuery,
+    result: &mut ReportResult,
+    start_min: i64,
+    end_min: i64,
+    fragment: &str,
+    filter_params: &[String],
+) -> Result<(), ReportError> {
+    if result.rankings.is_empty() {
+        return Ok(());
+    }
+    let sql = render_exit_sql(
+        raw_exit_sql(query.grouping),
+        fragment,
+        result.rankings.len(),
+    );
+    let prefix = match query.grouping {
+        DimensionKind::Process => {
+            let kind = dimension_kind_sql(query.grouping);
+            vec![
+                Value::Text(kind.into()),
+                Value::Text(kind.into()),
+                Value::from(start_min),
+                Value::from(end_min),
+            ]
+        }
+        _ => vec![Value::from(start_min), Value::from(end_min)],
+    };
+    let identities = result
+        .rankings
+        .iter()
+        .map(|row| Value::Text(row.identity.clone()));
+    let params = merge_sql_params(prefix, filter_params, identities);
+    let mut statement = connection.prepare(&sql).map_err(map_sqlite)?;
+    let rows = statement
+        .query_map(params_from_iter(params.iter()), |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, i64>(2)?,
+            ))
+        })
+        .map_err(map_sqlite)?;
+    let pairs = rows.collect::<Result<Vec<_>, _>>().map_err(map_sqlite)?;
+    apply_rank_exits(pairs, &mut result.rankings);
+    Ok(())
+}
+
+fn apply_rank_exits(pairs: Vec<(String, String, i64)>, rankings: &mut [RankingRow]) {
+    struct Agg {
+        download: i64,
+        chain_key: String,
+        keys: HashSet<String>,
+    }
+    let mut by_identity: HashMap<String, Agg> = HashMap::new();
+    for (identity, chain_key, download) in pairs {
+        let entry = by_identity.entry(identity).or_insert_with(|| Agg {
+            download,
+            chain_key: chain_key.clone(),
+            keys: HashSet::from([chain_key.clone()]),
+        });
+        entry.keys.insert(chain_key.clone());
+        if download > entry.download || (download == entry.download && chain_key < entry.chain_key)
+        {
+            entry.download = download;
+            entry.chain_key = chain_key;
+        }
+    }
+    for row in rankings.iter_mut() {
+        if let Some(agg) = by_identity.get(&row.identity) {
+            row.primary_exit = Some(agg.chain_key.clone());
+            row.exit_mixed = agg.keys.len() > 1;
+        }
+    }
 }
 
 fn fill_hourly(
@@ -791,6 +883,8 @@ fn load_rankings(
                 download: row.get(2)?,
                 connection_count: row.get(3)?,
                 active_duration_sec: row.get(4)?,
+                primary_exit: None,
+                exit_mixed: false,
             })
         })
         .map_err(map_sqlite)?;
@@ -1885,5 +1979,166 @@ mod dimension_capability_tests {
         let result = run_now(&coordinator, &mut store, query, 40 * 86_400);
         let rank_down: i64 = result.rankings.iter().map(|row| row.download).sum();
         assert!(rank_down <= result.totals.download);
+    }
+
+    fn ranking_named<'a>(result: &'a ReportResult, identity: &str) -> &'a RankingRow {
+        result
+            .rankings
+            .iter()
+            .find(|row| row.identity == identity)
+            .unwrap_or_else(|| panic!("missing {identity}"))
+    }
+
+    #[test]
+    fn raw_host_direct_exit_is_not_mixed() {
+        let (_dir, coordinator, mut store) = setup();
+        let mut query = base_query();
+        query.grouping = DimensionKind::Host;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        assert_eq!(result.data_tier, DataTier::Raw);
+        assert!(result.named_sql.iter().any(|name| name == "rank_raw_exits"));
+        let row = ranking_named(&result, "b.example");
+        assert_eq!(row.primary_exit.as_deref(), Some("DIRECT"));
+        assert!(!row.exit_mixed);
+    }
+
+    #[test]
+    fn raw_host_mixed_exits_pick_download_then_chain_key_asc() {
+        let (_dir, coordinator, mut store) = setup();
+        coordinator
+            .connection()
+            .execute_batch(
+                "
+                insert or ignore into connection_session(session_pk, epoch_id, connection_id, started_utc, host)
+                values
+                    (201, 1, 'mix-a', 900, 'mix.example'),
+                    (202, 1, 'mix-b', 900, 'mix.example'),
+                    (203, 1, 'win-a', 900, 'win.example'),
+                    (204, 1, 'win-b', 900, 'win.example');
+                insert or ignore into dimension_dict(dimension_kind, dimension_id, value) values
+                    ('host', 201, 'mix.example'),
+                    ('host', 202, 'win.example');
+                insert or ignore into connection_session_attr(
+                    session_pk, host_id, process_id, rule_id, network_id, chain_key,
+                    policy_version, primary_category_id, started_utc, ended_utc
+                ) values
+                    (201, 201, 1, null, 1, 'PROXY', 1, 1, 900, null),
+                    (202, 201, 1, null, 1, 'DIRECT', 1, 1, 900, null),
+                    (203, 202, 1, null, 1, 'PROXY', 1, 1, 900, null),
+                    (204, 202, 1, null, 1, 'DIRECT', 1, 1, 900, null);
+                insert or ignore into connection_minute(utc_minute, session_pk, upload, download)
+                values
+                    (15, 201, 1, 50),
+                    (15, 202, 1, 50),
+                    (15, 203, 1, 100),
+                    (15, 204, 1, 40);
+                ",
+            )
+            .expect("mixed exits");
+        let mut query = base_query();
+        query.grouping = DimensionKind::Host;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        let tied = ranking_named(&result, "mix.example");
+        assert_eq!(tied.primary_exit.as_deref(), Some("DIRECT"));
+        assert!(tied.exit_mixed);
+        let won = ranking_named(&result, "win.example");
+        assert_eq!(won.primary_exit.as_deref(), Some("PROXY"));
+        assert!(won.exit_mixed);
+    }
+
+    #[test]
+    fn empty_chain_key_is_unknown_not_direct() {
+        let (_dir, coordinator, mut store) = setup();
+        coordinator
+            .connection()
+            .execute_batch(
+                "
+                insert or ignore into connection_session(session_pk, epoch_id, connection_id, started_utc, host)
+                values (210, 1, 'blank', 900, 'blank.example'), (211, 1, 'null-exit', 900, 'nulle.example');
+                insert or ignore into connection_session_attr(
+                    session_pk, host_id, process_id, rule_id, network_id, chain_key,
+                    policy_version, primary_category_id, started_utc, ended_utc
+                ) values
+                    (210, null, 1, null, 1, '   ', 1, 1, 900, null),
+                    (211, null, 1, null, 1, null, 1, 1, 900, null);
+                insert or ignore into connection_minute(utc_minute, session_pk, upload, download)
+                values (15, 210, 1, 70), (15, 211, 1, 80);
+                ",
+            )
+            .expect("empty exits");
+        let mut query = base_query();
+        query.grouping = DimensionKind::Host;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        let blank = ranking_named(&result, "blank.example");
+        assert_eq!(blank.primary_exit, None);
+        assert!(!blank.exit_mixed);
+        let missing = ranking_named(&result, "nulle.example");
+        assert_eq!(missing.primary_exit, None);
+        assert!(!missing.exit_mixed);
+    }
+
+    #[test]
+    fn chain_grouping_does_not_fill_exits() {
+        let (_dir, coordinator, mut store) = setup();
+        let mut query = base_query();
+        query.grouping = DimensionKind::Chain;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        assert!(!result.rankings.is_empty());
+        assert!(result.named_sql.iter().all(|name| !name.contains("exits")));
+        assert!(result
+            .rankings
+            .iter()
+            .all(|row| row.primary_exit.is_none() && !row.exit_mixed));
+    }
+
+    #[test]
+    fn hourly_dimension_leaves_exits_unknown() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("hourly-exit.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        seed_extra_dimensions(coordinator.connection());
+        enable_v2_from_epoch(&coordinator);
+        materialize(&mut coordinator, 40 * 86_400);
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let mut query = base_query();
+        query.grouping = DimensionKind::Host;
+        let result = run_now(&coordinator, &mut store, query, 40 * 86_400);
+        assert_eq!(result.data_tier, DataTier::HourlyDimension);
+        assert!(!result.rankings.is_empty());
+        assert!(result
+            .rankings
+            .iter()
+            .all(|row| row.primary_exit.is_none() && !row.exit_mixed));
+    }
+
+    #[test]
+    fn raw_process_exit_uses_attr_identity() {
+        let (_dir, coordinator, mut store) = setup();
+        let mut query = base_query();
+        query.grouping = DimensionKind::Process;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        assert!(result
+            .named_sql
+            .iter()
+            .any(|name| name == "rank_raw_attr_exits"));
+        let row = ranking_named(&result, "app.exe");
+        assert_eq!(row.primary_exit.as_deref(), Some("DIRECT"));
+        assert!(!row.exit_mixed);
+    }
+
+    #[test]
+    fn raw_rule_exit_uses_rule_identity() {
+        let (_dir, coordinator, mut store) = setup();
+        let mut query = base_query();
+        query.grouping = DimensionKind::Rule;
+        let result = run_now(&coordinator, &mut store, query, 3_600);
+        assert!(result
+            .named_sql
+            .iter()
+            .any(|name| name == "rank_raw_rule_exits"));
+        let row = ranking_named(&result, "DIRECT");
+        assert_eq!(row.primary_exit.as_deref(), Some("DIRECT"));
+        assert!(!row.exit_mixed);
     }
 }

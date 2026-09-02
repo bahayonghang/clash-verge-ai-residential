@@ -11,6 +11,7 @@ pub mod controller;
 pub mod credential;
 pub mod data_dir;
 pub mod dbcli;
+pub mod dimension_rank_table_layout;
 pub mod evidence;
 pub mod i18n;
 pub mod identity;
@@ -26,6 +27,7 @@ pub mod theme;
 pub mod transport;
 pub mod workload;
 
+use crate::dimension_rank_table_layout::DimensionRankTableLayout;
 use crate::i18n::{health_title, t, UiLocale};
 use crate::live_table_layout::LiveTableLayout;
 use crate::session::ControllerSession;
@@ -710,6 +712,17 @@ fn save_live_table_layout(
 }
 
 #[tauri::command]
+fn save_dimension_rank_table_layout(
+    state: State<Mutex<AppFacade>>,
+    layout: DimensionRankTableLayout,
+) -> Result<DimensionRankTableLayout, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .save_dimension_rank_table_layout(layout)
+}
+
+#[tauri::command]
 async fn pick_file(
     dialog: State<'_, Arc<dyn FileDialogPort + Send + Sync>>,
     locale: String,
@@ -1379,6 +1392,7 @@ pub fn run() {
             save_ui_density,
             save_ui_sidebar_width,
             save_live_table_layout,
+            save_dimension_rank_table_layout,
             save_targets,
             test_controller,
             disconnect_controller,

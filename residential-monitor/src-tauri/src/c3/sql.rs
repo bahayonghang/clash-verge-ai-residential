@@ -113,6 +113,56 @@ select coalesce(chain_identity(a.chain_key), '__unknown__'),
  limit ?
 ";
 
+/// Top N identity × 非空 chain_key 的 download 聚合。identity 表达式与 RANK_RAW 第 1 列相同。
+pub const RANK_RAW_EXITS: &str = "
+select case when coalesce(s.host, '') = '' then '__unknown__' else s.host end,
+       a.chain_key,
+       coalesce(sum(m.download), 0)
+  from connection_minute m
+  join connection_session s on s.session_pk = m.session_pk
+  left join connection_session_attr a on a.session_pk = m.session_pk
+ where m.utc_minute >= ? and m.utc_minute < ?
+ {filters}
+   and trim(coalesce(a.chain_key, '')) != ''
+   and case when coalesce(s.host, '') = '' then '__unknown__' else s.host end in ({identities})
+ group by 1, 2
+";
+
+/// Process 出口聚合。identity 表达式与 RANK_RAW_ATTR 第 1 列相同。
+pub const RANK_RAW_ATTR_EXITS: &str = "
+select case when coalesce(d.value, '') = '' then '__unknown__' else d.value end,
+       a.chain_key,
+       coalesce(sum(m.download), 0)
+  from connection_minute m
+  join connection_session s on s.session_pk = m.session_pk
+  left join connection_session_attr a on a.session_pk = m.session_pk
+  left join dimension_dict d on d.dimension_kind = ? and d.dimension_id = case ?
+    when 'process' then a.process_id
+    when 'network' then a.network_id
+    when 'category' then a.primary_category_id
+    else a.host_id end
+ where m.utc_minute >= ? and m.utc_minute < ?
+ {filters}
+   and trim(coalesce(a.chain_key, '')) != ''
+   and case when coalesce(d.value, '') = '' then '__unknown__' else d.value end in ({identities})
+ group by 1, 2
+";
+
+/// Rule 出口聚合。identity 表达式与 RANK_RAW_RULE 第 1 列相同。
+pub const RANK_RAW_RULE_EXITS: &str = "
+select coalesce(last_chain_hop(a.chain_key), (select value from dimension_dict where dimension_kind = 'rule' and dimension_id = a.rule_id), 'DIRECT'),
+       a.chain_key,
+       coalesce(sum(m.download), 0)
+  from connection_minute m
+  join connection_session s on s.session_pk = m.session_pk
+  left join connection_session_attr a on a.session_pk = m.session_pk
+ where m.utc_minute >= ? and m.utc_minute < ?
+ {filters}
+   and trim(coalesce(a.chain_key, '')) != ''
+   and coalesce(last_chain_hop(a.chain_key), (select value from dimension_dict where dimension_kind = 'rule' and dimension_id = a.rule_id), 'DIRECT') in ({identities})
+ group by 1, 2
+";
+
 pub const SESSIONS_KEYSET: &str = "
 select s.session_pk, s.epoch_id, s.connection_id, s.host, s.started_utc,
        coalesce(sum(m.upload), 0), coalesce(sum(m.download), 0)
@@ -294,6 +344,9 @@ pub fn corpus() -> &'static [(&'static str, &'static str)] {
         ("rank_raw_attr", RANK_RAW_ATTR),
         ("rank_raw_rule", RANK_RAW_RULE),
         ("rank_raw_chain", RANK_RAW_CHAIN),
+        ("rank_raw_exits", RANK_RAW_EXITS),
+        ("rank_raw_attr_exits", RANK_RAW_ATTR_EXITS),
+        ("rank_raw_rule_exits", RANK_RAW_RULE_EXITS),
         ("sessions_keyset", SESSIONS_KEYSET),
         ("coverage_raw", COVERAGE_RAW),
         ("share_residential_raw", SHARE_RESIDENTIAL_RAW),
@@ -324,6 +377,31 @@ pub fn lookup(name: &str) -> Option<&'static str> {
 
 pub fn render_sql(sql: &str, filters_sql: &str) -> String {
     sql.replace("{filters}", filters_sql)
+}
+
+/// 将 Top N identity 列表绑成 `IN (?, …)`。调用方必须保证 `identity_count > 0`。
+pub fn render_exit_sql(sql: &str, filters_sql: &str, identity_count: usize) -> String {
+    let placeholders = vec!["?"; identity_count].join(", ");
+    let rendered = render_sql(sql, filters_sql).replace("{identities}", &placeholders);
+    debug_assert!(!rendered.contains("{filters}"));
+    debug_assert!(!rendered.contains("{identities}"));
+    rendered
+}
+
+pub fn raw_exit_sql(kind: DimensionKind) -> &'static str {
+    match kind {
+        DimensionKind::Rule => RANK_RAW_RULE_EXITS,
+        DimensionKind::Process => RANK_RAW_ATTR_EXITS,
+        _ => RANK_RAW_EXITS,
+    }
+}
+
+pub fn raw_exit_sql_name(kind: DimensionKind) -> &'static str {
+    match kind {
+        DimensionKind::Rule => "rank_raw_rule_exits",
+        DimensionKind::Process => "rank_raw_attr_exits",
+        _ => "rank_raw_exits",
+    }
 }
 
 /// 将 share 模板中的家宽归属槽位替换为与报告过滤相同的 raw 谓词。
@@ -742,5 +820,31 @@ mod sql_corpus_tests {
         assert_eq!(dimension_kind_sql(DimensionKind::Rule), "rule");
         assert_eq!(dimension_kind_sql_layer(DimensionKind::Rule), "rule_group");
         assert_eq!(dimension_kind_sql_layer(DimensionKind::Host), "host");
+    }
+
+    #[test]
+    fn rank_exit_templates_bind_identities() {
+        for (name, template) in [
+            ("rank_raw_exits", RANK_RAW_EXITS),
+            ("rank_raw_attr_exits", RANK_RAW_ATTR_EXITS),
+            ("rank_raw_rule_exits", RANK_RAW_RULE_EXITS),
+        ] {
+            let rendered = render_exit_sql(template, " and 1 = 1", 2);
+            assert!(!rendered.contains('{'), "{name} has an unresolved slot");
+            assert!(
+                rendered.contains("in (?, ?)"),
+                "{name} missing identity bind"
+            );
+            assert!(rendered.contains("trim(coalesce(a.chain_key, '')) != ''"));
+        }
+        assert_eq!(raw_exit_sql_name(DimensionKind::Host), "rank_raw_exits");
+        assert_eq!(
+            raw_exit_sql_name(DimensionKind::Process),
+            "rank_raw_attr_exits"
+        );
+        assert_eq!(
+            raw_exit_sql_name(DimensionKind::Rule),
+            "rank_raw_rule_exits"
+        );
     }
 }
