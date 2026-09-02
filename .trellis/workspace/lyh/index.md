@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 41
-- **Last Active**: 2026-08-31
+- **Total Sessions**: 42
+- **Last Active**: 2026-09-02
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1245 | Active |
+| `journal-1.md` | ~1267 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 42 | 2026-09-02 | 维度排名表归属列与可调列宽 | `b9e898d`, `9a62945` | `dev` |
 | 41 | 2026-08-31 | 家宽页创建并弹窗查看 HTML 报告 | `62cc590`, `ba32577` | `dev` |
 | 40 | 2026-08-31 | VitePress 中英双语文档站 | `02ba7fa`, `bdc7ada`, `de187f1`, `d1a4335` | `dev` |
 | 39 | 2026-08-31 | 家宽历史库 CLI 与规则优化 Skill | `bb9f754`, `01c93d6`, `7ce72eb`, `015a43c` | `dev` |

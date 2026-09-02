@@ -1243,3 +1243,25 @@
 ### Next Steps
 
 - 在 just tdev 下点一次创建与查看，确认弹窗内容
+
+
+## Session 42: 维度排名表归属列与可调列宽
+
+**Date**: 2026-09-02
+**Task**: 维度排名表归属列与可调列宽
+**Branch**: `dev`
+
+### Summary
+
+主机/规则/进程排名表增加主出口归属列（含 DIRECT 与混合），四页 DataTable 可拖列宽并写入 dimension_rank_table_layout。just monitor-check 通过。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b9e898d` | (see git log) |
+| `9a62945` | (see git log) |
+
+### Status
+
+[OK] **Completed**
