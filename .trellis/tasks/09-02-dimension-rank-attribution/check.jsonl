@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "DataTable 规格与 data-* / aria-sort 契约"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "列宽持久化与未知不得画零"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "rankings 新字段解码与旧档案"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "monitor-check 命令"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "前后端字段名与缺省必须一致"}
+{"file": ".trellis/tasks/09-02-dimension-rank-attribution/prd.md", "reason": "对照 AC1–AC7"}
+{"file": ".trellis/tasks/09-02-dimension-rank-attribution/design.md", "reason": "对照 Raw-only 出口与列序"}
