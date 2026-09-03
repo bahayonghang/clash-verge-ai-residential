@@ -57,6 +57,8 @@ pub enum CommitKillPoint {
     AfterAlerts,
     AfterOutbox,
     BeforeCommit,
+    BeforePersistSlice,
+    AfterTargetDelete,
 }
 
 impl CommitBundle {
@@ -352,74 +354,63 @@ impl StorageCoordinator {
                 return Ok(CommitOutcome::RetryWindowExpired);
             }
         }
-        self.connection.execute_batch("begin immediate")?;
-        let watermark: i64 = self.connection.query_row(
+        #[cfg(test)]
+        let kill = self.test_kill;
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let watermark: i64 = transaction.query_row(
             "select watermark from data_version where id = 1",
             [],
             |row| row.get(0),
         )?;
         let next = watermark + 1;
-        self.connection.execute(
+        transaction.execute(
             "insert into committed_bundle(writer_epoch, bundle_seq, payload_hash, data_version) values (?1, ?2, ?3, ?4)",
             params![bundle.writer_epoch as i64, bundle.bundle_seq as i64, hash, next],
         )?;
-        self.connection.execute(
+        transaction.execute(
             "update data_version set watermark = ?1 where id = 1",
             [next],
         )?;
-        self.connection.execute(
+        transaction.execute(
             "insert into bundle_epoch(writer_epoch, highest_contiguous_seq, durable_watermark)
              values (?1, ?2, ?3)
              on conflict(writer_epoch) do update set highest_contiguous_seq = excluded.highest_contiguous_seq, durable_watermark = excluded.durable_watermark",
             params![bundle.writer_epoch as i64, bundle.bundle_seq as i64, next],
         )?;
         if let Some((minute, session, up, down)) = parse_minute_payload(&bundle.payload) {
-            self.connection.execute(
+            transaction.execute(
                 "insert into connection_minute(utc_minute, session_pk, upload, download) values (?1, ?2, ?3, ?4)
                  on conflict(utc_minute, session_pk) do update set upload = excluded.upload, download = excluded.download",
                 params![minute, session, up, down],
             )?;
         }
+        #[cfg(test)]
+        if kill == Some(CommitKillPoint::BeforePersistSlice) {
+            return Err(StorageError::Closed("kill before persist slice".into()));
+        }
         if let Some(slice) = slice {
-            if let Err(error) = persist_slice(&self.connection, slice) {
-                let _ = self.connection.execute_batch("rollback");
-                return Err(error);
-            }
+            persist_slice(&transaction, slice)?;
             #[cfg(test)]
-            if self.test_kill == Some(CommitKillPoint::AfterFacts) {
-                let _ = self.connection.execute_batch("rollback");
+            if kill == Some(CommitKillPoint::AfterFacts) {
                 return Err(StorageError::Closed("kill after facts".into()));
             }
-            if let Err(error) =
-                crate::c4::store::persist_instances(&self.connection, &slice.writes.instances)
-            {
-                let _ = self.connection.execute_batch("rollback");
-                return Err(error);
-            }
-            if let Err(error) =
-                crate::c4::store::persist_events(&self.connection, &slice.writes.events)
-            {
-                let _ = self.connection.execute_batch("rollback");
-                return Err(error);
-            }
+            crate::c4::store::persist_instances(&transaction, &slice.writes.instances)?;
+            crate::c4::store::persist_events(&transaction, &slice.writes.events)?;
             #[cfg(test)]
-            if self.test_kill == Some(CommitKillPoint::AfterAlerts) {
-                let _ = self.connection.execute_batch("rollback");
+            if kill == Some(CommitKillPoint::AfterAlerts) {
                 return Err(StorageError::Closed("kill after alerts".into()));
             }
-            if let Err(error) = crate::c4::outbox::persist_intents(self, &slice.writes.outbox) {
-                let _ = self.connection.execute_batch("rollback");
-                return Err(error);
-            }
+            crate::c4::outbox::persist_intents(&transaction, &slice.writes.outbox)?;
             #[cfg(test)]
-            if self.test_kill == Some(CommitKillPoint::AfterOutbox)
-                || self.test_kill == Some(CommitKillPoint::BeforeCommit)
+            if kill == Some(CommitKillPoint::AfterOutbox)
+                || kill == Some(CommitKillPoint::BeforeCommit)
             {
-                let _ = self.connection.execute_batch("rollback");
                 return Err(StorageError::Closed("kill before commit".into()));
             }
         }
-        self.connection.execute_batch("commit")?;
+        transaction.commit()?;
         Ok(CommitOutcome::Applied(CommitReceipt {
             writer_epoch: bundle.writer_epoch,
             bundle_seq: bundle.bundle_seq,
@@ -530,22 +521,31 @@ impl StorageCoordinator {
         Ok(())
     }
 
-    pub fn save_targets(&self, names: &[String]) -> Result<u32, StorageError> {
+    pub fn save_targets(&mut self, names: &[String]) -> Result<u32, StorageError> {
         let current = self.load_targets()?.0;
         let next = current.saturating_add(1).max(1);
-        self.connection.execute(
+        #[cfg(test)]
+        let kill = self.test_kill;
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        transaction.execute(
             "insert into target_set(set_id, policy_version) values (1, ?1)
              on conflict(set_id) do update set policy_version = excluded.policy_version",
             [next as i64],
         )?;
-        self.connection
-            .execute("delete from target_item where set_id = 1", [])?;
+        transaction.execute("delete from target_item where set_id = 1", [])?;
+        #[cfg(test)]
+        if kill == Some(CommitKillPoint::AfterTargetDelete) {
+            return Err(StorageError::Closed("kill after target delete".into()));
+        }
         for (position, name) in names.iter().enumerate() {
-            self.connection.execute(
+            transaction.execute(
                 "insert into target_item(set_id, position, name) values (1, ?1, ?2)",
                 params![position as i64, name],
             )?;
         }
+        transaction.commit()?;
         Ok(next)
     }
 
@@ -1540,6 +1540,33 @@ mod c4_alert_commit_atomic_tests {
     }
 
     #[test]
+    fn kill_before_persist_slice_rolls_back_receipt_and_allows_begin() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("a.sqlite3")).expect("open");
+        coordinator.test_kill = Some(CommitKillPoint::BeforePersistSlice);
+        let bundle = CommitBundle {
+            writer_epoch: 1,
+            bundle_seq: 1,
+            payload: "1,1,1,1".into(),
+        };
+        let error = coordinator
+            .commit_alert_bundle(&bundle, &slice())
+            .expect_err("kill");
+        assert!(error.to_string().contains("kill"));
+        assert_eq!(coordinator.receipt_count().expect("c"), 0);
+        assert_eq!(table_count(&coordinator, "connection_minute"), 0);
+        coordinator
+            .connection()
+            .execute_batch("begin immediate")
+            .expect("begin again");
+        coordinator
+            .connection()
+            .execute_batch("rollback")
+            .expect("probe rollback");
+    }
+
+    #[test]
     fn retry_same_bundle_does_not_duplicate_event() {
         let dir = tempdir().expect("dir");
         let mut coordinator =
@@ -1574,6 +1601,41 @@ mod c4_alert_commit_atomic_tests {
             .expect("ob");
         assert_eq!(events, 1);
         assert_eq!(outbox, 1);
+    }
+}
+
+#[cfg(test)]
+mod save_targets_atomic_tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn save_targets_rolls_back_delete_when_insert_killed() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("t.sqlite3")).expect("open");
+        assert_eq!(coordinator.save_targets(&["家宽".into()]).expect("seed"), 1);
+        let (version, names) = coordinator.load_targets().expect("load");
+        assert_eq!(version, 1);
+        assert_eq!(names, vec!["家宽".to_string()]);
+
+        coordinator.test_kill = Some(CommitKillPoint::AfterTargetDelete);
+        let error = coordinator
+            .save_targets(&["备用".into()])
+            .expect_err("kill");
+        assert!(error.to_string().contains("kill"));
+
+        let (after_version, after_names) = coordinator.load_targets().expect("load after");
+        assert_eq!(after_version, version);
+        assert_eq!(after_names, names);
+        coordinator
+            .connection()
+            .execute_batch("begin immediate")
+            .expect("begin again");
+        coordinator
+            .connection()
+            .execute_batch("rollback")
+            .expect("probe rollback");
     }
 }
 

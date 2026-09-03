@@ -1122,17 +1122,19 @@ impl AppFacade {
     pub fn save_targets(&mut self, targets: Vec<String>) -> Result<u32, AppErrorDto> {
         validate_targets(&targets)
             .map_err(|error| AppErrorDto::from_settings_locale(error, self.ui_locale))?;
-        let storage = self.storage.as_ref().ok_or_else(|| {
-            self.err(
-                "recovery_only",
-                "error.recovery_only_targets",
-                "action.fix_db",
-                false,
-            )
-        })?;
-        let version = storage
-            .save_targets(&targets)
-            .map_err(|_| self.err("storage", "error.targets", "action.check_disk", true))?;
+        let result = {
+            let Some(storage) = self.storage.as_mut() else {
+                return Err(self.err(
+                    "recovery_only",
+                    "error.recovery_only_targets",
+                    "action.fix_db",
+                    false,
+                ));
+            };
+            storage.save_targets(&targets)
+        };
+        let version =
+            result.map_err(|_| self.err("storage", "error.targets", "action.check_disk", true))?;
         self.engine.set_targets(targets);
         Ok(version)
     }
