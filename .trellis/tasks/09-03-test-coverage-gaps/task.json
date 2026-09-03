@@ -1,0 +1,28 @@
+{
+  "id": "test-coverage-gaps",
+  "name": "test-coverage-gaps",
+  "title": "按业务风险补齐核心测试覆盖",
+  "description": "",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-03",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "按业务风险补齐 ResiWatch 校验、Recovery 写禁、事务回滚与 CLI purge 测试"
+  }
+}
