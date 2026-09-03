@@ -1265,3 +1265,25 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 43: 依赖扫描与分批升级
+
+**Date**: 2026-09-03
+**Task**: 依赖扫描与分批升级
+**Branch**: `dev`
+
+### Summary
+
+扫描根脚本、docs、ResiWatch npm/Cargo 与 GitHub Actions。8 批按风险升级并每批 just ci：lockfile、Actions v7、lucide 1、sha2/rand/tungstenite、hooks 7、TypeScript 6.0.3、Vitest 4、Vite 8。ESLint 10 / TS 7 / plugin-react 6 因 peer 阻断未做。npm audit 0。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5ddbf04` | (see git log) |
+| `038f0b0` | (see git log) |
+
+### Status
+
+[OK] **Completed**
