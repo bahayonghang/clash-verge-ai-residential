@@ -105,6 +105,7 @@ describe("timeRange 归整到分钟边界", () => {
     });
     expect(query.rangeStartUtc).toBe(1_200);
     expect(query.rangeEndUtc).toBe(1_260);
+    expect(query.sort).toEqual({ field: "download", descending: true });
     const sameMinute: ReportQuery = buildReportQuery({
       grouping: "host",
       timeRange: { ...range, startUtc: 1_200_999, endUtc: 1_260_001 },

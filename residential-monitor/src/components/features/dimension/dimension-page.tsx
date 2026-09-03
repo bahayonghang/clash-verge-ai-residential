@@ -13,6 +13,7 @@ import type { BootstrapDto, LiveOverview } from "../../../dto";
 import { t, type UiLocale } from "../../../i18n";
 import type { TimeRange } from "../../../lib/time-range";
 import { granularityForTimeRange, useReport } from "../../../hooks/use-report";
+import { DEFAULT_RANK_SORT, type RankSortSpec } from "../../../rank-sort";
 import { DrilldownPanel } from "./drilldown-panel";
 import { RankBarCard } from "./rank-bar-card";
 import { RankTable } from "./rank-table";
@@ -40,6 +41,7 @@ export function DimensionPage({
   const [topN, setTopN] = useState<TopNOption>(20);
   const [selected, setSelected] = useState<{ identity: string; label: string } | null>(null);
   const [residentialOnly, setResidentialOnly] = useState(false);
+  const [sort, setSort] = useState<RankSortSpec>(DEFAULT_RANK_SORT);
   const targets = drilldownTargets(kind);
   const [targetKind, setTargetKind] = useState<DimensionKind>(targets[0]);
   const granularity = granularityForTimeRange(timeRange.preset);
@@ -48,6 +50,7 @@ export function DimensionPage({
     setSelected(null);
     setTargetKind(drilldownTargets(kind)[0]);
     setResidentialOnly(false);
+    setSort(DEFAULT_RANK_SORT);
   }, [kind]); // kind 变化时清掉上一维选中行，避免 filters 串维。
   const parentFilters = useMemo(() => {
     if (kind !== "process" || !residentialOnly) {
@@ -60,7 +63,8 @@ export function DimensionPage({
     timeRange,
     granularity,
     topN,
-    filters: parentFilters
+    filters: parentFilters,
+    sort
   });
   const drillFilters = useMemo(() => {
     if (!selected) {
@@ -79,7 +83,8 @@ export function DimensionPage({
     granularity,
     topN,
     filters: drillFilters,
-    enabled: canDrill
+    enabled: canDrill,
+    sort
   });
   const Icon = KIND_ICON[kind];
   const title = t(locale, `route.${kind}`);
@@ -122,6 +127,8 @@ export function DimensionPage({
         errorZh={parent.errorZh}
         selectedIdentity={selected?.identity ?? null}
         layoutSeed={boot?.dimensionRankTableLayout}
+        sort={sort}
+        onSortChange={setSort}
         onSelect={(identity, label) => {
           if (isUnknownIdentity(identity) && kind !== "host" && kind !== "process") {
             return;

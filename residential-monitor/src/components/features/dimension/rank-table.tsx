@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReportResult } from "../../../dto";
 import {
   columnWidth,
@@ -16,7 +16,6 @@ import {
   formatRankLabel,
   isUnknownIdentity,
   missingDimensionLabel,
-  rankDisplayLabel,
   rankingShare,
   type DimensionKind
 } from "../../../format/rank";
@@ -24,13 +23,18 @@ import { formatBytes } from "../../../format/units";
 import { useDimensionRankTableLayout } from "../../../hooks/use-dimension-rank-table-layout";
 import { t, type UiLocale } from "../../../i18n";
 import { cn } from "../../../lib/utils";
+import {
+  DEFAULT_RANK_SORT,
+  isRankSortField,
+  nextRankSort,
+  rankSortAria,
+  type RankSortSpec
+} from "../../../rank-sort";
 import { ColResizer } from "../../common/col-resizer";
 import { dataTableClasses, DataTableEmptyRow, DataTableTd, DataTableTh } from "../../common/data-table";
 import { SortableTh } from "../../common/sortable-th";
 import { Button } from "../../ui/button";
 import { CapabilityNote, resolvedCapabilityNote } from "./capability-note";
-
-type TableSort = "name" | "upload" | "download" | "connections";
 
 const PAGE_SIZE = 20;
 
@@ -42,17 +46,6 @@ const COLUMN_LABEL: Record<RankDataColumnId, string> = {
   share: "report.col.share",
   attribution: "dimension.col.attribution"
 };
-
-function ariaSort(
-  column: TableSort,
-  sort: TableSort,
-  descending: boolean
-): "ascending" | "descending" | "none" {
-  if (column !== sort) {
-    return "none";
-  }
-  return descending ? "descending" : "ascending";
-}
 
 function attributionText(
   primaryExit: string | null,
@@ -74,7 +67,9 @@ export function RankTable({
   errorZh,
   selectedIdentity,
   onSelect,
-  layoutSeed
+  layoutSeed,
+  sort = DEFAULT_RANK_SORT,
+  onSortChange
 }: {
   locale: UiLocale;
   kind: DimensionKind;
@@ -84,12 +79,12 @@ export function RankTable({
   selectedIdentity: string | null;
   onSelect: (identity: string, label: string) => void;
   layoutSeed?: unknown;
+  sort?: RankSortSpec;
+  onSortChange?: (next: RankSortSpec) => void;
 }) {
   const unknown = t(locale, "common.unknown");
   const mixedLabel = t(locale, "dimension.exit_mixed");
   const missing = missingDimensionLabel(locale, kind);
-  const [sort, setSort] = useState<TableSort>("download");
-  const [descending, setDescending] = useState(true);
   const [page, setPage] = useState(0);
   const { layout, commitLayout, errorZh: layoutErrorZh } = useDimensionRankTableLayout(
     layoutSeed,
@@ -107,45 +102,21 @@ export function RankTable({
     drill: showDrill
   });
   const totals = result?.totals;
-  const sorted = useMemo(() => {
-    const rows = [...(result?.rankings ?? [])];
-    rows.sort((left, right) => {
-      const dir = descending ? -1 : 1;
-      if (sort === "name") {
-        return (
-          dir *
-          rankDisplayLabel(left.identity, left.label, missing).localeCompare(
-            rankDisplayLabel(right.identity, right.label, missing),
-            locale
-          )
-        );
-      }
-      const leftValue =
-        sort === "upload" ? left.upload : sort === "connections" ? left.connectionCount : left.download;
-      const rightValue =
-        sort === "upload" ? right.upload : sort === "connections" ? right.connectionCount : right.download;
-      return dir * (leftValue - rightValue);
-    });
-    return rows;
-  }, [descending, locale, missing, result?.rankings, sort]);
-
-  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const rankings = result?.rankings ?? [];
+  const pageCount = Math.max(1, Math.ceil(rankings.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
-  const visible = sorted.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+  const visible = rankings.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
   const colSpan = 6 + (showAttribution ? 1 : 0) + (showDrill ? 1 : 0);
 
   useEffect(() => {
     setPage(0);
-  }, [result?.reportSnapshotToken, sort, descending]);
+  }, [result?.reportSnapshotToken, sort.field, sort.descending]);
 
-  function toggleSort(column: TableSort): void {
-    if (sort === column) {
-      setDescending((current) => !current);
+  function toggleSort(column: RankDataColumnId): void {
+    if (!isRankSortField(column)) {
       return;
     }
-    setSort(column);
-    setDescending(column !== "name");
-    setPage(0);
+    onSortChange?.(nextRankSort(column, sort));
   }
 
   function renderResizer(column: RankDataColumnId, label: string) {
@@ -218,7 +189,7 @@ export function RankTable({
               {dataColumns.map((column) => {
                 const label = t(locale, COLUMN_LABEL[column]);
                 const numeric = isNumericRankColumn(column);
-                if (column === "share" || column === "attribution") {
+                if (!isRankSortField(column)) {
                   return (
                     <DataTableTh
                       key={column}
@@ -235,7 +206,7 @@ export function RankTable({
                   <SortableTh
                     key={column}
                     label={label}
-                    ariaSort={ariaSort(column, sort, descending)}
+                    ariaSort={rankSortAria(column, sort)}
                     onClick={() => toggleSort(column)}
                     numeric={numeric}
                     subtle
@@ -325,7 +296,7 @@ export function RankTable({
           </tbody>
         </table>
       </div>
-      {sorted.length > PAGE_SIZE ? (
+      {rankings.length > PAGE_SIZE ? (
         <div className="flex items-center justify-end gap-2">
           <Button
             type="button"

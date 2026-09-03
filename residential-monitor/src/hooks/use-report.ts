@@ -6,6 +6,7 @@ import { t } from "../i18n";
 import { isTauriRuntime } from "../ipc/live-session";
 import type { TimeRange, TimeRangePreset } from "../lib/time-range";
 import { invokeErrorZh } from "../lib/utils";
+import { DEFAULT_RANK_SORT } from "../rank-sort";
 
 export { emptyReportFilters, filtersForDrilldown, UNKNOWN_RANK_IDENTITY } from "../format/rank";
 
@@ -98,7 +99,7 @@ export function buildReportQuery(input: {
     grouping: input.grouping,
     targetPolicy: "historical",
     comparison: { previousEqualWindow: true },
-    sort: input.sort ?? { field: "download", descending: true },
+    sort: input.sort ?? DEFAULT_RANK_SORT,
     page: { limit: 200, after: null },
     topN: input.topN,
     includeSessions: false
@@ -156,7 +157,7 @@ export function useReport(input: UseReportInput): UseReportResult {
   const startUtc = snapMsToMinute(input.timeRange.startUtc);
   const endUtc = snapMsToMinute(input.timeRange.endUtc);
   const filterKey = JSON.stringify(input.filters ?? emptyReportFilters());
-  const sortKey = JSON.stringify(input.sort ?? { field: "download", descending: true });
+  const sortKey = JSON.stringify(input.sort ?? DEFAULT_RANK_SORT);
   const grouping = input.grouping;
   const granularity = input.granularity;
   const topN = input.topN;

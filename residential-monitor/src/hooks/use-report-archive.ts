@@ -18,6 +18,7 @@ import {
 import { t, type UiLocale } from "../i18n";
 import { isTauriRuntime } from "../ipc/live-session";
 import { formatTemplate, invokeErrorZh } from "../lib/utils";
+import { DEFAULT_RANK_SORT, type RankSortSpec } from "../rank-sort";
 import { releaseReportToken, runReport } from "./use-report";
 
 export type ReportSource = "auto-hour" | "auto-day" | "manual" | null;
@@ -51,7 +52,7 @@ export function defaultReportQuery(nowUtc = Math.floor(Date.now() / 1000)): Repo
     grouping: "host",
     targetPolicy: "historical",
     comparison: { previousEqualWindow: true },
-    sort: { field: "download", descending: true },
+    sort: DEFAULT_RANK_SORT,
     page: { limit: 200, after: null },
     topN: 20,
     includeSessions: false
@@ -132,8 +133,10 @@ export function useReportArchive(locale: UiLocale): {
   setArchiveKindFilter: (filter: ArchiveKindFilter) => void;
   loadArchives: (selectLatest: boolean) => Promise<void>;
   selectArchive: (archiveId: string) => Promise<void>;
+  sort: RankSortSpec;
   runManual: () => Promise<void>;
   runQuery: (query: ReportQuery) => Promise<void>;
+  applyRankSort: (next: RankSortSpec) => Promise<void>;
   restoreResidentialManual: () => Promise<void>;
   previewExport: (spec: ExportSpec) => Promise<void>;
   exportReport: (spec: ExportSpec) => Promise<void>;
@@ -146,6 +149,7 @@ export function useReportArchive(locale: UiLocale): {
   const [form, setForm] = useState<ReportForm>(defaultReportForm);
   const [topN, setTopN] = useState(20);
   const [compare, setCompare] = useState(true);
+  const [sort, setSort] = useState<RankSortSpec>(DEFAULT_RANK_SORT);
   const [archives, setArchives] = useState<ReportArchivePage | null>(null);
   const [archiveKindFilter, setArchiveKindFilterState] = useState<ArchiveKindFilter>("all");
   const [selectedArchiveId, setSelectedArchiveId] = useState<string | null>(null);
@@ -168,6 +172,7 @@ export function useReportArchive(locale: UiLocale): {
       setReportSource(source);
       setSelectedArchiveId(archiveId);
       setForm((current) => formFromQueryEcho(next.queryEcho, current));
+      setSort(next.queryEcho.sort);
       setErrorZh(null);
     },
     []
@@ -186,9 +191,10 @@ export function useReportArchive(locale: UiLocale): {
     return {
       ...query,
       topN,
-      comparison: compare ? { previousEqualWindow: true } : null
+      comparison: compare ? { previousEqualWindow: true } : null,
+      sort
     };
-  }, [compare, form, report, topN]);
+  }, [compare, form, report, sort, topN]);
 
   const loadArchiveList = useCallback(async (): Promise<ReportArchivePage> => {
     const kind = archiveKindFilter === "all" ? null : archiveKindFilter;
@@ -330,6 +336,14 @@ export function useReportArchive(locale: UiLocale): {
   const runManual = useCallback(async (): Promise<void> => {
     await runQuery(buildQuery());
   }, [buildQuery, runQuery]);
+
+  const applyRankSort = useCallback(
+    async (next: RankSortSpec): Promise<void> => {
+      setSort(next);
+      await runQuery({ ...buildQuery(), sort: next });
+    },
+    [buildQuery, runQuery]
+  );
 
   const restoreResidentialManual = useCallback(async (): Promise<void> => {
     const token = ++seq.current;
@@ -559,6 +573,7 @@ export function useReportArchive(locale: UiLocale): {
     loading,
     errorZh,
     exportPreview,
+    sort,
     setForm,
     setTopN,
     setCompare,
@@ -567,6 +582,7 @@ export function useReportArchive(locale: UiLocale): {
     selectArchive,
     runManual,
     runQuery,
+    applyRankSort,
     restoreResidentialManual,
     previewExport,
     exportReport,

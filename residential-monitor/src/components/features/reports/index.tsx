@@ -133,7 +133,12 @@ export function ReportsPage({
           <TrendCard locale={locale} series={report?.series ?? []} loading={loading} />
           <ShareDonutCard locale={locale} share={share} />
         </div>
-        <RankingTable locale={locale} share={share} />
+        <RankingTable
+          locale={locale}
+          share={share}
+          sort={archive.sort}
+          onSortChange={(next) => void archive.applyRankSort(next)}
+        />
         <CoveragePanel locale={locale} report={report} />
         <CapabilityPanel locale={locale} report={report} />
         <ExportPanel
