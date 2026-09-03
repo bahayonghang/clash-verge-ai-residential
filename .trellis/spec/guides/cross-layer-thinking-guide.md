@@ -71,6 +71,12 @@ For each boundary:
 
 **Good**: Each layer only knows its neighbors
 
+### Mistake: Recovery write path without a closed gate
+
+**Bad**: `create_backup` copies `data_dir/monitor.sqlite3` while `storage` is `None`
+
+**Good**: `storage.is_none()` returns `recovery_only` before any file copy. Add a facade test that asserts the error code and no new SQLite rows.
+
 ### Mistake 4: Every Consumer Parses The Same Payload
 
 **Bad**: A command reads JSONL events and casts fields inline:

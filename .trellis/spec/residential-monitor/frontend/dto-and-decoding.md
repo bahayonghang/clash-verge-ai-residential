@@ -251,6 +251,7 @@ const page = decodeLiveConnectionPage(raw); // summary.topDownload 已由 Rust �
 - token TTL / 缺失 → `token_expired`
 - 活动 token 或 spool 超限 → `quota_exceeded`
 - 磁盘不足 → `insufficient_space`
+- Recovery-only：`run_report` / `create_backup` → `recovery_only`；不得复制当前损坏热库
 
 ### 5. Good/Base/Bad Cases
 - Good: 同一 token 的 UI 与三种导出 totals 一致

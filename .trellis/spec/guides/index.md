@@ -37,6 +37,7 @@ These guides help you **ask the right questions before coding**.
 - [ ] You are adding an event kind, JSONL record, RPC payload, or config field
 - [ ] UI / command code starts casting raw payload fields directly
 - [ ] Real-time summary or Top 1 is derived from a truncated `rows` page instead of the query snapshot `summary`
+- [ ] You add an `AppFacade` write path (report, targets, alerts, backup) without a Recovery-only `recovery_only` test
 
 → Read [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md)
 

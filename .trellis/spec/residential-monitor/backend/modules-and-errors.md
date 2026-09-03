@@ -6,7 +6,7 @@
 - 界面语言键 `ui_locale`（`zh`/`en`）走 `put_setting`，不进控制器 JSON。`identity::PRODUCT_NAME` 与删除确认短语不随语言改。
 - 外观键 `ui_theme`、`ui_font`、`ui_font_size`、`ui_density`、`ui_sidebar_width` 与实时表列布局键 `live_table_layout` 同样走 `put_setting`，不进控制器 JSON。非法值回落默认。`ui_font` 存 `system`、旧别名或校验后的本机族名。本机族名由 `list_ui_fonts` 经 GDI 枚举，失败键为 `error.font_list`。`ui_sidebar_width` 为 160–352 的整数 CSS 像素，默认 220。
 - HTTP 使用成熟实现，不手写完整 HTTP/1.1 解析器。
-- TCP 只接受 loopback。named pipe 不发送 secret。
+- TCP 只接受 loopback。`validate_address` 必须先拆出 `host:port`（IPv6 用 `[::1]:port`），缺 `:` 为 `invalid_address`，再对 host 做字符串白名单 `127.0.0.1` / `::1` / `localhost`。不得把 `IpAddr::is_loopback()` 的整个 127/8 当作设置页可保存地址。named pipe 不发送 secret。
 - C0 候选 schema 不得复制为 C1 正式 migration。
 - C2 只消费 C1：`ControllerSession`、`AccountingEngine`、`StorageCoordinator`、`LiveProjection`、`RecoveryFacade`。C2 模块不得 `use rusqlite`，不得 `create table`。
 - C2 代码位于 `residential-monitor/src-tauri/src/c2/`。
@@ -27,9 +27,9 @@
 - `list_routes` 与引导 DTO 共用 `c2/shell.rs` 的 `default_routes_for`。十段顺序：`overview`、`live`、`residential`、`host`、`rule`、`chain`、`process`、`reports`、`alerts`、`settings-data`。禁止再维护第二份路由表。
 - `collector_loop_tick` 在 `apply_tick_result` 之后调用 `archive_tick`。`ReportService::run` 不得持 `Mutex<AppFacade>`。每 tick 最多 1 份档案。临时 snapshot 必须打开独立目录（`data_dir/archive-tick`），不得 `ReportSnapshotStore::open(data_dir)`，否则 `cleanup_orphans` 会删掉门面仍有效的 spool token。
 - Recovery Shell 与 shutdown 跳过档案调度，不初始化 `ReportArchiveService` 循环。
-- C4 代码位于 `residential-monitor/src-tauri/src/c4/`。`AlertEngine` 拥有告警状态机；周期用量只调用 `ReportService`；通知只经 `NotificationSink`。C4 不得另建 writer 或第二套小时 / 日 / 月聚合。
+- C4 代码位于 `residential-monitor/src-tauri/src/c4/`。`AlertEngine` 拥有告警状态机；周期用量只调用 `ReportService`；通知只经 `NotificationSink`。C4 不得另建 writer 或第二套小时 / 日 / 月聚合。`in_quiet` 必须挡住 `Activated` 与 `InstanceStatus::Active`；不得只压 outbox 仍把实例写成 Active。
 - C5 代码位于 `residential-monitor/src-tauri/src/c5/`。只做发布硬化：关于页、删除、VACUUM、故障矩阵、并发 fixture、供应链与 C0 基线核验。不得改写 C1 核算、C3 报告 / retention / backup 或 C4 告警语义。
-- Recovery Shell：`restoreAvailable` 为 `true`。restore 不初始化 `ReportService`；失败必须保留当前可用库。
+- Recovery Shell：`restoreAvailable` 为 `true`。restore 不初始化 `ReportService`；失败必须保留当前可用库。`storage.is_none()` 时 `run_report`、`save_targets`、`upsert_alert_rule`、`create_backup` 返回 `recovery_only`，不得写 `target_item` / `alert_rule`，不得把损坏热库复制为备份。
 - C4 前向表：`alert_rule`、`alert_instance`、`alert_event`、`notification_outbox`。不得改写 C1 / C3 已发布 migration。
 - AUMID 与 identifier 相同：`io.github.bahayonghang.residential-monitor`。About 固定 Releases URL，不注册 updater plugin，不新增 Windows Service。
 - current-user 安装目录为 `%LOCALAPPDATA%\ResiWatch`，与 Tauri NSIS `productName` + `installMode: currentUser` 默认一致。`just tinstall` 通过 NSIS `/D=` 显式传入该路径，不沿用注册表里指向 `%TEMP%` 或旧产品名目录的上次位置。`installer.nsh` 的 `NSIS_HOOK_PREINSTALL` 在 `$INSTDIR` 位于 `$TEMP` 下时改写到该目录并搬走 `data\`。数据目录仍是 `<安装目录>\data`。identifier 与 exe 仍是 `residential-monitor`。
@@ -176,4 +176,51 @@ if self.items.len() >= MAX_ACTIVE_TOKENS {
 ```
 #### Correct
 先 `cleanup_expired`，同 fingerprint 替换，再 LRU 淘汰，最后才 `QuotaExceeded`。
+
+## Scenario: fail-closed address, quiet hours, Recovery writes
+
+### 1. Scope / Trigger
+- Trigger: `validate_address`、`AlertEngine::transition` 的静默窗口、或 Recovery Shell 下的 `run_report` / `save_targets` / `upsert_alert_rule` / `create_backup`。
+
+### 2. Signatures
+- `validate_address(address: &str) -> Result<(), SettingsError>`
+- `AlertEngine::transition` / `in_quiet(rule, now_utc) -> bool`
+- `AppFacade::{run_report, save_targets, upsert_alert_rule, create_backup}`
+
+### 3. Contracts
+- 地址必须含 `host:port`。host 白名单仅 `127.0.0.1` / `::1` / `localhost`。缺 `:` 为 `invalid_address`，非白名单为 `non_loopback`。
+- `quiet_start_min > quiet_end_min` 为跨日窗口。窗口内不得发出 `Activated`，实例不得进入 `Active`。
+- `storage.is_none()` 时四个写入口返回 `recovery_only`，SQLite 无新行，备份路径不得被创建。
+
+### 4. Validation & Error Matrix
+| Condition | Result |
+| --- | --- |
+| `127.0.0.1` 无端口 / `not-an-addr` | `invalid_address` |
+| `127.0.0.2:9097` / `8.8.8.8:9097` | `non_loopback` |
+| 静默窗口内三连击 | 无 `Activated`，非 `Active` |
+| Recovery `create_backup` | `recovery_only`，目标文件不存在 |
+
+### 5. Good/Base/Bad Cases
+- Good: `[::1]:9097` 可保存；窗口外三连击仍激活。
+- Base: NormalReady `create_backup` 仍写出 checksum。
+- Bad: 缺 `:` 报 `non_loopback`；静默只压通知仍把实例写成 Active；Recovery 复制损坏热库。
+
+### 6. Tests Required
+- `validate_address_*` / `validate_targets_*`
+- `quiet_hours_overnight_window_does_not_activate`
+- `recovery_only_write_entry_points_return_recovery_only`
+- `kill_after_facts` / `kill_after_outbox` / `kill_after_alerts` 回滚计数
+
+### 7. Wrong vs Correct
+#### Wrong
+```rust
+let host = address.rsplit_once(':').map(|(h, _)| h).unwrap_or(address);
+reject_non_loopback(host)?;
+```
+#### Correct
+```rust
+let Some((host, _)) = address.rsplit_once(':') else {
+    return Err(SettingsError::InvalidAddress);
+};
+```
 
