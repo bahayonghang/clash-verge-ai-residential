@@ -3,7 +3,8 @@
 This Trellis layer covers the repository's user-facing Clash Verge extension and
 local configuration renderer. It is not a browser frontend: there are no UI
 components, hooks, styles, TypeScript sources, bundler, or third-party runtime
-dependencies.
+dependencies in the pasteable script. The VitePress docs site lives under
+`docs/` with its own `package.json` and is not part of this runtime contract.
 
 ## Runtime Model
 

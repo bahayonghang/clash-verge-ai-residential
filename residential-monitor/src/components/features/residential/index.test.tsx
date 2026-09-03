@@ -33,6 +33,13 @@ describe("家宽页装配", () => {
     expect(report).toContain('currentOn ? "current" : "historical"');
     expect(report).toContain("drilldownCapability.currentPolicy");
     expect(report).toContain("residential.report.current_off");
+    expect(report).toContain('t(locale, "residential.report.create")');
+    expect(report).toContain('t(locale, "residential.report.view")');
+    expect(report).toContain("restoreResidentialManual");
+    expect(report).toContain("renderReportHtml");
+    expect(report).toContain("srcDoc");
+    expect(report).toContain('role="dialog"');
+    expect(report).not.toContain('t(locale, "report.run")');
   });
 
   it("趋势图保留旧到新输入，趋势表使用独立新到旧投影", () => {

@@ -1116,3 +1116,152 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 37: 完成 ResiWatch Windows 登录自启动
+
+**Date**: 2026-08-29
+**Task**: 完成 ResiWatch Windows 登录自启动
+**Branch**: `dev`
+
+### Summary
+
+接入官方 Rust 自启动插件与设置页控制，完成自动质量门、current-user NSIS 安装核验及用户人工登录周期验证，并归档任务。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `71ac80c` | (see git log) |
+| `c6f8f13` | (see git log) |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 38: 修复家宽历史地址累计统计
+
+**Date**: 2026-08-31
+**Task**: 修复家宽历史地址累计统计
+**Branch**: `dev`
+
+### Summary
+
+统一家宽归属语义并恢复 raw 历史地址统计，修复滚动时间窗口与历史状态展示；完整自动门通过，原生 WebView 组合保留 UNVERIFIED。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `477a10ef38c8a171349810144f088747e8051851` | (see git log) |
+| `e06e83c25ea19604e5c488aa15018d083e0f8dc6` | (see git log) |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 39: 家宽历史库 CLI 与规则优化 Skill
+
+**Date**: 2026-08-31
+**Task**: 家宽历史库 CLI 与规则优化 Skill
+**Branch**: `dev`
+
+### Summary
+
+落地 monitor-db 只读查询与受控维护 CLI、可安装的 residential-rule-tuning skill、install-all 本机安装配方，以及 tinstall 安装后启动应用。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bb9f754` | (see git log) |
+| `01c93d6` | (see git log) |
+| `7ce72eb` | (see git log) |
+| `015a43c` | (see git log) |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 40: VitePress 中英双语文档站
+
+**Date**: 2026-08-31
+**Task**: VitePress 中英双语文档站
+**Branch**: `dev`
+
+### Summary
+
+用 VitePress 把根 docs/ 做成本地中英双语文档站。默认中文，英文在 docs/en/。ADR 不进站。文档依赖隔离在 docs/package.json，just ci 仍零依赖 Node 18。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `02ba7fa` | (see git log) |
+| `bdc7ada` | (see git log) |
+| `de187f1` | (see git log) |
+| `d1a4335` | (see git log) |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 41: 家宽页创建并弹窗查看 HTML 报告
+
+**Date**: 2026-08-31
+**Task**: 家宽页创建并弹窗查看 HTML 报告
+**Branch**: `dev`
+
+### Summary
+
+家宽页改为创建 HTML 报告并用大弹窗查看；进页回看最新家宽手动档案。排版重构任务已按要求归档。
+
+### Main Changes
+
+- 主按钮改为创建报告，右侧查看报告打开 iframe 弹窗
+- HTML 由 ExportService 渲染，档案回看不占用多余 snapshot
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `62cc590` | (see git log) |
+| `ba32577` | (see git log) |
+
+### Testing
+
+- [OK] just ci
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 在 just tdev 下点一次创建与查看，确认弹窗内容
+
+
+## Session 42: 维度排名表归属列与可调列宽
+
+**Date**: 2026-09-02
+**Task**: 维度排名表归属列与可调列宽
+**Branch**: `dev`
+
+### Summary
+
+主机/规则/进程排名表增加主出口归属列（含 DIRECT 与混合），四页 DataTable 可拖列宽并写入 dimension_rank_table_layout。just monitor-check 通过。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b9e898d` | (see git log) |
+| `9a62945` | (see git log) |
+
+### Status
+
+[OK] **Completed**

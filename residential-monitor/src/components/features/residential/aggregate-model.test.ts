@@ -5,6 +5,7 @@ import {
   directionTraffic,
   matchesResidentialRankQuery,
   newestFirstSeries,
+  residentialAggregateState,
   residentialReportFilters,
   shouldShowResidentialRankLoading
 } from "./aggregate-model";
@@ -117,5 +118,28 @@ describe("家宽聚合查询模型", () => {
     expect(series.map((point) => point.bucketUtc)).toEqual([10, 30, 20]);
     expect(newestFirstSeries([])).toEqual([]);
     expect(newestFirstSeries([series[0]])).toEqual([series[0]]);
+  });
+
+  it("区分刷新旧结果、失败、无覆盖、零命中、暂停与可用状态", () => {
+    const ready = report(queryEcho());
+    ready.coverage.coveredSec = 3_600;
+    ready.totals.download = 1;
+    expect(residentialAggregateState(null, true, null, true)).toBe("loading");
+    expect(residentialAggregateState(ready, true, null, true)).toBe("refreshing");
+    expect(residentialAggregateState(ready, false, "失败", true)).toBe("error");
+    expect(residentialAggregateState(ready, false, null, false)).toBe("paused");
+    expect(residentialAggregateState(null, false, null, true)).toBe("pending");
+
+    const uncovered = report(queryEcho());
+    expect(residentialAggregateState(uncovered, false, null, true)).toBe("uncovered");
+    const empty = report(queryEcho());
+    empty.coverage.coveredSec = 3_600;
+    expect(residentialAggregateState(empty, false, null, true)).toBe("empty");
+    const unsupported = report(queryEcho());
+    unsupported.coverage.coveredSec = 3_600;
+    unsupported.drilldownCapability.exactTopN = false;
+    expect(residentialAggregateState(unsupported, false, null, true)).toBe("unsupported");
+    expect(residentialAggregateState(unsupported, false, null, false)).toBe("unsupported");
+    expect(residentialAggregateState(ready, false, null, true)).toBe("ready");
   });
 });

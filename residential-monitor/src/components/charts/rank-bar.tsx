@@ -20,7 +20,8 @@ export interface RankBarDatum {
   value: number;
 }
 
-const CHART_COLORS = [
+/** 排名图表色序，表格行色点复用同一顺序，避免两处维护。 */
+export const CHART_COLORS = [
   "var(--chart-1)",
   "var(--chart-2)",
   "var(--chart-3)",
@@ -107,7 +108,7 @@ export function RankBar({
             axisLine={false}
             tickLine={false}
             interval={0}
-            tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+            tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
             tickFormatter={(value: string | number) => ellipsizeLabel(String(value), maxChars)}
           />
           <Tooltip

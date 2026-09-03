@@ -1,0 +1,5 @@
+{"file":".trellis/spec/residential-monitor/backend/index.md","reason":"核对生产 AppFacade 无 FakeAutostart、插件初始化、生命周期回归与 Rust 全门。"}
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"核对系统能力只经 hooks/commands、设置五分区与前端质量门。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"核对 AutostartStateDto 严格布尔解码和错误 payload 边界。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"核对 loading/saving/confirmed/error/stale response 状态语义。"}
+{"file":".trellis/tasks/08-29-resiwatch-auto-start/research/autostart-gap.md","reason":"逐项复核原始缺口、拒绝方案与安装态 UNVERIFIED 边界。"}

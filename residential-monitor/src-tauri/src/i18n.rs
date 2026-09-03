@@ -120,16 +120,16 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
         "dialog.filter.json" => ("JSON 文件", "JSON files"),
         "export.html_title" => ("家宽流量报告", "Residential traffic report"),
         "residential.caliber.filter" => (
-            "筛选口径：命中已配置 target，或节点名含「家宽」。",
-            "Filter caliber: a configured target, or a node name that contains 家宽.",
+            "共享口径：target 为「家宽」时匹配含该词的节点，其它 target 精确匹配。",
+            "Shared rule: target 家宽 matches nodes containing that term; other targets match exactly.",
         ),
         "residential.caliber.accounting" => (
-            "核算口径：仅命中已配置 target。",
-            "Accounting caliber: a configured target only.",
+            "共享口径：历史统计与实时筛选使用相同的 target 匹配语义。",
+            "Shared rule: historical statistics and live filtering use the same target semantics.",
         ),
         "residential.caliber.diff" => (
-            "实时段用筛选口径，聚合段用核算口径，两者容纳集可能不等。",
-            "The monitor uses the filter caliber. Aggregation uses the accounting caliber. The selected sets can differ.",
+            "实时与历史统计使用同一目标语义；raw 期内未分类记录通过已保存链路恢复。",
+            "Live and historical views share one target rule; unclassified rows recover from saved chains during raw retention.",
         ),
         "residential.share.unknown" => ("未知", "Unknown"),
         "residential.share.zero_den" => (
@@ -156,11 +156,16 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
             "总量 上行 {} 下行 {}。覆盖 {}。",
             "Totals upload {} download {}. Coverage {}.",
         ),
+        "export.html_window" => ("统计窗口 {} → {}", "Window {} → {}"),
+        "export.html_generated" => ("创建时间 {}", "Created {}"),
+        "export.html_policy" => ("策略 {} {}", "Policy {} {}"),
+        "export.html_series" => ("趋势", "Trend"),
         "export.html_rankings" => (
             "排名（与图表同一结果）",
             "Rankings (same result as the chart)",
         ),
         "export.col_name" => ("名称", "Name"),
+        "export.col_time" => ("时间", "Time"),
         "export.col_upload" => ("上行", "Upload"),
         "export.col_download" => ("下行", "Download"),
         "health.connecting" => ("正在连接控制器", "Connecting to the controller"),
@@ -272,6 +277,10 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
         "action.fix_db" => ("先修复数据库", "Repair the database first"),
         "action.restore_db" => ("先恢复数据库", "Restore the database first"),
         "action.retry" => ("重试", "Retry"),
+        "action.retry_autostart" => (
+            "重试读取 Windows 登录自启动状态",
+            "Retry reading Windows login autostart",
+        ),
         "action.check_disk" => ("检查磁盘后重试", "Check the disk, then retry"),
         "action.open_data_dir" => (
             "打开数据目录检查文件",
@@ -279,6 +288,10 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
         ),
         "action.open_log_dir" => ("打开日志目录", "Open the log directory"),
         "error.open_log_dir" => ("无法打开日志目录。", "Cannot open the log directory."),
+        "error.autostart_unavailable" => (
+            "Windows 登录自启动状态暂不可用。",
+            "Windows login autostart is temporarily unavailable.",
+        ),
         "action.change_loopback" => ("改用 127.0.0.1:端口", "Use 127.0.0.1 and a port"),
         "action.retry_later" => ("稍后重试", "Retry later"),
         "action.change_path" => ("更换路径后重试", "Change the path, then retry"),
@@ -417,6 +430,17 @@ mod i18n_tests {
             t(UiLocale::Zh, "session.connected"),
             t(UiLocale::En, "session.connected")
         );
+    }
+
+    #[test]
+    fn autostart_error_keys_resolve_in_both_locales() {
+        for key in ["error.autostart_unavailable", "action.retry_autostart"] {
+            let zh = t(UiLocale::Zh, key);
+            let en = t(UiLocale::En, key);
+            assert!(!zh.is_empty(), "{key} missing zh");
+            assert!(!en.is_empty(), "{key} missing en");
+            assert_ne!(zh, en, "{key} not translated");
+        }
     }
 
     #[test]

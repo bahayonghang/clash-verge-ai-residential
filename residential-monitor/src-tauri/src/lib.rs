@@ -10,6 +10,8 @@ pub mod candidate_schema;
 pub mod controller;
 pub mod credential;
 pub mod data_dir;
+pub mod dbcli;
+pub mod dimension_rank_table_layout;
 pub mod evidence;
 pub mod i18n;
 pub mod identity;
@@ -25,24 +27,28 @@ pub mod theme;
 pub mod transport;
 pub mod workload;
 
+use crate::dimension_rank_table_layout::DimensionRankTableLayout;
 use crate::i18n::{health_title, t, UiLocale};
 use crate::live_table_layout::LiveTableLayout;
 use crate::session::ControllerSession;
 #[cfg(not(windows))]
 use c2::desktop::ProcessSingleInstance;
-use c2::desktop::{tray_chrome, InstanceClaim, ShutdownPhase, TrayVisual};
+use c2::desktop::{
+    tray_chrome, AutostartError, AutostartPort, InstanceClaim, ShutdownPhase, TauriAutostartPort,
+    TrayVisual,
+};
 use c2::dialog::TauriFileDialog;
 use c2::facade::{parse_socket_locale, AppErrorDto, AppFacade, BootstrapDto, ProbeResult};
 use c2::hub::{LiveConnectionView, MonitorStreamMessage};
 use c2::query::{ConnectionPage, ConnectionQuery};
-use c2::settings::ControllerSettings;
+use c2::settings::{apply_autostart, ControllerSettings};
 use c2::shell::{
     default_routes_for, BootBranch, FileDialogPort, FileMode, FilePurpose, OperationProgress,
     RecoveryStatus, RouteDescriptor,
 };
 use c2::subscriptions::SubscriptionRegistry;
 use c3::archive::{ReportArchivePage, ReportArchiveService};
-use c3::export::{ExportPreview, ExportSpec};
+use c3::export::{ExportPreview, ExportSpec, HtmlDocument};
 use c3::query::{ReportQuery, ReportResult};
 use c3::retention::RetentionPreview;
 use c3::share::ResidentialShare;
@@ -54,6 +60,55 @@ use std::sync::{Arc, Mutex};
 use tauri::ipc::Channel;
 use tauri::menu::Menu;
 use tauri::{AppHandle, Emitter, Manager, Runtime, State};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AutostartStateDto {
+    pub enabled: bool,
+}
+
+fn map_autostart_error(
+    locale: UiLocale,
+    operation: &'static str,
+    error: &AutostartError,
+) -> AppErrorDto {
+    crate::app_log::emit(
+        crate::app_log::Level::Error,
+        "autostart",
+        serde_json::json!({ "class": error.class(), "operation": operation }),
+    );
+    AppErrorDto {
+        code: "autostart_unavailable".into(),
+        message_zh: t(locale, "error.autostart_unavailable").into(),
+        retryable: true,
+        action: t(locale, "action.retry_autostart").into(),
+        details_redacted: "autostart_unavailable".into(),
+    }
+}
+
+fn get_autostart_state_core(
+    port: &dyn AutostartPort,
+    locale: UiLocale,
+) -> Result<AutostartStateDto, AppErrorDto> {
+    port.is_enabled()
+        .map(|enabled| AutostartStateDto { enabled })
+        .map_err(|error| map_autostart_error(locale, "read", &error))
+}
+
+fn set_autostart_enabled_core(
+    port: &dyn AutostartPort,
+    locale: UiLocale,
+    enabled: bool,
+) -> Result<AutostartStateDto, AppErrorDto> {
+    let actual = apply_autostart(port, enabled)
+        .map_err(|error| map_autostart_error(locale, "write_readback", &error))?;
+    crate::app_log::emit(
+        crate::app_log::Level::Info,
+        "autostart",
+        serde_json::json!({ "class": "ok", "enabled": actual }),
+    );
+    Ok(AutostartStateDto { enabled: actual })
+}
 
 #[cfg(not(windows))]
 fn claim_process_instance() -> InstanceClaim {
@@ -461,6 +516,27 @@ fn get_settings(state: State<Mutex<AppFacade>>) -> Result<ControllerSettings, Ap
 }
 
 #[tauri::command]
+fn get_autostart_state(
+    app: AppHandle,
+    state: State<Mutex<AppFacade>>,
+) -> Result<AutostartStateDto, AppErrorDto> {
+    let locale = state.lock().expect("state").ui_locale;
+    let port = TauriAutostartPort::new(&app);
+    get_autostart_state_core(&port, locale)
+}
+
+#[tauri::command]
+fn set_autostart_enabled(
+    app: AppHandle,
+    state: State<Mutex<AppFacade>>,
+    enabled: bool,
+) -> Result<AutostartStateDto, AppErrorDto> {
+    let locale = state.lock().expect("state").ui_locale;
+    let port = TauriAutostartPort::new(&app);
+    set_autostart_enabled_core(&port, locale, enabled)
+}
+
+#[tauri::command]
 fn get_controller_secret(state: State<Mutex<AppFacade>>) -> Result<Option<String>, AppErrorDto> {
     state.lock().expect("state").reveal_secret()
 }
@@ -636,6 +712,17 @@ fn save_live_table_layout(
 }
 
 #[tauri::command]
+fn save_dimension_rank_table_layout(
+    state: State<Mutex<AppFacade>>,
+    layout: DimensionRankTableLayout,
+) -> Result<DimensionRankTableLayout, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .save_dimension_rank_table_layout(layout)
+}
+
+#[tauri::command]
 async fn pick_file(
     dialog: State<'_, Arc<dyn FileDialogPort + Send + Sync>>,
     locale: String,
@@ -753,6 +840,25 @@ fn export_report(
         .lock()
         .expect("state")
         .export_report(&token, &spec, std::path::Path::new(&path))
+}
+
+#[tauri::command]
+fn render_report_html(
+    state: State<Mutex<AppFacade>>,
+    token: String,
+    spec: ExportSpec,
+) -> Result<HtmlDocument, AppErrorDto> {
+    state
+        .lock()
+        .expect("state")
+        .render_report_html(&token, &spec)
+}
+
+#[tauri::command]
+fn get_latest_residential_manual(
+    state: State<Mutex<AppFacade>>,
+) -> Result<Option<ReportResult>, AppErrorDto> {
+    state.lock().expect("state").get_latest_residential_manual()
 }
 
 #[tauri::command]
@@ -1218,6 +1324,10 @@ pub fn run() {
     );
     let background = facade.desktop.launch_mode == c2::desktop::LaunchMode::Background;
     tauri::Builder::default()
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec![crate::identity::AUTOSTART_ARGUMENT]),
+        ))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .manage(Mutex::new(facade))
@@ -1270,6 +1380,8 @@ pub fn run() {
             get_connection,
             close_connection,
             get_settings,
+            get_autostart_state,
+            set_autostart_enabled,
             get_controller_secret,
             save_settings,
             save_ui_locale,
@@ -1280,6 +1392,7 @@ pub fn run() {
             save_ui_density,
             save_ui_sidebar_width,
             save_live_table_layout,
+            save_dimension_rank_table_layout,
             save_targets,
             test_controller,
             disconnect_controller,
@@ -1296,6 +1409,8 @@ pub fn run() {
             release_report,
             preview_export,
             export_report,
+            render_report_html,
+            get_latest_residential_manual,
             retention_preview,
             run_retention,
             create_backup,
@@ -1377,5 +1492,94 @@ mod archive_scheduler_tests {
         archive_tick_at(&state, now);
         assert_eq!(list_kind(&state, "hour"), 2);
         assert_eq!(list_kind(&state, "day"), 1);
+    }
+}
+
+#[cfg(test)]
+mod autostart_command_tests {
+    use super::*;
+    use c2::desktop::FakeAutostart;
+    use std::sync::Mutex;
+    use tempfile::tempdir;
+
+    const RAW_PLATFORM_ERROR: &str = "C:\\Users\\operator\\ResiWatch\\residential-monitor.exe; HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run; access denied";
+
+    struct FixedReadbackPort {
+        requested: Mutex<Option<bool>>,
+        readback: bool,
+    }
+
+    impl AutostartPort for FixedReadbackPort {
+        fn set_enabled(&self, enabled: bool) -> Result<(), AutostartError> {
+            *self.requested.lock().expect("requested") = Some(enabled);
+            Ok(())
+        }
+
+        fn is_enabled(&self) -> Result<bool, AutostartError> {
+            Ok(self.readback)
+        }
+    }
+
+    struct RawFailurePort;
+
+    impl AutostartPort for RawFailurePort {
+        fn set_enabled(&self, _enabled: bool) -> Result<(), AutostartError> {
+            Err(AutostartError::unavailable(RAW_PLATFORM_ERROR))
+        }
+
+        fn is_enabled(&self) -> Result<bool, AutostartError> {
+            Err(AutostartError::unavailable(RAW_PLATFORM_ERROR))
+        }
+    }
+
+    #[test]
+    fn reading_default_state_never_writes() {
+        let port = FakeAutostart::new();
+        let state = get_autostart_state_core(&port, UiLocale::Zh).expect("state");
+        assert!(!state.enabled);
+        assert_eq!(*port.requested.lock().expect("requested"), None);
+    }
+
+    #[test]
+    fn set_command_returns_os_readback_instead_of_requested_value() {
+        let port = FixedReadbackPort {
+            requested: Mutex::new(None),
+            readback: false,
+        };
+        let state = set_autostart_enabled_core(&port, UiLocale::Zh, true).expect("set");
+        assert!(!state.enabled);
+        assert_eq!(*port.requested.lock().expect("requested"), Some(true));
+    }
+
+    #[test]
+    fn platform_detail_is_absent_from_ipc_and_log() {
+        let _lock = crate::app_log::exclusive_test();
+        let dir = tempdir().expect("log dir");
+        crate::app_log::init_at(dir.path().to_path_buf(), crate::app_log::DEFAULT_MAX_BYTES);
+
+        let raw_error = AutostartError::unavailable(RAW_PLATFORM_ERROR);
+        assert_eq!(raw_error.raw_detail(), RAW_PLATFORM_ERROR);
+        assert!(!format!("{raw_error:?}").contains(RAW_PLATFORM_ERROR));
+
+        let error =
+            get_autostart_state_core(&RawFailurePort, UiLocale::En).expect_err("platform error");
+        assert_eq!(error.code, "autostart_unavailable");
+        assert_eq!(error.details_redacted, "autostart_unavailable");
+        assert!(error.retryable);
+        assert!(!error.message_zh.contains(RAW_PLATFORM_ERROR));
+        assert!(!error.action.contains(RAW_PLATFORM_ERROR));
+        assert!(!serde_json::to_string(&error)
+            .expect("serialize")
+            .contains(RAW_PLATFORM_ERROR));
+
+        let log =
+            std::fs::read_to_string(dir.path().join(crate::app_log::FILE_NAME)).expect("read log");
+        assert!(log.contains("autostart"));
+        assert!(log.contains("\"class\":\"platform\""));
+        assert!(!log.contains(RAW_PLATFORM_ERROR));
+        assert!(!log.contains("residential-monitor.exe"));
+        assert!(!log.contains("CurrentVersion"));
+
+        crate::app_log::reset_for_test();
     }
 }

@@ -29,7 +29,7 @@
 - 小时档案保留 30 天，日档案保留 13 个月（`DIMENSION_RETAIN_DAYS`，396 天）。过期删除只针对档案表，与 raw 自动 DELETE 无关。
 - 近 30 天默认走 raw，不在每个整点跑全量 `RetentionService`。更早的日档案走日维；日维未就绪则记失败，不写假总量。
 - 进入分析报告页加载最新成功日档案，否则最新成功小时档案。不自动选手动行。
-- 分析报告「运行报告」、告警跳转与家宽「生成报告」在查询成功后写入 `report_archive`（`kind=manual`），按 `generated_utc` 保留 7 天。同一 `(kind, range_start_utc, query_fingerprint)` 再跑则覆盖。失败查询不写行。不覆盖自动小时 / 日档案。
+- 分析报告「运行报告」、告警跳转与家宽「创建报告」在查询成功后写入 `report_archive`（`kind=manual`），按 `generated_utc` 保留 7 天。同一 `(kind, range_start_utc, query_fingerprint)` 再跑则覆盖。失败查询不写行。不覆盖自动小时 / 日档案。家宽页用 `render_report_html` 生成静态网页，弹窗 iframe 查看；进页 `get_latest_residential_manual` 回看最新家宽手动档案。
 - 概览、四聚合页与家宽聚合的 `useReport` 现查只进 10 分钟 spool token，不写 `report_archive`。spool 对未过期 fingerprint 复用 token；满 8 格或超 128 MiB 时按最近访问淘汰。单 token 超过 32 MiB 仍拒绝。
 - 从档案导出时，`get_report_archive` 把冻结 JSON 水合进现有 snapshot token，再走 `export_report`。不为导出再查更新后的库。
 - Recovery Shell 不调度自动档案。

@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "IPC 只在 hooks；DataTable / sortable-th / data-* 测试契约"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "本机列宽键、Recovery 内存回落、前端不重算排名"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "RankingRow 新字段边界解码；旧档案缺字段"}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "C3 查询权威；monitor-check 质量门"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C3 拥有 run_report；设置键不进控制器"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "SQL → RankingRow → decode → RankTable 跨层合同"}

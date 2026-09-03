@@ -2,6 +2,8 @@
 
 Rust 拥有采集、存储、凭据、托盘、查询、报告与恢复。C3 代码在 `src-tauri/src/c3/`。C4 在 `src-tauri/src/c4/`。C5 在 `src-tauri/src/c5/`。
 
+`dbcli` 在 `src-tauri/src/dbcli/`，bin 为 `monitor-db`。查询走 `run_uncached` 与 `query_residential_share_on`，不使用 `ReportSnapshotStore`。维护命令包装既有 C3/C5 服务。
+
 ## Pre-Development Checklist
 
 - 读 `modules-and-errors.md`

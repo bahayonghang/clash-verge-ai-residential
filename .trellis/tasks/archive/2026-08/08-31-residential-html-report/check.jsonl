@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Quality Check 命令与 IPC 边界"}
+{"file": ".trellis/spec/residential-monitor/frontend/view-state.md", "reason": "口径与时间窗不得被 UI 改写"}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "导出/HTML 不得含 secret"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": 检查 token 与档案边界"}
+{"file": ".trellis/tasks/08-31-residential-html-report/prd.md", "reason": "验收标准 AC1–AC6"}

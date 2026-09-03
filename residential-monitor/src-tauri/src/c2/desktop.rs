@@ -209,35 +209,110 @@ pub trait AutostartPort {
     fn is_enabled(&self) -> Result<bool, AutostartError>;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AutostartError {
-    Unavailable,
+pub struct AutostartError {
+    class: &'static str,
+    _detail: String,
 }
 
+impl AutostartError {
+    pub fn unavailable(detail: impl Into<String>) -> Self {
+        Self {
+            class: "platform",
+            _detail: detail.into(),
+        }
+    }
+
+    pub fn class(&self) -> &'static str {
+        self.class
+    }
+
+    #[cfg(test)]
+    pub fn raw_detail(&self) -> &str {
+        &self._detail
+    }
+}
+
+impl std::fmt::Debug for AutostartError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("AutostartError")
+            .field("class", &self.class)
+            .finish_non_exhaustive()
+    }
+}
+
+impl std::fmt::Display for AutostartError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.class)
+    }
+}
+
+impl std::error::Error for AutostartError {}
+
+pub struct TauriAutostartPort<'a> {
+    app: &'a tauri::AppHandle,
+}
+
+impl<'a> TauriAutostartPort<'a> {
+    pub fn new(app: &'a tauri::AppHandle) -> Self {
+        Self { app }
+    }
+}
+
+impl AutostartPort for TauriAutostartPort<'_> {
+    fn set_enabled(&self, enabled: bool) -> Result<(), AutostartError> {
+        use tauri_plugin_autostart::ManagerExt;
+
+        let manager = self.app.autolaunch();
+        let result = if enabled {
+            manager.enable()
+        } else {
+            manager.disable()
+        };
+        result.map_err(|error| AutostartError::unavailable(error.to_string()))
+    }
+
+    fn is_enabled(&self) -> Result<bool, AutostartError> {
+        use tauri_plugin_autostart::ManagerExt;
+
+        self.app
+            .autolaunch()
+            .is_enabled()
+            .map_err(|error| AutostartError::unavailable(error.to_string()))
+    }
+}
+
+#[cfg(test)]
 #[derive(Default)]
 pub struct FakeAutostart {
     pub requested: std::sync::Mutex<Option<bool>>,
     pub os_state: std::sync::Mutex<bool>,
     pub fail_write: std::sync::Mutex<bool>,
+    pub fail_read: std::sync::Mutex<bool>,
 }
 
+#[cfg(test)]
 impl FakeAutostart {
     pub fn new() -> Self {
         Self::default()
     }
 }
 
+#[cfg(test)]
 impl AutostartPort for FakeAutostart {
     fn set_enabled(&self, enabled: bool) -> Result<(), AutostartError> {
         *self.requested.lock().expect("autostart") = Some(enabled);
         if *self.fail_write.lock().expect("autostart") {
-            return Err(AutostartError::Unavailable);
+            return Err(AutostartError::unavailable("fake write failure"));
         }
         *self.os_state.lock().expect("autostart") = enabled;
         Ok(())
     }
 
     fn is_enabled(&self) -> Result<bool, AutostartError> {
+        if *self.fail_read.lock().expect("autostart") {
+            return Err(AutostartError::unavailable("fake read failure"));
+        }
         Ok(*self.os_state.lock().expect("autostart"))
     }
 }

@@ -1,0 +1,28 @@
+{
+  "id": "resiwatch-rules-cli",
+  "name": "resiwatch-rules-cli",
+  "title": "家宽历史库 CLI 与规则优化 Skill",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-08-31",
+  "completedAt": "2026-08-31",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "description": "新增 monitor-db CLI 读取 ResiWatch 历史库并提供受控维护写入，配套仓库内可安装的 residential-rule-tuning skill，指导 Agent 用流量证据收窄家宽路由范围。"
+  }
+}

@@ -1,0 +1,8 @@
+{"file":".trellis/spec/residential-monitor/backend/index.md","reason":"新增 dbcli 模块与 monitor-db bin 必须遵循 Rust 侧模块划分与入口约定。"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"DbCliError 与退出码映射需沿用既有错误分类，不新造错误层。"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"attach_cancel 传播、不可中断维护命令的声明义务与 --redact 输出必须遵循既有 secret 与取消契约。"}
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"只读连接、单 writer、绑定参数、named SQL 回显、空间 fail closed 与 AUTO_DELETE 关闭状态的权威来源；新增 AUDIT_RESIDENTIAL_HOST_RULE_PROCESS 与独占锁条款也登记在此。"}
+{"file":".trellis/spec/frontend/index.md","reason":"scripts/install-agent-skills.js 与 skills/ 下的生成器属于根仓库 Node CommonJS CLI 边界，入口、测试与本地配置约束由该层拥有。"}
+{"file":".trellis/spec/frontend/hook-guidelines.md","reason":"安装器与生成器的入口形态、参数处理与副作用边界。"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"零依赖、node --check、node:test 回归与凭据安全扫描的 CI 契约。"}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"CLI 必须复用 ReportService、share、家宽口径 SQL 与既有维护服务，不产生第二份实现。"}

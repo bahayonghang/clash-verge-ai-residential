@@ -1,0 +1,6 @@
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"审查实时/历史/新写入是否只用一个 matcher，raw 期外能力是否诚实。"}
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"审查 membership SQL 是否参数化、不倍增、不改库并满足 deadline。"}
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"审查中英文、可访问性、宽窄窗口与前端完整质量门。"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"审查窗口元信息与状态是否来自严格 DTO，未由 UI 猜测统计。"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"审查滚动/暂停窗口、陈旧响应、空态、方向 Top N 与趋势顺序。"}
+{"file":".trellis/tasks/08-31-residential-history-address-stats/research/findings.md","reason":"逐项复核根因证据、当前数据库恢复路径、范围与用户决定。"}

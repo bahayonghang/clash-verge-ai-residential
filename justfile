@@ -17,6 +17,16 @@ help:
 ci: monitor-check
     npm run ci
 
+# 本地 VitePress 文档站。需要 Node.js 22+，依赖在 docs/package.json。
+docs-dev:
+    npm --prefix docs run dev
+
+docs-build:
+    npm --prefix docs run build
+
+docs-preview:
+    npm --prefix docs run preview
+
 # 以 residential-monitor/package.json 为准，写入 Tauri 安装包、Cargo 与 lockfile 版本。
 monitor-sync-version:
     node scripts/sync-monitor-version.js
@@ -52,7 +62,29 @@ monitor-c5-auto:
     cargo run --quiet --manifest-path residential-monitor/src-tauri/Cargo.toml --bin monitor-bench -- c5-fault
     cargo run --quiet --manifest-path residential-monitor/src-tauri/Cargo.toml --bin monitor-bench -- c5-supply
 
-# 构建 NSIS 并静默安装到 %LOCALAPPDATA%\ResiWatch。不启动应用。会改本机安装态。
+# ResiWatch 历史库 CLI。参数原样转给 monitor-db。
+monitor-db *args:
+    cargo run --quiet --manifest-path residential-monitor/src-tauri/Cargo.toml --bin monitor-db -- {{args}}
+
+# 把仓库内 skill 源安装到本机已存在的平台 skill 目录。
+install-skills *args:
+    node scripts/install-agent-skills.js {{args}}
+
+# 把 monitor-db 安装到本机 cargo 用户 bin。
+install-cli:
+    cargo install --path residential-monitor/src-tauri --bin monitor-db --locked --force
+
+# 本机一次安装：桌面 NSIS、monitor-db CLI、当前项目 .agents/.claude skills。
+[windows]
+install-all: tinstall install-cli
+    node scripts/install-agent-skills.js --platforms .agents,.claude --create
+
+[unix]
+install-all:
+    @echo "家宽监控 v1 只提供 Windows 11 NSIS current-user 安装。"
+    @exit 1
+
+# 构建 NSIS 并静默安装到 %LOCALAPPDATA%\ResiWatch，安装完成后启动应用。会改本机安装态。
 # 构建前按 residential-monitor/package.json 同步 Tauri/Cargo 版本。
 # 安装前结束正在运行的 residential-monitor，避免 NSIS 覆盖被占用的文件。
 # 以 /D= 指定持久目录，忽略注册表里指向 Temp 的上次安装位置。

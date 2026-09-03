@@ -28,4 +28,14 @@ describe("decodeBootstrap", () => {
     };
     expect(() => decodeBootstrap(poisoned)).toThrow(/未知或无效/);
   });
+
+  it("缺 dimensionRankTableLayout 不拒引导，并保留 liveTableLayout", () => {
+    const raw = previewBootstrap();
+    raw.liveTableLayout = { widths: { host: 200 }, hidden: ["process"] };
+    delete raw.dimensionRankTableLayout;
+    const decoded = decodeBootstrap(raw);
+    expect(decoded.dimensionRankTableLayout?.widths.name).toBe(280);
+    expect(decoded.liveTableLayout?.widths.host).toBe(200);
+    expect(decoded.liveTableLayout?.hidden).toEqual(["process"]);
+  });
 });

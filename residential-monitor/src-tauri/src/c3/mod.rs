@@ -17,7 +17,7 @@ pub mod sql;
 
 pub use archive::ReportArchiveService;
 pub use backup::BackupRestoreService;
-pub use export::{ExportService, ExportSpec};
+pub use export::{ExportService, ExportSpec, HtmlDocument};
 pub use query::{
     default_auto_report_query, local_day_bounds, local_hour_bounds, local_month_bounds,
     plan_capability, plan_capability_ex, timezone_offset_secs, validate_query, CapabilityPlan,
@@ -26,8 +26,8 @@ pub use query::{
     RAW_RETAIN_DAYS_DEFAULT, RAW_RETAIN_DAYS_MAX, REPORT_DEADLINE_MS, TOKEN_TTL_SECS,
 };
 pub use retention::RetentionService;
-pub use service::ReportService;
-pub use share::{query_residential_share, ResidentialShare};
+pub use service::{run_uncached, ReportService};
+pub use share::{query_residential_share, query_residential_share_on, ResidentialShare};
 pub use snapshot::ReportSnapshotStore;
 pub use space::SpaceBudget;
 

@@ -153,7 +153,9 @@ describe("排行条形图能力说明", () => {
               upload: 1,
               download: 2,
               connectionCount: 1,
-              activeDurationSec: 1
+              activeDurationSec: 1,
+              primaryExit: null,
+              exitMixed: false
             }
           ]
         })}

@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 36
-- **Last Active**: 2026-08-25
+- **Total Sessions**: 42
+- **Last Active**: 2026-09-02
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1118 | Active |
+| `journal-1.md` | ~1267 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,12 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 42 | 2026-09-02 | 维度排名表归属列与可调列宽 | `b9e898d`, `9a62945` | `dev` |
+| 41 | 2026-08-31 | 家宽页创建并弹窗查看 HTML 报告 | `62cc590`, `ba32577` | `dev` |
+| 40 | 2026-08-31 | VitePress 中英双语文档站 | `02ba7fa`, `bdc7ada`, `de187f1`, `d1a4335` | `dev` |
+| 39 | 2026-08-31 | 家宽历史库 CLI 与规则优化 Skill | `bb9f754`, `01c93d6`, `7ce72eb`, `015a43c` | `dev` |
+| 38 | 2026-08-31 | 修复家宽历史地址累计统计 | `477a10ef38c8a171349810144f088747e8051851`, `e06e83c25ea19604e5c488aa15018d083e0f8dc6` | `dev` |
+| 37 | 2026-08-29 | 完成 ResiWatch Windows 登录自启动 | `71ac80c`, `c6f8f13` | `dev` |
 | 36 | 2026-08-25 | 家宽目的地址拆解与趋势明细优化 | `feccd1c` | `dev` |
 | 35 | 2026-08-25 | 彩色应用图标与安装态清晰度 | `9acb61977df55fc6ff58baf0ad24ea5a6de7151f` | `dev` |
 | 34 | 2026-08-22 | 解封 dev 合并 main：真实端口与存储重跑 | `a0f09a3`, `a6b1729` | `dev` |

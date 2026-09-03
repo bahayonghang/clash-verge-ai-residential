@@ -7,4 +7,5 @@
 - C3 自动 DELETE 关闭。freelist 不是已释放磁盘。
 - 未签名安装包会触发 SmartScreen。
 - C0 升级基线安装包缺失。C5-AC5 未通过。
-- 完整 30 天 `A=50/250/1000`、13 个月高基数、24 小时 soak、安装态通知 / Focus Assist / 自启动真机、代码签名和 GitHub Release 在本候选未完成。
+- 登录自启动的 Rust adapter、应用 commands、设置页与无副作用自动测试已经实现。2026-08-29 的命令采集已核对 current-user NSIS 默认不启用以及最终启动项路径/参数；用户人工报告已覆盖启用后的真实登录和关闭后的下一次登录。跨已发布旧版本保留和卸载器自动清理仍为 **UNVERIFIED**；自动测试不会写 HKCU 启动项。
+- 完整 30 天 `A=50/250/1000`、13 个月高基数、24 小时 soak、安装态通知 / Focus Assist、代码签名和 GitHub Release 在本候选未完成。

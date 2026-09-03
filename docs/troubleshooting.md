@@ -1,54 +1,54 @@
-# Troubleshooting
+# 故障排查
 
-## No usable upstream was found
+## 找不到可用上游
 
-Symptoms include an exception mentioning `dialer-proxy`, Profile candidates, or `MATCH/FINAL`.
+异常信息通常提到 `dialer-proxy`、Profile 候选或 `MATCH/FINAL`。
 
-Check:
+检查：
 
-- the actual top-level group name in the generated Profile;
-- `PROFILE_UPSTREAM_OVERRIDES` spelling, spaces, and emoji;
-- whether the selected upstream name contains `#` or `&`; these delimit Mihomo's DoH URL fragment and are rejected rather than encoded;
-- whether the Profile has a final `MATCH` or `FINAL` rule;
-- whether the candidate is `DIRECT`, `REJECT`, `AI-家宽`, or `家宽-SOCKS5`.
+- 生成 Profile 里实际的顶层组名；
+- `PROFILE_UPSTREAM_OVERRIDES` 的拼写、空格和 emoji；
+- 选中的上游名是否含 `#` 或 `&`（它们是 Mihomo DoH URL 片段分隔符，脚本拒绝而不是编码）；
+- Profile 是否有最后的 `MATCH` 或 `FINAL` 规则；
+- 候选是否为 `DIRECT`、`REJECT`、`AI-家宽` 或 `家宽-SOCKS5`。
 
-## Reserved-name collision
+## 保留名冲突
 
-The names `AI-家宽` and `家宽-SOCKS5` are managed by the script. Rename any unrelated Profile proxy or group that already uses either name.
+`AI-家宽` 和 `家宽-SOCKS5` 由脚本托管。Profile 里无关的代理或组若已占用这两个名字，请改名。
 
-## Recursive proxy-group error
+## 代理组递归错误
 
-The selected upstream graph eventually references itself, `AI-家宽`, or `家宽-SOCKS5`. Remove the reference from the subscription override or select a clean top-level airport group. The script also adds exclusion filters to `include-all` groups, but it cannot safely repair every arbitrary group graph.
+选中的上游图最终引用了自己、`AI-家宽` 或 `家宽-SOCKS5`。从订阅覆盖里去掉该引用，或改选干净的顶层机场组。脚本会给 `include-all` 组加排除过滤，但不能安全修复任意组图。
 
-## Placeholder credential error
+## 占位凭据错误
 
-The public template keeps `server`, `username`, and `password` as `xxx`. Either:
+公开模板把 `server`、`username`、`password` 保持为 `xxx`。任选其一：
 
-- edit the ignored `clash-verge-ai-residential.local.toml` and regenerate with `just render-local` or `node scripts/sync-local-config.js`; or
-- predefine an existing `家宽-SOCKS5` node in the Profile so the script can reuse its endpoint and credentials.
+- 编辑被忽略的 `clash-verge-ai-residential.local.toml`，再用 `just render-local` 或 `node scripts/sync-local-config.js` 重新生成；或
+- 在 Profile 里预置已有的 `家宽-SOCKS5` 节点，让脚本复用它的 endpoint 和凭据。
 
-For no-auth SOCKS5, both credential fields must be empty strings. Never hand-edit the generated `.local.js`; change the TOML and render again.
+无认证 SOCKS5 必须把两个凭据字段都设成空字符串。不要手改生成的 `.local.js`；改 TOML 再渲染。
 
-## AI service works but assets do not
+## AI 服务可用但资源不可用
 
-This can be expected under AI-only routing. Marketplace, update, download, media, analytics, and shared dependencies use the original Profile route. Inspect the failed host before widening scope. Prefer one exact domain over a broad provider suffix.
+这在 AI-only 路由下可以是预期行为。市场、更新、下载、媒体、统计和共享依赖走原 Profile。扩大范围前先看失败的主机。优先加一条精确域名，而不是宽泛的 provider 后缀。
 
-## Cursor Marketplace or YouTube hits AI-家宽
+## Cursor Marketplace 或 YouTube 命中 AI-家宽
 
-从 v5.6 起，Cursor 核心路由默认启用。从 v5.9.0 起，仓库索引主机 `repo[0-9]+.cursor.sh` 改由 `routing.cursor_repository_indexing` 控制，默认是 `false`，回落原 Profile / 机场上游。缺失的本地 TOML 字段会按 `false` 补全；显式设为 `true` 可恢复 v5.8.1 的 repo 家宽路由。即使启用 Cursor 核心路由，Marketplace 和 YouTube 仍不在分流范围内；如需让 Cursor 核心流量也使用机场上游，请在本地 TOML 中设置 `routing.cursor_core = false`。
+从 v5.6 起，Cursor 核心路由默认启用。从 v5.9.0 起，仓库索引主机 `repo[0-9]+.cursor.sh` 改由 `routing.cursor_repository_indexing` 控制，默认 `false`，回落原 Profile / 机场上游。缺失的本地 TOML 字段会按 `false` 补全；显式设为 `true` 可恢复 v5.8.1 的 repo 家宽路由。即使启用 Cursor 核心路由，Marketplace 和 YouTube 仍不在分流范围内；若要让 Cursor 核心流量也走机场上游，在本地 TOML 设 `routing.cursor_core = false`。
 
 若 `repo42.cursor.sh` 仍命中 `AI-家宽`，先检查是否把 `routing.cursor_repository_indexing` 设为 `true`，以及订阅或 Merge 层是否残留用户自有的 `DOMAIN,repo42.cursor.sh,AI-家宽`。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`；该主机仍由 `cursor_core` 控制，Clash 域名规则无法在保留多数 Cursor API 的同时隔离这条回退路径。默认关闭索引家宽不能宣称已排除全部仓库上传。
 
 Clash Verge 脚本控制台只显示 `Script execution failed` 时，查看 `%APPDATA%\io.github.clash-verge-rev.clash-verge-rev\logs\latest.log`。`Script execution error: expected value at line 1 column 1` 表示 `main` 抛错后返回值为空。最常见原因是把公开模板 `clash-verge-ai-residential.js`（`HOME_PROXY_TEMPLATE` 为 `xxx`）粘进 Global Extend Script，而当前 Profile 没有预置 `家宽-SOCKS5` 节点。应粘贴 `just render-local` 生成的 `clash-verge-ai-residential.local.js`。
 
-意外命中的常见原因包括：
+意外命中的常见原因：
 
-- stale rules remain in a subscription, another script, or Global Extend Config (Merge);
-- a broad user rule such as `DOMAIN-SUFFIX,cursor.com,AI-家宽` exists outside this script;
-- process-wide fallback was manually enabled;
-- the running Profile was not refreshed after editing the global script.
+- 订阅、另一段脚本或 Global Extend Config (Merge) 里还有旧规则；
+- 脚本之外存在宽规则，例如 `DOMAIN-SUFFIX,cursor.com,AI-家宽`；
+- 手动打开了进程级兜底；
+- 改完全局脚本后没有刷新正在运行的 Profile。
 
-v5.5 replaces only rules that the current version can generate. It deliberately preserves unknown rules and no longer migrates pre-v5.4 output. If v5.4 output was manually persisted, the following retired Cursor rules are also user-owned and require manual removal:
+v5.5 只替换当前版本能生成的规则。它故意保留未知规则，也不再迁移 pre-v5.4 输出。若 v5.4 输出曾被手工持久化，下列已退役 Cursor 规则也视为用户所有，需要手工删除：
 
 ```text
 DOMAIN,repo42.cursor.sh,AI-家宽
@@ -56,7 +56,7 @@ DOMAIN-REGEX,^[a-z0-9-]+\.api5\.cursor\.sh$,AI-家宽
 DOMAIN-REGEX,^(?:us-asia|us-eu|us-only)\.gcpp\.cursor\.sh$,AI-家宽
 ```
 
-Also search for broader old or custom entries such as:
+同时搜索更宽的旧规则或自定义规则，例如：
 
 ```text
 DOMAIN-SUFFIX,cursor.com,AI-家宽
@@ -64,19 +64,19 @@ DOMAIN,www.youtube.com,AI-家宽
 DOMAIN,marketplace.cursorapi.com,AI-家宽
 ```
 
-Identify which enhancement layer supplied each match, remove stale entries from that source, then refresh the Profile. Do not add the retired strings to the current script merely to clean them up.
+确认是哪一层增强写入了匹配项，从该源删掉残留，再刷新 Profile。不要把退役字符串加回当前脚本仅仅为了清理。
 
-## DNS leak test does not show the residential location
+## DNS leak test 没有显示住宅地区
 
-This is expected for generic test domains. The script sends only AI-domain DNS through `AI-家宽`; ordinary overseas DNS uses the current airport upstream. Validate an AI hostname in Mihomo DNS logs or connection metadata instead.
+对通用测试域名这是预期。脚本只把 AI 域名的 DNS 送进 `AI-家宽`；普通海外 DNS 走当前机场上游。请在 Mihomo DNS 日志或连接元数据里验证一个 AI 主机名。
 
-## The first connection to a new non-AI domain is slower
+## 第一次访问新的非 AI 域名更慢
 
-Strict DNS rebuilding sends real non-AI overseas lookups through DoH bound to the current Profile upstream. When a GEOIP fallback needs a real lookup, the first query for a new domain can add roughly one airport round trip; cache hits do not pay the same setup cost. This trade-off is retained to keep resolver routing consistent and resistant to pollution. See [DNS and Leak Model](dns-and-leak-model.md).
+严格 DNS 重建会把真实的非 AI 海外查找经绑定到当前 Profile 上游的 DoH 发出。GEOIP 回退需要为新域名做第一次真实查找时，大约多一次机场往返；缓存命中不再付同样成本。该取舍是为了解析一致和抗污染。见 [DNS 与泄漏模型](dns-and-leak-model.md)。
 
-## Chat/voice or realtime feature fails
+## 聊天/语音或实时功能失败
 
-The default AI-only policy does not capture generic STUN/TURN or all realtime UDP ports. Confirm the exact product host and the UDP capability of both the airport path and residential SOCKS5 service before enabling shared realtime switches.
+默认 AI-only 策略不捕获通用 STUN/TURN，也不捕获全部实时 UDP 端口。打开共享实时开关之前，先确认产品的确切主机，以及机场路径和住宅 SOCKS5 的 UDP 能力。
 
 ## 全新离线安装时配置验证失败（geosite.dat）
 

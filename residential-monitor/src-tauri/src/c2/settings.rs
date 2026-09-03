@@ -267,7 +267,10 @@ impl WizardState {
     }
 }
 
-pub fn apply_autostart<A: AutostartPort>(port: &A, enabled: bool) -> Result<bool, AutostartError> {
+pub fn apply_autostart<A: AutostartPort + ?Sized>(
+    port: &A,
+    enabled: bool,
+) -> Result<bool, AutostartError> {
     port.set_enabled(enabled)?;
     port.is_enabled()
 }
@@ -275,6 +278,7 @@ pub fn apply_autostart<A: AutostartPort>(port: &A, enabled: bool) -> Result<bool
 #[cfg(test)]
 mod settings_workflow_tests {
     use super::*;
+    use crate::c2::desktop::FakeAutostart;
     use crate::credential::FakeCredentialStore;
 
     #[test]
@@ -365,5 +369,35 @@ mod settings_workflow_tests {
         wizard.cancel();
         assert!(wizard.cancelled);
         assert_eq!(wizard.step, WizardStep::Controller);
+    }
+
+    #[test]
+    fn autostart_enable_disable_returns_os_readback() {
+        let port = FakeAutostart::new();
+        assert!(apply_autostart(&port, true).expect("enable readback"));
+        assert_eq!(*port.requested.lock().expect("requested"), Some(true));
+        assert!(!apply_autostart(&port, false).expect("disable readback"));
+        assert_eq!(*port.requested.lock().expect("requested"), Some(false));
+    }
+
+    #[test]
+    fn autostart_write_and_readback_failures_are_distinct_steps() {
+        let write_failure = FakeAutostart::new();
+        *write_failure.fail_write.lock().expect("fail write") = true;
+        assert!(apply_autostart(&write_failure, true).is_err());
+        assert_eq!(
+            *write_failure.requested.lock().expect("requested"),
+            Some(true)
+        );
+        assert!(!*write_failure.os_state.lock().expect("os state"));
+
+        let read_failure = FakeAutostart::new();
+        *read_failure.fail_read.lock().expect("fail read") = true;
+        assert!(apply_autostart(&read_failure, true).is_err());
+        assert_eq!(
+            *read_failure.requested.lock().expect("requested"),
+            Some(true)
+        );
+        assert!(*read_failure.os_state.lock().expect("os state"));
     }
 }

@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "检查 docs 中文约定、Node 18+ 根 CI、凭据与路由边界未被文档改动破坏"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "检查根 package.json 仍是零依赖命令面，文档文件名与 docs/ 归属"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "检查未引入会破坏粘贴运行时的 bundler 或根依赖"}
+{"file": ".trellis/spec/guides/index.md", "reason": "检查 routing-scope 重写后仍是域名准入合同"}

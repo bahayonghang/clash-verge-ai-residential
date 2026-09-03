@@ -16,6 +16,7 @@ const {
   planRelocation,
   readPackageVersion,
   readProductName,
+  startMonitorApp,
   stripOuterQuotes
 } = require("../scripts/nsis-silent-install.js");
 
@@ -139,4 +140,35 @@ test("discoverPreviousInstallDir 优先选带库的旧目录，而不是空的�
 test("仓库 tauri.conf.json 的 productName 与 package.json version 可读", () => {
   assert.equal(readProductName(path.resolve(__dirname, "..")), "ResiWatch");
   assert.match(readPackageVersion(path.resolve(__dirname, "..")), /^\d+\.\d+\.\d+/);
+});
+
+test("startMonitorApp 以 detached 启动安装目录中的 exe", () => {
+  withTemporaryDirectory((directory) => {
+    const exe = path.win32.join(directory, "residential-monitor.exe");
+    fs.writeFileSync(exe, "x");
+    const calls = [];
+    const child = {
+      unref() {
+        calls.push("unref");
+      }
+    };
+    startMonitorApp(directory, (file, args, options) => {
+      calls.push({ file, args, options });
+      return child;
+    });
+    assert.equal(calls[0].file, exe);
+    assert.deepEqual(calls[0].args, []);
+    assert.equal(calls[0].options.detached, true);
+    assert.equal(calls[0].options.stdio, "ignore");
+    assert.equal(calls[0].options.windowsHide, false);
+    assert.equal(calls[1], "unref");
+  });
+});
+
+test("startMonitorApp 在缺少 exe 时失败", () => {
+  withTemporaryDirectory((directory) => {
+    assert.throws(() => startMonitorApp(directory, () => {
+      throw new Error("不应启动");
+    }), /未找到/);
+  });
 });

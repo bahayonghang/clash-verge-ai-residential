@@ -1,40 +1,40 @@
-# Multi-Profile Upstream Resolution
+# 多 Profile 上游解析
 
-Mihomo's `dialer-proxy` field is a single name. The script resolves one valid name at runtime for the current Clash Verge Rev Profile.
+Mihomo 的 `dialer-proxy` 只接受一个名字。脚本在运行时为当前 Clash Verge Rev Profile 解析出一个合法名称。
 
-## Resolution order
+## 解析顺序
 
-1. Candidates in `PROFILE_UPSTREAM_OVERRIDES[profileName]`.
-2. `HOME_PROXY_TEMPLATE["dialer-proxy"]`, normally `🚀节点选择`.
-3. Names in `UPSTREAM_CANDIDATES`.
-4. The target of the last `MATCH` or `FINAL` rule when `ALLOW_FINAL_RULE_UPSTREAM_FALLBACK` is enabled.
-5. Optional semantic-name guessing when `ALLOW_HEURISTIC_UPSTREAM_FALLBACK` is enabled. It is disabled by default.
+1. `PROFILE_UPSTREAM_OVERRIDES[profileName]` 里的候选。
+2. `HOME_PROXY_TEMPLATE["dialer-proxy"]`，通常是 `🚀节点选择`。
+3. `UPSTREAM_CANDIDATES` 里的名字。
+4. 启用 `ALLOW_FINAL_RULE_UPSTREAM_FALLBACK` 时，最后一条 `MATCH` 或 `FINAL` 规则的目标。
+5. 启用 `ALLOW_HEURISTIC_UPSTREAM_FALLBACK` 时，按组名语义猜测。该开关默认关闭。
 
-The first existing and structurally valid proxy/group is selected. Resolution never writes an array to `dialer-proxy` and never silently falls back to `DIRECT`.
+第一个存在且结构合法的代理或组会被选中。解析从不把数组写进 `dialer-proxy`，也从不静默回落到 `DIRECT`。
 
-Spaces and emoji are valid in an upstream name. `#` and `&` are not: Mihomo uses them as delimiters in the upstream-bound DoH URL, so the script rejects a selected name containing either character before building DNS configuration.
+上游名可以含空格和 emoji。不能含 `#` 或 `&`：Mihomo 把它们当作绑定到上游的 DoH URL 分隔符，脚本在构建 DNS 之前会拒绝这样的名字。
 
-## Recursion protection
+## 递归保护
 
-Before injecting the residential node, the script:
+注入家宽节点之前，脚本会：
 
-- excludes `家宽-SOCKS5` from every `include-all` or `include-all-proxies` group;
-- removes script-managed group references from the selected upstream graph;
-- rejects direct and indirect group cycles;
-- rejects reserved-name collisions;
-- rejects top-level upstreams that explicitly disable UDP;
-- rejects an upstream that resolves to `DIRECT`, `REJECT`, the residential node, or the `AI-家宽` group.
+- 从每个 `include-all` 或 `include-all-proxies` 组排除 `家宽-SOCKS5`；
+- 从选中的上游图里去掉脚本托管的组引用；
+- 拒绝直接和间接的组循环；
+- 拒绝保留名冲突；
+- 拒绝顶层显式关闭 UDP 的上游；
+- 拒绝解析结果为 `DIRECT`、`REJECT`、家宽节点或 `AI-家宽` 组的上游。
 
-## Runtime limitation
+## 运行时限制
 
-Static configuration can prove that a selector exists, but it cannot reliably read the selector's current runtime choice. Do not put `DIRECT`, `REJECT`, `家宽-SOCKS5`, or `AI-家宽` inside the selector used as `dialer-proxy`.
+静态配置只能证明选择器存在，不能可靠读出它当前选中的项。不要把 `DIRECT`、`REJECT`、`家宽-SOCKS5` 或 `AI-家宽` 放进当作 `dialer-proxy` 的选择器里。
 
-## Diagnostics
+## 诊断
 
-The script logs one line after successful transformation:
+转换成功后脚本打一行日志，版本号来自脚本常量 `SCRIPT_VERSION`，不要把某个发行号抄进文档：
 
 ```text
-[AI-家宽 v5.5.0] Profile“<name>”：dialer-proxy -> <resolved group>
+[AI-家宽 v<SCRIPT_VERSION>] Profile“<name>”：dialer-proxy -> <resolved group>
 ```
 
-When resolution fails, use the sanitized proxy-group names and the final `MATCH`/`FINAL` rule to update the candidate list. Do not publish node endpoints or provider URLs.
+解析失败时，用脱敏后的代理组名和最后的 `MATCH` / `FINAL` 规则更新候选列表。不要公开节点 endpoint 或订阅 URL。

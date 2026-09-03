@@ -1,11 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ControllerSettings } from "../../../dto";
+import type { AutostartRequestState } from "../../../hooks/autostart-request";
 import { t, type UiLocale } from "../../../i18n";
 import { applySecretField } from "../../../ipc/secret-field";
 import { healthOf } from "../../../lib/health";
 import { formatTemplate } from "../../../lib/utils";
 import { Button } from "../../ui/button";
 import { fieldClass, labelClass } from "../form-styles";
+import { StartupSection } from "./startup-section";
 
 export function ConnectionSection({
   locale,
@@ -28,6 +30,9 @@ export function ConnectionSection({
   onPause,
   onResume,
   onCompleteWizard,
+  autostart,
+  onRefreshAutostart,
+  onSetAutostartEnabled,
   onEnter
 }: {
   locale: UiLocale;
@@ -50,6 +55,9 @@ export function ConnectionSection({
   onPause: () => void;
   onResume: () => void;
   onCompleteWizard: () => void;
+  autostart: AutostartRequestState;
+  onRefreshAutostart: () => void;
+  onSetAutostartEnabled: (enabled: boolean) => void;
   onEnter: () => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -97,6 +105,12 @@ export function ConnectionSection({
           </div>
         </dl>
       </section>
+      <StartupSection
+        locale={locale}
+        state={autostart}
+        onRefresh={onRefreshAutostart}
+        onSetEnabled={onSetAutostartEnabled}
+      />
       <section className="space-y-3 rounded-xl border bg-card p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -113,7 +127,6 @@ export function ConnectionSection({
             id="controller-address"
             className={fieldClass}
             value={address}
-            placeholder="127.0.0.1:9097"
             autoComplete="off"
             onChange={(event) => onAddress(event.target.value)}
           />

@@ -37,10 +37,19 @@ export function ShareReadout({
   return (
     <section className="space-y-3" aria-labelledby="residential-share-title">
       <div>
-        <h2 id="residential-share-title" className="text-sm font-semibold">
+        <h3 id="residential-share-title" className="text-sm font-semibold">
           {t(locale, "residential.share")}
-        </h2>
-        <p className="text-xs text-muted-foreground">{t(locale, "residential.share.denominator")}</p>
+        </h3>
+        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+          <p className="text-xs text-muted-foreground/80">
+            {t(locale, "residential.share.denominator")}
+          </p>
+          {share?.namedSql.length ? (
+            <p className="text-xs text-muted-foreground/80">
+              {t(locale, "report.named_sql")} {share.namedSql.join(", ")}
+            </p>
+          ) : null}
+        </div>
       </div>
       {errorZh ? (
         <p className="text-sm text-destructive" role="alert">
@@ -53,21 +62,21 @@ export function ShareReadout({
           label={t(locale, "residential.share.ratio")}
           value={percentUnavailable ? unknown : formatPercent(readout.percent, unknown)}
           subvalue={t(locale, "residential.share.denominator")}
-          color="#3B82F6"
+          colorToken={1}
           loading={loading && share === null}
         />
         <StatCard
           icon={<Layers />}
           label={t(locale, "residential.share.residential")}
           value={formatBytes(readout.residential, unknown)}
-          color="#8B5CF6"
+          colorToken={2}
           loading={loading && share === null}
         />
         <StatCard
           icon={<Layers />}
           label={t(locale, "residential.share.attributed")}
           value={formatBytes(readout.attributed, unknown)}
-          color="#06B6D4"
+          colorToken={3}
           loading={loading && share === null}
         />
       </div>
@@ -76,34 +85,39 @@ export function ShareReadout({
           {note}
         </p>
       ) : null}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border/60 text-left text-muted-foreground">
-              <th className="py-2 font-medium">{t(locale, "overview.col.name")}</th>
-              <th className="py-2 font-medium">{t(locale, "overview.col.upload")}</th>
-              <th className="py-2 font-medium">{t(locale, "overview.col.download")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-border/40">
-              <td className="py-2">{t(locale, "residential.share.residential")}</td>
-              <td className="py-2 tabular-nums">{formatBytes(share?.residentialUpload ?? null, unknown)}</td>
-              <td className="py-2 tabular-nums">{formatBytes(share?.residentialDownload ?? null, unknown)}</td>
-            </tr>
-            <tr>
-              <td className="py-2">{t(locale, "residential.share.attributed")}</td>
-              <td className="py-2 tabular-nums">{formatBytes(share?.attributedUpload ?? null, unknown)}</td>
-              <td className="py-2 tabular-nums">{formatBytes(share?.attributedDownload ?? null, unknown)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      {share?.namedSql.length ? (
-        <p className="text-xs text-muted-foreground">
-          {t(locale, "report.named_sql")} {share.namedSql.join(", ")}
-        </p>
-      ) : null}
+      <ul className="space-y-1.5">
+        {[
+          {
+            name: t(locale, "residential.share.residential"),
+            upload: share?.residentialUpload ?? null,
+            download: share?.residentialDownload ?? null
+          },
+          {
+            name: t(locale, "residential.share.attributed"),
+            upload: share?.attributedUpload ?? null,
+            download: share?.attributedDownload ?? null
+          }
+        ].map((row) => (
+          <li
+            key={row.name}
+            className="flex flex-wrap items-baseline gap-x-6 gap-y-0.5 text-sm"
+          >
+            <span className="font-medium">{row.name}</span>
+            <span className="text-muted-foreground">
+              {t(locale, "overview.col.upload")}{" "}
+              <span className="tabular-nums text-foreground">
+                {formatBytes(row.upload, unknown)}
+              </span>
+            </span>
+            <span className="text-muted-foreground">
+              {t(locale, "overview.col.download")}{" "}
+              <span className="tabular-nums text-foreground">
+                {formatBytes(row.download, unknown)}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

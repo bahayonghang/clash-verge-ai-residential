@@ -544,15 +544,8 @@ mod connection_query_tests {
         assert_eq!(page.rows[0].connection_id, "a");
     }
 
-    /// 改造前 `is_residential` 原文。用于断言「只看家宽」选中集合不变。
-    fn legacy_is_residential(row: &LiveConnectionView, targets: &[String]) -> bool {
-        row.chains
-            .iter()
-            .any(|node| targets.iter().any(|target| target == node) || node.contains("家宽"))
-    }
-
     #[test]
-    fn residential_only_selected_set_matches_legacy() {
+    fn residential_only_uses_configured_shared_semantics() {
         let mut exact = row("a", "a.test");
         exact.chains = vec!["家宽-SOCKS5".into()];
         let mut substring = row("b", "b.test");
@@ -570,23 +563,20 @@ mod connection_query_tests {
             sort_field: "identity".into(),
             ..ConnectionQuery::default()
         };
-        for targets in [
-            vec!["家宽-SOCKS5".into()],
-            vec!["家宽".into()],
-            Vec::<String>::new(),
-            vec!["DIRECT".into()],
-        ] {
-            let page = query_connections_with_targets(&rows, &query, &targets);
-            let mut got: Vec<String> = page.rows.iter().map(|item| item.identity.clone()).collect();
-            let mut expected: Vec<String> = rows
-                .iter()
-                .filter(|item| legacy_is_residential(item, &targets))
-                .map(|item| item.identity.clone())
-                .collect();
-            got.sort();
-            expected.sort();
-            assert_eq!(got, expected, "targets={targets:?}");
-        }
+        let semantic = query_connections_with_targets(&rows, &query, &["家宽".into()]);
+        let semantic_ids: Vec<&str> = semantic
+            .rows
+            .iter()
+            .map(|item| item.connection_id.as_str())
+            .collect();
+        assert_eq!(semantic_ids, vec!["a", "b", "d"]);
+
+        let custom = query_connections_with_targets(&rows, &query, &["家宽-SOCKS5".into()]);
+        assert_eq!(custom.rows.len(), 1);
+        assert_eq!(custom.rows[0].connection_id, "a");
+
+        let empty = query_connections_with_targets(&rows, &query, &[]);
+        assert!(empty.rows.is_empty());
     }
 
     #[test]

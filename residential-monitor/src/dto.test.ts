@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   decodeAbout,
   decodeAlertCenter,
+  decodeAutostartState,
   decodeDeleteReport,
   decodeDiagnostics,
   decodeReportArchivePage,
@@ -74,6 +75,14 @@ function validReportPayload() {
 }
 
 describe("decodeShellStatus", () => {
+  it("严格解码 Windows 登录自启动状态", () => {
+    expect(decodeAutostartState({ enabled: true })).toEqual({ enabled: true });
+    expect(decodeAutostartState({ enabled: false, extra: "ignored" })).toEqual({ enabled: false });
+    expect(() => decodeAutostartState({})).toThrow(/AutostartStateDto/);
+    expect(() => decodeAutostartState({ enabled: "true" })).toThrow(/AutostartStateDto/);
+    expect(() => decodeAutostartState({ enabled: null })).toThrow(/AutostartStateDto/);
+  });
+
   it("接受完整 DTO", () => {
     const decoded = decodeShellStatus({
       schemaVersion: 1,
@@ -135,6 +144,25 @@ describe("decodeShellStatus", () => {
     expect(decoded.reportSnapshotToken).toBe("abc");
     expect(decoded.attributionQuality.status).toBe("unavailable");
     expect(decoded.rankings[0]?.identity).toBe("__unknown__");
+    expect(decoded.rankings[0]?.primaryExit).toBeNull();
+    expect(decoded.rankings[0]?.exitMixed).toBe(false);
+  });
+
+  it("旧档案缺出口字段按未知解码，非法类型拒绝", () => {
+    const decoded = decodeReportResult(validReportPayload());
+    expect(decoded.rankings[0]?.primaryExit).toBeNull();
+    expect(decoded.rankings[0]?.exitMixed).toBe(false);
+    const withExit = validReportPayload();
+    Object.assign(withExit.rankings[0]!, { primaryExit: "DIRECT", exitMixed: true });
+    const ok = decodeReportResult(withExit);
+    expect(ok.rankings[0]?.primaryExit).toBe("DIRECT");
+    expect(ok.rankings[0]?.exitMixed).toBe(true);
+    const badExit = validReportPayload();
+    Object.assign(badExit.rankings[0]!, { primaryExit: 0 });
+    expect(() => decodeReportResult(badExit)).toThrow(/primaryExit/);
+    const badMixed = validReportPayload();
+    Object.assign(badMixed.rankings[0]!, { exitMixed: "true" });
+    expect(() => decodeReportResult(badMixed)).toThrow(/exitMixed/);
   });
 
   it("拒绝缺失 attributionQuality 或非法负数排名", () => {

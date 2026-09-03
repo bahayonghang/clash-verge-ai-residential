@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "扩展脚本零依赖、无 bundler 合同；文档工具不得破坏粘贴运行时"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "docs/ 中文用户文档放置规则；根 package.json 是零依赖命令面；文档文件名 kebab-case"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "docs/ 用中文；根脚本 Node 18+ 与 npm run ci 门禁"}
+{"file": ".trellis/spec/guides/index.md", "reason": "docs/routing-scope.md 是域名准入产品合同，重写不得改口径"}
