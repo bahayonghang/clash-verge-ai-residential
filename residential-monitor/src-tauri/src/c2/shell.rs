@@ -6,6 +6,8 @@ use crate::storage::{RecoveryFacade, StorageError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -133,9 +135,15 @@ pub struct OperationProgress {
     pub redacted_error: Option<String>,
 }
 
+struct OperationEntry {
+    progress: OperationProgress,
+    cancel: Arc<AtomicBool>,
+}
+
 #[derive(Default)]
 pub struct OperationRegistry {
-    items: HashMap<String, OperationProgress>,
+    items: HashMap<String, OperationEntry>,
+    archive_tick_cancel: Arc<AtomicBool>,
 }
 
 impl OperationRegistry {
@@ -156,33 +164,65 @@ impl OperationRegistry {
             status: "running".into(),
             redacted_error: None,
         };
-        self.items.insert(operation_id, progress.clone());
+        self.items.insert(
+            operation_id,
+            OperationEntry {
+                progress: progress.clone(),
+                cancel: Arc::new(AtomicBool::new(false)),
+            },
+        );
         progress
     }
 
+    pub fn cancel_flag(&self, operation_id: &str) -> Option<Arc<AtomicBool>> {
+        self.items
+            .get(operation_id)
+            .map(|entry| Arc::clone(&entry.cancel))
+    }
+
+    pub fn archive_tick_cancel(&self) -> Arc<AtomicBool> {
+        Arc::clone(&self.archive_tick_cancel)
+    }
+
+    pub fn resolve_cancel(&self, operation_id: Option<&str>, kind: &str) -> Arc<AtomicBool> {
+        if let Some(id) = operation_id {
+            if let Some(flag) = self.cancel_flag(id) {
+                return flag;
+            }
+        }
+        self.items
+            .values()
+            .find(|entry| entry.progress.kind == kind && entry.progress.status == "running")
+            .map(|entry| Arc::clone(&entry.cancel))
+            .unwrap_or_else(|| Arc::new(AtomicBool::new(false)))
+    }
+
     pub fn cancel(&mut self, operation_id: &str) -> Option<OperationProgress> {
-        if let Some(item) = self.items.get_mut(operation_id) {
-            item.status = "cancelled".into();
-            item.can_cancel = false;
-            item.phase = "cancelled".into();
-            return Some(item.clone());
+        if let Some(entry) = self.items.get_mut(operation_id) {
+            entry.cancel.store(true, Ordering::SeqCst);
+            entry.progress.status = "cancelled".into();
+            entry.progress.can_cancel = false;
+            entry.progress.phase = "cancelled".into();
+            return Some(entry.progress.clone());
         }
         None
     }
 
     pub fn finish(&mut self, operation_id: &str) -> Option<OperationProgress> {
-        if let Some(item) = self.items.get_mut(operation_id) {
-            item.status = "completed".into();
-            item.current = item.total;
-            item.can_cancel = false;
-            item.phase = "done".into();
-            return Some(item.clone());
+        if let Some(entry) = self.items.get_mut(operation_id) {
+            entry.progress.status = "completed".into();
+            entry.progress.current = entry.progress.total;
+            entry.progress.can_cancel = false;
+            entry.progress.phase = "done".into();
+            return Some(entry.progress.clone());
         }
         None
     }
 
     pub fn get(&self, operation_id: &str) -> Option<OperationProgress> {
-        self.items.get(operation_id).cloned()
+        self.items
+            .get(operation_id)
+            .map(|entry| entry.progress.clone())
     }
 }
 
@@ -318,8 +358,14 @@ mod shell_seam_tests {
     fn operation_progress_can_cancel_fixture() {
         let mut ops = OperationRegistry::new();
         ops.start_fixture("op-1".into(), "export".into());
+        let flag = ops.cancel_flag("op-1").expect("flag");
+        assert!(!flag.load(std::sync::atomic::Ordering::SeqCst));
         let cancelled = ops.cancel("op-1").expect("cancel");
         assert_eq!(cancelled.status, "cancelled");
+        assert!(flag.load(std::sync::atomic::Ordering::SeqCst));
+        assert!(!ops
+            .archive_tick_cancel()
+            .load(std::sync::atomic::Ordering::SeqCst));
     }
 
     #[test]

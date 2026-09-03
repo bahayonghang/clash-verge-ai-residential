@@ -26,6 +26,7 @@ use crate::c3::retention::{RetentionMode, RetentionPreview, RetentionService};
 use crate::c3::share::{query_residential_share, ResidentialShare};
 use crate::c3::snapshot::ReportSnapshotStore;
 use crate::c3::space::SpaceBudget;
+use crate::c3::{poll_interrupt, run_uncached};
 use crate::c4::engine::{AlertEngine, HealthSnapshot};
 use crate::c4::notify::{NotificationSink, NotifyPayload, WindowsNotificationSink};
 use crate::c4::types::{
@@ -56,6 +57,7 @@ use sha2::{Digest, Sha256};
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use std::sync::Mutex;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -1202,7 +1204,7 @@ impl AppFacade {
         let path = self
             .storage
             .as_ref()
-            .ok_or_else(recovery_only)?
+            .ok_or_else(|| recovery_only_locale(self.ui_locale))?
             .path()
             .to_path_buf();
         let now = chrono::Utc::now().timestamp();
@@ -1213,7 +1215,7 @@ impl AppFacade {
             &display_timezone,
             now,
         )
-        .map_err(map_report)
+        .map_err(|error| map_report_locale(error, self.ui_locale))
     }
 
     pub fn run_report(
@@ -1224,25 +1226,46 @@ impl AppFacade {
         let path = self
             .storage
             .as_ref()
-            .ok_or_else(recovery_only)?
+            .ok_or_else(|| recovery_only_locale(self.ui_locale))?
             .path()
             .to_path_buf();
         let now = chrono::Utc::now().timestamp();
-        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let result = crate::c3::ReportService::run(
+        let cancel = self.operations.resolve_cancel(None, "report");
+        let built = run_uncached(
             &path,
-            &mut self.snapshots,
-            query,
+            query.clone(),
             now,
             self.raw_retain_days,
             &cancel,
             None,
         )
-        .map_err(map_report)?;
+        .map_err(|error| map_report_locale(error, self.ui_locale))?;
+        poll_interrupt(&cancel, "user")
+            .map_err(|error| map_report_locale(error, self.ui_locale))?;
+        self.persist_report_result(query, built, persist_manual, now)
+    }
+
+    fn persist_report_result(
+        &mut self,
+        query: ReportQuery,
+        built: ReportResult,
+        persist_manual: bool,
+        now: i64,
+    ) -> Result<ReportResult, AppErrorDto> {
+        if self.storage.is_none() || self.branch != BootBranch::NormalReady {
+            return Err(recovery_only_locale(self.ui_locale));
+        }
+        let result = self
+            .snapshots
+            .insert(&query, built, now, false)
+            .map_err(|error| map_report_locale(error, self.ui_locale))?;
         if persist_manual {
-            let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
+            let storage = self
+                .storage
+                .as_ref()
+                .ok_or_else(|| recovery_only_locale(self.ui_locale))?;
             ReportArchiveService::persist_manual(storage.connection(), result.clone(), now)
-                .map_err(map_report)?;
+                .map_err(|error| map_report_locale(error, self.ui_locale))?;
         }
         Ok(result)
     }
@@ -1302,7 +1325,7 @@ impl AppFacade {
         let result = self.get_report(token)?;
         let mut spec = spec.clone();
         spec.ui_locale = self.ui_locale;
-        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let cancel = self.operations.resolve_cancel(None, "export");
         ExportService::render_html(&result, &spec, &cancel)
             .map(|html| HtmlDocument { html })
             .map_err(map_report)
@@ -1332,7 +1355,7 @@ impl AppFacade {
         dest: &Path,
     ) -> Result<String, AppErrorDto> {
         let result = self.get_report(token)?;
-        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let cancel = self.operations.resolve_cancel(None, "export");
         let mut spec = spec.clone();
         spec.ui_locale = self.ui_locale;
         ExportService::export_to_path(&result, &spec, dest, &self.space, &cancel)
@@ -1346,9 +1369,12 @@ impl AppFacade {
     }
 
     pub fn run_retention(&mut self, delete: bool) -> Result<RetentionPreview, AppErrorDto> {
-        let storage = self.storage.as_mut().ok_or_else(recovery_only)?;
+        let storage = self
+            .storage
+            .as_mut()
+            .ok_or_else(|| recovery_only_locale(self.ui_locale))?;
         let now = chrono::Utc::now().timestamp();
-        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let cancel = self.operations.resolve_cancel(None, "retention");
         let mode = if delete {
             RetentionMode::DeleteEnabled
         } else {
@@ -1622,11 +1648,11 @@ impl AppFacade {
 
     pub fn create_backup(&self, dest: &Path) -> Result<String, AppErrorDto> {
         if self.storage.is_none() {
-            return Err(recovery_only());
+            return Err(recovery_only_locale(self.ui_locale));
         }
         let live = self.data_dir.join("monitor.sqlite3");
         let now = chrono::Utc::now().timestamp();
-        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let cancel = self.operations.resolve_cancel(None, "backup");
         let result = BackupRestoreService::create_backup(&live, dest, &self.space, &cancel, now);
         app_log::emit(
             if result.is_ok() {
@@ -1644,7 +1670,7 @@ impl AppFacade {
         self.storage = None;
         self.branch = BootBranch::RecoveryOnly;
         let live = self.data_dir.join("monitor.sqlite3");
-        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let cancel = self.operations.resolve_cancel(None, "restore");
         let restored = BackupRestoreService::restore(&live, candidate, &self.space, &cancel);
         app_log::emit(
             if restored.is_ok() {
@@ -1655,6 +1681,10 @@ impl AppFacade {
             "restore",
             serde_json::json!({ "ok": restored.is_ok() }),
         );
+        self.complete_restore(restored)
+    }
+
+    fn complete_restore(&mut self, restored: Result<(), ReportError>) -> Result<(), AppErrorDto> {
         match restored {
             Ok(()) => match self.reboot_storage() {
                 Ok(()) => Ok(()),
@@ -1670,7 +1700,7 @@ impl AppFacade {
                 }
             },
             Err(error) => {
-                let mapped = map_report(error);
+                let mapped = map_report_locale(error, self.ui_locale);
                 if self.reboot_storage().is_err() {
                     self.branch = BootBranch::RecoveryOnly;
                     self.storage = None;
@@ -1748,6 +1778,203 @@ impl AppFacade {
         }
         result.map_err(map_report)
     }
+}
+
+pub fn run_report_unlocked(
+    state: &Mutex<AppFacade>,
+    query: ReportQuery,
+    persist_manual: bool,
+    operation_id: Option<&str>,
+) -> Result<ReportResult, AppErrorDto> {
+    let (path, cancel, raw_retain_days, locale) = {
+        let guard = state.lock().expect("state");
+        let path = guard
+            .storage
+            .as_ref()
+            .ok_or_else(|| recovery_only_locale(guard.ui_locale))?
+            .path()
+            .to_path_buf();
+        (
+            path,
+            guard.operations.resolve_cancel(operation_id, "report"),
+            guard.raw_retain_days,
+            guard.ui_locale,
+        )
+    };
+    let now = chrono::Utc::now().timestamp();
+    let built = run_uncached(&path, query.clone(), now, raw_retain_days, &cancel, None)
+        .map_err(|error| map_report_locale(error, locale))?;
+    poll_interrupt(&cancel, "user").map_err(|error| map_report_locale(error, locale))?;
+    let mut guard = state.lock().expect("state");
+    guard.persist_report_result(query, built, persist_manual, now)
+}
+
+pub fn residential_share_unlocked(
+    state: &Mutex<AppFacade>,
+    range_start_utc: i64,
+    range_end_utc: i64,
+    display_timezone: String,
+) -> Result<ResidentialShare, AppErrorDto> {
+    let (path, locale) = {
+        let guard = state.lock().expect("state");
+        let path = guard
+            .storage
+            .as_ref()
+            .ok_or_else(|| recovery_only_locale(guard.ui_locale))?
+            .path()
+            .to_path_buf();
+        (path, guard.ui_locale)
+    };
+    let now = chrono::Utc::now().timestamp();
+    query_residential_share(
+        &path,
+        range_start_utc,
+        range_end_utc,
+        &display_timezone,
+        now,
+    )
+    .map_err(|error| map_report_locale(error, locale))
+}
+
+pub fn export_report_unlocked(
+    state: &Mutex<AppFacade>,
+    token: &str,
+    spec: &ExportSpec,
+    dest: &Path,
+    operation_id: Option<&str>,
+) -> Result<String, AppErrorDto> {
+    let (result, mut spec, space, cancel, locale) = {
+        let mut guard = state.lock().expect("state");
+        let result = guard.get_report(token)?;
+        (
+            result,
+            spec.clone(),
+            guard.space.clone(),
+            guard.operations.resolve_cancel(operation_id, "export"),
+            guard.ui_locale,
+        )
+    };
+    spec.ui_locale = locale;
+    ExportService::export_to_path(&result, &spec, dest, &space, &cancel)
+        .map(|path| path.to_string_lossy().into_owned())
+        .map_err(|error| map_report_locale(error, locale))
+}
+
+pub fn run_retention_unlocked(
+    state: &Mutex<AppFacade>,
+    delete: bool,
+    operation_id: Option<&str>,
+) -> Result<RetentionPreview, AppErrorDto> {
+    let (path, raw_retain_days, space, cancel, mode, now, locale) = {
+        let guard = state.lock().expect("state");
+        let path = guard
+            .storage
+            .as_ref()
+            .ok_or_else(|| recovery_only_locale(guard.ui_locale))?
+            .path()
+            .to_path_buf();
+        let mode = if delete {
+            RetentionMode::DeleteEnabled
+        } else {
+            RetentionMode::MaterializeOnly
+        };
+        (
+            path,
+            guard.raw_retain_days,
+            guard.space.clone(),
+            guard.operations.resolve_cancel(operation_id, "retention"),
+            mode,
+            chrono::Utc::now().timestamp(),
+            guard.ui_locale,
+        )
+    };
+    let mut coordinator = StorageCoordinator::open(&path)
+        .map_err(|_| map_report_locale(ReportError::Failed("open writer"), locale))?;
+    let preview = RetentionService::run(
+        &mut coordinator,
+        now,
+        raw_retain_days,
+        mode,
+        &space,
+        &cancel,
+    );
+    drop(coordinator);
+    app_log::emit(
+        if preview.is_ok() {
+            Level::Info
+        } else {
+            Level::Error
+        },
+        "retention",
+        serde_json::json!({ "ok": preview.is_ok() }),
+    );
+    let preview = preview.map_err(|error| map_report_locale(error, locale))?;
+    let guard = state.lock().expect("state");
+    if let Some(storage) = guard.storage.as_ref() {
+        let _ = crate::c4::store::retain_alerts(storage.connection(), now);
+    }
+    Ok(preview)
+}
+
+pub fn create_backup_unlocked(
+    state: &Mutex<AppFacade>,
+    dest: &Path,
+    operation_id: Option<&str>,
+) -> Result<String, AppErrorDto> {
+    let (live, space, cancel, now, locale) = {
+        let guard = state.lock().expect("state");
+        if guard.storage.is_none() {
+            return Err(recovery_only_locale(guard.ui_locale));
+        }
+        (
+            guard.data_dir.join("monitor.sqlite3"),
+            guard.space.clone(),
+            guard.operations.resolve_cancel(operation_id, "backup"),
+            chrono::Utc::now().timestamp(),
+            guard.ui_locale,
+        )
+    };
+    let result = BackupRestoreService::create_backup(&live, dest, &space, &cancel, now);
+    app_log::emit(
+        if result.is_ok() {
+            Level::Info
+        } else {
+            Level::Error
+        },
+        "backup",
+        serde_json::json!({ "ok": result.is_ok() }),
+    );
+    result
+        .map(|manifest| manifest.checksum)
+        .map_err(|error| map_report_locale(error, locale))
+}
+
+pub fn restore_backup_unlocked(
+    state: &Mutex<AppFacade>,
+    candidate: &Path,
+    operation_id: Option<&str>,
+) -> Result<(), AppErrorDto> {
+    let (live, space, cancel) = {
+        let mut guard = state.lock().expect("state");
+        guard.storage = None;
+        guard.branch = BootBranch::RecoveryOnly;
+        (
+            guard.data_dir.join("monitor.sqlite3"),
+            guard.space.clone(),
+            guard.operations.resolve_cancel(operation_id, "restore"),
+        )
+    };
+    let restored = BackupRestoreService::restore(&live, candidate, &space, &cancel);
+    app_log::emit(
+        if restored.is_ok() {
+            Level::Info
+        } else {
+            Level::Error
+        },
+        "restore",
+        serde_json::json!({ "ok": restored.is_ok() }),
+    );
+    state.lock().expect("state").complete_restore(restored)
 }
 
 fn retain_live_rows(input: &ControllerInput) -> bool {
@@ -1841,6 +2068,7 @@ mod c2_facade_contract_tests {
     use crate::c2::contract::c2_consumes_c1_modules;
     use crate::live::LiveProjection;
     use crate::storage::{list_user_tables, migrate};
+    use std::time::{Duration, Instant};
     use tempfile::tempdir;
 
     #[test]
@@ -2818,6 +3046,147 @@ mod c2_facade_contract_tests {
             .resolve(&facade.settings.credential_target, "session")
             .expect("resolve session secret");
         assert_eq!(secret.as_header_bytes(), b"session-secret");
+    }
+
+    fn wait_c3_hold_entered() {
+        let started = Instant::now();
+        while !crate::c3::service::c3_hold_entered() {
+            assert!(
+                started.elapsed() < Duration::from_secs(2),
+                "c3 hold did not start"
+            );
+            std::thread::sleep(Duration::from_millis(5));
+        }
+    }
+
+    fn current_hour_query() -> ReportQuery {
+        let now = chrono::Utc::now().timestamp();
+        ReportQuery {
+            range_start_utc: now - 3_600,
+            range_end_utc: now,
+            ..ReportQuery::default()
+        }
+    }
+
+    #[test]
+    fn run_report_releases_facade_lock_for_live_query() {
+        let _hold = crate::c3::service::hold_c3_runs(800);
+        let dir = tempdir().expect("dir");
+        let facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let live = dir.path().join("monitor.sqlite3");
+        let before = std::fs::read(&live).expect("live");
+        let state = std::sync::Arc::new(Mutex::new(facade));
+        state
+            .lock()
+            .expect("state")
+            .start_operation("op-report".into(), "report".into());
+        let worker = {
+            let state = std::sync::Arc::clone(&state);
+            std::thread::spawn(move || {
+                run_report_unlocked(&state, current_hour_query(), true, Some("op-report"))
+            })
+        };
+        wait_c3_hold_entered();
+        let started = Instant::now();
+        {
+            let mut guard = state.lock().expect("state");
+            let _ = guard.pause_collector();
+            let _ = guard.query(&ConnectionQuery::default());
+        }
+        assert!(
+            started.elapsed() < Duration::from_millis(200),
+            "facade lock wait {:?}",
+            started.elapsed()
+        );
+        state.lock().expect("state").operations.cancel("op-report");
+        let error = worker.join().expect("join").expect_err("cancelled");
+        assert_eq!(error.code, "cancelled");
+        assert_eq!(std::fs::read(&live).expect("live after"), before);
+        let archives = state
+            .lock()
+            .expect("state")
+            .list_report_archives(Some("manual".into()), None, None)
+            .expect("list");
+        assert!(archives.items.is_empty());
+    }
+
+    #[test]
+    fn cancel_in_flight_export_returns_cancelled_without_dest() {
+        let dir = tempdir().expect("dir");
+        let facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let state = Mutex::new(facade);
+        let report =
+            run_report_unlocked(&state, current_hour_query(), false, None).expect("report");
+        let dest = dir.path().join("out.csv");
+        state
+            .lock()
+            .expect("state")
+            .start_operation("op-export".into(), "export".into());
+        let _hold = crate::c3::service::hold_c3_runs(800);
+        let state = std::sync::Arc::new(state);
+        let worker = {
+            let state = std::sync::Arc::clone(&state);
+            let token = report.report_snapshot_token.clone();
+            let dest = dest.clone();
+            std::thread::spawn(move || {
+                export_report_unlocked(
+                    &state,
+                    &token,
+                    &ExportSpec::default(),
+                    &dest,
+                    Some("op-export"),
+                )
+            })
+        };
+        wait_c3_hold_entered();
+        state.lock().expect("state").operations.cancel("op-export");
+        let error = worker.join().expect("join").expect_err("cancelled");
+        assert_eq!(error.code, "cancelled");
+        assert!(!dest.exists());
+    }
+
+    #[test]
+    fn cancel_in_flight_backup_does_not_overwrite_hot_db() {
+        let dir = tempdir().expect("dir");
+        let facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let live = dir.path().join("monitor.sqlite3");
+        let before = std::fs::read(&live).expect("live");
+        let dest = dir.path().join("backup.sqlite3");
+        let state = Mutex::new(facade);
+        state
+            .lock()
+            .expect("state")
+            .start_operation("op-backup".into(), "backup".into());
+        let _hold = crate::c3::service::hold_c3_runs(800);
+        let state = std::sync::Arc::new(state);
+        let worker = {
+            let state = std::sync::Arc::clone(&state);
+            let dest = dest.clone();
+            std::thread::spawn(move || create_backup_unlocked(&state, &dest, Some("op-backup")))
+        };
+        wait_c3_hold_entered();
+        state.lock().expect("state").operations.cancel("op-backup");
+        let error = worker.join().expect("join").expect_err("cancelled");
+        assert_eq!(error.code, "cancelled");
+        assert!(!dest.exists());
+        assert_eq!(std::fs::read(&live).expect("live after"), before);
+    }
+
+    #[test]
+    fn unlocked_write_paths_return_recovery_only() {
+        let (dir, facade) = recovery_only_boot();
+        let state = Mutex::new(facade);
+        let report =
+            run_report_unlocked(&state, ReportQuery::default(), true, None).expect_err("report");
+        assert_eq!(report.code, "recovery_only");
+        let dest = dir.path().join("recovery-backup.sqlite3");
+        let backup = create_backup_unlocked(&state, &dest, None).expect_err("backup");
+        assert_eq!(backup.code, "recovery_only");
+        assert!(!dest.exists());
+        let retention = run_retention_unlocked(&state, false, None).expect_err("retention");
+        assert_eq!(retention.code, "recovery_only");
+        let share = residential_share_unlocked(&state, 0, 3_600, "UTC".into()).expect_err("share");
+        assert_eq!(share.code, "recovery_only");
     }
 }
 

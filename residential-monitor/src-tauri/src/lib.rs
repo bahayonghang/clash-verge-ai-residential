@@ -314,12 +314,12 @@ fn archive_tick_at(state: &Mutex<AppFacade>, now_utc: i64) {
             storage.path().to_path_buf(),
             guard.data_dir.clone(),
             guard.raw_retain_days,
+            guard.operations.archive_tick_cancel(),
         )
     };
-    let (job, db_path, data_dir, raw_retain_days) = prepared;
+    let (job, db_path, data_dir, raw_retain_days, cancel) = prepared;
     // 独立 spool 目录，避免新 store 清理门面里仍有效的 token。
     let mut store = ReportSnapshotStore::open(data_dir.join("archive-tick"));
-    let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let outcome = c3::ReportService::run(
         &db_path,
         &mut store,
@@ -800,11 +800,14 @@ fn run_report(
     state: State<Mutex<AppFacade>>,
     query: ReportQuery,
     persist_manual: Option<bool>,
+    operation_id: Option<String>,
 ) -> Result<ReportResult, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .run_report(query, persist_manual.unwrap_or(false))
+    c2::facade::run_report_unlocked(
+        &state,
+        query,
+        persist_manual.unwrap_or(false),
+        operation_id.as_deref(),
+    )
 }
 
 #[tauri::command]
@@ -814,10 +817,7 @@ fn residential_share(
     range_end_utc: i64,
     display_timezone: String,
 ) -> Result<ResidentialShare, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .residential_share(range_start_utc, range_end_utc, display_timezone)
+    c2::facade::residential_share_unlocked(&state, range_start_utc, range_end_utc, display_timezone)
 }
 
 #[tauri::command]
@@ -866,11 +866,15 @@ fn export_report(
     token: String,
     spec: ExportSpec,
     path: String,
+    operation_id: Option<String>,
 ) -> Result<String, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .export_report(&token, &spec, std::path::Path::new(&path))
+    c2::facade::export_report_unlocked(
+        &state,
+        &token,
+        &spec,
+        std::path::Path::new(&path),
+        operation_id.as_deref(),
+    )
 }
 
 #[tauri::command]
@@ -901,24 +905,31 @@ fn retention_preview(state: State<Mutex<AppFacade>>) -> Result<RetentionPreview,
 fn run_retention(
     state: State<Mutex<AppFacade>>,
     delete: bool,
+    operation_id: Option<String>,
 ) -> Result<RetentionPreview, AppErrorDto> {
-    state.lock().expect("state").run_retention(delete)
+    c2::facade::run_retention_unlocked(&state, delete, operation_id.as_deref())
 }
 
 #[tauri::command]
-fn create_backup(state: State<Mutex<AppFacade>>, path: String) -> Result<String, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .create_backup(std::path::Path::new(&path))
+fn create_backup(
+    state: State<Mutex<AppFacade>>,
+    path: String,
+    operation_id: Option<String>,
+) -> Result<String, AppErrorDto> {
+    c2::facade::create_backup_unlocked(&state, std::path::Path::new(&path), operation_id.as_deref())
 }
 
 #[tauri::command]
-fn restore_backup(state: State<Mutex<AppFacade>>, path: String) -> Result<(), AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .restore_backup(std::path::Path::new(&path))
+fn restore_backup(
+    state: State<Mutex<AppFacade>>,
+    path: String,
+    operation_id: Option<String>,
+) -> Result<(), AppErrorDto> {
+    c2::facade::restore_backup_unlocked(
+        &state,
+        std::path::Path::new(&path),
+        operation_id.as_deref(),
+    )
 }
 
 #[tauri::command]

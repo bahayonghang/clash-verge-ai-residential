@@ -20,9 +20,67 @@ use rusqlite::types::Value;
 use rusqlite::{params, params_from_iter, Connection, OptionalExtension};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+#[cfg(test)]
+use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+#[cfg(test)]
+use std::sync::Mutex;
 use std::time::{Duration, Instant};
+
+#[cfg(test)]
+static C3_HOLD_MS: AtomicU64 = AtomicU64::new(0);
+#[cfg(test)]
+static C3_HOLD_ENTERED: AtomicBool = AtomicBool::new(false);
+#[cfg(test)]
+static C3_HOLD_LOCK: Mutex<()> = Mutex::new(());
+
+#[cfg(test)]
+pub struct C3HoldGuard {
+    _lock: std::sync::MutexGuard<'static, ()>,
+}
+
+#[cfg(test)]
+impl Drop for C3HoldGuard {
+    fn drop(&mut self) {
+        C3_HOLD_MS.store(0, Ordering::SeqCst);
+        C3_HOLD_ENTERED.store(false, Ordering::SeqCst);
+    }
+}
+
+#[cfg(test)]
+pub fn hold_c3_runs(ms: u64) -> C3HoldGuard {
+    let lock = C3_HOLD_LOCK.lock().expect("c3 hold lock");
+    C3_HOLD_ENTERED.store(false, Ordering::SeqCst);
+    C3_HOLD_MS.store(ms, Ordering::SeqCst);
+    C3HoldGuard { _lock: lock }
+}
+
+#[cfg(test)]
+pub fn c3_hold_entered() -> bool {
+    C3_HOLD_ENTERED.load(Ordering::SeqCst)
+}
+
+pub fn poll_interrupt(cancel: &Arc<AtomicBool>, reason: &'static str) -> Result<(), ReportError> {
+    #[cfg(test)]
+    {
+        let hold_ms = C3_HOLD_MS.load(Ordering::SeqCst);
+        if hold_ms > 0 {
+            C3_HOLD_ENTERED.store(true, Ordering::SeqCst);
+            let deadline = Instant::now() + Duration::from_millis(hold_ms);
+            while Instant::now() < deadline {
+                if cancel.load(Ordering::SeqCst) {
+                    return Err(ReportError::Cancelled(reason));
+                }
+                std::thread::sleep(Duration::from_millis(5));
+            }
+        }
+    }
+    if cancel.load(Ordering::SeqCst) {
+        return Err(ReportError::Cancelled(reason));
+    }
+    Ok(())
+}
 
 pub struct ReportService;
 
@@ -93,6 +151,7 @@ pub fn run_uncached(
     cancel: &Arc<AtomicBool>,
     deadline: Option<Duration>,
 ) -> Result<ReportResult, ReportError> {
+    poll_interrupt(cancel, "user")?;
     validate_query(&query)?;
     let plan = plan_capability(&query, now_utc, raw_retain_days)?;
     let limit = deadline.unwrap_or(Duration::from_millis(plan.deadline_ms));

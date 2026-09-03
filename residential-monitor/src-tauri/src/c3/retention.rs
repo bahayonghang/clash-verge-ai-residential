@@ -9,7 +9,7 @@ use crate::c3::sql::UNKNOWN_IDENTITY;
 use crate::storage::StorageCoordinator;
 use rusqlite::{params, OptionalExtension};
 use sha2::{Digest, Sha256};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -65,13 +65,11 @@ impl RetentionService {
         space: &SpaceBudget,
         cancel: &Arc<AtomicBool>,
     ) -> Result<RetentionPreview, ReportError> {
+        crate::c3::service::poll_interrupt(cancel, "retention")?;
         space.check(
             coordinator.path().parent().unwrap_or(coordinator.path()),
             4096,
         )?;
-        if cancel.load(Ordering::SeqCst) {
-            return Err(ReportError::Cancelled("retention"));
-        }
         repair_chain_identity_v1(coordinator)?;
         repair_coverage_open_gaps_v1(coordinator)?;
         materialize_hourly(coordinator, now_utc, raw_retain_days)?;

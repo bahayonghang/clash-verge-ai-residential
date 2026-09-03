@@ -105,6 +105,7 @@ impl ExportService {
         space: &SpaceBudget,
         cancel: &Arc<AtomicBool>,
     ) -> Result<PathBuf, ReportError> {
+        crate::c3::service::poll_interrupt(cancel, "export")?;
         reject_secret(result)?;
         if dest.exists() {
             return Err(ReportError::Failed("destination exists"));
