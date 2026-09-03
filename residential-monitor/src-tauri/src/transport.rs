@@ -1,7 +1,9 @@
 //! TCP / named pipe 兼容探测。HTTP 使用 hyper，不手写完整解析器。
 
+use crate::c0_contract::FRAME_BODY_LIMIT;
 use http_body_util::{BodyExt, Full};
 use hyper::body::Bytes;
+use hyper::header::CONTENT_LENGTH;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Method, Request, Response, StatusCode};
@@ -12,6 +14,11 @@ use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
+
+/// connect / handshake / 读体总超时。超限映射为 `EndpointMissing`，采集循环可进入下一拍。
+pub const HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
+/// 响应体上限。超过则 `ProtocolIncompatible`，不把整段读进 `String`。
+pub const HTTP_BODY_MAX_BYTES: usize = FRAME_BODY_LIMIT;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -94,14 +101,14 @@ pub fn reject_non_loopback(host: &str) -> Result<(), TransportErrorKind> {
 pub async fn fetch_version(
     addr: SocketAddr,
     secret: Option<&str>,
-) -> Result<(StatusCode, String), String> {
+) -> Result<(StatusCode, String), TransportErrorKind> {
     fetch_path(addr, "/version", secret).await
 }
 
 pub async fn fetch_connections(
     addr: SocketAddr,
     secret: Option<&str>,
-) -> Result<(StatusCode, String), String> {
+) -> Result<(StatusCode, String), TransportErrorKind> {
     fetch_path(addr, "/connections", secret).await
 }
 
@@ -109,7 +116,7 @@ pub async fn fetch_path(
     addr: SocketAddr,
     path: &str,
     secret: Option<&str>,
-) -> Result<(StatusCode, String), String> {
+) -> Result<(StatusCode, String), TransportErrorKind> {
     fetch_path_method(addr, Method::GET, path, secret).await
 }
 
@@ -117,9 +124,9 @@ pub async fn delete_connection(
     addr: SocketAddr,
     secret: Option<&str>,
     connection_id: &str,
-) -> Result<StatusCode, String> {
+) -> Result<StatusCode, TransportErrorKind> {
     if !connection_id_allowed(connection_id) {
-        return Err("invalid connection id".into());
+        return Err(TransportErrorKind::ProtocolIncompatible);
     }
     let path = format!("/connections/{connection_id}");
     let (status, _) = fetch_path_method(addr, Method::DELETE, &path, secret).await?;
@@ -139,14 +146,31 @@ pub async fn fetch_path_method(
     method: Method,
     path: &str,
     secret: Option<&str>,
-) -> Result<(StatusCode, String), String> {
+) -> Result<(StatusCode, String), TransportErrorKind> {
+    match tokio::time::timeout(
+        HTTP_REQUEST_TIMEOUT,
+        fetch_path_method_inner(addr, method, path, secret),
+    )
+    .await
+    {
+        Ok(result) => result,
+        Err(_) => Err(TransportErrorKind::EndpointMissing),
+    }
+}
+
+async fn fetch_path_method_inner(
+    addr: SocketAddr,
+    method: Method,
+    path: &str,
+    secret: Option<&str>,
+) -> Result<(StatusCode, String), TransportErrorKind> {
     let stream = tokio::net::TcpStream::connect(addr)
         .await
-        .map_err(|error| error.to_string())?;
+        .map_err(|_| TransportErrorKind::EndpointMissing)?;
     let io = TokioIo::new(stream);
     let (mut sender, conn) = hyper::client::conn::http1::handshake(io)
         .await
-        .map_err(|error| error.to_string())?;
+        .map_err(|_| TransportErrorKind::EndpointMissing)?;
     tokio::spawn(async move {
         let _ = conn.await;
     });
@@ -159,19 +183,46 @@ pub async fn fetch_path_method(
     }
     let request = builder
         .body(Full::new(Bytes::new()))
-        .map_err(|error| error.to_string())?;
+        .map_err(|_| TransportErrorKind::ProtocolIncompatible)?;
     let response = sender
         .send_request(request)
         .await
-        .map_err(|error| error.to_string())?;
+        .map_err(|_| TransportErrorKind::EndpointMissing)?;
     let status = response.status();
-    let body = response
-        .into_body()
-        .collect()
-        .await
-        .map_err(|error| error.to_string())?
-        .to_bytes();
+    if content_length_over_cap(response.headers()) {
+        return Err(TransportErrorKind::ProtocolIncompatible);
+    }
+    let body = collect_body_limited(response.into_body(), HTTP_BODY_MAX_BYTES).await?;
     Ok((status, String::from_utf8_lossy(&body).into_owned()))
+}
+
+fn content_length_over_cap(headers: &hyper::HeaderMap) -> bool {
+    headers
+        .get(CONTENT_LENGTH)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|text| text.parse::<usize>().ok())
+        .is_some_and(|len| len > HTTP_BODY_MAX_BYTES)
+}
+
+async fn collect_body_limited<B>(body: B, max_bytes: usize) -> Result<Vec<u8>, TransportErrorKind>
+where
+    B: hyper::body::Body,
+    B::Data: AsRef<[u8]>,
+{
+    let mut body = std::pin::pin!(body);
+    let mut collected = Vec::new();
+    while let Some(frame) = body.frame().await {
+        let frame = frame.map_err(|_| TransportErrorKind::EndpointMissing)?;
+        let Ok(data) = frame.into_data() else {
+            continue;
+        };
+        let chunk = data.as_ref();
+        if collected.len().saturating_add(chunk.len()) > max_bytes {
+            return Err(TransportErrorKind::ProtocolIncompatible);
+        }
+        collected.extend_from_slice(chunk);
+    }
+    Ok(collected)
 }
 
 pub async fn spawn_fixture_server(
@@ -253,6 +304,70 @@ fn json(status: StatusCode, body: &str) -> Response<Full<Bytes>> {
 }
 
 #[cfg(test)]
+pub async fn spawn_oversize_connections_server() -> (SocketAddr, oneshot::Sender<()>) {
+    let listener = TcpListener::bind("127.0.0.1:0")
+        .await
+        .expect("bind oversize");
+    let addr = listener.local_addr().expect("local addr");
+    let (shutdown_tx, mut shutdown_rx) = oneshot::channel();
+    tokio::spawn(async move {
+        loop {
+            tokio::select! {
+                _ = &mut shutdown_rx => break,
+                accepted = listener.accept() => {
+                    let Ok((stream, _)) = accepted else { break; };
+                    let io = TokioIo::new(stream);
+                    tokio::spawn(async move {
+                        let service = service_fn(move |request: Request<hyper::body::Incoming>| {
+                            async move {
+                                let body = if request.method() == Method::GET
+                                    && request.uri().path() == "/connections"
+                                {
+                                    "x".repeat(HTTP_BODY_MAX_BYTES + 1)
+                                } else {
+                                    "{\"version\":\"c0-fixture\"}".into()
+                                };
+                                let response = Response::builder()
+                                    .status(StatusCode::OK)
+                                    .header("content-type", "application/json")
+                                    .body(Full::new(Bytes::from(body)))
+                                    .expect("response");
+                                Ok::<_, Infallible>(response)
+                            }
+                        });
+                        let _ = http1::Builder::new().serve_connection(io, service).await;
+                    });
+                }
+            }
+        }
+    });
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    (addr, shutdown_tx)
+}
+
+#[cfg(test)]
+pub async fn spawn_stalling_body_server() -> (SocketAddr, oneshot::Sender<()>) {
+    let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind stall");
+    let addr = listener.local_addr().expect("local addr");
+    let (shutdown_tx, mut shutdown_rx) = oneshot::channel();
+    tokio::spawn(async move {
+        tokio::select! {
+            _ = &mut shutdown_rx => {}
+            accepted = listener.accept() => {
+                let Ok((mut stream, _)) = accepted else { return; };
+                use tokio::io::AsyncWriteExt;
+                let _ = stream
+                    .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\n")
+                    .await;
+                let _ = shutdown_rx.await;
+            }
+        }
+    });
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    (addr, shutdown_tx)
+}
+
+#[cfg(test)]
 mod transport_fixture_tests {
     use super::*;
     use futures_util::{SinkExt, StreamExt};
@@ -297,6 +412,24 @@ mod transport_fixture_tests {
         assert_eq!(denied, StatusCode::UNAUTHORIZED);
         let (missing, _) = fetch_version(addr, None).await.expect("missing");
         assert_eq!(missing, StatusCode::UNAUTHORIZED);
+        let _ = stop.send(());
+    }
+
+    #[tokio::test]
+    async fn fetch_oversize_body_is_protocol_incompatible() {
+        let (addr, stop) = spawn_oversize_connections_server().await;
+        let error = fetch_connections(addr, None).await.expect_err("oversize");
+        assert_eq!(error, TransportErrorKind::ProtocolIncompatible);
+        let _ = stop.send(());
+    }
+
+    #[tokio::test]
+    async fn fetch_stalling_body_is_endpoint_missing() {
+        let (addr, stop) = spawn_stalling_body_server().await;
+        let started = std::time::Instant::now();
+        let error = fetch_connections(addr, None).await.expect_err("timeout");
+        assert_eq!(error, TransportErrorKind::EndpointMissing);
+        assert!(started.elapsed() < HTTP_REQUEST_TIMEOUT + Duration::from_secs(1));
         let _ = stop.send(());
     }
 }

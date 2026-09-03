@@ -13,6 +13,7 @@ pub struct CollectorPlan {
     pub should_fetch: bool,
     address: Option<SocketAddr>,
     secret: Option<String>,
+    session_error: Option<SessionStatus>,
 }
 
 impl CollectorPlan {
@@ -21,6 +22,7 @@ impl CollectorPlan {
             should_fetch: false,
             address: None,
             secret: None,
+            session_error: None,
         }
     }
 
@@ -30,6 +32,10 @@ impl CollectorPlan {
 
     pub fn secret(&self) -> Option<&str> {
         self.secret.as_deref()
+    }
+
+    pub fn session_error(&self) -> Option<SessionStatus> {
+        self.session_error
     }
 }
 
@@ -57,14 +63,20 @@ pub fn plan_tick(facade: &AppFacade) -> CollectorPlan {
         return CollectorPlan::idle();
     }
     let secret = if facade.settings.has_secret {
-        facade
-            .workflow
-            .resolve(
-                &facade.settings.credential_target,
-                &facade.settings.secret_mode,
-            )
-            .ok()
-            .map(|value| String::from_utf8_lossy(value.as_header_bytes()).into_owned())
+        match facade.workflow.resolve(
+            &facade.settings.credential_target,
+            &facade.settings.secret_mode,
+        ) {
+            Ok(value) => Some(String::from_utf8_lossy(value.as_header_bytes()).into_owned()),
+            Err(_) => {
+                return CollectorPlan {
+                    should_fetch: false,
+                    address: Some(addr),
+                    secret: None,
+                    session_error: Some(SessionStatus::AuthFailed),
+                };
+            }
+        }
     } else {
         None
     };
@@ -72,6 +84,7 @@ pub fn plan_tick(facade: &AppFacade) -> CollectorPlan {
         should_fetch: true,
         address: Some(addr),
         secret,
+        session_error: None,
     }
 }
 
@@ -288,5 +301,37 @@ mod collector_tick_tests {
         facade.resume_collector();
         assert_eq!(facade.session_status, SessionStatus::Connecting);
         assert!(plan_tick(&facade).should_fetch);
+    }
+
+    #[test]
+    fn secret_resolve_failure_does_not_schedule_unauthorized_get() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.settings.address = "127.0.0.1:9097".into();
+        facade.settings.has_secret = true;
+        facade.settings.secret_mode = "persistent".into();
+        let plan = plan_tick(&facade);
+        assert!(!plan.should_fetch);
+        assert!(plan.secret().is_none());
+        assert_eq!(plan.session_error(), Some(SessionStatus::AuthFailed));
+        apply_tick_result(&mut facade, Err(plan.session_error().expect("auth")));
+        assert_eq!(facade.session_status, SessionStatus::AuthFailed);
+    }
+
+    #[tokio::test]
+    async fn oversize_body_leaves_next_tick_schedulable() {
+        let (addr, stop) = crate::transport::spawn_oversize_connections_server().await;
+        let (_dir, mut facade) = boot_with_addr(addr);
+        let plan = plan_tick(&facade);
+        assert!(plan.should_fetch);
+        let error = fetch_snapshot(plan.address().expect("addr"), plan.secret())
+            .await
+            .expect_err("oversize");
+        assert_eq!(error, SessionStatus::ProtocolIncompatible);
+        apply_tick_result(&mut facade, Err(error));
+        let next = plan_tick(&facade);
+        assert!(next.should_fetch);
+        assert!(next.session_error().is_none());
+        let _ = stop.send(());
     }
 }

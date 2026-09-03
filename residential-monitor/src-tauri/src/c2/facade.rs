@@ -1023,8 +1023,8 @@ impl AppFacade {
         address: String,
         secret: Option<String>,
         session_only: bool,
+        probe_ok: bool,
     ) -> Result<ControllerSettings, AppErrorDto> {
-        let probe_ok = true;
         let next = self
             .workflow
             .save_secret(
@@ -2318,12 +2318,55 @@ mod c2_facade_contract_tests {
         let dir = tempdir().expect("dir");
         let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         let saved = facade
-            .save_controller("127.0.0.1:9097".into(), Some("echo-secret".into()), false)
+            .save_controller(
+                "127.0.0.1:9097".into(),
+                Some("echo-secret".into()),
+                false,
+                true,
+            )
             .expect("save");
         assert_eq!(saved.secret_mode, "persistent");
         assert!(saved.has_secret);
         let revealed = facade.reveal_secret().expect("reveal");
         assert_eq!(revealed.as_deref(), Some("echo-secret"));
+    }
+
+    #[test]
+    fn save_controller_probe_failure_deletes_pending_and_keeps_old() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade
+            .save_controller(
+                "127.0.0.1:9097".into(),
+                Some("old-secret".into()),
+                false,
+                true,
+            )
+            .expect("old");
+        let error = facade
+            .save_controller(
+                "127.0.0.1:9097".into(),
+                Some("new-secret".into()),
+                false,
+                false,
+            )
+            .expect_err("probe");
+        assert_eq!(error.code, "probe_failed");
+        assert_eq!(
+            facade.reveal_secret().expect("reveal").as_deref(),
+            Some("old-secret")
+        );
+        assert!(facade
+            .workflow
+            .resolve(
+                &format!("{}/pending", crate::identity::CREDENTIAL_TARGET),
+                "persistent"
+            )
+            .is_err());
+        let encoded = serde_json::to_string(&error).expect("dto");
+        assert!(!encoded.contains("old-secret"));
+        assert!(!encoded.contains("new-secret"));
+        assert!(!crate::redact::scan_text_for_secrets(&encoded));
     }
 
     #[test]

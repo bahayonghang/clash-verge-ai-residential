@@ -238,29 +238,46 @@ async fn collector_loop_tick(handle: &AppHandle) -> bool {
         }
         c2::collector::plan_tick(&guard)
     };
-    if plan.should_fetch {
+    let message = if let Some(status) = plan.session_error() {
+        let mut guard = state.lock().expect("state");
+        if guard.desktop.shutdown != ShutdownPhase::Idle {
+            return false;
+        }
+        if guard.desktop.collector_running
+            && !matches!(
+                guard.session_status,
+                crate::controller::SessionStatus::Cancelled
+            )
+        {
+            c2::collector::apply_tick_result(&mut guard, Err(status))
+        } else {
+            None
+        }
+    } else if plan.should_fetch {
         if let Some(addr) = plan.address() {
             let result = c2::collector::fetch_snapshot(addr, plan.secret()).await;
-            let message = {
-                let mut guard = state.lock().expect("state");
-                if guard.desktop.shutdown != ShutdownPhase::Idle {
-                    return false;
-                }
-                if guard.desktop.collector_running
-                    && !matches!(
-                        guard.session_status,
-                        crate::controller::SessionStatus::Cancelled
-                    )
-                {
-                    c2::collector::apply_tick_result(&mut guard, result)
-                } else {
-                    None
-                }
-            };
-            if let Some(message) = message {
-                forward_published(&state, [message]);
+            let mut guard = state.lock().expect("state");
+            if guard.desktop.shutdown != ShutdownPhase::Idle {
+                return false;
             }
+            if guard.desktop.collector_running
+                && !matches!(
+                    guard.session_status,
+                    crate::controller::SessionStatus::Cancelled
+                )
+            {
+                c2::collector::apply_tick_result(&mut guard, result)
+            } else {
+                None
+            }
+        } else {
+            None
         }
+    } else {
+        None
+    };
+    if let Some(message) = message {
+        forward_published(&state, [message]);
     }
     archive_tick(&state);
     sync_tray_chrome(handle);
@@ -548,10 +565,12 @@ fn save_settings(
     secret: Option<String>,
     session_only: bool,
 ) -> Result<ControllerSettings, AppErrorDto> {
+    // 持久凭据只在探测成功后提升；设置页保存只改地址或写入 session。
+    let persist_secret = if session_only { secret } else { None };
     state
         .lock()
         .expect("state")
-        .save_controller(address, secret, session_only)
+        .save_controller(address, persist_secret, session_only, false)
 }
 
 #[tauri::command]
@@ -566,63 +585,75 @@ async fn test_controller(
     address: String,
     secret: Option<String>,
 ) -> Result<ProbeResult, AppErrorDto> {
-    {
-        let mut guard = state.lock().expect("state");
-        if guard.branch != c2::shell::BootBranch::NormalReady {
-            return Err(guard.err(
-                "recovery_only",
-                "error.recovery_only_probe",
-                "action.fix_db",
-                false,
-            ));
-        }
-        guard.save_controller(address.clone(), secret, false)?;
+    let (result, messages) = test_controller_core(&state, address, secret).await;
+    if !messages.is_empty() {
+        forward_published(&state, messages);
     }
-    let (addr, secret) = {
+    sync_tray_chrome(&app);
+    result
+}
+
+async fn test_controller_core(
+    state: &Mutex<AppFacade>,
+    address: String,
+    secret: Option<String>,
+) -> (Result<ProbeResult, AppErrorDto>, Vec<MonitorStreamMessage>) {
+    let addr = {
         let guard = state.lock().expect("state");
-        let addr = parse_socket_locale(&guard.settings.address, guard.ui_locale)?;
-        let secret = if guard.settings.has_secret {
-            guard
-                .workflow
-                .resolve(
-                    &guard.settings.credential_target,
-                    &guard.settings.secret_mode,
-                )
-                .ok()
-                .map(|value| String::from_utf8_lossy(value.as_header_bytes()).into_owned())
-        } else {
-            None
-        };
-        (addr, secret)
+        if guard.branch != c2::shell::BootBranch::NormalReady {
+            return (
+                Err(guard.err(
+                    "recovery_only",
+                    "error.recovery_only_probe",
+                    "action.fix_db",
+                    false,
+                )),
+                Vec::new(),
+            );
+        }
+        match parse_socket_locale(&address, guard.ui_locale) {
+            Ok(addr) => addr,
+            Err(error) => return (Err(error), Vec::new()),
+        }
     };
     let mut session = ControllerSession::new(addr.to_string());
     match session.connect_tcp(addr, secret.as_deref()).await {
         Ok(inputs) => {
-            let messages = {
-                let mut guard = state.lock().expect("state");
-                guard.session.endpoint = addr.to_string();
-                guard.session.core_identity = session.core_identity;
-                guard.apply_probe_ok(inputs)
-            };
-            forward_published(&state, messages);
-            let locale = state.lock().expect("state").ui_locale;
-            sync_tray_chrome(&app);
-            Ok(AppFacade::probe_result_locale(
-                crate::controller::SessionStatus::Connected,
-                locale,
-            ))
+            let mut guard = state.lock().expect("state");
+            if guard.branch != c2::shell::BootBranch::NormalReady {
+                return (
+                    Err(guard.err(
+                        "recovery_only",
+                        "error.recovery_only_probe",
+                        "action.fix_db",
+                        false,
+                    )),
+                    Vec::new(),
+                );
+            }
+            if let Err(error) = guard.save_controller(address, secret, false, true) {
+                return (Err(error), Vec::new());
+            }
+            guard.session.endpoint = addr.to_string();
+            guard.session.core_identity = session.core_identity;
+            let messages = guard.apply_probe_ok(inputs);
+            let locale = guard.ui_locale;
+            (
+                Ok(AppFacade::probe_result_locale(
+                    crate::controller::SessionStatus::Connected,
+                    locale,
+                )),
+                messages,
+            )
         }
         Err(status) => {
-            let (message, locale) = {
-                let mut guard = state.lock().expect("state");
-                let message = guard.apply_probe_err(status);
-                (message, guard.ui_locale)
-            };
-            if let Some(message) = message {
-                forward_published(&state, [message]);
-            }
-            sync_tray_chrome(&app);
-            Err(AppErrorDto::from_status_locale(status, locale))
+            let mut guard = state.lock().expect("state");
+            let message = guard.apply_probe_err(status);
+            let locale = guard.ui_locale;
+            (
+                Err(AppErrorDto::from_status_locale(status, locale)),
+                message.into_iter().collect(),
+            )
         }
     }
 }
@@ -1581,5 +1612,76 @@ mod autostart_command_tests {
         assert!(!log.contains("CurrentVersion"));
 
         crate::app_log::reset_for_test();
+    }
+}
+
+#[cfg(test)]
+mod test_controller_command_tests {
+    use super::*;
+    use crate::identity::CREDENTIAL_TARGET;
+    use crate::transport::spawn_fixture_server;
+    use c2::desktop::InstanceClaim;
+    use tempfile::tempdir;
+
+    const OLD_SECRET: &str = "ac5-old-secret-token";
+    const NEW_SECRET: &str = "ac5-new-secret-token";
+
+    #[tokio::test]
+    async fn failed_probe_leaves_stable_target_unchanged() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade
+            .save_controller(
+                "127.0.0.1:9097".into(),
+                Some(OLD_SECRET.into()),
+                false,
+                true,
+            )
+            .expect("old");
+        let (addr, stop) = spawn_fixture_server(Some(OLD_SECRET)).await;
+        let state = Mutex::new(facade);
+        let (result, messages) =
+            test_controller_core(&state, addr.to_string(), Some(NEW_SECRET.into())).await;
+        let error = result.expect_err("401");
+        assert_eq!(error.code, "tcp_unauthorized");
+        let guard = state.lock().expect("state");
+        assert_eq!(
+            guard.reveal_secret().expect("reveal").as_deref(),
+            Some(OLD_SECRET)
+        );
+        assert!(guard
+            .workflow
+            .resolve(&format!("{CREDENTIAL_TARGET}/pending"), "persistent")
+            .is_err());
+        let encoded = serde_json::to_string(&error).expect("dto");
+        let published = serde_json::to_string(&messages).expect("messages");
+        for text in [
+            encoded.as_str(),
+            published.as_str(),
+            error.message_zh.as_str(),
+            error.details_redacted.as_str(),
+        ] {
+            assert!(!text.contains(OLD_SECRET), "{text}");
+            assert!(!text.contains(NEW_SECRET), "{text}");
+            assert!(!crate::redact::scan_text_for_secrets(text), "{text}");
+        }
+        let _ = stop.send(());
+    }
+
+    #[tokio::test]
+    async fn successful_probe_promotes_secret() {
+        let (addr, stop) = spawn_fixture_server(Some("echo-secret")).await;
+        let dir = tempdir().expect("dir");
+        let facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        let state = Mutex::new(facade);
+        let (result, _) =
+            test_controller_core(&state, addr.to_string(), Some("echo-secret".into())).await;
+        result.expect("ok");
+        let guard = state.lock().expect("state");
+        assert_eq!(
+            guard.reveal_secret().expect("reveal").as_deref(),
+            Some("echo-secret")
+        );
+        let _ = stop.send(());
     }
 }
