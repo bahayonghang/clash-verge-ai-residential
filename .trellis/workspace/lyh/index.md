@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 43
+- **Total Sessions**: 44
 - **Last Active**: 2026-09-03
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1289 | Active |
+| `journal-1.md` | ~1312 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 44 | 2026-09-03 | 按业务风险补齐核心测试覆盖 | `d6019ea`, `75c7ff8`, `f459282` | `dev` |
 | 43 | 2026-09-03 | 依赖扫描与分批升级 | `5ddbf04`, `038f0b0` | `dev` |
 | 42 | 2026-09-02 | 维度排名表归属列与可调列宽 | `b9e898d`, `9a62945` | `dev` |
 | 41 | 2026-08-31 | 家宽页创建并弹窗查看 HTML 报告 | `62cc590`, `ba32577` | `dev` |

@@ -1287,3 +1287,26 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 44: 按业务风险补齐核心测试覆盖
+
+**Date**: 2026-09-03
+**Task**: 按业务风险补齐核心测试覆盖
+**Branch**: `dev`
+
+### Summary
+
+补齐 ResiWatch 地址/目标、报告查询、家宽份额、告警规则与静默窗口、Recovery 写禁、commit kill 回滚、CLI purge 门闩测试。测试打穿后收紧缺冒号地址错误码、静默窗口挡住 Activated、Recovery 下 create_backup 不再复制损坏热库。just ci 通过。规划与 spec 已落盘。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d6019ea` | (see git log) |
+| `75c7ff8` | (see git log) |
+| `f459282` | (see git log) |
+
+### Status
+
+[OK] **Completed**
