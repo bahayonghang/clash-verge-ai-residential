@@ -1655,18 +1655,27 @@ impl AppFacade {
             "restore",
             serde_json::json!({ "ok": restored.is_ok() }),
         );
-        restored.map_err(map_report)?;
-        match self.reboot_storage() {
-            Ok(()) => Ok(()),
-            Err(_) => {
-                self.branch = BootBranch::RecoveryOnly;
-                self.storage = None;
-                Err(self.err(
-                    "restore_reopen",
-                    "error.restore_reopen",
-                    "action.check_backup",
-                    true,
-                ))
+        match restored {
+            Ok(()) => match self.reboot_storage() {
+                Ok(()) => Ok(()),
+                Err(_) => {
+                    self.branch = BootBranch::RecoveryOnly;
+                    self.storage = None;
+                    Err(self.err(
+                        "restore_reopen",
+                        "error.restore_reopen",
+                        "action.check_backup",
+                        true,
+                    ))
+                }
+            },
+            Err(error) => {
+                let mapped = map_report(error);
+                if self.reboot_storage().is_err() {
+                    self.branch = BootBranch::RecoveryOnly;
+                    self.storage = None;
+                }
+                Err(mapped)
             }
         }
     }
@@ -2494,6 +2503,29 @@ mod c2_facade_contract_tests {
         }
     }
 
+    fn sqlite_target_names(path: &Path) -> Vec<String> {
+        let flags = rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY;
+        let connection = rusqlite::Connection::open_with_flags(path, flags).expect("ro");
+        let mut stmt = connection
+            .prepare("select name from target_item where set_id = 1 order by position")
+            .expect("prep");
+        stmt.query_map([], |row| row.get(0))
+            .expect("query")
+            .collect::<Result<Vec<String>, _>>()
+            .expect("names")
+    }
+
+    fn restore_swap_artifacts(data_dir: &Path) -> Vec<&'static str> {
+        [
+            "monitor.protect.sqlite3",
+            "monitor.pre-restore.sqlite3",
+            "monitor.restore.partial",
+        ]
+        .into_iter()
+        .filter(|name| data_dir.join(name).exists())
+        .collect()
+    }
+
     #[test]
     fn recovery_only_write_entry_points_return_recovery_only() {
         let (dir, mut facade) = recovery_only_boot();
@@ -2674,17 +2706,70 @@ mod c2_facade_contract_tests {
     }
 
     #[test]
-    fn failed_reopen_after_restore_stays_recovery_only() {
+    fn restore_invalid_candidate_reopens_usable_hot_db() {
         let dir = tempdir().expect("dir");
         let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
-        facade.ingest_snapshot(snapshot("pre"), 1, 1);
+        let marker = vec!["restore-marker".into()];
+        facade.save_targets(marker.clone()).expect("save marker");
+        let db_path = dir.path().join("monitor.sqlite3");
+        assert_eq!(sqlite_target_names(&db_path), marker);
+
         let bogus = dir.path().join("not-a-backup.sqlite3");
         std::fs::write(&bogus, b"not a sqlite db").expect("bogus");
+        let error = facade
+            .restore_backup(&bogus)
+            .expect_err("invalid candidate");
+        assert_eq!(error.code, "storage_failure");
+        assert_eq!(facade.branch, BootBranch::NormalReady);
+        assert!(facade.storage.is_some());
+        assert_eq!(sqlite_target_names(&db_path), marker);
+        assert!(restore_swap_artifacts(dir.path()).is_empty());
 
-        let result = facade.restore_backup(&bogus);
-        assert!(result.is_err());
+        let report = facade.run_report(ReportQuery::default(), false);
+        match report {
+            Ok(_) => {}
+            Err(error) => assert_ne!(error.code, "recovery_only", "{error:?}"),
+        }
+        facade
+            .save_targets(marker.clone())
+            .expect("save after failed restore");
+        assert_eq!(sqlite_target_names(&db_path), marker);
+    }
+
+    #[test]
+    fn restore_fail_keeps_recovery_only_when_hot_db_cannot_open() {
+        let dir = tempdir().expect("dir");
+        let db_path = dir.path().join("monitor.sqlite3");
+        std::fs::write(&db_path, b"not a sqlite db").expect("garbage live");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         assert_eq!(facade.branch, BootBranch::RecoveryOnly);
         assert!(facade.storage.is_none());
+
+        let bogus = dir.path().join("not-a-backup.sqlite3");
+        std::fs::write(&bogus, b"also not a sqlite db").expect("bogus");
+        let error = facade
+            .restore_backup(&bogus)
+            .expect_err("invalid candidate");
+        assert_eq!(error.code, "storage_failure");
+        assert_eq!(facade.branch, BootBranch::RecoveryOnly);
+        assert!(facade.storage.is_none());
+        assert_eq!(std::fs::read(&db_path).expect("live"), b"not a sqlite db");
+        assert!(restore_swap_artifacts(dir.path()).is_empty());
+
+        let report = facade
+            .run_report(ReportQuery::default(), false)
+            .expect_err("report");
+        assert_eq!(report.code, "recovery_only");
+        let targets = facade
+            .save_targets(vec!["家宽".into()])
+            .expect_err("targets");
+        assert_eq!(targets.code, "recovery_only");
+
+        let dest = dir.path().join("damaged-live-copy.sqlite3");
+        let backup = facade.create_backup(&dest).expect_err("backup");
+        assert_eq!(backup.code, "recovery_only");
+        assert!(!dest.exists());
+        assert!(restore_swap_artifacts(dir.path()).is_empty());
     }
 
     #[test]
