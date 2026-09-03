@@ -9,6 +9,7 @@ Rust 拥有采集、存储、凭据、托盘、查询、报告与恢复。C3 代
 - 读 `modules-and-errors.md`
 - 读 `secrets-and-cancellation.md`
 - 新依赖必须服务 C0/C1 已批准能力，禁止为演示引入额外运行时。
+- `rand` 0.10：`use rand::{RngExt, SeedableRng}`。不要写 `features = ["small_rng"]`（feature 已删除，`SmallRng` 默认可用）。`Rng` trait 现名为 `RngExt`。
 
 ## Quality Check
 

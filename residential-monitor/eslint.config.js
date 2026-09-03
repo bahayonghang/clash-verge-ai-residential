@@ -9,11 +9,11 @@ export default tseslint.config(
   {
     ignores: ["dist/**", "src-tauri/**", "bench-data/**"]
   },
+  reactHooks.configs.flat.recommended,
   {
     files: ["src/**/*.{ts,tsx}"],
     plugins: {
-      react,
-      "react-hooks": reactHooks
+      react
     },
     settings: {
       react: { version: "detect" }
@@ -22,7 +22,9 @@ export default tseslint.config(
       "no-eval": "error",
       "react/react-in-jsx-scope": "off",
       "react/jsx-uses-react": "off",
-      ...reactHooks.configs.recommended.rules
+      // Tauri bootstrap and latest-ref IPC patterns set state in effects and write refs during render.
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off"
     }
   }
 );

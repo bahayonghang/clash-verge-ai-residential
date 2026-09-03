@@ -26,3 +26,10 @@ React 19 + Tailwind v4 + Vite 桌面壳。`components/**` 不得直接 `invoke`�
 - `npm --prefix residential-monitor test`
 - `npm --prefix residential-monitor run build`
 - 关于页不得把未签名候选标成 `signed`。删除部分失败不得显示「已全部删除」。
+
+## Toolchain
+
+- Vite 8 的 `minify: "esbuild"` 需要把 `esbuild`（peer `^0.27 || ^0.28`）装成 **dev** 依赖。禁止写入 `dependencies`。源码不得 `import "esbuild"`。
+- npm 12 默认不跑 install scripts。`package.json` 的 `allowScripts` 只钉精确版本，例如 `esbuild@0.28.2: true`。存在 `allowScripts` 时用户 `.npmrc` 的 `allow-scripts` 被忽略。禁止 name-only `esbuild: true`。
+- `eslint-plugin-react-hooks` 用 `reactHooks.configs.flat.recommended`。允许关掉的只有 `react-hooks/set-state-in-effect` 与 `react-hooks/refs`（Tauri hook 的 effect `setState` 与 render 期 latest-ref）。不要关掉整个 recommended。
+- 当前 peer 阻断：ESLint 10 被 `eslint-plugin-react@7.37.5` 挡住；TypeScript 7 被 `typescript-eslint` 的 `typescript <6.1.0` 挡住；`@vitejs/plugin-react` 留 5.x（5.x 已声明 vite 8）。

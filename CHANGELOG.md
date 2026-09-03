@@ -18,6 +18,7 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 
 ### Changed
 
+- ResiWatch toolchain: `typescript-eslint` 8.69.0, `@types/react-dom` 19.2.5, compatible `cargo update` (`hyper` 1.11.1, `tauri-plugin-dialog` 2.7.3, `tauri-plugin-notification` 2.4.0). GitHub Actions `checkout` and `setup-node` v7. Breaking upgrades: `lucide-react` 1.39.0, `sha2` 0.11, `rand` 0.10, `tokio-tungstenite` 0.30, `eslint-plugin-react-hooks` 7.1.1 (flat `recommended`; `set-state-in-effect` and `refs` stay off), TypeScript 6.0.3, Vitest 4.1.11, Vite 8.2.2 with `@vitejs/plugin-react` 5.x and `esbuild` 0.28 as the optional minify peer. Root `package.json` still has zero third-party deps and `engines.node >=18`. ESLint 10, TypeScript 7, and plugin-react 6 stay out of this round.
 - The extension script writes top-level `find-process-mode: always` even when `routing.ai_process_fallback` is false. It still does not inject `PROCESS-NAME` / `PROCESS-PATH` rules unless that switch is on. A Clash Verge value nested under `profile:` does not reach the kernel.
 - Replaced the vanilla TypeScript + Catppuccin shell with a React + Tailwind desktop UI. Navigation is ten routes. Overview, live connections, and host / rule / chain / process pages ship in the new shell. `src/main.ts` and `src/styles.css` are removed.
 - Residential classification lives in one module with two named functions. Accounting uses exact target match. Live “residential only” still matches a configured target or a node name that contains 家宽.
