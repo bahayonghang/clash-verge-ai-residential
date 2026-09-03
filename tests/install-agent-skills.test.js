@@ -113,10 +113,12 @@ test("未知 --platforms 值被拒绝", () => {
 });
 
 test("SKILL.md 含 YAML frontmatter 的 name 与 description", () => {
-  const skill = fs.readFileSync(
-    path.join(__dirname, "..", "skills", "residential-rule-tuning", "SKILL.md"),
-    "utf8"
-  );
+  const skill = fs
+    .readFileSync(
+      path.join(__dirname, "..", "skills", "residential-rule-tuning", "SKILL.md"),
+      "utf8"
+    )
+    .replace(/\r\n/g, "\n");
   assert.ok(skill.startsWith("---\n"));
   const close = skill.indexOf("\n---\n", 4);
   assert.ok(close > 0, "frontmatter 未闭合");
