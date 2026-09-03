@@ -85,10 +85,10 @@ pub fn validate_address(address: &str) -> Result<(), SettingsError> {
     if address.len() > SETTING_VALUE_MAX {
         return Err(SettingsError::FieldTooLong);
     }
-    let host = address
-        .rsplit_once(':')
-        .map(|(host, _)| host.trim_matches(|c| c == '[' || c == ']'))
-        .unwrap_or(address);
+    let Some((host, _port)) = address.rsplit_once(':') else {
+        return Err(SettingsError::InvalidAddress);
+    };
+    let host = host.trim_matches(|c| c == '[' || c == ']');
     reject_non_loopback(host).map_err(|_| SettingsError::NonLoopback)?;
     address
         .to_socket_addrs()
@@ -288,6 +288,63 @@ mod settings_workflow_tests {
             Err(SettingsError::NonLoopback)
         ));
         validate_address("127.0.0.1:9090").expect("loopback");
+    }
+
+    #[test]
+    fn validate_address_accepts_loopback_forms() {
+        validate_address("127.0.0.1:9097").expect("ipv4");
+        validate_address("localhost:9097").expect("localhost");
+        validate_address("[::1]:9097").expect("ipv6");
+    }
+
+    #[test]
+    fn validate_address_rejects_non_loopback_hosts() {
+        for address in [
+            "8.8.8.8:9097",
+            "0.0.0.0:9097",
+            "example.com:9097",
+            "127.0.0.2:9097",
+        ] {
+            assert!(
+                matches!(validate_address(address), Err(SettingsError::NonLoopback)),
+                "{address}"
+            );
+        }
+    }
+
+    #[test]
+    fn validate_address_rejects_invalid_and_overlong() {
+        assert!(matches!(
+            validate_address("not-an-addr"),
+            Err(SettingsError::InvalidAddress)
+        ));
+        assert!(matches!(
+            validate_address("127.0.0.1"),
+            Err(SettingsError::InvalidAddress)
+        ));
+        let too_long = "x".repeat(SETTING_VALUE_MAX + 1);
+        assert!(matches!(
+            validate_address(&too_long),
+            Err(SettingsError::FieldTooLong)
+        ));
+    }
+
+    #[test]
+    fn validate_targets_rejects_empty_overlong_and_too_many() {
+        assert!(matches!(
+            validate_targets(&[String::new()]),
+            Err(SettingsError::EmptyTarget)
+        ));
+        let long_name = "n".repeat(TARGET_NAME_MAX + 1);
+        assert!(matches!(
+            validate_targets(&[long_name]),
+            Err(SettingsError::FieldTooLong)
+        ));
+        let many: Vec<String> = (0..=TARGET_COUNT_MAX).map(|i| format!("t{i}")).collect();
+        assert!(matches!(
+            validate_targets(&many),
+            Err(SettingsError::TooManyTargets)
+        ));
     }
 
     #[test]

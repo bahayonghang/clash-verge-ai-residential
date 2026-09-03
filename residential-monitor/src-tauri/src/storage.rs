@@ -1486,19 +1486,57 @@ mod c4_alert_commit_atomic_tests {
             assert!(error.to_string().contains("kill"));
         }
         let coordinator = StorageCoordinator::open(&path).expect("reopen");
+        assert_kill_rolled_back(&coordinator);
+    }
+
+    fn table_count(coordinator: &StorageCoordinator, table: &str) -> i64 {
+        let sql = match table {
+            "connection_minute" => "select count(*) from connection_minute",
+            "alert_event" => "select count(*) from alert_event",
+            "notification_outbox" => "select count(*) from notification_outbox",
+            other => panic!("unexpected table {other}"),
+        };
+        coordinator
+            .connection()
+            .query_row(sql, [], |row| row.get(0))
+            .expect("count")
+    }
+
+    fn assert_kill_rolled_back(coordinator: &StorageCoordinator) {
         assert_eq!(coordinator.receipt_count().expect("c"), 0);
-        let events: i64 = coordinator
-            .connection()
-            .query_row("select count(*) from alert_event", [], |row| row.get(0))
-            .expect("ev");
-        let outbox: i64 = coordinator
-            .connection()
-            .query_row("select count(*) from notification_outbox", [], |row| {
-                row.get(0)
-            })
-            .expect("ob");
-        assert_eq!(events, 0);
-        assert_eq!(outbox, 0);
+        assert_eq!(table_count(coordinator, "connection_minute"), 0);
+        assert_eq!(table_count(coordinator, "alert_event"), 0);
+        assert_eq!(table_count(coordinator, "notification_outbox"), 0);
+    }
+
+    fn kill_commit(kill: CommitKillPoint) {
+        let dir = tempdir().expect("dir");
+        let path = dir.path().join("a.sqlite3");
+        let bundle = CommitBundle {
+            writer_epoch: 1,
+            bundle_seq: 1,
+            payload: "1,1,1,1".into(),
+        };
+        {
+            let mut coordinator = StorageCoordinator::open(&path).expect("open");
+            coordinator.test_kill = Some(kill);
+            let error = coordinator
+                .commit_alert_bundle(&bundle, &slice())
+                .expect_err("kill");
+            assert!(error.to_string().contains("kill"));
+        }
+        let coordinator = StorageCoordinator::open(&path).expect("reopen");
+        assert_kill_rolled_back(&coordinator);
+    }
+
+    #[test]
+    fn kill_after_facts_rolls_back_facts_and_outbox() {
+        kill_commit(CommitKillPoint::AfterFacts);
+    }
+
+    #[test]
+    fn kill_after_outbox_rolls_back_facts_and_outbox() {
+        kill_commit(CommitKillPoint::AfterOutbox);
     }
 
     #[test]

@@ -1037,6 +1037,72 @@ mod query_contract_tests {
     }
 
     #[test]
+    fn validate_query_rejects_bounds_page_top_n_timezone_and_semicolon_cursor() {
+        let mut query = ReportQuery::default();
+        query.range_end_utc = query.range_start_utc - 1;
+        assert_eq!(
+            validate_query(&query).expect_err("inverted").code(),
+            "invalid_query"
+        );
+
+        query = ReportQuery::default();
+        query.range_end_utc = query.range_start_utc + MAX_RANGE_SECS + 1;
+        assert_eq!(
+            validate_query(&query).expect_err("range").code(),
+            "invalid_query"
+        );
+
+        query = ReportQuery::default();
+        query.page.limit = 0;
+        assert_eq!(
+            validate_query(&query).expect_err("limit0").code(),
+            "invalid_query"
+        );
+
+        query = ReportQuery::default();
+        query.page.limit = PAGE_MAX + 1;
+        assert_eq!(
+            validate_query(&query).expect_err("limitmax").code(),
+            "invalid_query"
+        );
+
+        query = ReportQuery::default();
+        query.top_n = 0;
+        assert_eq!(
+            validate_query(&query).expect_err("top0").code(),
+            "invalid_query"
+        );
+
+        query = ReportQuery::default();
+        query.top_n = TOP_N_MAX + 1;
+        assert_eq!(
+            validate_query(&query).expect_err("topmax").code(),
+            "invalid_query"
+        );
+
+        query = ReportQuery::default();
+        query.display_timezone = "Not/A_Zone".into();
+        assert_eq!(
+            validate_query(&query).expect_err("tz").code(),
+            "invalid_query"
+        );
+
+        query = ReportQuery::default();
+        query.page.after = Some("cursor;more".into());
+        assert_eq!(
+            validate_query(&query).expect_err("cursor").code(),
+            "invalid_query"
+        );
+
+        query = ReportQuery::default();
+        query.page.after = Some("select".into());
+        assert_eq!(
+            validate_query(&query).expect_err("select").code(),
+            "invalid_query"
+        );
+    }
+
+    #[test]
     fn raw_expired_session_drilldown_is_unsupported() {
         let mut query = ReportQuery::default();
         query.include_sessions = true;

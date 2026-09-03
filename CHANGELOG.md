@@ -29,6 +29,7 @@ All notable changes are recorded here. The project follows Semantic Versioning f
 
 ### Fixed
 
+- Controller address without `host:port` is `invalid_address`. Quiet hours block `Activated` instead of only suppressing the toast. Recovery Shell `create_backup` returns `recovery_only` and does not copy the live database.
 - `just tinstall` installs to `%LOCALAPPDATA%\ResiWatch` with NSIS `/D=`. A previous install path under `%TEMP%` or the old Chinese product folder is not reused; data moves to the new `data\` directory.
 - Windows MSVC no longer prints `linker_messages` for `residential_monitor_lib`. The crate type is `rlib` only; `cdylib` / `staticlib` were mobile leftovers.
 - Host rank bars no longer clip long FQDNs on the left of the Y-axis.

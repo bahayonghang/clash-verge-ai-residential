@@ -812,6 +812,46 @@ mod tests {
     }
 
     #[test]
+    fn purge_requires_offline_confirmed() {
+        let (_dir, path) = seeded();
+        let err = maint::run_purge(
+            &path,
+            &maint::MaintFlags {
+                confirm: true,
+                offline_confirmed: false,
+                allow_long: false,
+                phrase: None,
+                path: None,
+            },
+            3_600,
+        )
+        .expect_err("offline");
+        assert_eq!(err.exit_code(), 5);
+        assert!(path.exists());
+    }
+
+    #[test]
+    fn purge_confirm_without_phrase_is_invalid_args() {
+        let (_dir, path) = seeded();
+        let err = maint::run_purge(
+            &path,
+            &maint::MaintFlags {
+                confirm: true,
+                offline_confirmed: true,
+                allow_long: false,
+                phrase: None,
+                path: None,
+            },
+            3_600,
+        )
+        .expect_err("phrase");
+        assert!(matches!(err, DbCliError::InvalidArgs(_)));
+        assert!(err.to_string().contains("purge 需要 --phrase"));
+        assert_eq!(err.exit_code(), 2);
+        assert!(path.exists());
+    }
+
+    #[test]
     fn retention_without_confirm_only_previews() {
         let (_dir, path) = seeded();
         let cancel = Arc::new(AtomicBool::new(false));

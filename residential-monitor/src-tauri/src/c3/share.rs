@@ -223,6 +223,24 @@ mod residential_share_tests {
     }
 
     #[test]
+    fn inverted_range_returns_invalid_query() {
+        let dir = tempdir().expect("dir");
+        let path = dir.path().join("share.sqlite3");
+        let error =
+            query_residential_share(&path, 2_000, 1_000, "UTC", 4_000).expect_err("inverted");
+        assert_eq!(error.code(), "invalid_query");
+    }
+
+    #[test]
+    fn range_over_max_returns_invalid_query() {
+        let dir = tempdir().expect("dir");
+        let path = dir.path().join("share.sqlite3");
+        let error =
+            query_residential_share(&path, 0, MAX_RANGE_SECS + 1, "UTC", 4_000).expect_err("range");
+        assert_eq!(error.code(), "invalid_query");
+    }
+
+    #[test]
     fn uncovered_range_returns_four_nones() {
         let (_dir, coordinator) = setup();
         let share = query(&coordinator, 10_000, 11_000);

@@ -1619,6 +1619,9 @@ impl AppFacade {
     }
 
     pub fn create_backup(&self, dest: &Path) -> Result<String, AppErrorDto> {
+        if self.storage.is_none() {
+            return Err(recovery_only());
+        }
         let live = self.data_dir.join("monitor.sqlite3");
         let now = chrono::Utc::now().timestamp();
         let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -2405,6 +2408,73 @@ mod c2_facade_contract_tests {
         assert!(status.future);
         assert!(status.restore_available);
         assert!(facade.storage.is_none());
+    }
+
+    fn recovery_only_boot() -> (tempfile::TempDir, AppFacade) {
+        let dir = tempdir().expect("dir");
+        let path = dir.path().join("monitor.sqlite3");
+        {
+            let connection = rusqlite::Connection::open(&path).expect("open");
+            connection
+                .execute_batch("pragma user_version = 99")
+                .expect("ver");
+        }
+        let facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        assert_eq!(facade.branch, BootBranch::RecoveryOnly);
+        assert!(facade.storage.is_none());
+        (dir, facade)
+    }
+
+    fn sqlite_table_count(path: &Path, table: &str) -> i64 {
+        let sql = match table {
+            "target_item" => "select count(*) from target_item",
+            "alert_rule" => "select count(*) from alert_rule",
+            other => panic!("unexpected table {other}"),
+        };
+        let flags = rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY;
+        let connection = rusqlite::Connection::open_with_flags(path, flags).expect("ro");
+        let exists: i64 = connection
+            .query_row(
+                "select count(*) from sqlite_master where type = 'table' and name = ?1",
+                [table],
+                |row| row.get(0),
+            )
+            .expect("master");
+        if exists == 0 {
+            0
+        } else {
+            connection
+                .query_row(sql, [], |row| row.get(0))
+                .expect("count")
+        }
+    }
+
+    #[test]
+    fn recovery_only_write_entry_points_return_recovery_only() {
+        let (dir, mut facade) = recovery_only_boot();
+        let db_path = dir.path().join("monitor.sqlite3");
+
+        let report = facade
+            .run_report(ReportQuery::default(), false)
+            .expect_err("report");
+        assert_eq!(report.code, "recovery_only");
+
+        let targets = facade
+            .save_targets(vec!["家宽".into()])
+            .expect_err("targets");
+        assert_eq!(targets.code, "recovery_only");
+        assert_eq!(sqlite_table_count(&db_path, "target_item"), 0);
+
+        let rule = facade
+            .upsert_alert_rule(threshold_rule(100))
+            .expect_err("rule");
+        assert_eq!(rule.code, "recovery_only");
+        assert_eq!(sqlite_table_count(&db_path, "alert_rule"), 0);
+
+        let dest = dir.path().join("recovery-backup.sqlite3");
+        let backup = facade.create_backup(&dest).expect_err("backup");
+        assert_eq!(backup.code, "recovery_only");
+        assert!(!dest.exists());
     }
 
     // ---- 08-22-storage-reboot-after-recovery：还原 / 删除 / VACUUM 后重跑存储侧启动 ----

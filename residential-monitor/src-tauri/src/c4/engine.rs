@@ -432,6 +432,10 @@ impl AlertEngine {
         }
 
         let previous = state.instance.status;
+        let should_activate = input.firing
+            && (state.consecutive_hits >= RATE_TRIGGER_HITS
+                || (rule.kind == AlertKind::Health && state.consecutive_hits >= 1)
+                || (rule.kind == AlertKind::PeriodUsage && state.consecutive_hits >= 1));
         if !input.known {
             if previous == InstanceStatus::Active {
                 writes.merge(emit(
@@ -475,10 +479,7 @@ impl AlertEngine {
                 state.instance.last_eval_utc = now_utc;
                 state.instance.evidence = evidence;
             }
-        } else if input.firing && state.consecutive_hits >= RATE_TRIGGER_HITS
-            || (rule.kind == AlertKind::Health && input.firing && state.consecutive_hits >= 1)
-            || (rule.kind == AlertKind::PeriodUsage && input.firing && state.consecutive_hits >= 1)
-        {
+        } else if should_activate && !in_quiet(rule, now_utc) {
             state.instance.status = InstanceStatus::Active;
             state.instance.started_utc = Some(now_utc);
             state.instance.resolved_utc = None;
@@ -1130,6 +1131,79 @@ mod alert_engine_tests {
             "a2",
         );
         assert!(!after
+            .events
+            .iter()
+            .any(|item| item.kind == EventKind::Activated));
+    }
+
+    #[test]
+    fn load_rules_rejects_more_than_max_enabled() {
+        let mut engine = AlertEngine::new();
+        let rules: Vec<AlertRule> = (0..=MAX_ENABLED_RULES)
+            .map(|index| {
+                let mut rule = rate_rule();
+                rule.rule_id = format!("r{index}");
+                rule
+            })
+            .collect();
+        let error = engine.load_rules(rules).expect_err("cap");
+        assert!(matches!(error, AlertError::InvalidRule("too many rules")));
+        assert_eq!(error.code(), "invalid_rule");
+    }
+
+    fn quiet_rate_rule() -> AlertRule {
+        let mut rule = rate_rule();
+        rule.quiet_start_min = Some(22 * 60);
+        rule.quiet_end_min = Some(6 * 60);
+        rule.timezone = "UTC".into();
+        rule
+    }
+
+    #[test]
+    fn quiet_hours_overnight_window_does_not_activate() {
+        let mut engine = AlertEngine::new();
+        engine.load_rules(vec![quiet_rate_rule()]).expect("rules");
+        let utc = 23 * 3_600;
+        for step in 1..=3 {
+            let out = eval_with_rate(
+                &mut engine,
+                7_200,
+                utc + step,
+                60_000 + (step as u64) * 1_000,
+                &format!("q{step}"),
+            );
+            assert!(
+                !out.events
+                    .iter()
+                    .any(|item| item.kind == EventKind::Activated),
+                "step {step} activated inside quiet hours"
+            );
+            assert!(
+                !out.instances
+                    .iter()
+                    .any(|item| item.status == InstanceStatus::Active),
+                "step {step} instance active inside quiet hours"
+            );
+        }
+    }
+
+    #[test]
+    fn quiet_hours_outside_window_still_needs_three_hits() {
+        let mut engine = AlertEngine::new();
+        engine.load_rules(vec![quiet_rate_rule()]).expect("rules");
+        let utc = 12 * 3_600;
+        let first = eval_with_rate(&mut engine, 7_200, utc, 60_000, "d1");
+        let second = eval_with_rate(&mut engine, 7_200, utc + 1, 61_000, "d2");
+        let third = eval_with_rate(&mut engine, 7_200, utc + 2, 62_000, "d3");
+        assert!(!first
+            .events
+            .iter()
+            .any(|item| item.kind == EventKind::Activated));
+        assert!(!second
+            .events
+            .iter()
+            .any(|item| item.kind == EventKind::Activated));
+        assert!(third
             .events
             .iter()
             .any(|item| item.kind == EventKind::Activated));
