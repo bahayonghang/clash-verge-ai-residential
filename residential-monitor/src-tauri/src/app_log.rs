@@ -50,9 +50,63 @@ pub fn exclusive_test() -> std::sync::MutexGuard<'static, ()> {
 
 #[cfg(test)]
 pub fn reset_for_test() {
-    if let Ok(mut guard) = STATE.lock() {
-        *guard = None;
+    let mut guard = STATE.lock().unwrap_or_else(|poison| poison.into_inner());
+    *guard = None;
+}
+
+#[cfg(test)]
+pub struct ResetOnDrop;
+
+#[cfg(test)]
+impl Drop for ResetOnDrop {
+    fn drop(&mut self) {
+        reset_for_test();
     }
+}
+
+#[cfg(test)]
+pub fn flush_for_test() {
+    let mut guard = match STATE.lock() {
+        Ok(guard) => guard,
+        Err(poison) => poison.into_inner(),
+    };
+    if let Some(inner) = guard.as_mut() {
+        if let Some(file) = inner.file.as_mut() {
+            let _ = file.flush();
+            let _ = file.sync_all();
+        }
+    }
+}
+
+/// 先 flush，再拼接目录内全部 `FILE_NAME*`（含当前文件与轮转片），避免只读到空的新文件。
+#[cfg(test)]
+pub fn read_logged_text(dir: &Path) -> std::io::Result<String> {
+    flush_for_test();
+    let mut paths: Vec<PathBuf> = match fs::read_dir(dir) {
+        Ok(entries) => entries
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .filter(|path| {
+                path.file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.starts_with(FILE_NAME))
+            })
+            .collect(),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Vec::new(),
+        Err(error) => return Err(error),
+    };
+    paths.sort();
+    if paths.is_empty() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            format!("no {FILE_NAME}* in {}", dir.display()),
+        ));
+    }
+    let mut text = String::new();
+    for path in paths {
+        text.push_str(&fs::read_to_string(path)?);
+    }
+    Ok(text)
 }
 
 pub fn resolve_dir() -> PathBuf {

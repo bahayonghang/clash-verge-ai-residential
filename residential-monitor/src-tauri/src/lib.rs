@@ -1547,7 +1547,10 @@ mod archive_scheduler_tests {
     fn archive_tick_persist_failure_logs_class_without_secret() {
         let _lock = crate::app_log::exclusive_test();
         let dir = tempdir().expect("dir");
-        let logs = dir.path().join("logs");
+        let log_root = tempdir().expect("log root");
+        let logs = log_root.path().to_path_buf();
+        std::fs::create_dir_all(&logs).expect("logs dir");
+        let _reset = crate::app_log::ResetOnDrop;
         crate::app_log::init_at(logs.clone(), crate::app_log::DEFAULT_MAX_BYTES);
         let facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         const FIXTURE_SECRET: &str = "password=fixture-secret-value";
@@ -1564,12 +1567,11 @@ mod archive_scheduler_tests {
             .expect("trigger");
         let state = Mutex::new(facade);
         archive_tick(&state);
-        let text = std::fs::read_to_string(logs.join(crate::app_log::FILE_NAME)).expect("log");
+        let text = crate::app_log::read_logged_text(&logs).expect("log");
         assert!(text.contains("ERROR archive_persist"), "{text}");
         assert!(text.contains("\"class\":\"storage_failure\""), "{text}");
         assert!(!text.contains("fixture-secret-value"), "{text}");
         assert!(!crate::redact::scan_text_for_secrets(&text), "{text}");
-        crate::app_log::reset_for_test();
     }
 }
 
