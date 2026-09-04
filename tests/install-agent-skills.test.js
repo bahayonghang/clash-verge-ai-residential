@@ -8,6 +8,7 @@ const { test } = require("node:test");
 
 const installer = require("../scripts/install-agent-skills.js");
 const { buildInputs } = require("../skills/residential-rule-tuning/scripts/build-inputs.js");
+const { constants } = require("../clash-verge-ai-residential.js");
 
 function makeRepo() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "install-skills-"));
@@ -158,4 +159,24 @@ test("生成器对 routing 表 21 个开关做完整性检查", () => {
   assert.ok(built.rules.rules.length > 0);
   assert.ok(built.switches.unsupported.includes("openai_shared_dependencies"));
   assert.ok(built.switches.supported.openai_core.length > 0);
+});
+
+test("grok_web_assets 不把 auth.x.ai 算作该开关独有流量", () => {
+  const built = buildInputs(path.join(__dirname, ".."));
+  const grokCore = built.switches.supported.grok_core;
+  const webAssets = built.switches.supported.grok_web_assets;
+  assert.ok(Array.isArray(grokCore));
+  assert.ok(Array.isArray(webAssets));
+  for (const host of constants.GROK_EXACT_DOMAINS) {
+    assert.equal(grokCore.includes(host), true, `grok_core 应包含 ${host}`);
+    assert.equal(webAssets.includes(host), false, `grok_web_assets 不应包含 ${host}`);
+  }
+  const exclusive = webAssets.filter((host) => !grokCore.includes(host));
+  for (const host of constants.GROK_EXACT_DOMAINS) {
+    assert.equal(exclusive.includes(host), false, `${host} 不是 grok_web_assets 独有流量`);
+  }
+  assert.deepEqual(
+    [...webAssets].sort(),
+    [...constants.GROK_STRICT_EXACT_DOMAINS].sort()
+  );
 });

@@ -199,6 +199,14 @@ test("非法 SemVer 失败", () => {
   });
 });
 
+test("CI monitor 作业包含版本对齐检查", () => {
+  const yaml = fs.readFileSync(
+    path.join(__dirname, "..", ".github", "workflows", "ci.yml"),
+    "utf8"
+  );
+  assert.match(yaml, /node scripts\/sync-monitor-version\.js --check/);
+});
+
 test("缺少 tauri.conf.json 失败", () => {
   withTemporaryDirectory((directory) => {
     writeTree(directory, "0.2.0");

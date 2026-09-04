@@ -38,12 +38,16 @@ const ignoredDirectories = new Set([
   "node_modules",
   "target",
   "dist",
-  "bench-data"
+  "bench-data",
+  "ref"
 ]);
 const ignoredLocalFiles = new Set([
   "clash-verge-ai-residential.local.toml",
   "clash-verge-ai-residential.local.js"
 ]);
+const EXAMPLE_TOML = "clash-verge-ai-residential.local.toml.example";
+const HOME_PROXY_PLACEHOLDER_FIELDS = ["server", "username", "password"];
+const ALLOWED_PLACEHOLDERS = new Set(["", "xxx"]);
 
 function isIgnoredLocalFile(relativePath) {
   const normalized = relativePath.split(path.sep).join("/");
@@ -58,13 +62,51 @@ function checkPublicTemplate(source, failures) {
   }
 
   const template = templateMatch[1];
-  const allowed = new Set(["", "xxx"]);
-  for (const property of ["server", "username", "password"]) {
+  for (const property of HOME_PROXY_PLACEHOLDER_FIELDS) {
     const value = readStringProperty(template, property);
     if (value === null) {
       failures.push(`HOME_PROXY_TEMPLATE.${property} 缺失或不是字符串`);
-    } else if (!allowed.has(value)) {
+    } else if (!ALLOWED_PLACEHOLDERS.has(value)) {
       failures.push(`HOME_PROXY_TEMPLATE.${property} 不能在公共模板中保存真实值`);
+    }
+  }
+}
+
+function readTomlQuotedString(line) {
+  const match = line.match(
+    /^(server|username|password)\s*=\s*"([^"]*)"\s*(?:#.*)?$/
+  );
+  return match ? { property: match[1], value: match[2] } : null;
+}
+
+function checkExampleToml(source, failures, relative = EXAMPLE_TOML) {
+  const values = {};
+  let inHomeProxy = false;
+  let sawHomeProxy = false;
+
+  for (const rawLine of source.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (line === "" || line.startsWith("#")) continue;
+    if (line.startsWith("[")) {
+      inHomeProxy = /^\[home_proxy\]$/.test(line);
+      if (inHomeProxy) sawHomeProxy = true;
+      continue;
+    }
+    if (!inHomeProxy) continue;
+    const parsed = readTomlQuotedString(line);
+    if (parsed) values[parsed.property] = parsed.value;
+  }
+
+  if (!sawHomeProxy) {
+    failures.push(`${relative} 缺少 [home_proxy] 表`);
+    return;
+  }
+
+  for (const property of HOME_PROXY_PLACEHOLDER_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(values, property)) {
+      failures.push(`${relative} [home_proxy].${property} 缺失或不是 "" / "xxx"`);
+    } else if (!ALLOWED_PLACEHOLDERS.has(values[property])) {
+      failures.push(`${relative} [home_proxy].${property} 不能在公共示例中保存真实值`);
     }
   }
 }
@@ -93,6 +135,12 @@ function checkTemplateSafety(root = DEFAULT_ROOT) {
   const failures = [];
   const scriptPath = path.join(root, "clash-verge-ai-residential.js");
   checkPublicTemplate(fs.readFileSync(scriptPath, "utf8"), failures);
+  const examplePath = path.join(root, EXAMPLE_TOML);
+  if (!fs.existsSync(examplePath)) {
+    failures.push(`${EXAMPLE_TOML} 缺失`);
+  } else {
+    checkExampleToml(fs.readFileSync(examplePath, "utf8"), failures);
+  }
   walk(root, root, failures);
   return failures;
 }
@@ -115,5 +163,6 @@ if (require.main === module) {
 
 module.exports = {
   checkTemplateSafety,
+  checkExampleToml,
   runCli
 };

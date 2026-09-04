@@ -32,10 +32,9 @@ const SUPPORTED_SWITCH_BUILDERS = Object.freeze({
   ],
   grok_core: (constants) => [
     ...constants.GROK_SUFFIX_DOMAINS,
-    ...constants.GROK_STRICT_EXACT_DOMAINS,
     ...constants.GROK_EXACT_DOMAINS
   ],
-  grok_web_assets: (constants) => [...constants.GROK_EXACT_DOMAINS]
+  grok_web_assets: (constants) => [...constants.GROK_STRICT_EXACT_DOMAINS]
 });
 
 function uniqueStrings(values) {

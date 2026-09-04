@@ -1665,6 +1665,11 @@ test("grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话�
     assert.equal(rules.includes(`DOMAIN,grok.com,${target}`), true);
     assert.equal(rules.includes(`DOMAIN,cli-chat-proxy.grok.com,${target}`), true);
     assert.equal(rules.includes(`DOMAIN,code.grok.com,${target}`), true);
+    assert.equal(
+      ruleMatchesHost(rules, "auth.x.ai", target),
+      true,
+      "grok_web_assets=false 时 auth.x.ai 仍由 grok_core 覆盖"
+    );
   });
 
   withPatchedGrokWebAssets(true, (patched) => {
@@ -1672,6 +1677,11 @@ test("grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话�
     const target = patched.constants.AI_GROUP;
     assert.equal(ruleMatchesHost(rules, "assets.grok.com", target), true);
     assert.equal(rules.includes(`DOMAIN-SUFFIX,grok.com,${target}`), true);
+    assert.equal(
+      ruleMatchesHost(rules, "auth.x.ai", target),
+      true,
+      "grok_web_assets=true 时 auth.x.ai 仍由 grok_core 覆盖"
+    );
   });
 });
 

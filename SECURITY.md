@@ -19,4 +19,11 @@ For an accidental credential commit:
 
 ## Scope
 
-Security reports should concern this repository's script, tests, CI, or documentation. Connectivity failures caused solely by third-party proxy providers or upstream AI services are operational issues rather than repository vulnerabilities.
+Security reports should concern this repository's:
+
+- Clash Verge global extension script, tests, CI, and documentation
+- ResiWatch (`residential-monitor`), including the Tauri desktop app and `monitor-db` CLI
+- Install scripts (`scripts/nsis-silent-install.js`, `scripts/install-agent-skills.js`, and the ResiWatch NSIS installer)
+- The local ResiWatch data directory (`%LOCALAPPDATA%\ResiWatch`)
+
+Connectivity failures caused solely by third-party proxy providers or upstream AI services are operational issues rather than repository vulnerabilities.
