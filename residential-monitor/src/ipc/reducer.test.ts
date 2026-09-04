@@ -143,6 +143,30 @@ describe("reduceMonitor", () => {
       backendTime: 3
     });
     expect(state.closeMarks.get("0:a")).toBe("closed");
+    expect(state.connections.has("0:a")).toBe(false);
+  });
+
+  it("upsert 1000 行后 Channel 缓存只有 identity，不持有 processPath", () => {
+    let state = reduceMonitor(emptyMonitorState(), bootstrap(1, 1));
+    for (let index = 0; index < 1000; index += 1) {
+      state = reduceMonitor(state, {
+        kind: "connectionDelta",
+        schemaVersion: 1,
+        subscriptionId: 1,
+        seq: 2 + index,
+        snapshot,
+        upserts: [row(`0:${index}`)],
+        removes: [],
+        backendTime: 2 + index
+      });
+    }
+    expect(state.connections).toBeInstanceOf(Set);
+    expect(state.connections.size).toBe(1000);
+    for (const identity of state.connections.values()) {
+      expect(typeof identity).toBe("string");
+    }
+    expect(JSON.stringify([...state.connections])).not.toContain("processPath");
+    expect(Object.prototype.hasOwnProperty.call(state, "processPath")).toBe(false);
   });
 
   it("虚拟化只取窗口", () => {

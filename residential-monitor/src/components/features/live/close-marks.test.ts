@@ -13,4 +13,13 @@ describe("closeMarks", () => {
     expect(next.get("0:b")).toBe("unconfirmed");
     expect(next.get("0:c")).toBe("closed");
   });
+
+  it("查询页或 Channel 身份集里消失的 accepted 行变为 closed", () => {
+    const prev = new Set(["0:a", "0:b"]);
+    const current = new Set(["0:b"]);
+    const disappeared = [...prev].filter((id) => !current.has(id));
+    const marks = promoteAcceptedToClosed(new Map([["0:a", "accepted" as const], ["0:b", "accepted" as const]]), disappeared);
+    expect(marks.get("0:a")).toBe("closed");
+    expect(marks.get("0:b")).toBe("accepted");
+  });
 });

@@ -8,6 +8,7 @@ import {
   isTauriRuntime,
   LIST_PAGE_DEFAULT,
   queryLiveConnections,
+  type ConnectionSummary,
   type LiveConnectionPage,
   type LiveConnectionQuery
 } from "../ipc/live-session";
@@ -34,10 +35,83 @@ export interface LiveQuerySlice {
 export interface UseLivePageInput {
   applied: LiveFilterState;
   sort: LiveSortState;
-  cursor?: LiveConnectionQuery["cursor"];
   refreshSignal: number | null;
   locale: UiLocale;
   active?: boolean;
+}
+
+export type LiveCursor = LiveConnectionQuery["cursor"];
+
+export interface LivePager {
+  cursor: LiveCursor;
+  history: LiveCursor[];
+  pageNumber: number;
+}
+
+export function firstLivePager(): LivePager {
+  return { cursor: null, history: [], pageNumber: 1 };
+}
+
+export function cursorsEqual(left: LiveCursor, right: LiveCursor): boolean {
+  if (left === right) {
+    return true;
+  }
+  if (left == null || right == null) {
+    return false;
+  }
+  return left.sortKey === right.sortKey && left.identity === right.identity;
+}
+
+export function advanceLivePager(pager: LivePager, nextCursor: LiveCursor): LivePager {
+  if (nextCursor == null || cursorsEqual(pager.cursor, nextCursor)) {
+    return pager;
+  }
+  return {
+    cursor: nextCursor,
+    history: [...pager.history, pager.cursor],
+    pageNumber: pager.pageNumber + 1
+  };
+}
+
+export function rewindLivePager(pager: LivePager): LivePager {
+  if (pager.history.length === 0) {
+    return pager.pageNumber === 1 && pager.cursor == null ? pager : firstLivePager();
+  }
+  const cursor = pager.history[pager.history.length - 1] ?? null;
+  return {
+    cursor,
+    history: pager.history.slice(0, -1),
+    pageNumber: Math.max(1, pager.pageNumber - 1)
+  };
+}
+
+export function loadNextLivePage(pager: LivePager, page: LiveConnectionPage | null): LivePager {
+  return advanceLivePager(pager, page?.nextCursor ?? null);
+}
+
+export function loadPrevLivePage(pager: LivePager): LivePager {
+  return rewindLivePager(pager);
+}
+
+export function pinLiveSummary(
+  pinned: ConnectionSummary | null,
+  page: LiveConnectionPage,
+  cursor: LiveCursor
+): ConnectionSummary {
+  if (cursor == null || pinned == null) {
+    return page.summary;
+  }
+  return pinned;
+}
+
+export function withPinnedSummary(
+  page: LiveConnectionPage,
+  summary: ConnectionSummary
+): LiveConnectionPage {
+  if (page.summary === summary) {
+    return page;
+  }
+  return { ...page, summary };
 }
 
 export function buildLiveQuery(
@@ -120,6 +194,11 @@ export function useLivePage(input: UseLivePageInput): {
   queryFailed: boolean;
   trigger: LiveQueryTrigger | null;
   collectorRunning: boolean | null;
+  pageNumber: number;
+  canLoadNext: boolean;
+  canLoadPrev: boolean;
+  loadNext: () => void;
+  loadPrev: () => void;
   closeConnection: (identity: string) => Promise<CloseState>;
   saveLayout: (layout: LiveTableLayout) => Promise<void>;
 } {
@@ -129,13 +208,26 @@ export function useLivePage(input: UseLivePageInput): {
   const sliceRef = useRef(slice);
   sliceRef.current = slice;
   const [collectorRunning, setCollectorRunning] = useState<boolean | null>(null);
+  const appliedKey = JSON.stringify(input.applied);
+  const filterKey = `${appliedKey}|${input.sort.sortField}|${input.sort.descending ? "d" : "a"}`;
+  const [pager, setPager] = useState<LivePager>(firstLivePager);
+  const pagerFilterKeyRef = useRef(filterKey);
+  const pinnedRef = useRef<ConnectionSummary | null>(null);
+  if (pagerFilterKeyRef.current !== filterKey) {
+    pagerFilterKeyRef.current = filterKey;
+    setPager(firstLivePager());
+    pinnedRef.current = null;
+  }
+  const pagerRef = useRef(pager);
+  pagerRef.current = pager;
 
   const run = useCallback(async (trigger: LiveQueryTrigger): Promise<void> => {
     const started = startLiveQuery(sliceRef.current, trigger);
     sliceRef.current = started;
     setSlice(started);
     const seq = started.seq;
-    const { applied, sort, cursor, locale } = inputRef.current;
+    const { applied, sort, locale } = inputRef.current;
+    const cursor = pagerRef.current.cursor;
     if (!isTauriRuntime()) {
       const next: LiveQuerySlice = { ...started, loading: false };
       if (isCurrentLiveRequest(seq, sliceRef.current.seq)) {
@@ -145,9 +237,12 @@ export function useLivePage(input: UseLivePageInput): {
       return;
     }
     try {
-      const page = await queryLiveConnections(buildLiveQuery(applied, sort, cursor ?? null));
+      const page = await queryLiveConnections(buildLiveQuery(applied, sort, cursor));
+      const summary = pinLiveSummary(pinnedRef.current, page, cursor);
+      pinnedRef.current = summary;
+      const display = withPinnedSummary(page, summary);
       setSlice((current) => {
-        const next = applyLiveQuerySuccess(current, seq, page);
+        const next = applyLiveQuerySuccess(current, seq, display);
         sliceRef.current = next;
         return next;
       });
@@ -171,9 +266,7 @@ export function useLivePage(input: UseLivePageInput): {
     }
   }, []);
 
-  const appliedKey = JSON.stringify(input.applied);
-  const cursorKey = JSON.stringify(input.cursor ?? null);
-
+  const cursorKey = JSON.stringify(pager.cursor);
   const active = input.active !== false;
 
   useEffect(() => {
@@ -189,6 +282,20 @@ export function useLivePage(input: UseLivePageInput): {
     }
     void run("delta");
   }, [run, input.refreshSignal, active]);
+
+  const loadNext = useCallback((): void => {
+    if (sliceRef.current.loading) {
+      return;
+    }
+    setPager((current) => loadNextLivePage(current, sliceRef.current.page));
+  }, []);
+
+  const loadPrev = useCallback((): void => {
+    if (sliceRef.current.loading) {
+      return;
+    }
+    setPager((current) => loadPrevLivePage(current));
+  }, []);
 
   const closeConnection = useCallback(async (identity: string): Promise<CloseState> => {
     const locale = inputRef.current.locale;
@@ -230,6 +337,11 @@ export function useLivePage(input: UseLivePageInput): {
     queryFailed: slice.queryFailed,
     trigger: slice.trigger,
     collectorRunning,
+    pageNumber: pager.pageNumber,
+    canLoadNext: Boolean(slice.page?.nextCursor) && !slice.loading,
+    canLoadPrev: pager.pageNumber > 1 && !slice.loading,
+    loadNext,
+    loadPrev,
     closeConnection,
     saveLayout
   };

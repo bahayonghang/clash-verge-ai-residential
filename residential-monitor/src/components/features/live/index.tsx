@@ -18,6 +18,7 @@ import {
 } from "../../../live-filter-workspace";
 import { parseLiveTableLayout, type DataColumnId, type LiveTableLayout } from "../../../live-table-layout";
 import { nextLiveSort, type LiveSortState } from "../../../live-table-sort";
+import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { ColumnMenu } from "./column-menu";
 import { ConnectionTable } from "./connection-table";
@@ -28,6 +29,10 @@ import { HotspotCards } from "./hotspot-cards";
 
 function initialFilter(): LiveFilterState {
   return cloneLiveFilter(defaultLiveQuery().filter);
+}
+
+export function livePageStatusText(locale: UiLocale, pageNumber: number, matchedCount: number): string {
+  return formatTemplate(t(locale, "live.page.status"), { page: pageNumber, matched: matchedCount });
 }
 
 export function LivePage({
@@ -58,17 +63,17 @@ export function LivePage({
   const live = useLivePage({
     applied,
     sort,
-    cursor: null,
     refreshSignal: autoRefresh ? stream.lastSeq : null,
     locale,
     active
   });
-  const { saveLayout, closeConnection } = live;
+  const { saveLayout, closeConnection, loadNext, loadPrev } = live;
 
   const prevIdsRef = useRef<Set<string>>(new Set());
   const subRef = useRef(stream.subscriptionId);
   useEffect(() => {
-    const current = new Set(stream.connections.keys());
+    // 关闭标记跟 Channel 身份集，不用当前查询页（翻页会误标 closed）。
+    const current = new Set(stream.connections);
     if (subRef.current !== stream.subscriptionId) {
       subRef.current = stream.subscriptionId;
       prevIdsRef.current = current;
@@ -140,7 +145,7 @@ export function LivePage({
     collectorRunning: live.collectorRunning,
     coverageKind: snapshot?.coverageKind ?? null,
     coverageReason: snapshot?.coverageReason ?? null,
-    rowCount: rows.length,
+    rowCount: live.page?.matchedCount ?? 0,
     needResync: stream.needResync,
     frozen: stream.frozen,
     errorZh: live.errorZh ?? stream.errorZh
@@ -245,9 +250,40 @@ export function LivePage({
         }}
       />
       <Card className="min-h-0 min-w-0 overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-sm">{t(locale, "live.table")}</CardTitle>
-          <ColumnMenu locale={locale} layout={layout} onLayoutChange={commitLayout} />
+          <div className="flex flex-wrap items-center gap-2">
+            {live.page ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!live.canLoadPrev}
+                  onClick={loadPrev}
+                >
+                  {t(locale, "live.page.prev")}
+                </Button>
+                <span
+                  className="text-xs text-muted-foreground tabular-nums"
+                  data-live-page={live.pageNumber}
+                  role="status"
+                >
+                  {livePageStatusText(locale, live.pageNumber, live.page.matchedCount)}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!live.canLoadNext}
+                  onClick={loadNext}
+                >
+                  {t(locale, "live.page.next")}
+                </Button>
+              </div>
+            ) : null}
+            <ColumnMenu locale={locale} layout={layout} onLayoutChange={commitLayout} />
+          </div>
         </CardHeader>
         <CardContent className="min-w-0">
           <ConnectionTable

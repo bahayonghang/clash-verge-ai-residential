@@ -8,7 +8,8 @@ export interface MonitorState {
   frozen: boolean;
   needResync: boolean;
   errorZh: string | null;
-  connections: Map<string, LiveConnectionView>;
+  /** Channel 身份集，供关闭标记检测消失 id。不缓存整行（含 processPath）。 */
+  connections: Set<string>;
   closeMarks: Map<string, "accepted" | "closed" | "unconfirmed">;
   alertSummary: AlertSummary | null;
 }
@@ -22,7 +23,7 @@ export function emptyMonitorState(): MonitorState {
     frozen: false,
     needResync: false,
     errorZh: null,
-    connections: new Map(),
+    connections: new Set(),
     closeMarks: new Map(),
     alertSummary: null
   };
@@ -38,7 +39,7 @@ export function reduceMonitor(state: MonitorState, message: MonitorStreamMessage
       frozen: false,
       needResync: false,
       errorZh: null,
-      connections: new Map(),
+      connections: new Set(),
       closeMarks: new Map(state.closeMarks),
       alertSummary: state.alertSummary
     };
@@ -89,10 +90,10 @@ export function reduceMonitor(state: MonitorState, message: MonitorStreamMessage
   if (message.kind === "summaryChanged") {
     return { ...state, lastSeq: seq, snapshot: message.snapshot };
   }
-  const connections = new Map(state.connections);
+  const connections = new Set(state.connections);
   const closeMarks = new Map(state.closeMarks);
   for (const row of message.upserts) {
-    connections.set(row.identity, row);
+    connections.add(row.identity);
   }
   for (const id of message.removes) {
     connections.delete(id);
