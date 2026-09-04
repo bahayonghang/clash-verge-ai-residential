@@ -158,6 +158,14 @@ fn storage_error_class(error: &StorageError) -> &'static str {
     }
 }
 
+fn log_storage_failure(event: &'static str, error: &StorageError) {
+    app_log::emit(
+        Level::Error,
+        event,
+        serde_json::json!({ "class": storage_error_class(error) }),
+    );
+}
+
 fn slice_fingerprint(slice: &AlertCommitSlice, monotonic_ms: u64) -> Result<String, ()> {
     let encoded = serde_json::to_vec(slice).map_err(|_| ())?;
     let mut digest = Sha256::new();
@@ -536,6 +544,10 @@ impl AppFacade {
         retryable: bool,
     ) -> AppErrorDto {
         localized_error(self.ui_locale, code, message_key, action_key, retryable)
+    }
+
+    fn map_report(&self, error: ReportError) -> AppErrorDto {
+        map_report_locale(error, self.ui_locale)
     }
 
     fn log_session_change(&mut self, to: SessionStatus) {
@@ -1011,13 +1023,19 @@ impl AppFacade {
             .map_err(|_| self.err("encode", "error.encode", "action.retry", false))?;
         storage
             .put_setting("controller", &encoded)
-            .map_err(|_| self.err("storage", "error.storage", "action.check_disk", true))?;
+            .map_err(|error| {
+                log_storage_failure("persist_settings", &error);
+                self.err("storage", "error.storage", "action.check_disk", true)
+            })?;
         storage
             .put_setting(
                 "wizard_complete",
                 if self.wizard_complete { "1" } else { "0" },
             )
-            .map_err(|_| self.err("storage", "error.wizard", "action.check_disk", true))?;
+            .map_err(|error| {
+                log_storage_failure("persist_settings", &error);
+                self.err("storage", "error.wizard", "action.check_disk", true)
+            })?;
         Ok(())
     }
 
@@ -1136,8 +1154,10 @@ impl AppFacade {
             };
             storage.save_targets(&targets)
         };
-        let version =
-            result.map_err(|_| self.err("storage", "error.targets", "action.check_disk", true))?;
+        let version = result.map_err(|error| {
+            log_storage_failure("save_targets", &error);
+            self.err("storage", "error.targets", "action.check_disk", true)
+        })?;
         self.engine.set_targets(targets);
         Ok(version)
     }
@@ -1273,7 +1293,10 @@ impl AppFacade {
 
     pub fn get_report(&mut self, token: &str) -> Result<ReportResult, AppErrorDto> {
         let now = chrono::Utc::now().timestamp();
-        self.snapshots.get(token, now).cloned().map_err(map_report)
+        self.snapshots
+            .get(token, now)
+            .cloned()
+            .map_err(|error| self.map_report(error))
     }
 
     pub fn release_report(&mut self, token: &str) -> bool {
@@ -1293,7 +1316,7 @@ impl AppFacade {
             after.as_deref(),
             limit,
         )
-        .map_err(map_report)
+        .map_err(|error| self.map_report(error))
     }
 
     pub fn get_report_archive(&mut self, archive_id: &str) -> Result<ReportResult, AppErrorDto> {
@@ -1301,12 +1324,12 @@ impl AppFacade {
         let frozen = {
             let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
             ReportArchiveService::load_frozen(storage.connection(), archive_id)
-                .map_err(map_report)?
+                .map_err(|error| self.map_report(error))?
         };
         let query = frozen.query_echo.clone();
         self.snapshots
             .insert(&query, frozen, now, false)
-            .map_err(map_report)
+            .map_err(|error| self.map_report(error))
     }
 
     pub fn preview_export(
@@ -1315,7 +1338,7 @@ impl AppFacade {
         spec: &ExportSpec,
     ) -> Result<ExportPreview, AppErrorDto> {
         let result = self.get_report(token)?;
-        ExportService::preview(&result, spec).map_err(map_report)
+        ExportService::preview(&result, spec).map_err(|error| self.map_report(error))
     }
 
     pub fn render_report_html(
@@ -1329,14 +1352,14 @@ impl AppFacade {
         let cancel = self.operations.resolve_cancel(None, "export");
         ExportService::render_html(&result, &spec, &cancel)
             .map(|html| HtmlDocument { html })
-            .map_err(map_report)
+            .map_err(|error| self.map_report(error))
     }
 
     pub fn get_latest_residential_manual(&mut self) -> Result<Option<ReportResult>, AppErrorDto> {
         let frozen = {
             let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
             ReportArchiveService::load_latest_residential_manual(storage.connection())
-                .map_err(map_report)?
+                .map_err(|error| self.map_report(error))?
         };
         let Some(frozen) = frozen else {
             return Ok(None);
@@ -1346,7 +1369,7 @@ impl AppFacade {
         self.snapshots
             .insert(&query, frozen, now, false)
             .map(Some)
-            .map_err(map_report)
+            .map_err(|error| self.map_report(error))
     }
 
     pub fn export_report(
@@ -1361,12 +1384,13 @@ impl AppFacade {
         spec.ui_locale = self.ui_locale;
         ExportService::export_to_path(&result, &spec, dest, &self.space, &cancel)
             .map(|path| path.to_string_lossy().into_owned())
-            .map_err(map_report)
+            .map_err(|error| self.map_report(error))
     }
 
     pub fn retention_preview(&self) -> Result<RetentionPreview, AppErrorDto> {
         let storage = self.storage.as_ref().ok_or_else(recovery_only)?;
-        RetentionService::preview(storage, self.raw_retain_days).map_err(map_report)
+        RetentionService::preview(storage, self.raw_retain_days)
+            .map_err(|error| self.map_report(error))
     }
 
     pub fn run_retention(&mut self, delete: bool) -> Result<RetentionPreview, AppErrorDto> {
@@ -1398,7 +1422,7 @@ impl AppFacade {
             "retention",
             serde_json::json!({ "ok": preview.is_ok() }),
         );
-        let preview = preview.map_err(map_report)?;
+        let preview = preview.map_err(|error| self.map_report(error))?;
         if let Some(storage) = self.storage.as_ref() {
             let _ = crate::c4::store::retain_alerts(storage.connection(), now);
         }
@@ -1674,7 +1698,9 @@ impl AppFacade {
             "backup",
             serde_json::json!({ "ok": result.is_ok() }),
         );
-        result.map(|manifest| manifest.checksum).map_err(map_report)
+        result
+            .map(|manifest| manifest.checksum)
+            .map_err(|error| self.map_report(error))
     }
 
     pub fn restore_backup(&mut self, candidate: &Path) -> Result<(), AppErrorDto> {
@@ -1787,7 +1813,7 @@ impl AppFacade {
         if self.reboot_storage().is_err() {
             self.branch = BootBranch::RecoveryOnly;
         }
-        result.map_err(map_report)
+        result.map_err(|error| self.map_report(error))
     }
 }
 
@@ -2029,11 +2055,12 @@ fn recovery_only_locale(locale: UiLocale) -> AppErrorDto {
     }
 }
 
-fn map_report(error: ReportError) -> AppErrorDto {
-    map_report_locale(error, UiLocale::Zh)
-}
-
 fn map_report_locale(error: ReportError, locale: UiLocale) -> AppErrorDto {
+    app_log::emit(
+        Level::Error,
+        "report",
+        serde_json::json!({ "class": error.code() }),
+    );
     AppErrorDto {
         code: error.code().into(),
         message_zh: error.message(locale).into(),
@@ -2543,6 +2570,65 @@ mod c2_facade_contract_tests {
         assert!(text.contains("storage_open"));
         assert!(text.contains("\"class\":\"sqlite\"") || text.contains("\"class\":\"closed\""));
         assert!(!crate::redact::scan_text_for_secrets(&text));
+        crate::app_log::reset_for_test();
+    }
+
+    #[test]
+    fn run_report_invalid_query_uses_ui_locale_and_logs_class() {
+        let _lock = crate::app_log::exclusive_test();
+        let dir = tempdir().expect("dir");
+        let logs = dir.path().join("logs");
+        crate::app_log::init_at(logs.clone(), crate::app_log::DEFAULT_MAX_BYTES);
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.save_ui_locale("en").expect("locale");
+        let mut query = ReportQuery::default();
+        query.range_end_utc = query.range_start_utc;
+        let error = facade.run_report(query, false).expect_err("invalid");
+        assert_eq!(error.code, "invalid_query");
+        assert_eq!(error.message_zh, "The query is not valid.");
+        assert_eq!(error.action, "Check the time range, dimension, and page");
+        let text = std::fs::read_to_string(logs.join(crate::app_log::FILE_NAME)).expect("log");
+        assert!(text.contains("ERROR report"), "{text}");
+        assert!(text.contains("\"class\":\"invalid_query\""), "{text}");
+        assert!(!crate::redact::scan_text_for_secrets(&text), "{text}");
+        crate::app_log::reset_for_test();
+    }
+
+    #[test]
+    fn persist_settings_and_save_targets_failure_logs_error_class() {
+        let _lock = crate::app_log::exclusive_test();
+        let dir = tempdir().expect("dir");
+        let logs = dir.path().join("logs");
+        crate::app_log::init_at(logs.clone(), crate::app_log::DEFAULT_MAX_BYTES);
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade
+            .storage
+            .as_ref()
+            .expect("storage")
+            .connection()
+            .execute_batch(
+                "create trigger fail_setting_ins before insert on machine_setting begin
+                   select raise(abort, 'injected persist');
+                 end;
+                 create trigger fail_setting_upd before update on machine_setting begin
+                   select raise(abort, 'injected persist');
+                 end;",
+            )
+            .expect("trigger");
+        let persist_err = facade.persist_settings().expect_err("persist");
+        assert_eq!(persist_err.code, "storage");
+        facade.storage.as_mut().expect("storage").test_kill =
+            Some(crate::storage::CommitKillPoint::AfterTargetDelete);
+        let targets_err = facade
+            .save_targets(vec!["家宽".into()])
+            .expect_err("targets");
+        assert_eq!(targets_err.code, "storage");
+        let text = std::fs::read_to_string(logs.join(crate::app_log::FILE_NAME)).expect("log");
+        assert!(text.contains("ERROR persist_settings"), "{text}");
+        assert!(text.contains("ERROR save_targets"), "{text}");
+        assert!(text.contains("\"class\":\"sqlite\""), "{text}");
+        assert!(text.contains("\"class\":\"closed\""), "{text}");
+        assert!(!crate::redact::scan_text_for_secrets(&text), "{text}");
         crate::app_log::reset_for_test();
     }
 

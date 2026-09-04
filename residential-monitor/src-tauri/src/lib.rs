@@ -304,10 +304,16 @@ fn archive_tick_at(state: &Mutex<AppFacade>, now_utc: i64) {
             return;
         };
         let connection = storage.connection();
-        let _ = ReportArchiveService::purge_expired(connection, now_utc);
+        if let Err(error) = ReportArchiveService::purge_expired(connection, now_utc) {
+            log_archive_error("archive_purge", &error);
+        }
         let job = match ReportArchiveService::next_job(connection, now_utc) {
             Ok(Some(job)) => job,
-            _ => return,
+            Ok(None) => return,
+            Err(error) => {
+                log_archive_error("archive_next_job", &error);
+                return;
+            }
         };
         (
             job,
@@ -354,7 +360,19 @@ fn persist_archive_outcome(
     let Some(storage) = guard.storage.as_ref() else {
         return;
     };
-    let _ = ReportArchiveService::persist_outcome(storage.connection(), job, outcome, now_utc);
+    if let Err(error) =
+        ReportArchiveService::persist_outcome(storage.connection(), job, outcome, now_utc)
+    {
+        log_archive_error("archive_persist", &error);
+    }
+}
+
+fn log_archive_error(event: &'static str, error: &c3::query::ReportError) {
+    crate::app_log::emit(
+        crate::app_log::Level::Error,
+        event,
+        serde_json::json!({ "class": error.code() }),
+    );
 }
 
 fn boot_facade() -> Option<AppFacade> {
@@ -1534,6 +1552,35 @@ mod archive_scheduler_tests {
         archive_tick_at(&state, now);
         assert_eq!(list_kind(&state, "hour"), 2);
         assert_eq!(list_kind(&state, "day"), 1);
+    }
+
+    #[test]
+    fn archive_tick_persist_failure_logs_class_without_secret() {
+        let _lock = crate::app_log::exclusive_test();
+        let dir = tempdir().expect("dir");
+        let logs = dir.path().join("logs");
+        crate::app_log::init_at(logs.clone(), crate::app_log::DEFAULT_MAX_BYTES);
+        let facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        const FIXTURE_SECRET: &str = "password=fixture-secret-value";
+        facade
+            .storage
+            .as_ref()
+            .expect("storage")
+            .connection()
+            .execute_batch(&format!(
+                "create trigger fail_archive_write before insert on report_archive begin
+                   select raise(abort, '{FIXTURE_SECRET}');
+                 end;"
+            ))
+            .expect("trigger");
+        let state = Mutex::new(facade);
+        archive_tick(&state);
+        let text = std::fs::read_to_string(logs.join(crate::app_log::FILE_NAME)).expect("log");
+        assert!(text.contains("ERROR archive_persist"), "{text}");
+        assert!(text.contains("\"class\":\"storage_failure\""), "{text}");
+        assert!(!text.contains("fixture-secret-value"), "{text}");
+        assert!(!crate::redact::scan_text_for_secrets(&text), "{text}");
+        crate::app_log::reset_for_test();
     }
 }
 
