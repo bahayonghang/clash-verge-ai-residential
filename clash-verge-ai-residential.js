@@ -536,10 +536,10 @@ function buildUpstreamDoh(upstreamName) {
   ).trim();
 
   if (!target) {
-    throw new Error(`[${AI_GROUP}] 无法为非 AI DNS 构造机场上游`);
+    fail(`[${AI_GROUP}] 无法为非 AI DNS 构造机场上游`);
   }
   if (/[#&]/.test(target)) {
-    throw new Error(`[${AI_GROUP}] 非 AI DNS 上游名称“${target}”不能包含 # 或 &`);
+    fail(`[${AI_GROUP}] 非 AI DNS 上游名称“${target}”不能包含 # 或 &`);
   }
 
   return NON_AI_DOH_ENDPOINTS.map(
@@ -578,6 +578,40 @@ function isPlainObject(value) {
 
 function cloneObject(value) {
   return isPlainObject(value) ? { ...value } : {};
+}
+
+function cloneConfigForEdit(config) {
+  const proxies = Array.isArray(config.proxies) ? config.proxies : [];
+  const groups = Array.isArray(config["proxy-groups"]) ? config["proxy-groups"] : [];
+  const rules = Array.isArray(config.rules) ? config.rules : [];
+  const dns = isPlainObject(config.dns) ? config.dns : {};
+
+  const working = {
+    ...config,
+    proxies: [...proxies],
+    "proxy-groups": groups.map((group) => {
+      if (!isPlainObject(group)) return group;
+      return {
+        ...group,
+        proxies: Array.isArray(group.proxies) ? [...group.proxies] : group.proxies
+      };
+    }),
+    rules: [...rules],
+    dns: { ...dns }
+  };
+
+  if (isPlainObject(config.tun)) {
+    working.tun = { ...config.tun };
+    if (Array.isArray(config.tun["dns-hijack"])) {
+      working.tun["dns-hijack"] = [...config.tun["dns-hijack"]];
+    }
+  }
+
+  if (isPlainObject(config.sniffer)) {
+    working.sniffer = { ...config.sniffer };
+  }
+
+  return working;
 }
 
 function uniqueStrings(items) {
@@ -696,6 +730,14 @@ function formatAvailableOutbounds(config) {
   return names.length > 30 ? `${shown}……（共 ${names.length} 个）` : shown;
 }
 
+function fail(message) {
+  if (typeof console !== "undefined" && typeof console.error === "function") {
+    console.error(message);
+  }
+  const error = new Error(message);
+  throw error;
+}
+
 function warn(message) {
   if (typeof console !== "undefined" && typeof console.warn === "function") {
     console.warn(message);
@@ -717,21 +759,21 @@ function validateReservedNameCollisions(config) {
   const groups = Array.isArray(config["proxy-groups"]) ? config["proxy-groups"] : [];
 
   if (countNamedItems(proxies, HOME_PROXY_NAME) > 1) {
-    throw new Error(`[${AI_GROUP}] 存在多个同名代理节点“${HOME_PROXY_NAME}”，无法确定要更新哪一个`);
+    fail(`[${AI_GROUP}] 存在多个同名代理节点“${HOME_PROXY_NAME}”，无法确定要更新哪一个`);
   }
   if (countNamedItems(groups, AI_GROUP) > 1) {
-    throw new Error(`[${AI_GROUP}] 存在多个同名代理组“${AI_GROUP}”，无法安全更新`);
+    fail(`[${AI_GROUP}] 存在多个同名代理组“${AI_GROUP}”，无法安全更新`);
   }
   if (findNamedItem(groups, HOME_PROXY_NAME)) {
-    throw new Error(`[${AI_GROUP}] 保留名称“${HOME_PROXY_NAME}”已被代理组占用`);
+    fail(`[${AI_GROUP}] 保留名称“${HOME_PROXY_NAME}”已被代理组占用`);
   }
   if (findNamedItem(proxies, AI_GROUP)) {
-    throw new Error(`[${AI_GROUP}] 保留名称“${AI_GROUP}”已被代理节点占用`);
+    fail(`[${AI_GROUP}] 保留名称“${AI_GROUP}”已被代理节点占用`);
   }
 
   const existingHome = findNamedItem(proxies, HOME_PROXY_NAME);
   if (existingHome && String(existingHome.type || "").toLowerCase() !== "socks5") {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] 同名“${HOME_PROXY_NAME}”节点类型为 ${existingHome.type || "<未设置>"}，` +
       "为避免覆盖用户节点，脚本拒绝继续"
     );
@@ -748,7 +790,7 @@ function validateReservedNameCollisions(config) {
       proxiesInGroup[0] === HOME_PROXY_NAME;
 
     if (!isManagedShape) {
-      throw new Error(
+      fail(
         `[${AI_GROUP}] 已存在非脚本管理的同名代理组“${AI_GROUP}”。` +
         "请重命名该组，或确认其类型为 select 且仅包含 家宽-SOCKS5"
       );
@@ -763,7 +805,7 @@ function requireOutboundIndex(outboundIndex) {
     !(outboundIndex.groups instanceof Map) ||
     !(outboundIndex.proxies instanceof Map)
   ) {
-    throw new Error(`[${AI_GROUP}] findOutbound 需要 outbound 索引`);
+    fail(`[${AI_GROUP}] findOutbound 需要 outbound 索引`);
   }
 }
 
@@ -797,7 +839,7 @@ function findOutbound(outboundIndex, name) {
   const proxyCount = proxyEntry ? proxyEntry.count : 0;
 
   if (groupCount > 1 || proxyCount > 1 || (groupCount === 1 && proxyCount === 1)) {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] outbound 名称“${name}”存在歧义（同名组/节点或重复定义），` +
       "无法安全用于 dialer-proxy"
     );
@@ -828,7 +870,7 @@ function profileOverrideCandidates(profileName) {
     return toStringArray(PROFILE_UPSTREAM_OVERRIDES[matchingKeys[0]]);
   }
   if (matchingKeys.length > 1) {
-    throw new Error(`[${AI_GROUP}] Profile 覆盖配置存在归一化重名：${matchingKeys.join(" / ")}`);
+    fail(`[${AI_GROUP}] Profile 覆盖配置存在归一化重名：${matchingKeys.join(" / ")}`);
   }
 
   return [];
@@ -854,7 +896,7 @@ function resolveCandidate(config, candidate, outboundIndex) {
     return normalizedMatches[0];
   }
   if (normalizedMatches.length > 1) {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] 候选“${candidate}”归一化后匹配多个 outbound：` +
       normalizedMatches.join(" / ")
     );
@@ -938,7 +980,7 @@ function resolveUpstreamName(config, profileName, outboundIndex) {
     : "";
   const finalText = finalTarget ? `；最终规则目标：${finalTarget}` : "";
 
-  throw new Error(
+  fail(
     `[${AI_GROUP}] 找不到可用 dialer-proxy${profileText}。` +
     `候选：${globalCandidates.join(" / ")}${finalText}；` +
     `当前 outbound：${formatAvailableOutbounds(config)}。` +
@@ -975,7 +1017,7 @@ function buildHomeProxy(config, upstreamName) {
       (field) => isPlaceholder(HOME_PROXY_TEMPLATE[field]) && existing[field] === undefined
     );
     if (unresolvedCredentials.length > 0) {
-      throw new Error(
+      fail(
         `[${AI_GROUP}] 家宽 SOCKS5 ${unresolvedCredentials.join("/")} 仍是占位值 xxx；` +
         "无认证时请显式改为空字符串"
       );
@@ -1002,25 +1044,25 @@ function buildHomeProxy(config, upstreamName) {
 
 function validateHomeProxy(homeProxy) {
   if (!homeProxy.server || isPlaceholder(homeProxy.server)) {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] 家宽 SOCKS5 server 未配置。` +
       `请修改 HOME_PROXY_TEMPLATE，或在当前 Profile 中预置同名“${HOME_PROXY_NAME}”节点。`
     );
   }
   if (!Number.isInteger(homeProxy.port) || homeProxy.port < 1 || homeProxy.port > 65535) {
-    throw new Error(`[${AI_GROUP}] 家宽 SOCKS5 port 必须是 1-65535 的整数`);
+    fail(`[${AI_GROUP}] 家宽 SOCKS5 port 必须是 1-65535 的整数`);
   }
   if (isPlaceholder(homeProxy.username) || isPlaceholder(homeProxy.password)) {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] 家宽 SOCKS5 用户名/密码仍是占位值 xxx；` +
       "无认证时请改为空字符串"
     );
   }
   if (homeProxy.udp !== true) {
-    throw new Error(`[${AI_GROUP}] 家宽 SOCKS5 udp 必须为 true`);
+    fail(`[${AI_GROUP}] 家宽 SOCKS5 udp 必须为 true`);
   }
   if (isForbiddenUpstreamName(homeProxy["dialer-proxy"])) {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] dialer-proxy“${homeProxy["dialer-proxy"]}”会导致直连、拒绝或递归链`
     );
   }
@@ -1089,7 +1131,7 @@ function buildGroupMap(config) {
   for (const group of groups) {
     if (!group || typeof group.name !== "string" || group.name.length === 0) continue;
     if (map.has(group.name)) {
-      throw new Error(`[${AI_GROUP}] 存在重复代理组名称“${group.name}”`);
+      fail(`[${AI_GROUP}] 存在重复代理组名称“${group.name}”`);
     }
     map.set(group.name, group);
   }
@@ -1113,7 +1155,7 @@ function hardenReachableUpstreamGraph(config, upstreamName, outboundIndex) {
     if (visiting.has(groupName)) {
       const start = stack.indexOf(groupName);
       const cycle = [...stack.slice(start), groupName];
-      throw new Error(`[${AI_GROUP}] 上游代理组存在循环依赖：${cycle.join(" -> ")}`);
+      fail(`[${AI_GROUP}] 上游代理组存在循环依赖：${cycle.join(" -> ")}`);
     }
     if (visited.has(groupName)) return;
 
@@ -1125,14 +1167,14 @@ function hardenReachableUpstreamGraph(config, upstreamName, outboundIndex) {
     appendHomeProxyExcludeFilter(group);
 
     if (group["disable-udp"] === true) {
-      throw new Error(
+      fail(
         `[${AI_GROUP}] 可达上游代理组“${groupName}”显式禁用了 UDP（路径：${stack.join(" -> ")}）`
       );
     }
 
     const children = Array.isArray(group.proxies) ? group.proxies : [];
     if (children.length === 0 && !groupHasAlternativeSource(group)) {
-      throw new Error(
+      fail(
         `[${AI_GROUP}] 上游代理组“${groupName}”在移除递归引用后没有可用节点来源`
       );
     }
@@ -1180,17 +1222,17 @@ function validateTopLevelUpstream(config, upstreamName, outboundIndex) {
   requireOutboundIndex(outboundIndex);
   const outbound = findOutbound(outboundIndex, upstreamName);
   if (!outbound) {
-    throw new Error(`[${AI_GROUP}] 上游“${upstreamName}”不存在`);
+    fail(`[${AI_GROUP}] 上游“${upstreamName}”不存在`);
   }
 
   if (outbound.kind === "group") {
     const group = outbound.value;
     if (group["disable-udp"] === true) {
-      throw new Error(`[${AI_GROUP}] 上游代理组“${upstreamName}”显式禁用了 UDP`);
+      fail(`[${AI_GROUP}] 上游代理组“${upstreamName}”显式禁用了 UDP`);
     }
     const explicit = Array.isArray(group.proxies) ? group.proxies : [];
     if (explicit.length === 0 && !groupHasAlternativeSource(group)) {
-      throw new Error(`[${AI_GROUP}] 上游代理组“${upstreamName}”没有可用节点来源`);
+      fail(`[${AI_GROUP}] 上游代理组“${upstreamName}”没有可用节点来源`);
     }
     return;
   }
@@ -1198,10 +1240,10 @@ function validateTopLevelUpstream(config, upstreamName, outboundIndex) {
   const proxy = outbound.value;
   const proxyType = String(proxy.type || "").toLowerCase();
   if (proxyType === "direct" || proxyType === "reject") {
-    throw new Error(`[${AI_GROUP}] 上游“${upstreamName}”不是机场代理节点`);
+    fail(`[${AI_GROUP}] 上游“${upstreamName}”不是机场代理节点`);
   }
   if (proxy.udp === false) {
-    throw new Error(`[${AI_GROUP}] 上游节点“${upstreamName}”显式关闭了 UDP`);
+    fail(`[${AI_GROUP}] 上游节点“${upstreamName}”显式关闭了 UDP`);
   }
 }
 
@@ -1600,7 +1642,7 @@ function upsertNamedItem(items, item) {
     if (result[index] && result[index].name === item.name) indexes.push(index);
   }
   if (indexes.length > 1) {
-    throw new Error(`[${AI_GROUP}] 无法 upsert 重复名称“${item.name}”`);
+    fail(`[${AI_GROUP}] 无法 upsert 重复名称“${item.name}”`);
   }
   if (indexes.length === 1) result[indexes[0]] = item;
   else result.unshift(item);
@@ -1682,53 +1724,53 @@ function ensureProcessLookup(config) {
 // ============================================================
 
 function main(config, profileName) {
-  if (!config || typeof config !== "object") return config;
+  if (!isPlainObject(config)) {
+    fail(`[${AI_GROUP}] 配置对象无效，拒绝执行`);
+  }
 
-  if (!Array.isArray(config.proxies)) config.proxies = [];
-  if (!Array.isArray(config["proxy-groups"])) config["proxy-groups"] = [];
-  if (!Array.isArray(config.rules)) config.rules = [];
+  const working = cloneConfigForEdit(config);
 
   // 1. 在任何覆盖前检查保留名称，防止静默破坏用户配置。
-  validateReservedNameCollisions(config);
+  validateReservedNameCollisions(working);
 
   // 2. 为当前 Profile 动态解析一个真实存在的上游名称。
-  const outboundIndex = buildOutboundIndex(config);
-  const upstreamName = resolveUpstreamName(config, profileName, outboundIndex);
+  const outboundIndex = buildOutboundIndex(working);
+  const upstreamName = resolveUpstreamName(working, profileName, outboundIndex);
 
   // 3. 防止 include-all / 嵌套组把家宽节点重新纳入上游，形成递归链。
-  hardenAllIncludeAllGroups(config["proxy-groups"]);
-  hardenReachableUpstreamGraph(config, upstreamName, outboundIndex);
-  validateTopLevelUpstream(config, upstreamName, outboundIndex);
+  hardenAllIncludeAllGroups(working["proxy-groups"]);
+  hardenReachableUpstreamGraph(working, upstreamName, outboundIndex);
+  validateTopLevelUpstream(working, upstreamName, outboundIndex);
 
   // 4. 构建家宽 SOCKS5，dialer-proxy 始终是单一、已解析名称。
-  const homeProxy = buildHomeProxy(config, upstreamName);
+  const homeProxy = buildHomeProxy(working, upstreamName);
   validateHomeProxy(homeProxy);
-  config.proxies = upsertNamedItem(config.proxies, homeProxy);
+  working.proxies = upsertNamedItem(working.proxies, homeProxy);
 
   // 5. 注入统一 AI 出口组；不提供 DIRECT 回退，故障时 fail closed。
-  config["proxy-groups"] = upsertNamedItem(
-    config["proxy-groups"],
-    buildAiGroup(config)
+  working["proxy-groups"] = upsertNamedItem(
+    working["proxy-groups"],
+    buildAiGroup(working)
   );
 
   // 6. 精确清理当前版本管理的规则；未知自定义规则原样保留。
-  const existingRules = cleanExistingManagedRules(config.rules);
-  config.rules = dedupeRuleEntries([
+  const existingRules = cleanExistingManagedRules(working.rules);
+  working.rules = dedupeRuleEntries([
     ...buildInjectedRules(),
     ...existingRules
   ]);
 
   // 7. 重建严格 DNS 路径。
-  config.dns = buildDnsConfig(config.dns, upstreamName);
+  working.dns = buildDnsConfig(working.dns, upstreamName);
 
   // 8. 加固已启用的 TUN 与域名嗅探。查找进程写顶层 always；进程路由默认关闭。
-  hardenTun(config);
-  hardenSniffer(config);
-  ensureProcessLookup(config);
+  hardenTun(working);
+  hardenSniffer(working);
+  ensureProcessLookup(working);
 
   // 9. 统一关闭 Mihomo IPv6；操作系统层仍需由 TUN/系统路由约束。
   // 新版 Clash Verge Rev 会把 ipv6 还原为应用设置值（见 hardenTun 注释）。
-  config.ipv6 = false;
+  working.ipv6 = false;
 
   info(
     `[${AI_GROUP} v${SCRIPT_VERSION}] Profile“${profileName || "<未命名>"}”` +
@@ -1739,7 +1781,7 @@ function main(config, profileName) {
     "等权威字段；TUN 的 dns-hijack 与 IPv6 开关请在 Verge 设置页配置。"
   );
 
-  return config;
+  return working;
 }
 
 // Node.js 单元测试导出；Clash Verge 环境不存在 module，不受影响。

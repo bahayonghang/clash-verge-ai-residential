@@ -59,13 +59,16 @@ const {
 function quietMainWith(scriptModule, config, profileName) {
   const originalInfo = console.info;
   const originalWarn = console.warn;
+  const originalError = console.error;
   console.info = () => {};
   console.warn = () => {};
+  console.error = () => {};
   try {
     return scriptModule.main(config, profileName);
   } finally {
     console.info = originalInfo;
     console.warn = originalWarn;
+    console.error = originalError;
   }
 }
 
@@ -485,6 +488,73 @@ test("只配置 endpoint 而保留 xxx 凭据时明确报错", () => {
   }
 });
 
+test("占位凭据失败时不改调用方配置，并 console.error [AI-家宽]", () => {
+  const original = {
+    server: template.server,
+    port: template.port,
+    username: template.username,
+    password: template.password
+  };
+  template.server = "configured.example.test";
+  template.port = 1080;
+  template.username = "xxx";
+  template.password = "xxx";
+
+  const errors = [];
+  const originalError = console.error;
+  const originalInfo = console.info;
+  const originalWarn = console.warn;
+  console.error = (message) => errors.push(String(message));
+  console.info = () => {};
+  console.warn = () => {};
+
+  try {
+    const config = configFixture({
+      includeHome: false,
+      proxies: [airportNode("JP")],
+      groups: [
+        group("🚀节点选择", ["JP"], {
+          "include-all-proxies": true,
+          "exclude-filter": "^过期节点$"
+        })
+      ]
+    });
+    const before = JSON.stringify({
+      proxies: config.proxies,
+      "proxy-groups": config["proxy-groups"]
+    });
+
+    assert.throws(
+      () => main(config, "赔钱机场"),
+      /username\/password 仍是占位值 xxx/
+    );
+
+    assert.equal(
+      JSON.stringify({
+        proxies: config.proxies,
+        "proxy-groups": config["proxy-groups"]
+      }),
+      before
+    );
+    assert.equal(
+      findGroup(config, "🚀节点选择")["exclude-filter"],
+      "^过期节点$"
+    );
+    assert.ok(
+      errors.some((line) => line.includes("[AI-家宽]")),
+      `console.error 应含 [AI-家宽]，实际：${errors.join(" | ")}`
+    );
+  } finally {
+    console.error = originalError;
+    console.info = originalInfo;
+    console.warn = originalWarn;
+    template.server = original.server;
+    template.port = original.port;
+    template.username = original.username;
+    template.password = original.password;
+  }
+});
+
 test("findOutbound 缺索引时抛错，合法索引可解析唯一节点", () => {
   assert.throws(() => findOutbound(), /需要 outbound 索引/);
   assert.throws(() => findOutbound({}, "x"), /需要 outbound 索引/);
@@ -619,18 +689,18 @@ test("2000 叶子同一对象连续两次 main 保持规则、policy 与 dialer-
     groups: [group("🚀节点选择", leafNames)]
   });
 
-  quietMain(config, "赔钱机场");
-  const firstRules = config.rules.slice();
-  const firstPolicy = structuredClone(config.dns["nameserver-policy"]);
-  const firstHome = findProxy(config, HOME_PROXY_NAME);
+  const first = quietMain(config, "赔钱机场");
+  const firstRules = first.rules.slice();
+  const firstPolicy = structuredClone(first.dns["nameserver-policy"]);
+  const firstHome = findProxy(first, HOME_PROXY_NAME);
   const firstServer = firstHome.server;
   const firstPort = firstHome.port;
   const firstDialer = firstHome["dialer-proxy"];
-  quietMain(config, "赔钱机场");
+  const second = quietMain(first, "赔钱机场");
 
-  const secondHome = findProxy(config, HOME_PROXY_NAME);
-  assert.deepEqual(config.rules, firstRules);
-  assert.deepEqual(config.dns["nameserver-policy"], firstPolicy);
+  const secondHome = findProxy(second, HOME_PROXY_NAME);
+  assert.deepEqual(second.rules, firstRules);
+  assert.deepEqual(second.dns["nameserver-policy"], firstPolicy);
   assert.equal(secondHome.server, firstServer);
   assert.equal(secondHome.port, firstPort);
   assert.equal(secondHome["dialer-proxy"], firstDialer);
@@ -1044,12 +1114,12 @@ test("OpenAI 第一方认证与网页资源开关默认关闭且可独立组合"
           groups: [group("🚀节点选择", ["HK"])],
           rules: ["MATCH,🚀节点选择"]
         });
-        quietMainWith(patched, config, "赔钱机场");
-        const firstRules = structuredClone(config.rules);
-        const firstPolicy = structuredClone(config.dns["nameserver-policy"]);
-        quietMainWith(patched, config, "赔钱机场");
-        assert.deepEqual(config.rules, firstRules);
-        assert.deepEqual(config.dns["nameserver-policy"], firstPolicy);
+        const first = quietMainWith(patched, config, "赔钱机场");
+        const firstRules = structuredClone(first.rules);
+        const firstPolicy = structuredClone(first.dns["nameserver-policy"]);
+        const second = quietMainWith(patched, first, "赔钱机场");
+        assert.deepEqual(second.rules, firstRules);
+        assert.deepEqual(second.dns["nameserver-policy"], firstPolicy);
       }
     });
   }
@@ -1075,50 +1145,51 @@ test("OpenAI 开关分别由开启切换为关闭时清理规则与 DNS，并保
       rules: [customAiRule, "MATCH,🚀节点选择"]
     });
 
+    let output;
     withPatchedOpenAiSwitches(true, true, (enabled) => {
-      quietMainWith(enabled, config, "赔钱机场");
+      output = quietMainWith(enabled, config, "赔钱机场");
     });
-    assert.equal(ruleMatchesHost(config.rules, "auth.openai.com"), true);
-    assert.equal(ruleMatchesHost(config.rules, "auth0.openai.com"), true);
-    assert.equal(ruleMatchesHost(config.rules, "oaistatic.com"), true);
-    assert.equal("+.auth.openai.com" in config.dns["nameserver-policy"], true);
-    assert.equal("auth0.openai.com" in config.dns["nameserver-policy"], true);
-    assert.equal("+.oaistatic.com" in config.dns["nameserver-policy"], true);
+    assert.equal(ruleMatchesHost(output.rules, "auth.openai.com"), true);
+    assert.equal(ruleMatchesHost(output.rules, "auth0.openai.com"), true);
+    assert.equal(ruleMatchesHost(output.rules, "oaistatic.com"), true);
+    assert.equal("+.auth.openai.com" in output.dns["nameserver-policy"], true);
+    assert.equal("auth0.openai.com" in output.dns["nameserver-policy"], true);
+    assert.equal("+.oaistatic.com" in output.dns["nameserver-policy"], true);
 
     withPatchedOpenAiSwitches(
       item.authEnabledAfter,
       item.assetsEnabledAfter,
       (disabled) => {
-        quietMainWith(disabled, config, "赔钱机场");
+        output = quietMainWith(disabled, output, "赔钱机场");
       }
     );
 
     assert.equal(
-      ruleMatchesHost(config.rules, "auth.openai.com"),
+      ruleMatchesHost(output.rules, "auth.openai.com"),
       item.authEnabledAfter
     );
     assert.equal(
-      ruleMatchesHost(config.rules, "auth0.openai.com"),
+      ruleMatchesHost(output.rules, "auth0.openai.com"),
       item.authEnabledAfter
     );
     assert.equal(
-      ruleMatchesHost(config.rules, "oaistatic.com"),
+      ruleMatchesHost(output.rules, "oaistatic.com"),
       item.assetsEnabledAfter
     );
     assert.equal(
-      "+.auth.openai.com" in config.dns["nameserver-policy"],
+      "+.auth.openai.com" in output.dns["nameserver-policy"],
       item.authEnabledAfter
     );
     assert.equal(
-      "auth0.openai.com" in config.dns["nameserver-policy"],
+      "auth0.openai.com" in output.dns["nameserver-policy"],
       item.authEnabledAfter
     );
     assert.equal(
-      "+.oaistatic.com" in config.dns["nameserver-policy"],
+      "+.oaistatic.com" in output.dns["nameserver-policy"],
       item.assetsEnabledAfter
     );
-    assert.equal(config.rules.includes(customAiRule), true);
-    assert.equal(new Set(config.rules).size, config.rules.length);
+    assert.equal(output.rules.includes(customAiRule), true);
+    assert.equal(new Set(output.rules).size, output.rules.length);
   }
 });
 
@@ -1208,72 +1279,72 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
     ]
   });
 
-  quietMain(config, "赔钱机场");
-  const firstNameserverPolicy = structuredClone(config.dns["nameserver-policy"]);
-  quietMain(config, "赔钱机场");
+  const first = quietMain(config, "赔钱机场");
+  const firstNameserverPolicy = structuredClone(first.dns["nameserver-policy"]);
+  const output = quietMain(first, "赔钱机场");
 
-  assert.equal(countNamed(config.proxies, HOME_PROXY_NAME), 1);
-  assert.equal(countNamed(config["proxy-groups"], AI_GROUP), 1);
-  assert.equal(config.rules.includes(anthropicFallbackRule), true);
+  assert.equal(countNamed(output.proxies, HOME_PROXY_NAME), 1);
+  assert.equal(countNamed(output["proxy-groups"], AI_GROUP), 1);
+  assert.equal(output.rules.includes(anthropicFallbackRule), true);
   {
     const exactRule = `DOMAIN,api.anthropic.com,${AI_GROUP}`;
-    assert.equal(config.rules.filter((rule) => rule === exactRule).length, 1);
-    assert.ok(config.rules.indexOf(exactRule) < config.rules.indexOf(anthropicFallbackRule));
+    assert.equal(output.rules.filter((rule) => rule === exactRule).length, 1);
+    assert.ok(output.rules.indexOf(exactRule) < output.rules.indexOf(anthropicFallbackRule));
   }
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN,a-api.anthropic.com,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN,a-api.anthropic.com,${AI_GROUP}`).length,
     0
   );
-  assert.equal(config.rules.filter((rule) => rule === customAiRule).length, 1);
-  assert.equal(config.rules.includes(normalYoutubeRule), true);
-  assert.equal(config.rules.includes(normalMarketplaceRule), true);
-  assert.equal(config.rules.includes(`DOMAIN,www.youtube.com,${AI_GROUP}`), true);
-  assert.equal(config.rules.includes(`DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`), true);
-  assert.equal(config.rules.includes(`DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`), true);
+  assert.equal(output.rules.filter((rule) => rule === customAiRule).length, 1);
+  assert.equal(output.rules.includes(normalYoutubeRule), true);
+  assert.equal(output.rules.includes(normalMarketplaceRule), true);
+  assert.equal(output.rules.includes(`DOMAIN,www.youtube.com,${AI_GROUP}`), true);
+  assert.equal(output.rules.includes(`DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`), true);
+  assert.equal(output.rules.includes(`DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`), true);
   // cursor_core 默认开启：旧 suffix 被清理，改注入 exact 一次。
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
     0
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN,api2.cursor.sh,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN,api2.cursor.sh,${AI_GROUP}`).length,
     1
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,grok.com,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN-SUFFIX,grok.com,${AI_GROUP}`).length,
     1
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN,api.openai.com,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN,api.openai.com,${AI_GROUP}`).length,
     0
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api.openai.com,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api.openai.com,${AI_GROUP}`).length,
     1
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,chat.openai.com,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN-SUFFIX,chat.openai.com,${AI_GROUP}`).length,
     0
   );
   for (const host of OPENAI_CORE_EXACT_DOMAINS) {
     assert.equal(
-      config.rules.filter((rule) => rule === `DOMAIN,${host},${AI_GROUP}`).length,
+      output.rules.filter((rule) => rule === `DOMAIN,${host},${AI_GROUP}`).length,
       1,
       `exact 主机应重注一次：${host}`
     );
   }
-  for (const rule of retiredCursorRules) assert.equal(config.rules.includes(rule), true);
+  for (const rule of retiredCursorRules) assert.equal(output.rules.includes(rule), true);
   assert.equal(
-    config.rules.includes(`DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`),
+    output.rules.includes(`DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`),
     false,
     "默认关闭仓库索引后不应重新注入托管 repo 正则"
   );
-  assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), true);
-  assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`), true);
-  assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`), true);
-  assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`), true);
-  assert.equal(new Set(config.rules).size, config.rules.length);
-  assert.deepEqual(config.dns["nameserver-policy"], firstNameserverPolicy);
+  assert.equal(output.rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), true);
+  assert.equal(output.rules.includes(`IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`), true);
+  assert.equal(output.rules.includes(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`), true);
+  assert.equal(output.rules.includes(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`), true);
+  assert.equal(new Set(output.rules).size, output.rules.length);
+  assert.deepEqual(output.dns["nameserver-policy"], firstNameserverPolicy);
 });
 
 test("关闭仓库索引后二次运行会移除托管 repo 正则，并保留用户自有规则", () => {
@@ -1294,26 +1365,26 @@ test("关闭仓库索引后二次运行会移除托管 repo 正则，并保留�
     ]
   });
 
-  quietMain(config, "赔钱机场");
-  assert.equal(config.rules.includes(managedRepoRule), false);
-  assert.equal(config.rules.filter((rule) => rule === unknownAiRule).length, 1);
-  assert.equal(config.rules.includes(retiredExactRule), true);
-  assert.equal(config.rules.includes(retiredRegexRule), true);
+  const first = quietMain(config, "赔钱机场");
+  assert.equal(first.rules.includes(managedRepoRule), false);
+  assert.equal(first.rules.filter((rule) => rule === unknownAiRule).length, 1);
+  assert.equal(first.rules.includes(retiredExactRule), true);
+  assert.equal(first.rules.includes(retiredRegexRule), true);
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
+    first.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
     0
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN,api2.cursor.sh,${AI_GROUP}`).length,
+    first.rules.filter((rule) => rule === `DOMAIN,api2.cursor.sh,${AI_GROUP}`).length,
     1
   );
 
-  quietMain(config, "赔钱机场");
-  assert.equal(config.rules.includes(managedRepoRule), false);
-  assert.equal(config.rules.filter((rule) => rule === unknownAiRule).length, 1);
-  assert.equal(config.rules.includes(retiredExactRule), true);
-  assert.equal(config.rules.includes(retiredRegexRule), true);
-  assert.equal(new Set(config.rules).size, config.rules.length);
+  const second = quietMain(first, "赔钱机场");
+  assert.equal(second.rules.includes(managedRepoRule), false);
+  assert.equal(second.rules.filter((rule) => rule === unknownAiRule).length, 1);
+  assert.equal(second.rules.includes(retiredExactRule), true);
+  assert.equal(second.rules.includes(retiredRegexRule), true);
+  assert.equal(new Set(second.rules).size, second.rules.length);
 });
 
 // ---------------------------------------------------------------------------
