@@ -5,6 +5,7 @@ use crate::c2::facade::{parse_socket, AppFacade};
 use crate::c2::hub::MonitorStreamMessage;
 use crate::c2::shell::BootBranch;
 use crate::controller::{reject_non_loopback_ip, ControllerInput, SessionStatus};
+use crate::credential::Secret;
 use crate::session::ControllerSession;
 use std::net::SocketAddr;
 
@@ -12,7 +13,7 @@ use std::net::SocketAddr;
 pub struct CollectorPlan {
     pub should_fetch: bool,
     address: Option<SocketAddr>,
-    secret: Option<String>,
+    secret: Option<Secret>,
     session_error: Option<SessionStatus>,
 }
 
@@ -31,7 +32,7 @@ impl CollectorPlan {
     }
 
     pub fn secret(&self) -> Option<&str> {
-        self.secret.as_deref()
+        self.secret.as_ref().and_then(Secret::as_utf8)
     }
 
     pub fn session_error(&self) -> Option<SessionStatus> {
@@ -67,8 +68,8 @@ pub fn plan_tick(facade: &AppFacade) -> CollectorPlan {
             &facade.settings.credential_target,
             &facade.settings.secret_mode,
         ) {
-            Ok(value) => Some(String::from_utf8_lossy(value.as_header_bytes()).into_owned()),
-            Err(_) => {
+            Ok(value) if value.as_utf8().is_some() => Some(value),
+            Ok(_) | Err(_) => {
                 return CollectorPlan {
                     should_fetch: false,
                     address: Some(addr),

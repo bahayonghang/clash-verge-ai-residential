@@ -320,6 +320,10 @@ fn entry(key: &str) -> Option<(&'static str, &'static str)> {
         "action.complete_wizard" => ("完成设置向导", "Finish the setup wizard"),
         "error.encode" => ("设置编码失败。", "Settings encoding failed."),
         "error.storage" => ("设置写入失败。", "Settings write failed."),
+        "error.storage_failure" => (
+            "应用状态不可用，请重启应用。",
+            "Application state is unavailable. Restart the application.",
+        ),
         "error.wizard" => ("向导状态写入失败。", "Wizard state write failed."),
         "error.targets" => ("目标写入失败。", "Target write failed."),
         "error.locale" => ("语言设置写入失败。", "Locale setting write failed."),
@@ -434,7 +438,11 @@ mod i18n_tests {
 
     #[test]
     fn autostart_error_keys_resolve_in_both_locales() {
-        for key in ["error.autostart_unavailable", "action.retry_autostart"] {
+        for key in [
+            "error.autostart_unavailable",
+            "action.retry_autostart",
+            "error.storage_failure",
+        ] {
             let zh = t(UiLocale::Zh, key);
             let en = t(UiLocale::En, key);
             assert!(!zh.is_empty(), "{key} missing zh");

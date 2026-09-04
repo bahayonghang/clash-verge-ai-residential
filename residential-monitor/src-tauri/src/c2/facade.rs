@@ -57,7 +57,7 @@ use sha2::{Digest, Sha256};
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -164,6 +164,25 @@ fn log_storage_failure(event: &'static str, error: &StorageError) {
         event,
         serde_json::json!({ "class": storage_error_class(error) }),
     );
+}
+
+/// IPC 命令的 facade 锁。中毒时返回 `storage_failure`，不 unwind。
+pub fn lock_facade(state: &Mutex<AppFacade>) -> Result<MutexGuard<'_, AppFacade>, AppErrorDto> {
+    state.lock().map_err(|poisoned| {
+        let locale = poisoned.get_ref().ui_locale;
+        app_log::emit(
+            Level::Error,
+            "facade_lock",
+            serde_json::json!({ "class": "mutex_poisoned" }),
+        );
+        localized_error(
+            locale,
+            "storage_failure",
+            "error.storage_failure",
+            "action.retry",
+            true,
+        )
+    })
 }
 
 fn slice_fingerprint(slice: &AlertCommitSlice, monotonic_ms: u64) -> Result<String, ()> {
@@ -1824,7 +1843,7 @@ pub fn run_report_unlocked(
     operation_id: Option<&str>,
 ) -> Result<ReportResult, AppErrorDto> {
     let (path, cancel, raw_retain_days, locale) = {
-        let guard = state.lock().expect("state");
+        let guard = lock_facade(state)?;
         let path = guard
             .storage
             .as_ref()
@@ -1842,7 +1861,7 @@ pub fn run_report_unlocked(
     let built = run_uncached(&path, query.clone(), now, raw_retain_days, &cancel, None)
         .map_err(|error| map_report_locale(error, locale))?;
     poll_interrupt(&cancel, "user").map_err(|error| map_report_locale(error, locale))?;
-    let mut guard = state.lock().expect("state");
+    let mut guard = lock_facade(state)?;
     guard.persist_report_result(query, built, persist_manual, now)
 }
 
@@ -1853,7 +1872,7 @@ pub fn residential_share_unlocked(
     display_timezone: String,
 ) -> Result<ResidentialShare, AppErrorDto> {
     let (path, locale) = {
-        let guard = state.lock().expect("state");
+        let guard = lock_facade(state)?;
         let path = guard
             .storage
             .as_ref()
@@ -1881,7 +1900,7 @@ pub fn export_report_unlocked(
     operation_id: Option<&str>,
 ) -> Result<String, AppErrorDto> {
     let (result, mut spec, space, cancel, locale) = {
-        let mut guard = state.lock().expect("state");
+        let mut guard = lock_facade(state)?;
         let result = guard.get_report(token)?;
         (
             result,
@@ -1903,7 +1922,7 @@ pub fn run_retention_unlocked(
     operation_id: Option<&str>,
 ) -> Result<RetentionPreview, AppErrorDto> {
     let (path, raw_retain_days, space, cancel, mode, now, locale) = {
-        let guard = state.lock().expect("state");
+        let guard = lock_facade(state)?;
         let path = guard
             .storage
             .as_ref()
@@ -1946,7 +1965,7 @@ pub fn run_retention_unlocked(
         serde_json::json!({ "ok": preview.is_ok() }),
     );
     let preview = preview.map_err(|error| map_report_locale(error, locale))?;
-    let guard = state.lock().expect("state");
+    let guard = lock_facade(state)?;
     if let Some(storage) = guard.storage.as_ref() {
         let _ = crate::c4::store::retain_alerts(storage.connection(), now);
     }
@@ -1959,7 +1978,7 @@ pub fn create_backup_unlocked(
     operation_id: Option<&str>,
 ) -> Result<String, AppErrorDto> {
     let (live, space, cancel, now, locale) = {
-        let guard = state.lock().expect("state");
+        let guard = lock_facade(state)?;
         if guard.storage.is_none() {
             return Err(recovery_only_locale(guard.ui_locale));
         }
@@ -1992,7 +2011,7 @@ pub fn restore_backup_unlocked(
     operation_id: Option<&str>,
 ) -> Result<(), AppErrorDto> {
     let (live, space, cancel) = {
-        let mut guard = state.lock().expect("state");
+        let mut guard = lock_facade(state)?;
         guard.storage = None;
         guard.branch = BootBranch::RecoveryOnly;
         (
@@ -2011,7 +2030,7 @@ pub fn restore_backup_unlocked(
         "restore",
         serde_json::json!({ "ok": restored.is_ok() }),
     );
-    state.lock().expect("state").complete_restore(restored)
+    lock_facade(state)?.complete_restore(restored)
 }
 
 fn retain_live_rows(input: &ControllerInput) -> bool {

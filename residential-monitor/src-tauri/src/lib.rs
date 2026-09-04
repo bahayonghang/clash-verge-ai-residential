@@ -38,7 +38,9 @@ use c2::desktop::{
     TrayVisual,
 };
 use c2::dialog::TauriFileDialog;
-use c2::facade::{parse_socket_locale, AppErrorDto, AppFacade, BootstrapDto, ProbeResult};
+use c2::facade::{
+    lock_facade, parse_socket_locale, AppErrorDto, AppFacade, BootstrapDto, ProbeResult,
+};
 use c2::hub::{LiveConnectionView, MonitorStreamMessage};
 use c2::query::{ConnectionPage, ConnectionQuery};
 use c2::settings::{apply_autostart, ControllerSettings};
@@ -221,7 +223,9 @@ fn forward_published(
     if dead.is_empty() {
         return;
     }
-    let guard = state.lock().expect("state");
+    let Ok(guard) = state.lock() else {
+        return;
+    };
     for id in dead {
         guard.hub.drop_subscription(id);
     }
@@ -232,14 +236,18 @@ async fn collector_loop_tick(handle: &AppHandle) -> bool {
         return false;
     };
     let plan = {
-        let guard = state.lock().expect("state");
+        let Ok(guard) = state.lock() else {
+            return false;
+        };
         if guard.desktop.shutdown != ShutdownPhase::Idle {
             return false;
         }
         c2::collector::plan_tick(&guard)
     };
     let message = if let Some(status) = plan.session_error() {
-        let mut guard = state.lock().expect("state");
+        let Ok(mut guard) = state.lock() else {
+            return false;
+        };
         if guard.desktop.shutdown != ShutdownPhase::Idle {
             return false;
         }
@@ -256,7 +264,9 @@ async fn collector_loop_tick(handle: &AppHandle) -> bool {
     } else if plan.should_fetch {
         if let Some(addr) = plan.address() {
             let result = c2::collector::fetch_snapshot(addr, plan.secret()).await;
-            let mut guard = state.lock().expect("state");
+            let Ok(mut guard) = state.lock() else {
+                return false;
+            };
             if guard.desktop.shutdown != ShutdownPhase::Idle {
                 return false;
             }
@@ -413,9 +423,13 @@ fn attach_windows_credentials(facade: &mut AppFacade) {
     );
 }
 
+fn get_bootstrap_core(state: &Mutex<AppFacade>) -> Result<BootstrapDto, AppErrorDto> {
+    lock_facade(state)?.bootstrap()
+}
+
 #[tauri::command]
 fn get_bootstrap(state: State<Mutex<AppFacade>>) -> Result<BootstrapDto, AppErrorDto> {
-    state.lock().expect("state").bootstrap()
+    get_bootstrap_core(&state)
 }
 
 #[tauri::command]
@@ -423,7 +437,7 @@ fn subscribe_monitor(
     state: State<Mutex<AppFacade>>,
     on_event: Channel<MonitorStreamMessage>,
 ) -> Result<u64, AppErrorDto> {
-    let message = state.lock().expect("state").subscribe();
+    let message = lock_facade(&state)?.subscribe();
     let id = match &message {
         MonitorStreamMessage::Bootstrap {
             subscription_id, ..
@@ -450,7 +464,7 @@ fn resync_monitor(
     subscription_id: u64,
     on_event: Channel<MonitorStreamMessage>,
 ) -> Result<u64, AppErrorDto> {
-    let message = state.lock().expect("state").resync(subscription_id);
+    let message = lock_facade(&state)?.resync(subscription_id);
     let id = match &message {
         MonitorStreamMessage::Bootstrap {
             subscription_id, ..
@@ -477,7 +491,7 @@ fn query_live_connections(
     state: State<Mutex<AppFacade>>,
     query: ConnectionQuery,
 ) -> Result<ConnectionPage, AppErrorDto> {
-    Ok(state.lock().expect("state").query(&query))
+    Ok(lock_facade(&state)?.query(&query))
 }
 
 #[tauri::command]
@@ -485,7 +499,7 @@ fn get_connection(
     state: State<Mutex<AppFacade>>,
     identity: String,
 ) -> Result<Option<LiveConnectionView>, AppErrorDto> {
-    Ok(state.lock().expect("state").hub.row(&identity))
+    Ok(lock_facade(&state)?.hub.row(&identity))
 }
 
 #[tauri::command]
@@ -495,7 +509,7 @@ async fn close_connection(
     request_id: String,
 ) -> Result<c2::close::CloseState, AppErrorDto> {
     let (addr, secret, connection_id) = {
-        let guard = state.lock().expect("state");
+        let guard = lock_facade(&state)?;
         if guard.branch != c2::shell::BootBranch::NormalReady {
             return Err(guard.err(
                 "recovery_only",
@@ -521,7 +535,6 @@ async fn close_connection(
                     &guard.settings.secret_mode,
                 )
                 .ok()
-                .map(|value| String::from_utf8_lossy(value.as_header_bytes()).into_owned())
         } else {
             None
         };
@@ -533,21 +546,24 @@ async fn close_connection(
     };
     let result = {
         let session = ControllerSession::new(addr.to_string());
+        let secret = secret.as_ref().and_then(crate::credential::Secret::as_utf8);
         session
-            .close_connection(addr, secret.as_deref(), &connection_id)
+            .close_connection(addr, secret, &connection_id)
             .await
             .map_err(|status| {
-                let locale = state.lock().expect("state").ui_locale;
-                AppErrorDto::from_status_locale(status, locale)
+                lock_facade(&state)
+                    .map(|guard| AppErrorDto::from_status_locale(status, guard.ui_locale))
+                    .unwrap_or_else(|error| error)
             })?
     };
-    let mut guard = state.lock().expect("state");
+    drop(secret);
+    let mut guard = lock_facade(&state)?;
     Ok(guard.mark_close_accepted_from_control(identity, request_id, result))
 }
 
 #[tauri::command]
 fn get_settings(state: State<Mutex<AppFacade>>) -> Result<ControllerSettings, AppErrorDto> {
-    Ok(state.lock().expect("state").settings.clone())
+    Ok(lock_facade(&state)?.settings.clone())
 }
 
 #[tauri::command]
@@ -555,7 +571,7 @@ fn get_autostart_state(
     app: AppHandle,
     state: State<Mutex<AppFacade>>,
 ) -> Result<AutostartStateDto, AppErrorDto> {
-    let locale = state.lock().expect("state").ui_locale;
+    let locale = lock_facade(&state)?.ui_locale;
     let port = TauriAutostartPort::new(&app);
     get_autostart_state_core(&port, locale)
 }
@@ -566,14 +582,14 @@ fn set_autostart_enabled(
     state: State<Mutex<AppFacade>>,
     enabled: bool,
 ) -> Result<AutostartStateDto, AppErrorDto> {
-    let locale = state.lock().expect("state").ui_locale;
+    let locale = lock_facade(&state)?.ui_locale;
     let port = TauriAutostartPort::new(&app);
     set_autostart_enabled_core(&port, locale, enabled)
 }
 
 #[tauri::command]
 fn get_controller_secret(state: State<Mutex<AppFacade>>) -> Result<Option<String>, AppErrorDto> {
-    state.lock().expect("state").reveal_secret()
+    lock_facade(&state)?.reveal_secret()
 }
 
 #[tauri::command]
@@ -585,15 +601,12 @@ fn save_settings(
 ) -> Result<ControllerSettings, AppErrorDto> {
     // 持久凭据只在探测成功后提升；设置页保存只改地址或写入 session。
     let persist_secret = if session_only { secret } else { None };
-    state
-        .lock()
-        .expect("state")
-        .save_controller(address, persist_secret, session_only, false)
+    lock_facade(&state)?.save_controller(address, persist_secret, session_only, false)
 }
 
 #[tauri::command]
 fn save_targets(state: State<Mutex<AppFacade>>, targets: Vec<String>) -> Result<u32, AppErrorDto> {
-    state.lock().expect("state").save_targets(targets)
+    lock_facade(&state)?.save_targets(targets)
 }
 
 #[tauri::command]
@@ -617,7 +630,10 @@ async fn test_controller_core(
     secret: Option<String>,
 ) -> (Result<ProbeResult, AppErrorDto>, Vec<MonitorStreamMessage>) {
     let addr = {
-        let guard = state.lock().expect("state");
+        let guard = match lock_facade(state) {
+            Ok(guard) => guard,
+            Err(error) => return (Err(error), Vec::new()),
+        };
         if guard.branch != c2::shell::BootBranch::NormalReady {
             return (
                 Err(guard.err(
@@ -637,7 +653,10 @@ async fn test_controller_core(
     let mut session = ControllerSession::new(addr.to_string());
     match session.connect_tcp(addr, secret.as_deref()).await {
         Ok(inputs) => {
-            let mut guard = state.lock().expect("state");
+            let mut guard = match lock_facade(state) {
+                Ok(guard) => guard,
+                Err(error) => return (Err(error), Vec::new()),
+            };
             if guard.branch != c2::shell::BootBranch::NormalReady {
                 return (
                     Err(guard.err(
@@ -665,7 +684,10 @@ async fn test_controller_core(
             )
         }
         Err(status) => {
-            let mut guard = state.lock().expect("state");
+            let mut guard = match lock_facade(state) {
+                Ok(guard) => guard,
+                Err(error) => return (Err(error), Vec::new()),
+            };
             let message = guard.apply_probe_err(status);
             let locale = guard.ui_locale;
             (
@@ -682,7 +704,7 @@ fn disconnect_controller(
     state: State<Mutex<AppFacade>>,
 ) -> Result<ProbeResult, AppErrorDto> {
     let (message, locale) = {
-        let mut guard = state.lock().expect("state");
+        let mut guard = lock_facade(&state)?;
         let message = guard.disconnect_now();
         (message, guard.ui_locale)
     };
@@ -698,7 +720,7 @@ fn disconnect_controller(
 
 #[tauri::command]
 fn list_routes(state: State<Mutex<AppFacade>>) -> Result<Vec<RouteDescriptor>, AppErrorDto> {
-    let locale = state.lock().expect("state").ui_locale;
+    let locale = lock_facade(&state)?.ui_locale;
     Ok(default_routes_for(locale))
 }
 
@@ -708,48 +730,48 @@ fn save_ui_locale(
     state: State<Mutex<AppFacade>>,
     locale: String,
 ) -> Result<String, AppErrorDto> {
-    let parsed = state.lock().expect("state").save_ui_locale(&locale)?;
+    let parsed = lock_facade(&state)?.save_ui_locale(&locale)?;
     apply_locale_chrome(&app, parsed);
     Ok(parsed.as_str().into())
 }
 
 #[tauri::command]
 fn save_ui_theme(state: State<Mutex<AppFacade>>, theme: String) -> Result<String, AppErrorDto> {
-    let parsed = state.lock().expect("state").save_ui_theme(&theme)?;
+    let parsed = lock_facade(&state)?.save_ui_theme(&theme)?;
     Ok(parsed.as_str().into())
 }
 
 #[tauri::command]
 fn save_ui_font(state: State<Mutex<AppFacade>>, font: String) -> Result<String, AppErrorDto> {
-    let parsed = state.lock().expect("state").save_ui_font(&font)?;
+    let parsed = lock_facade(&state)?.save_ui_font(&font)?;
     Ok(parsed.as_str().to_string())
 }
 
 #[tauri::command]
 fn list_ui_fonts(state: State<Mutex<AppFacade>>) -> Result<Vec<String>, AppErrorDto> {
     crate::theme::list_installed_families().map_err(|_| {
-        state
-            .lock()
-            .expect("state")
-            .err("io", "error.font_list", "action.retry", true)
+        lock_facade(&state).map_or_else(
+            |error| error,
+            |guard| guard.err("io", "error.font_list", "action.retry", true),
+        )
     })
 }
 
 #[tauri::command]
 fn save_ui_font_size(state: State<Mutex<AppFacade>>, size: String) -> Result<String, AppErrorDto> {
-    let parsed = state.lock().expect("state").save_ui_font_size(&size)?;
+    let parsed = lock_facade(&state)?.save_ui_font_size(&size)?;
     Ok(parsed.as_str().into())
 }
 
 #[tauri::command]
 fn save_ui_density(state: State<Mutex<AppFacade>>, density: String) -> Result<String, AppErrorDto> {
-    let parsed = state.lock().expect("state").save_ui_density(&density)?;
+    let parsed = lock_facade(&state)?.save_ui_density(&density)?;
     Ok(parsed.as_str().into())
 }
 
 #[tauri::command]
 fn save_ui_sidebar_width(state: State<Mutex<AppFacade>>, width: i32) -> Result<i32, AppErrorDto> {
-    state.lock().expect("state").save_ui_sidebar_width(width)
+    lock_facade(&state)?.save_ui_sidebar_width(width)
 }
 
 #[tauri::command]
@@ -757,7 +779,7 @@ fn save_live_table_layout(
     state: State<Mutex<AppFacade>>,
     layout: LiveTableLayout,
 ) -> Result<LiveTableLayout, AppErrorDto> {
-    state.lock().expect("state").save_live_table_layout(layout)
+    lock_facade(&state)?.save_live_table_layout(layout)
 }
 
 #[tauri::command]
@@ -765,10 +787,7 @@ fn save_dimension_rank_table_layout(
     state: State<Mutex<AppFacade>>,
     layout: DimensionRankTableLayout,
 ) -> Result<DimensionRankTableLayout, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .save_dimension_rank_table_layout(layout)
+    lock_facade(&state)?.save_dimension_rank_table_layout(layout)
 }
 
 #[tauri::command]
@@ -790,10 +809,7 @@ fn start_operation(
     operation_id: String,
     kind: String,
 ) -> Result<OperationProgress, AppErrorDto> {
-    Ok(state
-        .lock()
-        .expect("state")
-        .start_operation(operation_id, kind))
+    Ok(lock_facade(&state)?.start_operation(operation_id, kind))
 }
 
 #[tauri::command]
@@ -801,16 +817,12 @@ fn cancel_operation(
     state: State<Mutex<AppFacade>>,
     operation_id: String,
 ) -> Result<Option<OperationProgress>, AppErrorDto> {
-    Ok(state
-        .lock()
-        .expect("state")
-        .operations
-        .cancel(&operation_id))
+    Ok(lock_facade(&state)?.operations.cancel(&operation_id))
 }
 
 #[tauri::command]
 fn get_recovery_status(state: State<Mutex<AppFacade>>) -> Result<RecoveryStatus, AppErrorDto> {
-    state.lock().expect("state").recovery()
+    lock_facade(&state)?.recovery()
 }
 
 #[tauri::command]
@@ -845,10 +857,7 @@ fn list_report_archives(
     after: Option<String>,
     limit: Option<u32>,
 ) -> Result<ReportArchivePage, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .list_report_archives(kind, after, limit)
+    lock_facade(&state)?.list_report_archives(kind, after, limit)
 }
 
 #[tauri::command]
@@ -856,17 +865,17 @@ fn get_report_archive(
     state: State<Mutex<AppFacade>>,
     archive_id: String,
 ) -> Result<ReportResult, AppErrorDto> {
-    state.lock().expect("state").get_report_archive(&archive_id)
+    lock_facade(&state)?.get_report_archive(&archive_id)
 }
 
 #[tauri::command]
 fn get_report(state: State<Mutex<AppFacade>>, token: String) -> Result<ReportResult, AppErrorDto> {
-    state.lock().expect("state").get_report(&token)
+    lock_facade(&state)?.get_report(&token)
 }
 
 #[tauri::command]
 fn release_report(state: State<Mutex<AppFacade>>, token: String) -> Result<bool, AppErrorDto> {
-    Ok(state.lock().expect("state").release_report(&token))
+    Ok(lock_facade(&state)?.release_report(&token))
 }
 
 #[tauri::command]
@@ -875,7 +884,7 @@ fn preview_export(
     token: String,
     spec: ExportSpec,
 ) -> Result<ExportPreview, AppErrorDto> {
-    state.lock().expect("state").preview_export(&token, &spec)
+    lock_facade(&state)?.preview_export(&token, &spec)
 }
 
 #[tauri::command]
@@ -901,22 +910,19 @@ fn render_report_html(
     token: String,
     spec: ExportSpec,
 ) -> Result<HtmlDocument, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .render_report_html(&token, &spec)
+    lock_facade(&state)?.render_report_html(&token, &spec)
 }
 
 #[tauri::command]
 fn get_latest_residential_manual(
     state: State<Mutex<AppFacade>>,
 ) -> Result<Option<ReportResult>, AppErrorDto> {
-    state.lock().expect("state").get_latest_residential_manual()
+    lock_facade(&state)?.get_latest_residential_manual()
 }
 
 #[tauri::command]
 fn retention_preview(state: State<Mutex<AppFacade>>) -> Result<RetentionPreview, AppErrorDto> {
-    state.lock().expect("state").retention_preview()
+    lock_facade(&state)?.retention_preview()
 }
 
 #[tauri::command]
@@ -952,26 +958,18 @@ fn restore_backup(
 
 #[tauri::command]
 fn validate_backup(state: State<Mutex<AppFacade>>, path: String) -> Result<bool, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .validate_candidate(std::path::Path::new(&path))
+    lock_facade(&state)?.validate_candidate(std::path::Path::new(&path))
 }
 
 #[tauri::command]
 fn data_directory(state: State<Mutex<AppFacade>>) -> Result<String, AppErrorDto> {
-    Ok(state
-        .lock()
-        .expect("state")
-        .data_dir
-        .to_string_lossy()
-        .into_owned())
+    Ok(lock_facade(&state)?.data_dir.to_string_lossy().into_owned())
 }
 
 #[tauri::command]
 fn pause_collector(app: AppHandle, state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
     let message = {
-        let mut guard = state.lock().expect("state");
+        let mut guard = lock_facade(&state)?;
         guard.pause_collector()
     };
     if let Some(message) = message {
@@ -983,7 +981,7 @@ fn pause_collector(app: AppHandle, state: State<Mutex<AppFacade>>) -> Result<(),
 
 #[tauri::command]
 fn resume_collector(app: AppHandle, state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
-    let message = state.lock().expect("state").resume_collector();
+    let message = lock_facade(&state)?.resume_collector();
     if let Some(message) = message {
         forward_published(&state, [message]);
     }
@@ -993,7 +991,7 @@ fn resume_collector(app: AppHandle, state: State<Mutex<AppFacade>>) -> Result<()
 
 #[tauri::command]
 fn reconnect_now(app: AppHandle, state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
-    let message = state.lock().expect("state").reconnect_now();
+    let message = lock_facade(&state)?.reconnect_now();
     if let Some(message) = message {
         forward_published(&state, [message]);
     }
@@ -1008,7 +1006,7 @@ fn notify_power_event(
     sleeping: bool,
 ) -> Result<(), AppErrorDto> {
     let message = {
-        let mut guard = state.lock().expect("state");
+        let mut guard = lock_facade(&state)?;
         let input = if sleeping {
             guard.desktop.on_sleep()
         } else {
@@ -1025,19 +1023,19 @@ fn notify_power_event(
 
 #[tauri::command]
 fn complete_wizard(state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
-    state.lock().expect("state").complete_wizard()
+    lock_facade(&state)?.complete_wizard()
 }
 
 #[tauri::command]
 fn shutdown_app(app: tauri::AppHandle, state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
-    let _ = state.lock().expect("state").shutdown();
+    let _ = lock_facade(&state)?.shutdown();
     app.exit(0);
     Ok(())
 }
 
 #[tauri::command]
 fn list_alert_rules(state: State<Mutex<AppFacade>>) -> Result<Vec<AlertRule>, AppErrorDto> {
-    state.lock().expect("state").list_alert_rules()
+    lock_facade(&state)?.list_alert_rules()
 }
 
 #[tauri::command]
@@ -1045,7 +1043,7 @@ fn upsert_alert_rule(
     state: State<Mutex<AppFacade>>,
     rule: AlertRule,
 ) -> Result<AlertRule, AppErrorDto> {
-    state.lock().expect("state").upsert_alert_rule(rule)
+    lock_facade(&state)?.upsert_alert_rule(rule)
 }
 
 #[tauri::command]
@@ -1054,43 +1052,37 @@ fn list_alert_center(
     status: Option<String>,
     after: Option<String>,
 ) -> Result<AlertCenterPage, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .list_alert_center(status, after)
+    lock_facade(&state)?.list_alert_center(status, after)
 }
 
 #[tauri::command]
 fn alert_summary(state: State<Mutex<AppFacade>>) -> Result<AlertSummary, AppErrorDto> {
-    state.lock().expect("state").alert_summary()
+    lock_facade(&state)?.alert_summary()
 }
 
 #[tauri::command]
 fn test_notification(state: State<Mutex<AppFacade>>) -> Result<NotifyCapability, AppErrorDto> {
-    state.lock().expect("state").test_notification()
+    lock_facade(&state)?.test_notification()
 }
 
 #[tauri::command]
 fn get_diagnostics(state: State<Mutex<AppFacade>>) -> Result<DiagnosticsSnapshot, AppErrorDto> {
-    state.lock().expect("state").get_diagnostics()
+    lock_facade(&state)?.get_diagnostics()
 }
 
 #[tauri::command]
 fn export_diagnostics(state: State<Mutex<AppFacade>>, path: String) -> Result<String, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .export_diagnostics(std::path::Path::new(&path))
+    lock_facade(&state)?.export_diagnostics(std::path::Path::new(&path))
 }
 
 #[tauri::command]
 fn scan_outbox(state: State<Mutex<AppFacade>>) -> Result<u32, AppErrorDto> {
-    state.lock().expect("state").scan_outbox()
+    lock_facade(&state)?.scan_outbox()
 }
 
 #[tauri::command]
 fn get_about(state: State<Mutex<AppFacade>>) -> Result<c5::AboutDto, AppErrorDto> {
-    Ok(state.lock().expect("state").about())
+    Ok(lock_facade(&state)?.about())
 }
 
 #[tauri::command]
@@ -1100,14 +1092,14 @@ fn open_releases() -> Result<String, AppErrorDto> {
 
 #[tauri::command]
 fn open_log_dir(state: State<Mutex<AppFacade>>) -> Result<String, AppErrorDto> {
-    state.lock().expect("state").open_log_dir()
+    lock_facade(&state)?.open_log_dir()
 }
 
 #[tauri::command]
 fn preview_delete_local_data(
     state: State<Mutex<AppFacade>>,
 ) -> Result<c5::DeletePreview, AppErrorDto> {
-    Ok(state.lock().expect("state").preview_delete_local_data())
+    Ok(lock_facade(&state)?.preview_delete_local_data())
 }
 
 #[tauri::command]
@@ -1115,20 +1107,17 @@ fn confirm_delete_local_data(
     state: State<Mutex<AppFacade>>,
     phrase: String,
 ) -> Result<c5::DeleteReport, AppErrorDto> {
-    state
-        .lock()
-        .expect("state")
-        .confirm_delete_local_data(&phrase)
+    lock_facade(&state)?.confirm_delete_local_data(&phrase)
 }
 
 #[tauri::command]
 fn run_user_vacuum(state: State<Mutex<AppFacade>>) -> Result<(), AppErrorDto> {
-    state.lock().expect("state").run_user_vacuum()
+    lock_facade(&state)?.run_user_vacuum()
 }
 
 #[tauri::command]
 fn tray_summary(state: State<Mutex<AppFacade>>) -> Result<c2::desktop::TraySummary, AppErrorDto> {
-    let guard = state.lock().expect("state");
+    let guard = lock_facade(&state)?;
     Ok(guard
         .desktop
         .tray_summary(&guard.hub.overview().health.session))
@@ -1669,6 +1658,71 @@ mod autostart_command_tests {
         assert!(!log.contains("residential-monitor.exe"));
         assert!(!log.contains("CurrentVersion"));
 
+        crate::app_log::reset_for_test();
+    }
+}
+
+#[cfg(test)]
+mod facade_lock_command_tests {
+    use super::*;
+    use c2::desktop::InstanceClaim;
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+    use tempfile::tempdir;
+
+    const FIXTURE_SECRET: &str = "poison-lock-secret-value";
+
+    fn poison(state: &Mutex<AppFacade>) {
+        let _ = catch_unwind(AssertUnwindSafe(|| {
+            let _guard = state.lock().expect("lock");
+            panic!("poison facade");
+        }));
+        assert!(state.lock().is_err());
+    }
+
+    #[test]
+    fn poisoned_facade_command_returns_storage_failure_without_unwind() {
+        let _lock = crate::app_log::exclusive_test();
+        let dir = tempdir().expect("dir");
+        let logs = dir.path().join("logs");
+        crate::app_log::init_at(logs.clone(), crate::app_log::DEFAULT_MAX_BYTES);
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade
+            .save_controller(
+                "127.0.0.1:9097".into(),
+                Some(FIXTURE_SECRET.into()),
+                true,
+                true,
+            )
+            .expect("secret");
+        let state = Mutex::new(facade);
+        poison(&state);
+
+        let caught = catch_unwind(AssertUnwindSafe(|| get_bootstrap_core(&state)));
+        let error = caught
+            .expect("command must not unwind")
+            .expect_err("poison");
+        assert_eq!(error.code, "storage_failure");
+        assert_eq!(error.details_redacted, "storage_failure");
+        assert!(error.retryable);
+        let encoded = serde_json::to_string(&error).expect("dto");
+        for text in [
+            encoded.as_str(),
+            error.message_zh.as_str(),
+            error.details_redacted.as_str(),
+            error.action.as_str(),
+        ] {
+            assert!(!text.contains(FIXTURE_SECRET), "{text}");
+            assert!(!crate::redact::scan_text_for_secrets(text), "{text}");
+        }
+
+        let again = get_bootstrap_core(&state).expect_err("still poisoned");
+        assert_eq!(again.code, "storage_failure");
+
+        let log = std::fs::read_to_string(logs.join(crate::app_log::FILE_NAME)).expect("log");
+        assert!(log.contains("facade_lock"), "{log}");
+        assert!(log.contains("\"class\":\"mutex_poisoned\""), "{log}");
+        assert!(!log.contains(FIXTURE_SECRET), "{log}");
+        assert!(!crate::redact::scan_text_for_secrets(&log), "{log}");
         crate::app_log::reset_for_test();
     }
 }
