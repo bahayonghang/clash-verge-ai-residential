@@ -907,6 +907,7 @@ impl AppFacade {
             live_rows: live.to_vec(),
             utc,
             writes,
+            rule: None,
         };
         let payload = match slice_fingerprint(&slice, mono) {
             Ok(payload) => payload,
@@ -1418,6 +1419,9 @@ impl AppFacade {
             action: error.action_zh().into(),
             details_redacted: error.code().into(),
         })?;
+        if self.storage.is_none() {
+            return Err(recovery_only());
+        }
         let now = chrono::Utc::now().timestamp();
         let writes = self
             .alerts
@@ -1429,88 +1433,95 @@ impl AppFacade {
                 action: error.action_zh().into(),
                 details_redacted: error.code().into(),
             })?;
+        let stored = self.alerts.rule(&rule.rule_id).cloned().unwrap_or(rule);
         let locale = self.ui_locale;
-        let storage = self.storage.as_mut().ok_or_else(recovery_only)?;
-        crate::c4::store::upsert_rule(storage.connection(), &rule).map_err(|_| {
+        let slice = AlertCommitSlice {
+            utc: now,
+            writes,
+            rule: Some(stored.clone()),
+            ..AlertCommitSlice::default()
+        };
+        let payload = slice_fingerprint(&slice, 0).map_err(|()| {
+            self.reload_alerts_from_db();
             localized_error(
                 locale,
-                "storage",
+                "commit_serialize",
                 "error.alert_write",
                 "action.check_disk",
                 true,
             )
         })?;
-        if !writes.instances.is_empty() || !writes.events.is_empty() || !writes.outbox.is_empty() {
-            let slice = AlertCommitSlice {
-                utc: now,
-                writes,
-                ..AlertCommitSlice::default()
-            };
-            let payload = slice_fingerprint(&slice, 0).map_err(|()| {
-                localized_error(
+        let bundle = CommitBundle {
+            writer_epoch: self.writer_epoch,
+            bundle_seq: self.bundle_seq,
+            payload,
+        };
+        let outcome = {
+            let storage = self.storage.as_mut().expect("storage");
+            storage.commit_alert_bundle(&bundle, &slice)
+        };
+        match outcome {
+            Ok(CommitOutcome::Applied(_) | CommitOutcome::Duplicate(_)) => {
+                self.bundle_seq = self.bundle_seq.saturating_add(1);
+            }
+            Ok(CommitOutcome::PayloadMismatch) => {
+                self.reload_alerts_from_db();
+                app_log::emit(
+                    Level::Error,
+                    "alert_rule_commit",
+                    serde_json::json!({ "class": "payload_mismatch" }),
+                );
+                return Err(localized_error(
                     locale,
-                    "commit_serialize",
+                    "payload_mismatch",
+                    "error.alert_write",
+                    "action.check_disk",
+                    false,
+                ));
+            }
+            Ok(CommitOutcome::RetryWindowExpired) => {
+                self.reload_alerts_from_db();
+                app_log::emit(
+                    Level::Error,
+                    "alert_rule_commit",
+                    serde_json::json!({ "class": "retry_window_expired" }),
+                );
+                return Err(localized_error(
+                    locale,
+                    "retry_window_expired",
+                    "error.alert_write",
+                    "action.check_disk",
+                    false,
+                ));
+            }
+            Err(error) => {
+                self.reload_alerts_from_db();
+                let class = storage_error_class(&error);
+                app_log::emit(
+                    Level::Error,
+                    "alert_rule_commit",
+                    serde_json::json!({ "class": class }),
+                );
+                return Err(localized_error(
+                    locale,
+                    "storage",
                     "error.alert_write",
                     "action.check_disk",
                     true,
-                )
-            })?;
-            let bundle = CommitBundle {
-                writer_epoch: self.writer_epoch,
-                bundle_seq: self.bundle_seq,
-                payload,
-            };
-            match storage.commit_alert_bundle(&bundle, &slice) {
-                Ok(CommitOutcome::Applied(_) | CommitOutcome::Duplicate(_)) => {
-                    self.bundle_seq = self.bundle_seq.saturating_add(1);
-                }
-                Ok(CommitOutcome::PayloadMismatch) => {
-                    app_log::emit(
-                        Level::Error,
-                        "alert_rule_commit",
-                        serde_json::json!({ "class": "payload_mismatch" }),
-                    );
-                    return Err(localized_error(
-                        locale,
-                        "payload_mismatch",
-                        "error.alert_write",
-                        "action.check_disk",
-                        false,
-                    ));
-                }
-                Ok(CommitOutcome::RetryWindowExpired) => {
-                    app_log::emit(
-                        Level::Error,
-                        "alert_rule_commit",
-                        serde_json::json!({ "class": "retry_window_expired" }),
-                    );
-                    return Err(localized_error(
-                        locale,
-                        "retry_window_expired",
-                        "error.alert_write",
-                        "action.check_disk",
-                        false,
-                    ));
-                }
-                Err(error) => {
-                    let class = storage_error_class(&error);
-                    app_log::emit(
-                        Level::Error,
-                        "alert_rule_commit",
-                        serde_json::json!({ "class": class }),
-                    );
-                    return Err(localized_error(
-                        locale,
-                        "storage",
-                        "error.alert_write",
-                        "action.check_disk",
-                        true,
-                    ));
-                }
+                ));
             }
         }
         app_log::emit(Level::Info, "alert_rule", serde_json::json!({ "ok": true }));
-        Ok(rule)
+        Ok(stored)
+    }
+
+    fn reload_alerts_from_db(&mut self) {
+        let Some(storage) = self.storage.as_ref() else {
+            return;
+        };
+        let rules = crate::c4::store::load_rules(storage.connection()).unwrap_or_default();
+        let instances = crate::c4::store::load_instances(storage.connection()).unwrap_or_default();
+        let _ = self.alerts.replace_store(rules, instances);
     }
 
     pub fn list_alert_center(
@@ -2889,6 +2900,36 @@ mod c2_facade_contract_tests {
         let restored = rate(&facade);
         assert_eq!(restored.threshold_value, 100);
         assert_eq!(restored.version, 1);
+    }
+
+    #[test]
+    fn upsert_alert_rule_bundle_failure_keeps_engine_aligned_with_db() {
+        let dir = tempdir().expect("dir");
+        let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        facade.upsert_alert_rule(threshold_rule(100)).expect("R1");
+        assert_eq!(
+            facade.alerts.rule("rate-cat").map(|rule| rule.version),
+            Some(1)
+        );
+
+        facade.storage.as_mut().expect("storage").test_kill =
+            Some(crate::storage::CommitKillPoint::AfterFacts);
+        let mut changed = threshold_rule(200);
+        changed.version = 2;
+        let error = facade.upsert_alert_rule(changed).expect_err("kill");
+        assert_eq!(error.code, "storage");
+
+        let db_rule = facade
+            .list_alert_rules()
+            .expect("db rules")
+            .into_iter()
+            .find(|rule| rule.rule_id == "rate-cat")
+            .expect("rate-cat");
+        assert_eq!(db_rule.version, 1);
+        assert_eq!(db_rule.threshold_value, 100);
+        let engine = facade.alerts.rule("rate-cat").expect("engine rule");
+        assert_eq!(engine.version, db_rule.version);
+        assert_eq!(engine.threshold_value, db_rule.threshold_value);
     }
 
     #[test]

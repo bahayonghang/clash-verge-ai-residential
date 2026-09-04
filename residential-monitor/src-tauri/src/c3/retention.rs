@@ -73,9 +73,7 @@ impl RetentionService {
         repair_chain_identity_v1(coordinator)?;
         repair_coverage_open_gaps_v1(coordinator)?;
         materialize_hourly(coordinator, now_utc, raw_retain_days)?;
-        materialize_daily_from_hourly(coordinator, now_utc)?;
-        materialize_core(coordinator, now_utc)?;
-        materialize_coverage_daily(coordinator, now_utc)?;
+        materialize_daily_core_coverage(coordinator, now_utc)?;
         if mode == RetentionMode::DeleteEnabled && AUTO_DELETE_ENABLED {
             delete_covered_raw(coordinator, now_utc, raw_retain_days)?;
             delete_expired_dimension(coordinator, now_utc)?;
@@ -609,12 +607,35 @@ fn materialize_hourly(
     }
 }
 
-fn materialize_daily_from_hourly(
+fn materialize_daily_core_coverage(
     coordinator: &mut StorageCoordinator,
     now_utc: i64,
 ) -> Result<(), ReportError> {
-    let end = now_utc;
     let connection = coordinator.connection_mut();
+    connection
+        .execute_batch("begin immediate")
+        .map_err(|_| ReportError::StorageBusy("daily begin"))?;
+    let result = (|| {
+        materialize_daily_from_hourly(connection, now_utc)?;
+        materialize_core(connection, now_utc)?;
+        materialize_coverage_daily(connection, now_utc)?;
+        Ok(())
+    })();
+    match result {
+        Ok(()) => connection
+            .execute_batch("commit")
+            .map_err(|_| ReportError::Failed("daily commit")),
+        Err(error) => {
+            let _ = connection.execute_batch("rollback");
+            Err(error)
+        }
+    }
+}
+
+fn materialize_daily_from_hourly(
+    connection: &rusqlite::Connection,
+    now_utc: i64,
+) -> Result<(), ReportError> {
     connection
         .execute(
             "insert or replace into traffic_daily_dimension(
@@ -626,15 +647,14 @@ fn materialize_daily_from_hourly(
                from traffic_hourly_dimension
               where utc_hour < ?1
               group by 1, 2, 3, 4",
-            [end],
+            [now_utc],
         )
         .map_err(|_| ReportError::Failed("daily dim materialize"))?;
-    verify_layer(connection, "daily", 0, end)?;
+    verify_layer(connection, "daily", 0, now_utc)?;
     Ok(())
 }
 
-fn materialize_core(coordinator: &mut StorageCoordinator, now_utc: i64) -> Result<(), ReportError> {
-    let connection = coordinator.connection_mut();
+fn materialize_core(connection: &rusqlite::Connection, now_utc: i64) -> Result<(), ReportError> {
     connection
         .execute(
             "insert or replace into traffic_daily_core(
@@ -668,10 +688,9 @@ fn materialize_core(coordinator: &mut StorageCoordinator, now_utc: i64) -> Resul
 }
 
 fn materialize_coverage_daily(
-    coordinator: &mut StorageCoordinator,
+    connection: &rusqlite::Connection,
     now_utc: i64,
 ) -> Result<(), ReportError> {
-    let connection = coordinator.connection_mut();
     connection
         .execute(
             "insert or replace into coverage_daily(utc_day, covered_sec, gap_sec, reasons_json)
@@ -1358,5 +1377,77 @@ mod retention_tests {
             )
             .expect("marker absent");
         assert_eq!(marker_count, 0);
+    }
+
+    #[test]
+    fn core_second_insert_failure_rolls_back_daily_core_and_coverage() {
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("daily-txn.sqlite3")).expect("open");
+        coordinator.seed_report_fixture().expect("seed");
+        coordinator
+            .connection()
+            .execute_batch(
+                "insert or ignore into retention_watermark(layer, watermark_utc, delete_watermark_utc)
+                 values ('chain_identity_v1', 0, 0), ('coverage_open_gap_v1', 0, 0);
+                 create trigger kill_core_total before insert on traffic_daily_core
+                 when new.category_id = 0
+                 begin
+                   select raise(abort, 'kill core total');
+                 end;",
+            )
+            .expect("trigger");
+        let daily_before = count(
+            coordinator.connection(),
+            "select count(*) from traffic_daily_dimension",
+        )
+        .expect("daily before");
+        let core_before = count(
+            coordinator.connection(),
+            "select count(*) from traffic_daily_core",
+        )
+        .expect("core before");
+        let coverage_before = count(
+            coordinator.connection(),
+            "select count(*) from coverage_daily",
+        )
+        .expect("coverage before");
+        let error = RetentionService::run(
+            &mut coordinator,
+            10_000,
+            30,
+            RetentionMode::MaterializeOnly,
+            &SpaceBudget::unlimited(),
+            &Arc::new(AtomicBool::new(false)),
+        )
+        .expect_err("core total killed");
+        assert_eq!(error.code(), "storage_failure");
+        assert_eq!(error.to_string(), "core total");
+        let daily_after = count(
+            coordinator.connection(),
+            "select count(*) from traffic_daily_dimension",
+        )
+        .expect("daily after");
+        let core_after = count(
+            coordinator.connection(),
+            "select count(*) from traffic_daily_core",
+        )
+        .expect("core after");
+        let coverage_after = count(
+            coordinator.connection(),
+            "select count(*) from coverage_daily",
+        )
+        .expect("coverage after");
+        assert_eq!(daily_after, daily_before);
+        assert_eq!(core_after, core_before);
+        assert_eq!(coverage_after, coverage_before);
+        coordinator
+            .connection()
+            .execute_batch("begin immediate")
+            .expect("begin again");
+        coordinator
+            .connection()
+            .execute_batch("rollback")
+            .expect("probe rollback");
     }
 }

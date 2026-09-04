@@ -8,13 +8,14 @@ use crate::c3::schema::{
 };
 use crate::c3::sql::UNKNOWN_IDENTITY;
 use crate::c4::schema::{C4_DDL, C4_MIGRATION_CHECKSUM, C4_SCHEMA_VERSION};
-use crate::c4::types::AlertWriteSet;
+use crate::c4::types::{AlertRule, AlertWriteSet};
 
 pub const MIGRATION_CHECKSUM: &str = "c1-core-v1";
 use crate::sqlite_probe::{apply_required_pragmas, open_bundled};
 use rusqlite::backup::Backup;
 use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
 use sha2::{Digest, Sha256};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -49,6 +50,7 @@ pub struct AlertCommitSlice {
     pub live_rows: Vec<crate::c2::hub::LiveConnectionView>,
     pub utc: i64,
     pub writes: AlertWriteSet,
+    pub rule: Option<AlertRule>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -267,6 +269,7 @@ pub struct StorageCoordinator {
     path: PathBuf,
     connection: Connection,
     prepare_count: u64,
+    prepared_sql: HashSet<&'static str>,
     #[cfg(test)]
     pub test_kill: Option<CommitKillPoint>,
 }
@@ -274,6 +277,7 @@ pub struct StorageCoordinator {
 impl StorageCoordinator {
     pub fn open(path: &Path) -> Result<Self, StorageError> {
         let connection = migrate(path)?;
+        connection.set_prepared_statement_cache_capacity(32);
         let mut lookup = connection.prepare(
             "select payload_hash, data_version from committed_bundle where writer_epoch = ?1 and bundle_seq = ?2",
         )?;
@@ -285,6 +289,7 @@ impl StorageCoordinator {
             path: path.to_path_buf(),
             connection,
             prepare_count: 1,
+            prepared_sql: HashSet::new(),
             #[cfg(test)]
             test_kill: None,
         })
@@ -356,9 +361,10 @@ impl StorageCoordinator {
         }
         #[cfg(test)]
         let kill = self.test_kill;
-        let transaction = self
-            .connection
-            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let connection = &mut self.connection;
+        let prepare_count = &mut self.prepare_count;
+        let prepared_sql = &mut self.prepared_sql;
+        let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
         let watermark: i64 = transaction.query_row(
             "select watermark from data_version where id = 1",
             [],
@@ -391,7 +397,16 @@ impl StorageCoordinator {
             return Err(StorageError::Closed("kill before persist slice".into()));
         }
         if let Some(slice) = slice {
-            persist_slice(&transaction, slice)?;
+            let persist_tick = slice.rule.is_none()
+                || !slice.facts.is_empty()
+                || !slice.live_rows.is_empty()
+                || !slice.coverage.is_empty();
+            if persist_tick {
+                persist_slice(&transaction, slice, prepare_count, prepared_sql)?;
+            }
+            if let Some(rule) = &slice.rule {
+                crate::c4::store::upsert_rule(&transaction, rule)?;
+            }
             #[cfg(test)]
             if kill == Some(CommitKillPoint::AfterFacts) {
                 return Err(StorageError::Closed("kill after facts".into()));
@@ -582,32 +597,128 @@ impl StorageCoordinator {
                 live_rows: rows.to_vec(),
                 utc,
                 writes: AlertWriteSet::default(),
+                rule: None,
             },
+            &mut self.prepare_count,
+            &mut self.prepared_sql,
         )
     }
 }
 
-fn persist_slice(connection: &Connection, slice: &AlertCommitSlice) -> Result<(), StorageError> {
-    let policy_version = connection
-        .query_row(
-            "select policy_version from target_set where set_id = 1",
-            [],
-            |row| row.get::<_, i64>(0),
-        )
-        .optional()?
-        .unwrap_or(0);
+const SQL_POLICY_VERSION: &str = "select policy_version from target_set where set_id = 1";
+const SQL_SESSION_LOOKUP: &str =
+    "select session_pk, host from connection_session where epoch_id = ?1 and connection_id = ?2";
+const SQL_SESSION_UPDATE_HOST: &str =
+    "update connection_session set host = ?1 where session_pk = ?2";
+const SQL_SESSION_INSERT: &str =
+    "insert into connection_session(epoch_id, connection_id, started_utc, host) values (?1, ?2, ?3, ?4)";
+const SQL_SESSION_HOST: &str = "select host from connection_session where session_pk = ?1";
+const SQL_INTERN_LOOKUP: &str =
+    "select dimension_id from dimension_dict where dimension_kind = ?1 and value = ?2";
+const SQL_INTERN_MAX: &str =
+    "select coalesce(max(dimension_id), 0) + 1 from dimension_dict where dimension_kind = ?1";
+const SQL_INTERN_INSERT: &str =
+    "insert or ignore into dimension_dict(dimension_kind, dimension_id, value) values (?1, ?2, ?3)";
+const SQL_ATTR_UPSERT: &str = "insert into connection_session_attr(
+            session_pk, host_id, process_id, rule_id, network_id, chain_key,
+            policy_version, primary_category_id, started_utc, ended_utc
+         ) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, null)
+         on conflict(session_pk) do update set
+            host_id = coalesce(excluded.host_id, connection_session_attr.host_id),
+            process_id = coalesce(excluded.process_id, connection_session_attr.process_id),
+            rule_id = coalesce(excluded.rule_id, connection_session_attr.rule_id),
+            network_id = coalesce(excluded.network_id, connection_session_attr.network_id),
+            chain_key = coalesce(excluded.chain_key, connection_session_attr.chain_key),
+            policy_version = excluded.policy_version,
+            primary_category_id = excluded.primary_category_id";
+const SQL_CHAIN_DELETE: &str = "delete from connection_chain where session_pk = ?1";
+const SQL_CHAIN_INSERT: &str =
+    "insert into connection_chain(session_pk, position, node) values (?1, ?2, ?3)";
+const SQL_MINUTE_UPSERT: &str = "insert into connection_minute(utc_minute, session_pk, upload, download) values (?1, ?2, ?3, ?4)
+             on conflict(utc_minute, session_pk) do update set
+                upload = upload + excluded.upload,
+                download = download + excluded.download";
+const SQL_COVERAGE_EXISTS: &str = "select exists(select 1 from coverage_interval
+                  where kind = ?1 and reason = ?2 and ended_utc is null)";
+const SQL_COVERAGE_INSERT: &str =
+    "insert into coverage_interval(kind, reason, started_utc, ended_utc) values (?1, ?2, ?3, ?4)";
+const SQL_COVERAGE_CLOSE_ALL: &str =
+    "update coverage_interval set ended_utc = ?1 where ended_utc is null";
+
+struct PrepareCache<'a> {
+    count: &'a mut u64,
+    seen: &'a mut HashSet<&'static str>,
+}
+
+impl PrepareCache<'_> {
+    fn note(&mut self, sql: &'static str) {
+        if self.seen.insert(sql) {
+            *self.count += 1;
+        }
+    }
+}
+
+fn exec_cached(
+    connection: &Connection,
+    cache: &mut PrepareCache<'_>,
+    sql: &'static str,
+    params: impl rusqlite::Params,
+) -> Result<usize, StorageError> {
+    cache.note(sql);
+    Ok(connection.prepare_cached(sql)?.execute(params)?)
+}
+
+fn query_cached<T>(
+    connection: &Connection,
+    cache: &mut PrepareCache<'_>,
+    sql: &'static str,
+    params: impl rusqlite::Params,
+    f: impl FnOnce(&rusqlite::Row<'_>) -> rusqlite::Result<T>,
+) -> Result<T, rusqlite::Error> {
+    cache.note(sql);
+    connection.prepare_cached(sql)?.query_row(params, f)
+}
+
+fn persist_slice(
+    connection: &Connection,
+    slice: &AlertCommitSlice,
+    prepare_count: &mut u64,
+    prepared_sql: &mut HashSet<&'static str>,
+) -> Result<(), StorageError> {
+    let mut cache = PrepareCache {
+        count: prepare_count,
+        seen: prepared_sql,
+    };
+    let policy_version = query_cached(connection, &mut cache, SQL_POLICY_VERSION, (), |row| {
+        row.get::<_, i64>(0)
+    })
+    .optional()?
+    .unwrap_or(0);
     for row in &slice.live_rows {
         let (epoch, id) = split_identity(&row.identity);
-        let session_pk = ensure_session_on(connection, epoch, id, slice.utc, row.host.as_deref())?;
-        intern_and_attr(connection, session_pk, row, policy_version, slice.utc)?;
+        let session_pk = ensure_session_on(
+            connection,
+            epoch,
+            id,
+            slice.utc,
+            row.host.as_deref(),
+            &mut cache,
+        )?;
+        intern_and_attr(
+            connection,
+            session_pk,
+            row,
+            policy_version,
+            slice.utc,
+            &mut cache,
+        )?;
         if !row.chains.is_empty() {
-            connection.execute(
-                "delete from connection_chain where session_pk = ?1",
-                [session_pk],
-            )?;
+            exec_cached(connection, &mut cache, SQL_CHAIN_DELETE, [session_pk])?;
             for (position, node) in row.chains.iter().enumerate() {
-                connection.execute(
-                    "insert into connection_chain(session_pk, position, node) values (?1, ?2, ?3)",
+                exec_cached(
+                    connection,
+                    &mut cache,
+                    SQL_CHAIN_INSERT,
                     params![session_pk, position as i64, node],
                 )?;
             }
@@ -615,25 +726,32 @@ fn persist_slice(connection: &Connection, slice: &AlertCommitSlice) -> Result<()
     }
     for fact in &slice.facts {
         let (epoch, id) = split_identity(&fact.session_key);
-        let session_pk = ensure_session_on(connection, epoch, id, slice.utc, None)?;
-        connection.execute(
-            "insert into connection_minute(utc_minute, session_pk, upload, download) values (?1, ?2, ?3, ?4)
-             on conflict(utc_minute, session_pk) do update set
-                upload = upload + excluded.upload,
-                download = download + excluded.download",
-            params![fact.utc_minute, session_pk, fact.upload as i64, fact.download as i64],
+        let session_pk = ensure_session_on(connection, epoch, id, slice.utc, None, &mut cache)?;
+        exec_cached(
+            connection,
+            &mut cache,
+            SQL_MINUTE_UPSERT,
+            params![
+                fact.utc_minute,
+                session_pk,
+                fact.upload as i64,
+                fact.download as i64
+            ],
         )?;
     }
     for item in &slice.coverage {
-        let open_exists: bool = connection.query_row(
-            "select exists(select 1 from coverage_interval
-                  where kind = ?1 and reason = ?2 and ended_utc is null)",
+        let open_exists: bool = query_cached(
+            connection,
+            &mut cache,
+            SQL_COVERAGE_EXISTS,
             params![item.kind, item.reason],
             |row| row.get(0),
         )?;
         if !open_exists {
-            connection.execute(
-                "insert into coverage_interval(kind, reason, started_utc, ended_utc) values (?1, ?2, ?3, ?4)",
+            exec_cached(
+                connection,
+                &mut cache,
+                SQL_COVERAGE_INSERT,
                 params![item.kind, item.reason, slice.utc, Option::<i64>::None],
             )?;
         }
@@ -641,20 +759,25 @@ fn persist_slice(connection: &Connection, slice: &AlertCommitSlice) -> Result<()
     // 恢复采集的切片不再携带上一状态的 kind，据此闭合遗留的开放行。
     // 正常帧 coverage 为空 → 关闭全部开放行；断连帧带 gap → gap 保持开放。
     let kinds: Vec<&str> = slice.coverage.iter().map(|item| item.kind).collect();
-    let sql = if kinds.is_empty() {
-        "update coverage_interval set ended_utc = ?1 where ended_utc is null".to_string()
+    if kinds.is_empty() {
+        exec_cached(
+            connection,
+            &mut cache,
+            SQL_COVERAGE_CLOSE_ALL,
+            params![slice.utc],
+        )?;
     } else {
         let placeholders = kinds.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
-        format!(
+        let sql = format!(
             "update coverage_interval set ended_utc = ?1
               where ended_utc is null and kind not in ({placeholders})"
-        )
-    };
-    let mut bind: Vec<&dyn rusqlite::ToSql> = vec![&slice.utc];
-    for kind in &kinds {
-        bind.push(kind);
+        );
+        let mut bind: Vec<&dyn rusqlite::ToSql> = vec![&slice.utc];
+        for kind in &kinds {
+            bind.push(kind);
+        }
+        connection.execute(&sql, bind.as_slice())?;
     }
-    connection.execute(&sql, bind.as_slice())?;
     Ok(())
 }
 
@@ -664,26 +787,32 @@ fn ensure_session_on(
     connection_id: &str,
     utc: i64,
     host: Option<&str>,
+    cache: &mut PrepareCache<'_>,
 ) -> Result<i64, StorageError> {
-    if let Some((existing, stored)) = connection
-        .query_row(
-            "select session_pk, host from connection_session where epoch_id = ?1 and connection_id = ?2",
-            params![epoch, connection_id],
-            |row| Ok((row.get::<_, i64>(0)?, row.get::<_, Option<String>>(1)?)),
-        )
-        .optional()?
+    if let Some((existing, stored)) = query_cached(
+        connection,
+        cache,
+        SQL_SESSION_LOOKUP,
+        params![epoch, connection_id],
+        |row| Ok((row.get::<_, i64>(0)?, row.get::<_, Option<String>>(1)?)),
+    )
+    .optional()?
     {
         let next = crate::session_host::prefer_host_identity(stored.as_deref(), host);
         if next.as_deref() != stored.as_deref() {
-            connection.execute(
-                "update connection_session set host = ?1 where session_pk = ?2",
+            exec_cached(
+                connection,
+                cache,
+                SQL_SESSION_UPDATE_HOST,
                 params![next, existing],
             )?;
         }
         return Ok(existing);
     }
-    connection.execute(
-        "insert into connection_session(epoch_id, connection_id, started_utc, host) values (?1, ?2, ?3, ?4)",
+    exec_cached(
+        connection,
+        cache,
+        SQL_SESSION_INSERT,
         params![epoch, connection_id, utc, host],
     )?;
     Ok(connection.last_insert_rowid())
@@ -733,35 +862,29 @@ fn intern_and_attr(
     row: &crate::c2::hub::LiveConnectionView,
     policy_version: i64,
     utc: i64,
+    cache: &mut PrepareCache<'_>,
 ) -> Result<(), StorageError> {
-    let canonical_host: Option<String> = connection.query_row(
-        "select host from connection_session where session_pk = ?1",
+    let canonical_host: Option<String> = query_cached(
+        connection,
+        cache,
+        SQL_SESSION_HOST,
         [session_pk],
         |result| result.get(0),
     )?;
-    let host_id = intern_dim(connection, "host", canonical_host.as_deref())?;
-    let process_id = intern_dim(connection, "process", row.process_name.as_deref())?;
-    let rule_id = intern_dim(connection, "rule", row.rule.as_deref())?;
-    let network_id = intern_dim(connection, "network", row.network.as_deref())?;
-    let category_id = intern_dim(connection, "category", row.primary.as_deref())?;
+    let host_id = intern_dim(connection, cache, "host", canonical_host.as_deref())?;
+    let process_id = intern_dim(connection, cache, "process", row.process_name.as_deref())?;
+    let rule_id = intern_dim(connection, cache, "rule", row.rule.as_deref())?;
+    let network_id = intern_dim(connection, cache, "network", row.network.as_deref())?;
+    let category_id = intern_dim(connection, cache, "category", row.primary.as_deref())?;
     let chain_key = if row.chains.is_empty() {
         None
     } else {
         Some(row.chains.join(">"))
     };
-    connection.execute(
-        "insert into connection_session_attr(
-            session_pk, host_id, process_id, rule_id, network_id, chain_key,
-            policy_version, primary_category_id, started_utc, ended_utc
-         ) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, null)
-         on conflict(session_pk) do update set
-            host_id = coalesce(excluded.host_id, connection_session_attr.host_id),
-            process_id = coalesce(excluded.process_id, connection_session_attr.process_id),
-            rule_id = coalesce(excluded.rule_id, connection_session_attr.rule_id),
-            network_id = coalesce(excluded.network_id, connection_session_attr.network_id),
-            chain_key = coalesce(excluded.chain_key, connection_session_attr.chain_key),
-            policy_version = excluded.policy_version,
-            primary_category_id = excluded.primary_category_id",
+    exec_cached(
+        connection,
+        cache,
+        SQL_ATTR_UPSERT,
         params![
             session_pk,
             host_id,
@@ -779,6 +902,7 @@ fn intern_and_attr(
 
 fn intern_dim(
     connection: &Connection,
+    cache: &mut PrepareCache<'_>,
     kind: &str,
     value: Option<&str>,
 ) -> Result<Option<i64>, StorageError> {
@@ -788,23 +912,22 @@ fn intern_dim(
     if value == UNKNOWN_IDENTITY {
         return Ok(None);
     }
-    if let Some(existing) = connection
-        .query_row(
-            "select dimension_id from dimension_dict where dimension_kind = ?1 and value = ?2",
-            params![kind, value],
-            |row| row.get(0),
-        )
-        .optional()?
+    if let Some(existing) = query_cached(
+        connection,
+        cache,
+        SQL_INTERN_LOOKUP,
+        params![kind, value],
+        |row| row.get(0),
+    )
+    .optional()?
     {
         return Ok(Some(existing));
     }
-    let next: i64 = connection.query_row(
-        "select coalesce(max(dimension_id), 0) + 1 from dimension_dict where dimension_kind = ?1",
-        [kind],
-        |row| row.get(0),
-    )?;
-    connection.execute(
-        "insert or ignore into dimension_dict(dimension_kind, dimension_id, value) values (?1, ?2, ?3)",
+    let next: i64 = query_cached(connection, cache, SQL_INTERN_MAX, [kind], |row| row.get(0))?;
+    exec_cached(
+        connection,
+        cache,
+        SQL_INTERN_INSERT,
         params![kind, next, value],
     )?;
     Ok(Some(next))
@@ -1138,6 +1261,46 @@ mod storage_prepared_tests {
         let coordinator = StorageCoordinator::open(&dir.path().join("w.sqlite3")).expect("open");
         assert!(coordinator.prepare_count() >= 1);
     }
+
+    #[test]
+    fn persist_slice_does_not_prepare_per_live_row() {
+        use crate::c2::hub::LiveConnectionView;
+        let dir = tempdir().expect("tempdir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("prep.sqlite3")).expect("open");
+        let after_open = coordinator.prepare_count();
+        let rows = |start: u8, end: u8| -> Vec<LiveConnectionView> {
+            (start..end)
+                .map(|i| LiveConnectionView {
+                    identity: format!("1:row{i}"),
+                    connection_id: format!("row{i}"),
+                    epoch: 1,
+                    host: Some(format!("h{i}.test")),
+                    process_name: Some("app.exe".into()),
+                    rule: Some("DIRECT".into()),
+                    network: Some("tcp".into()),
+                    chains: vec!["DIRECT".into()],
+                    ..LiveConnectionView::default()
+                })
+                .collect()
+        };
+        coordinator
+            .persist_live_facts(&[], &rows(0, 1), &[], 100)
+            .expect("first");
+        let after_first = coordinator.prepare_count();
+        assert!(
+            after_first > after_open,
+            "first persist should prepare intern/session/attr/chain statements"
+        );
+        coordinator
+            .persist_live_facts(&[], &rows(1, 9), &[], 101)
+            .expect("second");
+        assert_eq!(
+            coordinator.prepare_count(),
+            after_first,
+            "eight live rows must reuse cached statements, not prepare per row"
+        );
+    }
 }
 
 #[cfg(test)]
@@ -1428,6 +1591,7 @@ mod c4_alert_commit_atomic_tests {
             coverage: Vec::new(),
             live_rows: Vec::new(),
             utc: 10,
+            rule: None,
             writes: AlertWriteSet {
                 instances: vec![AlertInstance {
                     instance_id: "i1".into(),
@@ -1532,6 +1696,53 @@ mod c4_alert_commit_atomic_tests {
     #[test]
     fn kill_after_facts_rolls_back_facts_and_outbox() {
         kill_commit(CommitKillPoint::AfterFacts);
+    }
+
+    #[test]
+    fn kill_after_facts_rolls_back_alert_rule() {
+        use crate::c4::types::{AlertKind, AlertRule, SelectorKind};
+        let dir = tempdir().expect("dir");
+        let mut coordinator =
+            StorageCoordinator::open(&dir.path().join("rule-kill.sqlite3")).expect("open");
+        coordinator.test_kill = Some(CommitKillPoint::AfterFacts);
+        let mut extras = slice();
+        extras.rule = Some(AlertRule {
+            rule_id: "r1".into(),
+            version: 1,
+            enabled: true,
+            kind: AlertKind::Health,
+            selector_kind: SelectorKind::HealthKind,
+            selector_value: Some("tcp_auth".into()),
+            direction: None,
+            threshold_value: 1,
+            recovery_threshold: None,
+            period: None,
+            timezone: "UTC".into(),
+            cooldown_sec: 0,
+            quiet_start_min: None,
+            quiet_end_min: None,
+            created_utc: 10,
+            updated_utc: 10,
+        });
+        let bundle = CommitBundle {
+            writer_epoch: 1,
+            bundle_seq: 1,
+            payload: "1,1,1,1".into(),
+        };
+        let error = coordinator
+            .commit_alert_bundle(&bundle, &extras)
+            .expect_err("kill");
+        assert!(error.to_string().contains("kill"));
+        let inserted: i64 = coordinator
+            .connection()
+            .query_row(
+                "select count(*) from alert_rule where rule_id = 'r1'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("rule");
+        assert_eq!(inserted, 0);
+        assert_eq!(coordinator.receipt_count().expect("c"), 0);
     }
 
     #[test]

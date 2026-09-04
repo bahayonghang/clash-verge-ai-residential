@@ -156,6 +156,23 @@ impl AlertEngine {
         Ok(())
     }
 
+    pub fn rule(&self, rule_id: &str) -> Option<&AlertRule> {
+        self.rules.get(rule_id)
+    }
+
+    pub fn replace_store(
+        &mut self,
+        rules: Vec<AlertRule>,
+        instances: Vec<AlertInstance>,
+    ) -> Result<(), AlertError> {
+        self.states.clear();
+        self.load_rules(rules)?;
+        for instance in instances {
+            self.restore_instance(instance);
+        }
+        Ok(())
+    }
+
     pub fn upsert_rule(
         &mut self,
         mut rule: AlertRule,
