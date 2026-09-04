@@ -120,7 +120,33 @@ describe("useLivePage 游标翻页", () => {
   });
 
   const rawPage = (identity: string, next: { sortKey: string; identity: string } | null, summaryId: string) => ({
-    rows: [{ identity, processPath: `C:\\${identity}.exe` }],
+    rows: [
+      {
+        identity,
+        connectionId: identity,
+        epoch: 0,
+        upload: 1,
+        download: 1,
+        rateUpload: null,
+        rateDownload: null,
+        durationMs: null,
+        primary: null,
+        tags: [],
+        host: null,
+        sourceIp: null,
+        destinationIp: null,
+        processName: null,
+        network: "tcp",
+        inbound: null,
+        sourcePort: null,
+        destinationPort: null,
+        start: null,
+        rule: null,
+        rulePayload: null,
+        chains: [],
+        processPath: `C:\\${identity}.exe`
+      }
+    ],
     nextCursor: next,
     matchedCount: LIST_PAGE_DEFAULT + 1,
     sampleUtc: 1,
@@ -163,6 +189,8 @@ describe("useLivePage 游标翻页", () => {
 
     const firstIds = new Set(first.rows.map((row) => row.identity));
     const secondIds = new Set(second.rows.map((row) => row.identity));
+    expect(first.rows[0]).not.toHaveProperty("processPath");
+    expect(second.rows[0]).not.toHaveProperty("processPath");
     expect(firstIds).not.toEqual(secondIds);
     expect(second.matchedCount).toBe(first.matchedCount);
     expect(second.summary.topDownload?.identity).toBe("hot-2");

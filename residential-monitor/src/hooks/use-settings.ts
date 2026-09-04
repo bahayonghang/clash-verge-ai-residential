@@ -78,10 +78,12 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   progress: OperationProgress | null;
   autostart: AutostartRequestState;
   errorZh: string | null;
+  secretErrorZh: string | null;
   setAddress: (value: string) => void;
   setTargets: (value: string) => void;
   setSecret: (value: string) => void;
   loadSecret: () => Promise<void>;
+  retrySecret: () => Promise<void>;
   saveConnection: () => Promise<void>;
   testConnection: () => Promise<void>;
   disconnect: () => Promise<void>;
@@ -106,7 +108,10 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   completeWizard: () => Promise<void>;
   cancelOperation: () => Promise<void>;
 } {
-  const seq = useRef(0);
+  const secretSeq = useRef(0);
+  const connectionSeq = useRef(0);
+  const aboutSeq = useRef(0);
+  const dataSeq = useRef(0);
   const [address, setAddress] = useState(boot?.settings.address || DEFAULT_CONTROLLER_ADDRESS);
   const [targets, setTargets] = useState(DEFAULT_TARGETS);
   const [secret, setSecret] = useState("");
@@ -134,6 +139,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     );
   }
   const [errorZh, setErrorZh] = useState<string | null>(null);
+  const [secretErrorZh, setSecretErrorZh] = useState<string | null>(null);
 
   useEffect(() => {
     autostartRequest.current?.setLocale(locale);
@@ -151,26 +157,38 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     if (secretLoaded.current) {
       return;
     }
-    secretLoaded.current = true;
     if (!isTauriRuntime() || !boot?.settings.hasSecret) {
+      secretLoaded.current = true;
       return;
     }
-    const token = ++seq.current;
+    const token = ++secretSeq.current;
+    const fallback = t(locale, "secret.load_fail");
     try {
       const value = await invoke<string | null>("get_controller_secret");
-      if (token !== seq.current) {
+      if (token !== secretSeq.current) {
         return;
       }
       setSecret(value ?? "");
-    } catch {
-      if (token !== seq.current) {
+      setSecretErrorZh(null);
+      setErrorZh(null);
+      secretLoaded.current = true;
+    } catch (caught: unknown) {
+      if (token !== secretSeq.current) {
         return;
       }
+      const message = invokeErrorZh(caught, fallback);
+      setSecretErrorZh(message);
+      setErrorZh(message);
     }
-  }, [boot?.settings.hasSecret]);
+  }, [boot?.settings.hasSecret, locale]);
+
+  const retrySecret = useCallback(async (): Promise<void> => {
+    secretLoaded.current = false;
+    await loadSecret();
+  }, [loadSecret]);
 
   const saveConnection = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++connectionSeq.current;
     const fallback = t(locale, "settings.save_fail");
     if (!isTauriRuntime()) {
       setErrorZh(fallback);
@@ -190,14 +208,14 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
           .map((item) => item.trim())
           .filter(Boolean)
       });
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setSettings(saved);
       setErrorZh(null);
       setProbe({ messageZh: t(locale, "settings.saved"), state: "connected" });
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, fallback));
@@ -206,7 +224,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [address, locale, secret, targets]);
 
   const testConnection = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++connectionSeq.current;
     const fallback = t(locale, "settings.connect_fail");
     setProbe({ messageZh: t(locale, "settings.probing"), state: "connecting" });
     if (!isTauriRuntime()) {
@@ -221,7 +239,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
           secret: secret.length > 0 ? secret : null
         }
       );
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       const extra = result.status === "endpoint_missing" ? t(locale, "settings.verge_port") : "";
@@ -231,11 +249,11 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
       });
       setErrorZh(null);
       const next = decodeSettings((await invoke<unknown>("get_settings")) as unknown);
-      if (token === seq.current) {
+      if (token === connectionSeq.current) {
         setSettings(next);
       }
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       const message = invokeErrorZh(caught, fallback);
@@ -245,7 +263,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [address, locale, secret]);
 
   const disconnect = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++connectionSeq.current;
     const fallback = t(locale, "settings.disconnect_fail");
     if (!isTauriRuntime()) {
       setErrorZh(fallback);
@@ -255,13 +273,13 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
       const result = await invoke<{ messageZh: string; status: string; action: string }>(
         "disconnect_controller"
       );
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setProbe({ messageZh: `${result.messageZh}${result.action}`, state: result.status });
       setErrorZh(null);
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, fallback));
@@ -270,7 +288,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [locale]);
 
   const reconnect = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++connectionSeq.current;
     setProbe({ messageZh: t(locale, "settings.reconnecting"), state: "connecting" });
     const fallback = t(locale, "settings.connect_fail");
     if (!isTauriRuntime()) {
@@ -279,13 +297,13 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     }
     try {
       await invoke("reconnect_now");
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setProbe({ messageZh: t(locale, "settings.reconnected"), state: "connected" });
       setErrorZh(null);
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       const message = invokeErrorZh(caught, fallback);
@@ -295,18 +313,18 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [locale]);
 
   const refreshCollector = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++connectionSeq.current;
     if (!isTauriRuntime()) {
       return;
     }
     try {
       const tray = await fetchTraySummary();
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setCollectorRunning(tray.collectorRunning);
     } catch {
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setCollectorRunning(null);
@@ -322,19 +340,19 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, []);
 
   const pauseCollector = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++connectionSeq.current;
     if (!isTauriRuntime()) {
       return;
     }
     try {
       await invoke("pause_collector");
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setErrorZh(null);
       await refreshCollector();
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, t(locale, "settings.connect_fail")));
@@ -342,19 +360,19 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [locale, refreshCollector]);
 
   const resumeCollector = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++connectionSeq.current;
     if (!isTauriRuntime()) {
       return;
     }
     try {
       await invoke("resume_collector");
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setErrorZh(null);
       await refreshCollector();
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, t(locale, "settings.connect_fail")));
@@ -376,21 +394,21 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
         setAboutError("");
         aboutLoaded.current = false;
       }
-      const token = ++seq.current;
+      const token = ++aboutSeq.current;
       const fallback = t(locale, "settings.about_fail");
       try {
         if (!isTauriRuntime()) {
           throw new Error(fallback);
         }
         const next = decodeAbout(await invoke<unknown>("get_about"));
-        if (token !== seq.current) {
+        if (token !== aboutSeq.current) {
           return;
         }
         setAbout(next);
         setAboutError("");
         aboutLoaded.current = true;
       } catch (caught: unknown) {
-        if (token !== seq.current) {
+        if (token !== aboutSeq.current) {
           return;
         }
         setAbout(null);
@@ -398,7 +416,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
         aboutLoaded.current = true;
       } finally {
         aboutLoadingRef.current = false;
-        if (token === seq.current) {
+        if (token === aboutSeq.current) {
           setAboutLoading(false);
         }
       }
@@ -407,18 +425,18 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   );
 
   const openReleases = useCallback(async (): Promise<string | null> => {
-    const token = ++seq.current;
+    const token = ++aboutSeq.current;
     if (!isTauriRuntime()) {
       return about?.releasesUrl ?? null;
     }
     try {
       const url = await invoke<string>("open_releases");
-      if (token !== seq.current) {
+      if (token !== aboutSeq.current) {
         return null;
       }
       return url;
     } catch {
-      if (token !== seq.current) {
+      if (token !== aboutSeq.current) {
         return null;
       }
       return about?.releasesUrl ?? null;
@@ -426,7 +444,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [about?.releasesUrl]);
 
   const previewDelete = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++dataSeq.current;
     const fallback = t(locale, "settings.delete.preview_fail");
     if (!isTauriRuntime()) {
       setErrorZh(fallback);
@@ -434,13 +452,13 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     }
     try {
       const next = decodeDeletePreview(await invoke<unknown>("preview_delete_local_data"));
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return;
       }
       setDeletePreview(next);
       setErrorZh(null);
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, fallback));
@@ -449,7 +467,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
 
   const confirmDelete = useCallback(
     async (phrase: string): Promise<void> => {
-      const token = ++seq.current;
+      const token = ++dataSeq.current;
       const fallback = t(locale, "settings.delete.confirm_fail");
       if (!isTauriRuntime()) {
         setErrorZh(fallback);
@@ -459,13 +477,13 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
         const next = decodeDeleteReport(
           await invoke<unknown>("confirm_delete_local_data", { phrase })
         );
-        if (token !== seq.current) {
+        if (token !== dataSeq.current) {
           return;
         }
         setDeleteReport(next);
         setErrorZh(null);
       } catch (caught: unknown) {
-        if (token !== seq.current) {
+        if (token !== dataSeq.current) {
           return;
         }
         setErrorZh(invokeErrorZh(caught, fallback));
@@ -480,19 +498,19 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
       fallback: string,
       task: () => Promise<"done" | "cancelled">
     ): Promise<void> => {
-      const token = ++seq.current;
+      const token = ++dataSeq.current;
       const operationId = `op-${Date.now()}`;
       try {
         if (isTauriRuntime()) {
           const started = decodeProgress(
             await invoke<unknown>("start_operation", { operationId, kind })
           );
-          if (token === seq.current) {
+          if (token === dataSeq.current) {
             setProgress(started);
           }
         }
         const result = await task();
-        if (token !== seq.current) {
+        if (token !== dataSeq.current) {
           return;
         }
         if (result === "cancelled") {
@@ -506,7 +524,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
         );
         setErrorZh(null);
       } catch (caught: unknown) {
-        if (token !== seq.current) {
+        if (token !== dataSeq.current) {
           return;
         }
         const message = invokeErrorZh(caught, fallback);
@@ -522,20 +540,20 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   );
 
   const previewRetention = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++dataSeq.current;
     const fallback = t(locale, "settings.retention_preview");
     if (!isTauriRuntime()) {
       return;
     }
     try {
       const next = decodeRetention(await invoke<unknown>("retention_preview"));
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return;
       }
       setRetention(next);
       setErrorZh(null);
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, fallback));
@@ -551,18 +569,18 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [locale, withOperation]);
 
   const loadDataDir = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++dataSeq.current;
     if (!isTauriRuntime()) {
       return;
     }
     try {
       const dir = await invoke<string>("data_directory");
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return;
       }
       setDataDir(dir);
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, t(locale, "settings.log_dir_unknown")));
@@ -570,7 +588,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [locale]);
 
   const openLogDir = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++dataSeq.current;
     const fallback = t(locale, "settings.open_log_dir_fail");
     if (!isTauriRuntime()) {
       setErrorZh(fallback);
@@ -578,12 +596,12 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     }
     try {
       await invoke("open_log_dir");
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return;
       }
       setErrorZh(null);
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, fallback));
@@ -621,7 +639,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [locale, withOperation]);
 
   const validateBackup = useCallback(async (): Promise<boolean | null> => {
-    const token = ++seq.current;
+    const token = ++dataSeq.current;
     const fallback = t(locale, "settings.validate_fail");
     if (!isTauriRuntime()) {
       setErrorZh(fallback);
@@ -637,13 +655,13 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
         return null;
       }
       const ok = await invoke<boolean>("validate_backup", { path: picked });
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return null;
       }
       setErrorZh(ok ? null : fallback);
       return ok;
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return null;
       }
       setErrorZh(invokeErrorZh(caught, fallback));
@@ -659,18 +677,18 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [locale, withOperation]);
 
   const completeWizard = useCallback(async (): Promise<void> => {
-    const token = ++seq.current;
+    const token = ++connectionSeq.current;
     if (!isTauriRuntime()) {
       return;
     }
     try {
       await invoke("complete_wizard");
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setErrorZh(null);
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== connectionSeq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, t(locale, "settings.save_fail")));
@@ -682,17 +700,17 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     if (!id || !progress.canCancel || !isTauriRuntime()) {
       return;
     }
-    const token = ++seq.current;
+    const token = ++dataSeq.current;
     try {
       const next = await invoke<unknown>("cancel_operation", { operationId: id });
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return;
       }
       if (next) {
         setProgress(decodeProgress(next));
       }
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (token !== dataSeq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, t(locale, "settings.progress.cancel")));
@@ -716,10 +734,12 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     progress,
     autostart,
     errorZh,
+    secretErrorZh,
     setAddress,
     setTargets,
     setSecret,
     loadSecret,
+    retrySecret,
     saveConnection,
     testConnection,
     disconnect,

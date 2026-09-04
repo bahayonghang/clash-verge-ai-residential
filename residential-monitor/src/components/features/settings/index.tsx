@@ -127,6 +127,8 @@ export function SettingsPage({
               onRefreshAutostart={() => void settings.loadAutostart()}
               onSetAutostartEnabled={(enabled) => void settings.setAutostartEnabled(enabled)}
               onEnter={onEnterConnection}
+              secretErrorZh={settings.secretErrorZh}
+              onRetrySecret={() => void settings.retrySecret()}
             />
           ) : null}
           {section === "data" ? (

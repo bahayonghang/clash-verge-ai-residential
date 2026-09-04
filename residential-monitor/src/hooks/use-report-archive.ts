@@ -93,7 +93,7 @@ export function decodeHtmlDocument(value: unknown): string {
   return html;
 }
 
-export async function renderReportHtml(token: string): Promise<string> {
+async function renderReportHtml(token: string): Promise<string> {
   return decodeHtmlDocument(
     await invoke<unknown>("render_report_html", {
       token,
@@ -114,7 +114,7 @@ function decodePreview(value: unknown): ExportPreview {
   };
 }
 
-export function useReportArchive(locale: UiLocale): {
+export function useReportArchive(locale: UiLocale, previewHtml = false): {
   form: ReportForm;
   topN: number;
   compare: boolean;
@@ -126,6 +126,8 @@ export function useReportArchive(locale: UiLocale): {
   statusZh: string;
   loading: boolean;
   errorZh: string | null;
+  html: string | null;
+  htmlError: string | null;
   exportPreview: ExportPreview | null;
   setForm: (form: ReportForm) => void;
   setTopN: (value: number) => void;
@@ -158,6 +160,8 @@ export function useReportArchive(locale: UiLocale): {
   const [statusZh, setStatusZh] = useState(() => t(locale, "report.idle"));
   const [loading, setLoading] = useState(false);
   const [errorZh, setErrorZh] = useState<string | null>(null);
+  const [html, setHtml] = useState<string | null>(null);
+  const [htmlError, setHtmlError] = useState<string | null>(null);
   const [exportPreview, setExportPreview] = useState<ExportPreview | null>(null);
 
   const applyDecoded = useCallback(
@@ -515,6 +519,35 @@ export function useReportArchive(locale: UiLocale): {
     };
   }, []);
 
+  useEffect(() => {
+    if (!previewHtml) {
+      return;
+    }
+    if (!report || !isTauriRuntime()) {
+      setHtml(null);
+      setHtmlError(null);
+      return;
+    }
+    let cancelled = false;
+    setHtml(null);
+    setHtmlError(null);
+    void renderReportHtml(report.reportSnapshotToken)
+      .then((next) => {
+        if (!cancelled) {
+          setHtml(next);
+        }
+      })
+      .catch((caught: unknown) => {
+        if (!cancelled) {
+          setHtml(null);
+          setHtmlError(invokeErrorZh(caught, t(locale, "report.export_fail")));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [locale, previewHtml, report]);
+
   const exportReport = useCallback(
     async (spec: ExportSpec): Promise<void> => {
       const token = ++seq.current;
@@ -572,6 +605,8 @@ export function useReportArchive(locale: UiLocale): {
     statusZh,
     loading,
     errorZh,
+    html,
+    htmlError,
     exportPreview,
     sort,
     setForm,

@@ -14,4 +14,12 @@ describe("IPC 边界", () => {
       .map(([file]) => file);
     expect(hits).toEqual([]);
   });
+
+  it("components/** 不直接 renderReportHtml", () => {
+    const hits = Object.entries(sources)
+      .filter(([file]) => !file.includes(".test."))
+      .filter(([, text]) => /\brenderReportHtml\b/.test(text))
+      .map(([file]) => file);
+    expect(hits).toEqual([]);
+  });
 });

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   decodeAlertCenter,
+  decodeAlertRules,
+  decodeAlertSummary,
   decodeDiagnostics,
   type AlertCenterPage,
   type AlertInstance,
@@ -51,20 +53,6 @@ function decodeNotify(value: unknown): NotifyCapability {
     canFocusApp: value.canFocusApp === true,
     focusAssistUnknown: value.focusAssistUnknown === true
   };
-}
-
-function decodeRules(value: unknown): AlertRule[] {
-  if (!Array.isArray(value)) {
-    throw new Error("告警规则列表无效");
-  }
-  return value as AlertRule[];
-}
-
-function decodeSummary(value: unknown): AlertSummary {
-  if (!isRecord(value) || value.schemaVersion !== 1) {
-    throw new Error("AlertSummary 无效");
-  }
-  return value as unknown as AlertSummary;
 }
 
 export function useAlerts(locale: UiLocale, active: boolean): {
@@ -124,8 +112,8 @@ export function useAlerts(locale: UiLocale, active: boolean): {
       }
       const decodedPage = decodeAlertCenter(nextPage);
       setPage(decodedPage);
-      setRules(decodeRules(nextRules));
-      setSummary(decodeSummary(nextSummary));
+      setRules(decodeAlertRules(nextRules));
+      setSummary(decodeAlertSummary(nextSummary));
       setDiagnostics(decodeDiagnostics(nextDiag));
       setSelected((current) =>
         current ? (decodedPage.items.find((item) => item.instanceId === current.instanceId) ?? null) : null

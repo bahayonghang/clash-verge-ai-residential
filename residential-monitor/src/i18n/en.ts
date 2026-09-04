@@ -511,6 +511,8 @@ export const EN: Record<string, string> = {
   "secret.show": "Show secret",
   "secret.hide": "Hide secret",
   "secret.hint": "After save, this box is filled with dots by default. The secret is not written to logs or the Channel.",
+  "secret.load_fail": "Cannot read the TCP secret. The password box was not updated. Retry.",
+  "secret.retry": "Retry reading the secret",
   "recovery.missing": "Recovery information is not available.",
   "recovery.title": "Recovery Shell",
   "recovery.meta": "App version {app}, database version {db}, supported maximum {max}.",

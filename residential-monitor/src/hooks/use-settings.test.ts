@@ -41,4 +41,27 @@ describe("secret 与保存", () => {
     expect(settingsPageSource).toContain("void loadAutostart()");
     expect(connectionSource).toContain("<StartupSection");
   });
+
+  it("secret、连接保存、About、数据操作分序号，About 不丢弃保存结果", () => {
+    expect(source).toContain("secretSeq");
+    expect(source).toContain("connectionSeq");
+    expect(source).toContain("aboutSeq");
+    expect(source).toContain("dataSeq");
+    expect(source).not.toMatch(/const seq = useRef\(0\)/);
+    expect(source).toMatch(
+      /const saveConnection = useCallback\(async \(\): Promise<void> => \{\s*const token = \+\+connectionSeq\.current/
+    );
+    expect(source).toMatch(/const token = \+\+aboutSeq\.current;\s*const fallback = t\(locale, "settings\.about_fail"\)/);
+  });
+
+  it("secret 读取失败设置 errorZh 与重试，不把空密码框当成无 secret", () => {
+    expect(source).toContain("secret.load_fail");
+    expect(source).toContain("setSecretErrorZh(message)");
+    expect(source).toContain("setErrorZh(message)");
+    expect(source).toContain("retrySecret");
+    expect(source).not.toMatch(/secretLoaded\.current = true;\s*if \(!isTauriRuntime/);
+    expect(connectionSource).toContain("secretErrorZh");
+    expect(connectionSource).toContain("secret.retry");
+    expect(settingsPageSource).toContain("retrySecret");
+  });
 });

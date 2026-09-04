@@ -511,6 +511,8 @@ export const ZH: Record<string, string> = {
   "secret.show": "显示密钥",
   "secret.hide": "隐藏密钥",
   "secret.hint": "保存后回填此框，默认显示圆点。不会写入日志或 Channel。",
+  "secret.load_fail": "无法读取 TCP secret。密码框未更新。请重试。",
+  "secret.retry": "重试读取密钥",
   "recovery.missing": "恢复信息不可用。",
   "recovery.title": "Recovery Shell",
   "recovery.meta": "应用版本 {app}，数据库版本 {db}，支持上限 {max}。",

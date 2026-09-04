@@ -96,6 +96,63 @@ describe("decodeMonitorMessage", () => {
     );
   });
 
+  it("connectionDelta upsert 剥离 processPath", () => {
+    const decoded = decodeMonitorMessage({
+      kind: "connectionDelta",
+      schemaVersion: 1,
+      subscriptionId: 1,
+      seq: 2,
+      snapshot: overview,
+      upserts: [
+        {
+          identity: "0:a",
+          connectionId: "a",
+          epoch: 0,
+          upload: 1,
+          download: 1,
+          rateUpload: null,
+          rateDownload: null,
+          durationMs: null,
+          primary: null,
+          tags: [],
+          host: null,
+          sourceIp: null,
+          destinationIp: null,
+          processName: null,
+          network: "tcp",
+          inbound: null,
+          sourcePort: null,
+          destinationPort: null,
+          start: null,
+          rule: null,
+          rulePayload: null,
+          chains: [],
+          processPath: "C:\\secret\\a.exe"
+        }
+      ],
+      removes: [],
+      backendTime: 2
+    });
+    expect(decoded.kind).toBe("connectionDelta");
+    if (decoded.kind === "connectionDelta") {
+      expect(decoded.upserts[0]).not.toHaveProperty("processPath");
+      expect(JSON.stringify(decoded.upserts)).not.toContain("processPath");
+    }
+  });
+
+  it("alertChanged 缺 schemaVersion 或非法摘要拒绝", () => {
+    expect(() =>
+      decodeMonitorMessage({
+        kind: "alertChanged",
+        schemaVersion: 1,
+        subscriptionId: 1,
+        seq: 2,
+        summary: { activeCount: 1, notEvaluableCount: 0, outboxBacklog: 0, lastEventUtc: null },
+        backendTime: 2
+      })
+    ).toThrow(/AlertSummary/);
+  });
+
   it("拒绝静默丢弃无效 upsert 或补造 health 字段", () => {
     expect(() =>
       decodeMonitorMessage({

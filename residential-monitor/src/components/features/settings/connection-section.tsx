@@ -33,7 +33,9 @@ export function ConnectionSection({
   autostart,
   onRefreshAutostart,
   onSetAutostartEnabled,
-  onEnter
+  onEnter,
+  secretErrorZh,
+  onRetrySecret
 }: {
   locale: UiLocale;
   address: string;
@@ -59,6 +61,8 @@ export function ConnectionSection({
   onRefreshAutostart: () => void;
   onSetAutostartEnabled: (enabled: boolean) => void;
   onEnter: () => void;
+  secretErrorZh: string | null;
+  onRetrySecret: () => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -172,6 +176,14 @@ export function ConnectionSection({
           </span>
           <span className="text-xs text-muted-foreground">{t(locale, "secret.hint")}</span>
         </label>
+        {secretErrorZh ? (
+          <div className="flex flex-wrap items-center gap-2" role="alert">
+            <span className="text-sm text-destructive">{secretErrorZh}</span>
+            <Button type="button" variant="outline" onClick={onRetrySecret}>
+              {t(locale, "secret.retry")}
+            </Button>
+          </div>
+        ) : null}
         <p className="text-xs text-muted-foreground">{t(locale, "settings.port_note")}</p>
         <details className="text-sm">
           <summary>{t(locale, "settings.wizard")}</summary>

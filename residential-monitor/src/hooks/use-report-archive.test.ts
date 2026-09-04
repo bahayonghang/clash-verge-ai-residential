@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { decodeHtmlDocument, pickLatestArchive } from "./use-report-archive";
+import archiveSource from "./use-report-archive.ts?raw";
 
 describe("pickLatestArchive", () => {
   it("优先日档案，否则小时档案", () => {
@@ -90,6 +91,14 @@ describe("pickLatestArchive", () => {
         next: null
       })?.archiveId
     ).toBe("h1");
+  });
+});
+
+describe("家宽 HTML 导出", () => {
+  it("renderReportHtml 只从 archive hook 调用", () => {
+    expect(archiveSource).toContain("async function renderReportHtml");
+    expect(archiveSource).toContain("void renderReportHtml(report.reportSnapshotToken)");
+    expect(archiveSource).toContain("previewHtml");
   });
 });
 

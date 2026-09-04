@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   decodeLiveConnectionPage,
+  decodeTraySummary,
   defaultLiveQuery,
   isTauriRuntime,
   LIST_PAGE_DEFAULT
@@ -54,7 +55,7 @@ describe("live-session", () => {
   it("保留同一后端快照的完整筛选摘要，不从分页 rows 推导", () => {
     const decoded = decodeLiveConnectionPage(
       page({
-        rows: [{ identity: "0:page-row", download: 999_999 }],
+        rows: [],
         summary: { topDownload: null, topUpload: hotspot }
       })
     );
@@ -78,6 +79,51 @@ describe("live-session", () => {
     expect(() => decodeLiveConnectionPage(page({ summary: { topDownload: null } }))).toThrow(/字段缺失/);
     expect(() => decodeLiveConnectionPage(page({ sampleUtc: undefined }))).toThrow(/sampleUtc/);
     expect(() => decodeLiveConnectionPage(page({ sampleUtc: 1.5 }))).toThrow(/sampleUtc/);
+  });
+
+  it("连接行剥离 processPath，缺字段拒绝整页", () => {
+    const row = {
+      identity: "0:a",
+      connectionId: "a",
+      epoch: 0,
+      upload: 1,
+      download: 1,
+      rateUpload: null,
+      rateDownload: null,
+      durationMs: null,
+      primary: null,
+      tags: [],
+      host: "a.test",
+      sourceIp: null,
+      destinationIp: null,
+      processName: null,
+      network: "tcp",
+      inbound: null,
+      sourcePort: null,
+      destinationPort: null,
+      start: null,
+      rule: null,
+      rulePayload: null,
+      chains: [],
+      processPath: "C:\\secret\\a.exe"
+    };
+    const decoded = decodeLiveConnectionPage(page({ rows: [row] }));
+    expect(decoded.rows[0]?.identity).toBe("0:a");
+    expect(decoded.rows[0]).not.toHaveProperty("processPath");
+    expect(JSON.stringify(decoded.rows)).not.toContain("processPath");
+    expect(() => decodeLiveConnectionPage(page({ rows: [{ identity: "0:a" }] }))).toThrow(/字段缺失|连接行/);
+  });
+
+  it("tray_summary 缺字段或非法类型拒绝", () => {
+    expect(decodeTraySummary({ collectorRunning: true, health: "connected", windowVisible: false })).toEqual({
+      collectorRunning: true,
+      health: "connected",
+      windowVisible: false
+    });
+    expect(() => decodeTraySummary({ collectorRunning: true, health: "connected" })).toThrow(/windowVisible/);
+    expect(() => decodeTraySummary({ collectorRunning: "yes", health: "connected", windowVisible: false })).toThrow(
+      /collectorRunning/
+    );
   });
 
   it("不把 processPath 或原始规则载荷拷进热点", () => {

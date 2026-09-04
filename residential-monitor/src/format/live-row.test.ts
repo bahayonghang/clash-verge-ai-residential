@@ -18,7 +18,6 @@ function row(overrides: Partial<LiveConnectionView> = {}): LiveConnectionView {
     sourceIp: "198.18.0.1",
     destinationIp: "1.1.1.1",
     processName: "app.exe",
-    processPath: null,
     network: "tcp",
     inbound: "Tun",
     sourcePort: "1546",

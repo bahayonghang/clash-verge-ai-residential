@@ -59,7 +59,6 @@ function row(id: string): LiveConnectionView {
     sourceIp: null,
     destinationIp: null,
     processName: null,
-    processPath: null,
     network: "tcp",
     rule: null,
     rulePayload: null,
