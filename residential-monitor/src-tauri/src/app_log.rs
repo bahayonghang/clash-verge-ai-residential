@@ -3,9 +3,13 @@
 use crate::identity::IDENTIFIER;
 use crate::redact::scan_text_for_secrets;
 use serde_json::{Map, Value};
+#[cfg(test)]
+use std::cell::Cell;
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
+#[cfg(test)]
+use std::sync::MutexGuard;
 use std::sync::{Mutex, OnceLock};
 
 pub const ENV_LOG_DIR: &str = "RESIDENTIAL_MONITOR_LOG_DIR";
@@ -44,12 +48,49 @@ static PANIC_HOOK: OnceLock<()> = OnceLock::new();
 static TEST: Mutex<()> = Mutex::new(());
 
 #[cfg(test)]
-pub fn exclusive_test() -> std::sync::MutexGuard<'static, ()> {
-    TEST.lock().unwrap_or_else(|poison| poison.into_inner())
+thread_local! {
+    static HOLDING_TEST: Cell<bool> = const { Cell::new(false) };
+}
+
+/// Holds `TEST`. Drop clears the thread-local hold flag.
+#[cfg(test)]
+#[must_use = "dropping releases the test log lock"]
+pub struct ExclusiveTestGuard {
+    _guard: Option<MutexGuard<'static, ()>>,
+}
+
+#[cfg(test)]
+impl Drop for ExclusiveTestGuard {
+    fn drop(&mut self) {
+        if let Some(guard) = self._guard.take() {
+            HOLDING_TEST.with(|flag| flag.set(false));
+            drop(guard);
+        }
+    }
+}
+
+/// `std::sync::Mutex` is not reentrant: skip if this thread already holds `TEST`.
+#[cfg(test)]
+fn lock_test() -> ExclusiveTestGuard {
+    if HOLDING_TEST.with(|flag| flag.get()) {
+        ExclusiveTestGuard { _guard: None }
+    } else {
+        let guard = TEST.lock().unwrap_or_else(|poison| poison.into_inner());
+        HOLDING_TEST.with(|flag| flag.set(true));
+        ExclusiveTestGuard {
+            _guard: Some(guard),
+        }
+    }
+}
+
+#[cfg(test)]
+pub fn exclusive_test() -> ExclusiveTestGuard {
+    lock_test()
 }
 
 #[cfg(test)]
 pub fn reset_for_test() {
+    let _test = lock_test();
     let mut guard = STATE.lock().unwrap_or_else(|poison| poison.into_inner());
     *guard = None;
 }
@@ -66,6 +107,7 @@ impl Drop for ResetOnDrop {
 
 #[cfg(test)]
 pub fn flush_for_test() {
+    let _test = lock_test();
     let mut guard = match STATE.lock() {
         Ok(guard) => guard,
         Err(poison) => poison.into_inner(),
@@ -81,6 +123,7 @@ pub fn flush_for_test() {
 /// 先 flush，再拼接目录内全部 `FILE_NAME*`（含当前文件与轮转片），避免只读到空的新文件。
 #[cfg(test)]
 pub fn read_logged_text(dir: &Path) -> std::io::Result<String> {
+    let _test = lock_test();
     flush_for_test();
     let mut paths: Vec<PathBuf> = match fs::read_dir(dir) {
         Ok(entries) => entries
@@ -130,10 +173,14 @@ pub fn resolve_dir_from(
 }
 
 pub fn init() {
+    #[cfg(test)]
+    let _test = lock_test();
     init_at(resolve_dir(), DEFAULT_MAX_BYTES);
 }
 
 pub fn init_at(dir: PathBuf, max_bytes: u64) {
+    #[cfg(test)]
+    let _test = lock_test();
     let _ = fs::create_dir_all(&dir);
     let file = open_current(&dir);
     if let Ok(mut guard) = STATE.lock() {
@@ -147,6 +194,8 @@ pub fn init_at(dir: PathBuf, max_bytes: u64) {
 }
 
 pub fn dir() -> PathBuf {
+    #[cfg(test)]
+    let _test = lock_test();
     STATE
         .lock()
         .ok()
@@ -155,6 +204,8 @@ pub fn dir() -> PathBuf {
 }
 
 pub fn emit(level: Level, event: &str, fields: Value) {
+    #[cfg(test)]
+    let _test = lock_test();
     let line = format_line(level, event, fields);
     if cfg!(debug_assertions) {
         eprintln!("{line}");

@@ -2581,15 +2581,15 @@ mod c2_facade_contract_tests {
         let _lock = crate::app_log::exclusive_test();
         let dir = tempdir().expect("dir");
         let logs = dir.path().join("logs");
+        let _reset = crate::app_log::ResetOnDrop;
         crate::app_log::init_at(logs.clone(), crate::app_log::DEFAULT_MAX_BYTES);
         std::fs::create_dir_all(dir.path().join("monitor.sqlite3")).expect("dir-as-db");
         let facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         assert_eq!(facade.branch, BootBranch::RecoveryOnly);
-        let text = std::fs::read_to_string(logs.join(crate::app_log::FILE_NAME)).expect("log");
+        let text = crate::app_log::read_logged_text(&logs).expect("log");
         assert!(text.contains("storage_open"));
         assert!(text.contains("\"class\":\"sqlite\"") || text.contains("\"class\":\"closed\""));
         assert!(!crate::redact::scan_text_for_secrets(&text));
-        crate::app_log::reset_for_test();
     }
 
     #[test]
@@ -2597,6 +2597,7 @@ mod c2_facade_contract_tests {
         let _lock = crate::app_log::exclusive_test();
         let dir = tempdir().expect("dir");
         let logs = dir.path().join("logs");
+        let _reset = crate::app_log::ResetOnDrop;
         crate::app_log::init_at(logs.clone(), crate::app_log::DEFAULT_MAX_BYTES);
         let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         facade.save_ui_locale("en").expect("locale");
@@ -2606,11 +2607,10 @@ mod c2_facade_contract_tests {
         assert_eq!(error.code, "invalid_query");
         assert_eq!(error.message_zh, "The query is not valid.");
         assert_eq!(error.action, "Check the time range, dimension, and page");
-        let text = std::fs::read_to_string(logs.join(crate::app_log::FILE_NAME)).expect("log");
+        let text = crate::app_log::read_logged_text(&logs).expect("log");
         assert!(text.contains("ERROR report"), "{text}");
         assert!(text.contains("\"class\":\"invalid_query\""), "{text}");
         assert!(!crate::redact::scan_text_for_secrets(&text), "{text}");
-        crate::app_log::reset_for_test();
     }
 
     #[test]
@@ -2618,6 +2618,7 @@ mod c2_facade_contract_tests {
         let _lock = crate::app_log::exclusive_test();
         let dir = tempdir().expect("dir");
         let logs = dir.path().join("logs");
+        let _reset = crate::app_log::ResetOnDrop;
         crate::app_log::init_at(logs.clone(), crate::app_log::DEFAULT_MAX_BYTES);
         let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         facade
@@ -2642,13 +2643,12 @@ mod c2_facade_contract_tests {
             .save_targets(vec!["家宽".into()])
             .expect_err("targets");
         assert_eq!(targets_err.code, "storage");
-        let text = std::fs::read_to_string(logs.join(crate::app_log::FILE_NAME)).expect("log");
+        let text = crate::app_log::read_logged_text(&logs).expect("log");
         assert!(text.contains("ERROR persist_settings"), "{text}");
         assert!(text.contains("ERROR save_targets"), "{text}");
         assert!(text.contains("\"class\":\"sqlite\""), "{text}");
         assert!(text.contains("\"class\":\"closed\""), "{text}");
         assert!(!crate::redact::scan_text_for_secrets(&text), "{text}");
-        crate::app_log::reset_for_test();
     }
 
     #[test]
@@ -3051,9 +3051,13 @@ mod c2_facade_contract_tests {
 
     #[test]
     fn confirm_delete_reboots_storage_to_first_epoch() {
-        // confirm_delete 会删除真实日志目录；用环境变量指到临时目录。
+        let _lock = crate::app_log::exclusive_test();
         let log_dir = tempdir().expect("log dir");
-        std::env::set_var("RESIDENTIAL_MONITOR_LOG_DIR", log_dir.path());
+        let _reset = crate::app_log::ResetOnDrop;
+        crate::app_log::init_at(
+            log_dir.path().to_path_buf(),
+            crate::app_log::DEFAULT_MAX_BYTES,
+        );
         let dir = tempdir().expect("dir");
         let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         facade.ingest_snapshot(snapshot("pre"), 1, 1);
@@ -3076,7 +3080,6 @@ mod c2_facade_contract_tests {
             .collect();
         assert!(rule_ids.iter().all(|id| id.starts_with("health-")));
         assert_eq!(facade.writer_epoch, 1);
-        std::env::remove_var("RESIDENTIAL_MONITOR_LOG_DIR");
     }
 
     #[test]

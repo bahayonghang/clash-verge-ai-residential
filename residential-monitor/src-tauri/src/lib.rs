@@ -1635,6 +1635,7 @@ mod autostart_command_tests {
     fn platform_detail_is_absent_from_ipc_and_log() {
         let _lock = crate::app_log::exclusive_test();
         let dir = tempdir().expect("log dir");
+        let _reset = crate::app_log::ResetOnDrop;
         crate::app_log::init_at(dir.path().to_path_buf(), crate::app_log::DEFAULT_MAX_BYTES);
 
         let raw_error = AutostartError::unavailable(RAW_PLATFORM_ERROR);
@@ -1652,15 +1653,12 @@ mod autostart_command_tests {
             .expect("serialize")
             .contains(RAW_PLATFORM_ERROR));
 
-        let log =
-            std::fs::read_to_string(dir.path().join(crate::app_log::FILE_NAME)).expect("read log");
+        let log = crate::app_log::read_logged_text(dir.path()).expect("read log");
         assert!(log.contains("autostart"));
         assert!(log.contains("\"class\":\"platform\""));
         assert!(!log.contains(RAW_PLATFORM_ERROR));
         assert!(!log.contains("residential-monitor.exe"));
         assert!(!log.contains("CurrentVersion"));
-
-        crate::app_log::reset_for_test();
     }
 }
 
@@ -1686,6 +1684,7 @@ mod facade_lock_command_tests {
         let _lock = crate::app_log::exclusive_test();
         let dir = tempdir().expect("dir");
         let logs = dir.path().join("logs");
+        let _reset = crate::app_log::ResetOnDrop;
         crate::app_log::init_at(logs.clone(), crate::app_log::DEFAULT_MAX_BYTES);
         let mut facade = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
         facade
@@ -1720,12 +1719,11 @@ mod facade_lock_command_tests {
         let again = get_bootstrap_core(&state).expect_err("still poisoned");
         assert_eq!(again.code, "storage_failure");
 
-        let log = std::fs::read_to_string(logs.join(crate::app_log::FILE_NAME)).expect("log");
+        let log = crate::app_log::read_logged_text(&logs).expect("log");
         assert!(log.contains("facade_lock"), "{log}");
         assert!(log.contains("\"class\":\"mutex_poisoned\""), "{log}");
         assert!(!log.contains(FIXTURE_SECRET), "{log}");
         assert!(!crate::redact::scan_text_for_secrets(&log), "{log}");
-        crate::app_log::reset_for_test();
     }
 }
 
