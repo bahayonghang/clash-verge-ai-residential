@@ -1,0 +1,32 @@
+{
+  "id": "evergreen-ci-gates",
+  "name": "evergreen-ci-gates",
+  "title": "修复 CI 失败传播并补齐文档检查",
+  "description": "拆分 Windows 原生命令步骤，补文档构建门及负向回归",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-07",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "dev",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-07-evergreen-harness-audit",
+  "relatedFiles": [
+    ".github/workflows/ci.yml",
+    "tests/sync-monitor-version.test.js"
+  ],
+  "notes": "",
+  "meta": {
+    "baseline_commit": "5578576787dba73ba1b96985a2fc408fc246bfed",
+    "implementation_approved": false
+  }
+}
