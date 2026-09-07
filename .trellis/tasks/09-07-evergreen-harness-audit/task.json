@@ -1,0 +1,41 @@
+{
+  "id": "evergreen-harness-audit",
+  "name": "evergreen-harness-audit",
+  "title": "常青项目审查与五套 Harness 对齐",
+  "description": "只读工程审查、测试与失败根因；五套harness能力/规则对齐及五个待批准子任务",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-07",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "dev",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-07-evergreen-ci-gates",
+    "09-07-evergreen-project-contract",
+    "09-07-evergreen-harness-adapters",
+    "09-07-evergreen-skill-delivery",
+    "09-07-evergreen-branch-governance"
+  ],
+  "parent": null,
+  "relatedFiles": [
+    ".trellis/tasks/09-07-evergreen-ci-gates/",
+    ".trellis/tasks/09-07-evergreen-project-contract/",
+    ".trellis/tasks/09-07-evergreen-harness-adapters/",
+    ".trellis/tasks/09-07-evergreen-skill-delivery/",
+    ".trellis/tasks/09-07-evergreen-branch-governance/"
+  ],
+  "notes": "建议先批准C1-C4本地实施；C5远端main保护单独批准。本轮无产品、规则、安装态或远端改动。",
+  "meta": {
+    "baseline_commit": "5578576787dba73ba1b96985a2fc408fc246bfed",
+    "implementation_approved": false
+  }
+}
