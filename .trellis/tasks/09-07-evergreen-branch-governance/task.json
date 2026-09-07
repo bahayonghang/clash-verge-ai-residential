@@ -1,0 +1,32 @@
+{
+  "id": "evergreen-branch-governance",
+  "name": "evergreen-branch-governance",
+  "title": "核对并恢复分支治理契约",
+  "description": "对照已记录 linear-history 契约与 GitHub 实际设置；远端修改须单独批准",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-07",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "dev",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-07-evergreen-harness-audit",
+  "relatedFiles": [
+    ".trellis/spec/frontend/quality-guidelines.md"
+  ],
+  "notes": "",
+  "meta": {
+    "baseline_commit": "5578576787dba73ba1b96985a2fc408fc246bfed",
+    "implementation_approved": false,
+    "external_write_approved": false
+  }
+}

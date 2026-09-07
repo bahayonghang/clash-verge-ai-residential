@@ -176,9 +176,37 @@ Correct PUT body after discovering `app_id` from the successful check run:
   "required_linear_history": true,
   "allow_force_pushes": false,
   "allow_deletions": false,
-  "required_conversation_resolution": true
+  "block_creations": false,
+  "required_conversation_resolution": true,
+  "lock_branch": false,
+  "allow_fork_syncing": false
 }
 ```
+
+Omit `contexts` and `required_signatures` from this PUT. `contexts` is
+GET-derived from `checks`. Signatures use a separate endpoint. Include the
+boolean flags that the GET reports so an incomplete PUT does not clear them.
+
+### 8. Live verification
+
+Date: 2026-09-07.
+
+Independent `GET /repos/bahayonghang/clash-verge-ai-residential/branches/main/protection`
+on 2026-09-07 recorded `required_linear_history.enabled=true`. Other protection
+fields matched the approved contract: `required_status_checks.strict=true` with
+app-bound `Required checks` (`app_id` 15368), pull-request reviews with
+`required_approving_review_count=0`, `dismiss_stale_reviews=false`,
+`require_code_owner_reviews=false`, `require_last_push_approval=false`,
+`enforce_admins.enabled=true`, `required_conversation_resolution.enabled=true`,
+`allow_force_pushes.enabled=false`, `allow_deletions.enabled=false`,
+`required_signatures.enabled=false`, `block_creations.enabled=false`,
+`lock_branch.enabled=false`, and `allow_fork_syncing.enabled=false`. GET still
+derives `contexts: ["Required checks"]` from `checks`. A later independent GET
+on the same date returned the same comparable fields. This section records those
+GETs. The local file is not the remote setting.
+
+The next ordinary PR exact-head `Required checks` evidence is UNVERIFIED. This
+change did not open a test PR.
 
 ## Security And Generated Files
 
