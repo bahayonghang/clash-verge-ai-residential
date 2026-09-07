@@ -1,0 +1,34 @@
+{
+  "id": "evergreen-skill-delivery",
+  "name": "evergreen-skill-delivery",
+  "title": "修复业务 Skill 分发漂移",
+  "description": "验证源库到本地平台副本的一致性和实际安装行为",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-07",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "dev",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-07-evergreen-harness-audit",
+  "relatedFiles": [
+    "tests/install-agent-skills.test.js",
+    "docs/agents/residential-rule-tuning.md",
+    "skills/residential-rule-tuning/SKILL.md",
+    "skills/residential-rule-tuning/reference.md"
+  ],
+  "notes": "",
+  "meta": {
+    "baseline_commit": "5578576787dba73ba1b96985a2fc408fc246bfed",
+    "implementation_approved": false
+  }
+}

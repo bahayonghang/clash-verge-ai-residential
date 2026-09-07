@@ -23,6 +23,10 @@ metadata:
 
 用 ResiWatch 历史库证据收窄 `AI-家宽` 路由范围，减少不必要的家宽流量。
 
+## 分发
+
+源库：仓库内 `skills/residential-rule-tuning/`。适用工具：Claude Code、Codex、Grok Build、Kimi Code、OMP，以及 `.agents` / `.cursor` 共享目录。项目级副本位于 `.agents`、`.claude`、`.codex`、`.cursor`、`.omp`、`.grok`、`.kimi-code` 的 `skills/residential-rule-tuning/`，被 gitignore，干净 clone 默认没有；用 `just install-skills` 或 `node scripts/install-agent-skills.js` 写入已存在的平台根。干净 clone 需 `--create` 或先建平台根。
+
 ## 触发条件
 
 在以下情况使用本 skill：

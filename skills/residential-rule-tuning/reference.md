@@ -1,5 +1,7 @@
 # 家宽规则优化：判读细节
 
+源库：`skills/residential-rule-tuning/`。项目级平台副本可能落后于源库。适用工具见 SKILL.md。
+
 ## CLI 边界
 
 `monitor-db` 只接触 residential-monitor 与其数据库。它不读、不解析、不改写 `clash-verge-ai-residential.js`、`*.local.toml` 或 `*.local.js`。
