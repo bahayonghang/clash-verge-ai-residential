@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "单文件脚本与独立渲染器边界"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "托管清理与幂等；已知陈旧描述见研究"}
+{"file": ".trellis/tasks/09-07-js-routing-egress-optimization/research/routing-analysis.md", "reason": "参考架构、证据、确认范围"}
+{"file": ".trellis/tasks/09-07-js-routing-egress-optimization/research/validation.md", "reason": "固定基线算法、测试矩阵与验收边界"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "配置表与字段自动校验、测试及秘密边界"}

@@ -1,0 +1,62 @@
+{
+  "id": "js-routing-egress-optimization",
+  "name": "js-routing-egress-optimization",
+  "title": "借鉴 personal-edge-proxy 优化 JS 分流策略与出口边界",
+  "description": "在现有家宽/原 Profile 两条路径内补齐核心开关、固定出口组约束、专属兜底与文档和审计映射。",
+  "status": "in_progress",
+  "dev_type": "frontend",
+  "scope": "js-routing",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-07",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "clash-verge-ai-residential.js",
+    "scripts/sync-local-config.js",
+    "clash-verge-ai-residential.local.toml.example",
+    "tests/regression.test.js",
+    "tests/sync-local-config.test.js",
+    "tests/install-agent-skills.test.js",
+    "tests/fixtures/routing-default-v5.11.json",
+    "skills/residential-rule-tuning/scripts/build-inputs.js",
+    "skills/residential-rule-tuning/SKILL.md",
+    "skills/residential-rule-tuning/reference.md",
+    "docs/configuration.md",
+    "docs/en/configuration.md",
+    "docs/local-configuration.md",
+    "docs/en/local-configuration.md",
+    "docs/routing-scope.md",
+    "docs/en/routing-scope.md",
+    "docs/dns-and-leak-model.md",
+    "docs/en/dns-and-leak-model.md",
+    ".trellis/spec/frontend/index.md",
+    ".trellis/spec/frontend/component-guidelines.md",
+    ".trellis/spec/frontend/state-management.md",
+    ".trellis/spec/frontend/quality-guidelines.md",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "notes": "2026-09-07 用户后续明确要求开始按照本任务规划实施。现有两条路径范围不变；真实网络修改与远程发布未获授权。完整文件范围见 design.md/implement.md。",
+  "meta": {
+    "reference_commit": "a6f4f75f268567656b4b2412cbcef4d715365d97",
+    "baseline_commit": "063c5561b9e81e42f89d7966a5d1a9772bdc44b3",
+    "planning_only": false,
+    "planned_new_files": [
+      "tests/fixtures/routing-default-v5.11.json"
+    ],
+    "conditional_files": [
+      "README.md"
+    ],
+    "version_policy": "Record changes in CHANGELOG Unreleased; defer script/package version bump and release to separately authorized release work."
+  }
+}
