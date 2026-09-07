@@ -247,6 +247,247 @@ function withPatchedOpenAiSwitches(openaiAuth, openaiWebAssets, fn) {
   }, fn);
 }
 
+const routingBaseline = require("./fixtures/routing-default-v5.11.json");
+const baselineUserRules = [
+  "DOMAIN,custom.example.test,DIRECT",
+  "DOMAIN-SUFFIX,company.example.test,Proxy",
+  "MATCH,Proxy"
+];
+
+// 与 fixture 来源提交执行时的虚构 Profile 一致；fixture 不包含节点凭据。
+function baselineProfile() {
+  return configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("Proxy", ["HK"])],
+    rules: [...baselineUserRules],
+    dns: {
+      nameserver: ["https://dns.example.test/dns-query"],
+      fallback: ["https://fallback.example.test/dns-query"],
+      "nameserver-policy": { "custom.example.test": ["https://custom-dns.example.test/dns-query"] },
+      "fake-ip-filter": ["custom.example.test"]
+    }
+  });
+}
+
+function normalizeObjectKeys(value) {
+  if (Array.isArray(value)) return value.map(normalizeObjectKeys);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(Object.keys(value).sort().map((key) => [key, normalizeObjectKeys(value[key])]));
+}
+
+function normalizeDefaultProjection(projection) {
+  const rules = [...projection.rules];
+  const isAiDomain = (rule) => /^DOMAIN(?:-SUFFIX|-REGEX)?,.*?,AI-家宽$/.test(rule);
+  const start = rules.findIndex(isAiDomain);
+  assert.equal(start, 16, "全部私网 DIRECT 必须位于核心域名之前");
+  assert.ok(rules.slice(0, start).every((rule) => /,DIRECT(?:,no-resolve)?$/.test(rule)));
+  let end = start;
+  while (end < rules.length && isAiDomain(rules[end])) end += 1;
+  assert.ok(!rules.slice(end).some(isAiDomain), "核心域名区段必须连续");
+  assert.deepEqual(rules.slice(end, -baselineUserRules.length), [
+    `IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`,
+    `IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`
+  ], "IP 兜底必须位于域名后、原规则前");
+  assert.deepEqual(rules.slice(-baselineUserRules.length), baselineUserRules);
+  rules.splice(start, end - start, ...rules.slice(start, end).sort());
+  return normalizeObjectKeys({ ...projection, rules });
+}
+
+test("默认输出与实施前固定的 v5.11 提交投影等价，保留规则层次及 DNS resolver 顺序", () => {
+  assert.equal(routingBaseline.baselineCommit, "063c5561b9e81e42f89d7966a5d1a9772bdc44b3");
+  const input = baselineProfile();
+  const snapshot = structuredClone(input);
+  const output = quietMain(input, routingBaseline.profileName);
+  assert.notEqual(output, input);
+  assert.deepEqual(input, snapshot);
+  const home = findProxy(output, HOME_PROXY_NAME);
+  const projection = {
+    rules: output.rules,
+    dns: output.dns,
+    group: findGroup(output, AI_GROUP),
+    home: { type: home.type, udp: home.udp, "dialer-proxy": home["dialer-proxy"] }
+  };
+  assert.deepEqual(normalizeDefaultProjection(projection), normalizeDefaultProjection(routingBaseline.projection));
+  assert.deepEqual(quietMain(output, routingBaseline.profileName), output);
+});
+
+test("保留家宽组拒绝动态来源、排除条件、替代选择及未知字段，错误不改输入", () => {
+  const extraFields = {
+    use: ["provider-a"], "include-all": true, "include-all-proxies": false,
+    "include-all-providers": true, filter: "HK", "exclude-filter": "家宽",
+    "exclude-type": "socks5", "default-selected": "HK", "empty-fallback": "DIRECT",
+    url: "https://probe.example.test", interval: 300, "custom-option": "private-value"
+  };
+  for (const [key, value] of Object.entries(extraFields)) {
+    const config = baselineProfile();
+    config["proxy-groups"].push(group(AI_GROUP, [HOME_PROXY_NAME], { [key]: value }));
+    const snapshot = structuredClone(config);
+    assert.throws(() => quietMain(config, "fixture"), (error) => {
+      assert.ok(error.message.includes(key), key);
+      assert.match(error.message, /重命名.*移除额外字段/);
+      assert.doesNotMatch(error.message, /private-value|home-pass|airport-secret/);
+      return true;
+    });
+    assert.deepEqual(config, snapshot, key);
+  }
+});
+
+test("合法家宽组只保留展示字段并恢复 UDP，普通上游组不受封闭字段约束", () => {
+  for (const hidden of [true, false]) {
+    const config = baselineProfile();
+    config["proxy-groups"][0]["custom-option"] = "user-owned";
+    config["proxy-groups"].push(group(AI_GROUP, [HOME_PROXY_NAME], {
+      icon: "https://icons.example.test/ai.svg", hidden, "disable-udp": true
+    }));
+    const output = quietMain(config, "fixture");
+    assert.deepEqual(findGroup(output, AI_GROUP), {
+      name: AI_GROUP, type: "select", proxies: [HOME_PROXY_NAME], "disable-udp": false,
+      icon: "https://icons.example.test/ai.svg", hidden
+    });
+    assert.equal(findGroup(output, "Proxy")["custom-option"], "user-owned");
+    assert.deepEqual(quietMain(output, "fixture"), output);
+  }
+});
+
+const newCoreCases = [
+  { constant: "ROUTE_ANTHROPIC_CORE", suffix: ["claude.ai", "claude.com", "claudemcpcontent.com", "claudeusercontent.com"],
+    exact: ["api.anthropic.com", "mcp-proxy.anthropic.com", "assets-proxy.anthropic.com"] },
+  { constant: "ROUTE_GEMINI_API_CORE", suffix: [], exact: ["generativelanguage.googleapis.com"] },
+  { constant: "ROUTE_ANTIGRAVITY_CORE", suffix: [], exact: ["cloudcode-pa.googleapis.com",
+    "daily-cloudcode-pa.googleapis.com", "cloudaicompanion.googleapis.com", "antigravity.google"] }
+];
+
+for (const entry of newCoreCases) {
+  test(`${entry.constant} true→false→true 清理基线托管域名和 DNS，保留其他类别及原规则`, () => {
+    assert.equal(constants[entry.constant], true);
+    const enabled = quietMain(baselineProfile(), "fixture");
+    const oldOutput = baselineProfile();
+    oldOutput.rules = [...routingBaseline.projection.rules];
+    oldOutput.dns = structuredClone(routingBaseline.projection.dns);
+    const userRule = `DOMAIN,user-owned.example.test,${AI_GROUP}`;
+    oldOutput.rules.splice(-1, 0, userRule);
+    const inputSnapshot = structuredClone(oldOutput);
+    withPatchedSwitches({ [entry.constant]: false }, (disabledScript) => {
+      const disabled = quietMainWith(disabledScript, oldOutput, "fixture");
+      assert.deepEqual(oldOutput, inputSnapshot);
+      const removedRules = new Set([
+        ...entry.suffix.map((host) => `DOMAIN-SUFFIX,${host},${AI_GROUP}`),
+        ...entry.exact.map((host) => `DOMAIN,${host},${AI_GROUP}`)
+      ]);
+      if (entry.constant === "ROUTE_ANTHROPIC_CORE") {
+        removedRules.add(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`);
+        removedRules.add(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`);
+      }
+      assert.deepEqual(disabled.rules, [
+        ...enabled.rules.slice(0, -1).filter((rule) => !removedRules.has(rule)), userRule, "MATCH,Proxy"
+      ]);
+      const expectedDns = structuredClone(enabled.dns);
+      for (const key of [...entry.suffix.map((host) => `+.${host}`), ...entry.exact]) {
+        delete expectedDns["nameserver-policy"][key];
+      }
+      assert.deepEqual(disabled.dns, expectedDns);
+      assert.deepEqual(quietMainWith(disabledScript, disabled, "fixture"), disabled);
+      const restored = quietMain(disabled, "fixture");
+      assert.deepEqual(restored.rules, [...enabled.rules.slice(0, -1), userRule, "MATCH,Proxy"]);
+      assert.deepEqual(restored.dns, enabled.dns);
+    });
+  });
+}
+
+test("Anthropic IP 独立开关关闭时不影响核心域名，并清理旧 IP 兜底", () => {
+  const enabled = quietMain(baselineProfile(), "fixture");
+  withPatchedSwitches({ ENABLE_ANTHROPIC_IP_FALLBACK: false }, (patched) => {
+    const output = quietMainWith(patched, enabled, "fixture");
+    assert.ok(!output.rules.some((rule) => /^IP-CIDR6?,.*?,AI-家宽,/.test(rule)));
+    assert.ok(ruleMatchesHost(output.rules, "api.anthropic.com"));
+    assert.deepEqual(output.dns, enabled.dns);
+  });
+});
+
+test("各服务进程兜底服从 core，Cursor 同时受全局与专属开关约束且全量清理不受门控", () => {
+  const fallbacks = { ENABLE_AI_PROCESS_FALLBACK: true, ROUTE_CURSOR_PROCESS_FALLBACK: true };
+  withPatchedSwitches(fallbacks, (allEnabledScript) => {
+    const enabled = quietMainWith(allEnabledScript, baselineProfile(), "fixture");
+    const allProcesses = enabled.rules.filter((rule) => rule.startsWith("PROCESS-"));
+    assert.equal(allProcesses.length, 8);
+    for (const [constant, product] of [
+      ["ROUTE_ANTHROPIC_CORE", "claude"], ["ROUTE_OPENAI_CORE", "chatgpt"],
+      ["ROUTE_ANTIGRAVITY_CORE", "antigravity"], ["ROUTE_CURSOR_CORE", "cursor"],
+      ["ROUTE_CURSOR_PROCESS_FALLBACK", "cursor"]
+    ]) {
+      withPatchedSwitches({ ...fallbacks, [constant]: false }, (patched) => {
+        const inputSnapshot = structuredClone(enabled);
+        const output = quietMainWith(patched, enabled, "fixture");
+        assert.deepEqual(enabled, inputSnapshot);
+        assert.deepEqual(output.rules.filter((rule) => rule.startsWith("PROCESS-")),
+          allProcesses.filter((rule) => !rule.includes(product)), constant);
+        assert.equal(output.rules.slice(0, 16).every((rule) => /,DIRECT(?:,no-resolve)?$/.test(rule)), true);
+        assert.deepEqual(output.rules.slice(-3), baselineUserRules);
+        assert.deepEqual(quietMainWith(patched, output, "fixture"), output);
+        assert.deepEqual(quietMainWith(allEnabledScript, output, "fixture"), enabled);
+      });
+    }
+    withPatchedSwitches({ ...fallbacks, ENABLE_AI_PROCESS_FALLBACK: false }, (patched) => {
+      const output = quietMainWith(patched, enabled, "fixture");
+      assert.deepEqual(output.rules.filter((rule) => rule.startsWith("PROCESS-")), []);
+    });
+    withPatchedSwitches({ ...fallbacks, ROUTE_ANTHROPIC_CORE: false, ROUTE_OPENAI_CORE: false,
+      ROUTE_ANTIGRAVITY_CORE: false, ROUTE_CURSOR_CORE: false }, (patched) => {
+      const output = quietMainWith(patched, enabled, "fixture");
+      assert.deepEqual(output.rules.filter((rule) => rule.startsWith("PROCESS-")), []);
+    });
+  });
+});
+
+test("核心关闭不关闭独立认证、辅助、资源和全局捕获开关", () => {
+  withPatchedSwitches({
+    ROUTE_ANTHROPIC_CORE: false, ROUTE_OPENAI_CORE: false, ROUTE_ANTIGRAVITY_CORE: false,
+    ROUTE_GEMINI_API_CORE: false, ROUTE_GEMINI_WEB_CORE: false, ROUTE_VERTEX_AI_ENDPOINTS: false,
+    ROUTE_CURSOR_CORE: false, ROUTE_CLAUDE_CODE_AUXILIARY: true,
+    ROUTE_CLAUDE_SHARED_DEPENDENCIES: true, ROUTE_OPENAI_AUTH: true, ROUTE_OPENAI_WEB_ASSETS: true,
+    ROUTE_ANTIGRAVITY_GOOGLE_AUTH: true, ROUTE_ANTIGRAVITY_PROJECT_APIS: true,
+    ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY: true, ROUTE_CURSOR_REPOSITORY_INDEXING: true,
+    ROUTE_SHARED_REALTIME_INFRASTRUCTURE: true, ROUTE_GLOBAL_REALTIME_PORTS: true,
+    ROUTE_PUBLIC_ENCRYPTED_DNS: true
+  }, (patched) => {
+    const output = quietMainWith(patched, baselineProfile(), "fixture");
+    for (const host of ["auth.openai.com", "cdn.oaistatic.com", "registry.npmjs.org",
+      "cdn.usefathom.com", "accounts.google.com", "serviceusage.googleapis.com",
+      "update.googleapis.com", "repo42.cursor.sh"]) {
+      assert.ok(ruleMatchesHost(output.rules, host), host);
+    }
+    for (const host of newCoreCases.flatMap((entry) => [...entry.exact, ...entry.suffix])) {
+      assert.equal(ruleMatchesHost(output.rules, host), false, host);
+    }
+    assert.ok(output.rules.includes(`DST-PORT,5349,${AI_GROUP}`));
+    assert.ok(output.rules.includes(`DST-PORT,853,${AI_GROUP}`));
+  });
+});
+
+test("关闭全部 Google 核心撤销原五个无开关端点，正则仍不生成宽域 DNS policy", () => {
+  withPatchedSwitches({ ROUTE_GEMINI_WEB_CORE: false, ROUTE_GEMINI_API_CORE: false,
+    ROUTE_VERTEX_AI_ENDPOINTS: false, ROUTE_ANTIGRAVITY_CORE: false }, (patched) => {
+    const output = quietMainWith(patched, baselineProfile(), "fixture");
+    for (const host of ["gemini.google.com", "generativelanguage.googleapis.com",
+      "us-central1-aiplatform.googleapis.com", "antigravity.google", "cloudcode-pa.googleapis.com",
+      "daily-cloudcode-pa.googleapis.com", "cloudaicompanion.googleapis.com"]) {
+      assert.equal(ruleMatchesHost(output.rules, host), false, host);
+    }
+  });
+  withPatchedSwitches({ ROUTE_CURSOR_REPOSITORY_INDEXING: true }, (patched) => {
+    const policy = patched.buildNameserverPolicy();
+    const rules = patched.buildInjectedRules();
+    for (const host of ["us-central1-aiplatform.googleapis.com", "repo42.cursor.sh"]) {
+      assert.ok(ruleMatchesHost(rules, host));
+      assert.equal(host in policy, false);
+    }
+    for (const key of ["+.googleapis.com", "+.cursor.sh", ...VERTEX_AI_DOMAIN_REGEXES,
+      ...CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES]) assert.equal(key in policy, false, key);
+    for (const host of ["storage.googleapis.com", "repoevil.cursor.sh", "docs.anthropic.com",
+      "www.antigravity.google"]) assert.equal(ruleMatchesHost(rules, host), false, host);
+  });
+});
+
 const CURSOR_CORE_HOSTS = [
   "api2.cursor.sh",
   "api3.cursor.sh",

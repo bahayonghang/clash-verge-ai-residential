@@ -20,6 +20,14 @@
 
 匹配优先级 exact > 最长 suffix > regex > 输入顺序。这是本工具的字节归属规则，**不模拟 Mihomo 首个规则命中**。
 
+## 核心开关与统计归属
+
+Unreleased 增加三个默认 `true` 的域名开关：`anthropic_core` 对应 Claude/Anthropic 产品、API、MCP 与会话域；`gemini_api_core` 对应 `generativelanguage.googleapis.com`；`antigravity_core` 对应四个 Antigravity/Code Assist 核心 exact 主机。它们进入 supported 后，总数为 24 个 routing 开关，其中 12 supported、12 unsupported。默认开关未收窄，不能据此声称节省家宽流量。
+
+`anthropic_core=false` 会停止 Anthropic CIDR 与专属进程兜底；OpenAI、Antigravity、Cursor 的进程兜底也服从各自 core。对应 IP/进程开关的统计能力仍是原有 unsupported 状态，不因域名归属增加而获得数值。认证、辅助、静态资源及全局实时/DNS开关仍独立。
+
+生成器的 `rules.json` 来自公开模板，`switches.json` 是域名归属表；二者不反映用户当前启用状态。数据库没有 rulePayload，host 的匹配字节不能证明由某个开关造成。关闭某项只撤销脚本托管捕获，原 Profile 和用户自定义家宽规则仍可能匹配；若要判断真实收益，应检查采集覆盖、实际配置和相近工作负载，不把 rank 当全量审计。
+
 ## 守恒
 
 未截断且能力可用时：

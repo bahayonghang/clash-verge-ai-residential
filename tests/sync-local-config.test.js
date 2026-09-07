@@ -20,7 +20,9 @@ const templatePath = path.join(root, "clash-verge-ai-residential.js");
 const examplePath = path.join(root, "clash-verge-ai-residential.local.toml.example");
 const switchDocumentPaths = [
   path.join(root, "docs", "configuration.md"),
-  path.join(root, "docs", "local-configuration.md")
+  path.join(root, "docs", "local-configuration.md"),
+  path.join(root, "docs", "en", "configuration.md"),
+  path.join(root, "docs", "en", "local-configuration.md")
 ];
 
 function withTemporaryDirectory(fn) {
@@ -81,6 +83,63 @@ password = "home-pass"
 udp = true
 dialer-proxy = "🚀节点选择"
 `;
+
+const newCoreSwitches = [
+  { key: "anthropic_core", constant: "ROUTE_ANTHROPIC_CORE", host: "api.anthropic.com" },
+  { key: "gemini_api_core", constant: "ROUTE_GEMINI_API_CORE", host: "generativelanguage.googleapis.com" },
+  { key: "antigravity_core", constant: "ROUTE_ANTIGRAVITY_CORE", host: "daily-cloudcode-pa.googleapis.com" }
+];
+
+for (const entry of newCoreSwitches) {
+  test(`本地 ${entry.key} 支持 true/false，缺失补 true 且保留显式值与注释`, () => {
+    for (const value of [undefined, true, false]) {
+      withTemporaryDirectory((directory) => {
+        const configPath = path.join(directory, "proxy.local.toml");
+        const outputPath = path.join(directory, "proxy.local.js");
+        const originalTemplate = fs.readFileSync(templatePath, "utf8");
+        const explicitLine = `${entry.key} = ${value} # 保留用户选择`;
+        fs.writeFileSync(configPath, validHomeProxyToml + (value === undefined ? "" : `\n[routing]\n${explicitLine}\n`));
+        const result = syncLocalConfig({ templatePath, configPath, outputPath });
+        const completed = fs.readFileSync(configPath, "utf8");
+        const generated = require(outputPath);
+        const expected = value === undefined ? true : value;
+        assert.equal(parseLocalToml(completed).routing[entry.key], expected);
+        assert.equal(generated.constants[entry.constant], expected);
+        assert.equal(result.addedKeys.includes(`routing.${entry.key}`), value === undefined);
+        if (value !== undefined) assert.ok(completed.includes(explicitLine));
+        const rules = generated.buildInjectedRules();
+        const policy = generated.buildNameserverPolicy();
+        assert.equal(ruleMatchesHost(rules, entry.host, generated.constants.AI_GROUP), expected);
+        assert.equal(entry.host in policy, expected);
+        for (const other of newCoreSwitches.filter((item) => item !== entry)) {
+          assert.equal(generated.constants[other.constant], true);
+          assert.equal(ruleMatchesHost(rules, other.host, generated.constants.AI_GROUP), true);
+        }
+        assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
+        syncLocalConfig({ templatePath, configPath, outputPath });
+        assert.equal(fs.readFileSync(configPath, "utf8"), completed);
+      });
+    }
+  });
+
+  test(`本地 ${entry.key} 类型错误或重复键拒绝写入`, () => {
+    for (const [body, message] of [
+      [`${entry.key} = "false"`, `routing.${entry.key} 必须是 true 或 false`],
+      [`${entry.key} = true\n${entry.key} = false`, `重复定义字段 routing.${entry.key}`]
+    ]) {
+      withTemporaryDirectory((directory) => {
+        const configPath = path.join(directory, "proxy.local.toml");
+        const outputPath = path.join(directory, "proxy.local.js");
+        const source = `${validHomeProxyToml}\n[routing]\n${body}\n`;
+        fs.writeFileSync(configPath, source);
+        assert.throws(() => syncLocalConfig({ templatePath, configPath, outputPath }),
+          (error) => error.message.includes(message));
+        assert.equal(fs.existsSync(outputPath), false);
+        assert.equal(fs.readFileSync(configPath, "utf8"), source);
+      });
+    }
+  });
+}
 
 test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚本", () => {
   withTemporaryDirectory((directory) => {

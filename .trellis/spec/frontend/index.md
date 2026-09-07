@@ -9,14 +9,15 @@ dependencies in the pasteable script. The VitePress docs site lives under
 ## Runtime Model
 
 `clash-verge-ai-residential.js` is a pasteable Clash Verge Rev global extension.
-Its host entry point receives a Mihomo configuration object and returns the same
-object after a validated, idempotent transformation:
+Its host entry point receives a Mihomo configuration object and returns a cloned,
+validated, idempotently transformed configuration without mutating the input:
 
 ```js
 function main(config, profileName) {
-  if (!config || typeof config !== "object") return config;
-  // validate, clean current-managed state, and rebuild configuration
-  return config;
+  if (!isPlainObject(config)) fail("Invalid configuration");
+  const working = cloneConfigForEdit(config);
+  // validate, clean current-managed state, and rebuild working
+  return working;
 }
 ```
 
@@ -52,9 +53,9 @@ and repository secret scanner.
 
 ## Quality Check
 
-Run `just ci` (equivalent to `npm run ci`). It performs `node --check`, three
-`node:test` suites, and the direct `scripts/check-template-safety.js` repository
-scan. Domain changes also require narrow positive coverage and explicit negative
+Run the actual `just ci` target: `monitor-check` followed by root `npm run ci`.
+The root gate performs syntax checks, the explicitly listed Node test suites,
+and the repository template-safety scan. Domain changes require positive and negative
 coverage for shared or non-AI traffic. Node tests do not replace a sanitized
 real-profile check in Clash Verge Rev when host behavior changes.
 

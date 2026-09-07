@@ -15,6 +15,14 @@ dialer-proxy = "🚀节点选择"
 # 家宽的流量范围，默认均为关闭。
 [routing]
 
+# Claude 产品、Anthropic API 与产品代理；关闭后也撤销其专属进程及 IP 兜底。
+# 各 core 只撤销对应托管捕获，剩余请求交回原 Profile；辅助/认证开关仍独立。
+anthropic_core = true
+# Gemini Developer API，与 Gemini Web、Vertex AI 及 Antigravity 独立。
+gemini_api_core = true
+# Antigravity / Gemini Code Assist 核心端点；关闭后也撤销 Antigravity 进程兜底。
+antigravity_core = true
+
 # OpenAI / ChatGPT 的核心产品流量：ChatGPT 网页、模型 API 及用户上传、生成内容。
 openai_core = true
 # OpenAI 第一方登录：auth.openai.com（含 setup 子域）与 auth0.openai.com。
@@ -55,14 +63,14 @@ grok_core = true
 grok_web_assets = true
 
 # 进程级兜底：按 Cursor 进程名代理其插件市场、GitHub、npm、MCP 和用户后端等
-# 全部连接。只有同时开启 ai_process_fallback 时此项才生效，通常不建议开启。
+# 全部连接。须同时开启 ai_process_fallback 与 cursor_core，通常不建议开启。
 cursor_process_fallback = false
 # Claude Code 的辅助流量：安装、更新、文档和包管理；不包括核心推理流量。
 claude_code_auxiliary = false
-# 为已知 AI 进程添加进程名匹配规则的总开关。会扩大代理范围。
+# 为核心开关已开启的已知 AI 服务添加进程名匹配规则的总开关。会扩大代理范围。
 # 查找进程由脚本写到配置顶层 find-process-mode: always，与本开关无关。
 ai_process_fallback = false
-# Anthropic 官方入站 IP 网段兜底：覆盖域名嗅探失败或应用直接连接 IP 的情形。
+# Anthropic 官方入站 IP 网段兜底：须开启 anthropic_core，覆盖嗅探失败或直连 IP。
 anthropic_ip_fallback = true
 
 # 通用实时通信基础设施：共享 STUN/TURN 服务可能被非 AI 应用复用。

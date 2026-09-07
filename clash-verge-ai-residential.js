@@ -139,6 +139,15 @@ const ROUTE_OPENAI_SHARED_DEPENDENCIES = false;
 // ChatGPT 产品、OpenAI 模型 API 与用户上传/生成内容；默认走家宽，可在本地 TOML 关闭。
 const ROUTE_OPENAI_CORE = true;
 
+// Claude 产品、Anthropic API 与产品代理；同时约束其专属进程和 IP 兜底。
+const ROUTE_ANTHROPIC_CORE = true;
+
+// Gemini Developer API；与 Gemini Web、Vertex AI 及 Antigravity 独立。
+const ROUTE_GEMINI_API_CORE = true;
+
+// Antigravity / Gemini Code Assist 核心端点；同时约束 Antigravity 进程兜底。
+const ROUTE_ANTIGRAVITY_CORE = true;
+
 // OpenAI 第一方登录主机；默认保留在机场出口，按需与核心流量统一到家宽。
 const ROUTE_OPENAI_AUTH = false;
 
@@ -185,7 +194,7 @@ const ROUTE_CLAUDE_CODE_AUXILIARY = false;
 // 全局进程兜底会扩大作用域，严格 AI-only 模式默认关闭。
 const ENABLE_AI_PROCESS_FALLBACK = false;
 
-// 使用 Anthropic 官方入站网段兜底，覆盖域名嗅探失败或直连 IP 的情况。
+// 仅在 anthropic_core 开启时使用官方入站网段兜底，覆盖嗅探失败或直连 IP。
 const ENABLE_ANTHROPIC_IP_FALLBACK = true;
 
 // 通用 STUN/TURN 基础设施会被大量非 AI 应用复用，默认完全不注入。
@@ -216,7 +225,7 @@ const WARN_ON_REACHABLE_UDP_DISABLED = true;
 // 2. AI 域名清单
 // ============================================================
 
-const CORE_SUFFIX_DOMAINS = [
+const ANTHROPIC_CORE_SUFFIX_DOMAINS = [
   // Claude Web / Desktop / generated content
   "claude.ai",
   "claude.com",
@@ -230,7 +239,7 @@ const RETIRED_CORE_SUFFIX_DOMAINS = [
   "claudemcpclient.com"
 ];
 
-// ChatGPT 产品域；开关关闭后 GPT 流量改走机场，不再进家宽。
+// ChatGPT 产品域；关闭时撤销本脚本的核心捕获，剩余请求交回原 Profile。
 const OPENAI_CORE_SUFFIX_DOMAINS = [
   // ChatGPT Web / user-uploaded and generated content；通用静态 CDN 不走家宽
   "chatgpt.com",
@@ -241,22 +250,27 @@ const OPENAI_CORE_SUFFIX_DOMAINS = [
   "api.openai.com"
 ];
 
-const CORE_EXACT_DOMAINS = [
+const ANTHROPIC_CORE_EXACT_DOMAINS = [
   // 第一方模型 API；避免 anthropic.com 宽泛后缀。
   "api.anthropic.com",
 
   // 官方网络文档列出的产品功能域（code.claude.com/docs network-config）：
   // claude.ai MCP connector 代理与桌面/网页资产代理（官方警告缺失会导致白屏）。
   "mcp-proxy.anthropic.com",
-  "assets-proxy.anthropic.com",
+  "assets-proxy.anthropic.com"
+];
 
-  // Antigravity / Gemini Code Assist / Gemini Developer API
+const GEMINI_API_CORE_EXACT_DOMAINS = [
+  "generativelanguage.googleapis.com"
+];
+
+const ANTIGRAVITY_CORE_EXACT_DOMAINS = [
+  // Antigravity / Gemini Code Assist
   "cloudcode-pa.googleapis.com",
   // Antigravity language_server 的 --cloud_code_endpoint；本机 Connections
   // 与 TLS 握手失败证明该主机承载 Agent 会话，不是遥测。
   "daily-cloudcode-pa.googleapis.com",
   "cloudaicompanion.googleapis.com",
-  "generativelanguage.googleapis.com",
 
   // Google Antigravity 产品域；v5.10 从 suffix 收窄为 exact。
   "antigravity.google"
@@ -795,6 +809,14 @@ function validateReservedNameCollisions(config) {
         "请重命名该组，或确认其类型为 select 且仅包含 家宽-SOCKS5"
       );
     }
+    const allowedFields = ["name", "type", "proxies", "disable-udp", "icon", "hidden"];
+    const extraFields = Object.keys(existingAiGroup).filter((key) => !allowedFields.includes(key));
+    if (extraFields.length > 0) {
+      fail(
+        `[${AI_GROUP}] 已存在非脚本管理的同名代理组“${AI_GROUP}”，额外字段：${extraFields.join("、")}。` +
+        "请重命名该组，或移除额外字段；家宽组仅允许单一家宽节点及 icon/hidden 展示字段"
+      );
+    }
   }
 }
 
@@ -1265,7 +1287,7 @@ function grokActiveExactDomains() {
 
 function activeSuffixDomains() {
   return uniqueStrings([
-    ...CORE_SUFFIX_DOMAINS,
+    ...(ROUTE_ANTHROPIC_CORE ? ANTHROPIC_CORE_SUFFIX_DOMAINS : []),
     ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_SUFFIX_DOMAINS : []),
     ...(ROUTE_OPENAI_AUTH ? OPENAI_AUTH_SUFFIX_DOMAINS : []),
     ...(ROUTE_OPENAI_WEB_ASSETS ? OPENAI_WEB_ASSET_SUFFIX_DOMAINS : []),
@@ -1282,7 +1304,9 @@ function activeSuffixDomains() {
 
 function activeExactDomains() {
   return uniqueStrings([
-    ...CORE_EXACT_DOMAINS,
+    ...(ROUTE_ANTHROPIC_CORE ? ANTHROPIC_CORE_EXACT_DOMAINS : []),
+    ...(ROUTE_GEMINI_API_CORE ? GEMINI_API_CORE_EXACT_DOMAINS : []),
+    ...(ROUTE_ANTIGRAVITY_CORE ? ANTIGRAVITY_CORE_EXACT_DOMAINS : []),
     ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_EXACT_DOMAINS : []),
     ...(ROUTE_OPENAI_AUTH ? OPENAI_AUTH_EXACT_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_EXACT_DOMAINS : []),
@@ -1311,7 +1335,7 @@ function activeDomainRegexes() {
 
 function allPossibleSuffixDomains() {
   return uniqueStrings([
-    ...CORE_SUFFIX_DOMAINS,
+    ...ANTHROPIC_CORE_SUFFIX_DOMAINS,
     ...RETIRED_CORE_SUFFIX_DOMAINS,
     ...OPENAI_CORE_SUFFIX_DOMAINS,
     ...OPENAI_AUTH_SUFFIX_DOMAINS,
@@ -1334,7 +1358,9 @@ function allPossibleSuffixDomains() {
 
 function allPossibleExactDomains() {
   return uniqueStrings([
-    ...CORE_EXACT_DOMAINS,
+    ...ANTHROPIC_CORE_EXACT_DOMAINS,
+    ...GEMINI_API_CORE_EXACT_DOMAINS,
+    ...ANTIGRAVITY_CORE_EXACT_DOMAINS,
     ...RETIRED_CORE_EXACT_DOMAINS,
     ...OPENAI_CORE_EXACT_DOMAINS,
     ...OPENAI_AUTH_EXACT_DOMAINS,
@@ -1395,16 +1421,24 @@ function buildDomainRules(targetGroup) {
   ]);
 }
 
-function buildCoreAiProcessRules(targetGroup) {
+function buildAntigravityProcessRules(targetGroup) {
   return [
     // Antigravity 主进程与安装目录内的 language_server 等子进程
     `PROCESS-NAME-REGEX,(?i)^antigravity(?:[ _-]ide)?(?:\\.exe)?$,${targetGroup}`,
-    `PROCESS-PATH-REGEX,(?i).*[/\\\\]antigravity(?:[ _-]ide)?[/\\\\].*,${targetGroup}`,
+    `PROCESS-PATH-REGEX,(?i).*[/\\\\]antigravity(?:[ _-]ide)?[/\\\\].*,${targetGroup}`
+  ];
+}
 
+function buildOpenAiProcessRules(targetGroup) {
+  return [
     // ChatGPT 桌面端、Electron Helper、Codex/OpenAI CLI
     `PROCESS-NAME-REGEX,(?i)^(?:chatgpt(?: helper.*)?|codex|openai)(?:\\.exe)?$,${targetGroup}`,
-    `PROCESS-PATH-REGEX,(?i).*[/\\\\](?:chatgpt|codex|openai)(?:[ _-][^/\\\\]+)?[/\\\\].*,${targetGroup}`,
+    `PROCESS-PATH-REGEX,(?i).*[/\\\\](?:chatgpt|codex|openai)(?:[ _-][^/\\\\]+)?[/\\\\].*,${targetGroup}`
+  ];
+}
 
+function buildAnthropicProcessRules(targetGroup) {
+  return [
     // Claude Desktop / Claude Code
     `PROCESS-NAME-REGEX,(?i)^(?:claude(?: desktop)?|claude-code)(?:\\.exe)?$,${targetGroup}`,
     `PROCESS-PATH-REGEX,(?i).*[/\\\\](?:claude|claude-code)(?:[ _-][^/\\\\]+)?[/\\\\].*,${targetGroup}`
@@ -1420,7 +1454,9 @@ function buildCursorProcessRules(targetGroup) {
 
 function buildAllProcessRules(targetGroup) {
   return uniqueStrings([
-    ...buildCoreAiProcessRules(targetGroup),
+    ...buildAntigravityProcessRules(targetGroup),
+    ...buildOpenAiProcessRules(targetGroup),
+    ...buildAnthropicProcessRules(targetGroup),
     ...buildCursorProcessRules(targetGroup)
   ]);
 }
@@ -1428,13 +1464,15 @@ function buildAllProcessRules(targetGroup) {
 function buildProcessRules(targetGroup) {
   if (!ENABLE_AI_PROCESS_FALLBACK) return [];
   return uniqueStrings([
-    ...buildCoreAiProcessRules(targetGroup),
-    ...(ROUTE_CURSOR_PROCESS_FALLBACK ? buildCursorProcessRules(targetGroup) : [])
+    ...(ROUTE_ANTIGRAVITY_CORE ? buildAntigravityProcessRules(targetGroup) : []),
+    ...(ROUTE_OPENAI_CORE ? buildOpenAiProcessRules(targetGroup) : []),
+    ...(ROUTE_ANTHROPIC_CORE ? buildAnthropicProcessRules(targetGroup) : []),
+    ...(ROUTE_CURSOR_CORE && ROUTE_CURSOR_PROCESS_FALLBACK ? buildCursorProcessRules(targetGroup) : [])
   ]);
 }
 
 function buildAnthropicIpRules(targetGroup) {
-  if (!ENABLE_ANTHROPIC_IP_FALLBACK) return [];
+  if (!ROUTE_ANTHROPIC_CORE || !ENABLE_ANTHROPIC_IP_FALLBACK) return [];
   return ANTHROPIC_INBOUND_IP_RULE_TEMPLATES.map(
     (template) => template.replace("{GROUP}", targetGroup)
   );
@@ -1651,13 +1689,16 @@ function upsertNamedItem(items, item) {
 
 function buildAiGroup(config) {
   const existing = findNamedItem(config["proxy-groups"], AI_GROUP) || {};
-  return {
-    ...existing,
+  const group = {
     name: AI_GROUP,
     type: "select",
     proxies: [HOME_PROXY_NAME],
     "disable-udp": false
   };
+  for (const key of ["icon", "hidden"]) {
+    if (Object.prototype.hasOwnProperty.call(existing, key)) group[key] = existing[key];
+  }
+  return group;
 }
 
 function hardenTun(config) {
@@ -1809,6 +1850,13 @@ if (typeof module !== "undefined" && module.exports) {
       PRIVATE_DNS,
       PRESERVE_UNMANAGED_NAMESERVER_POLICY,
       ROUTE_OPENAI_CORE,
+      ROUTE_ANTHROPIC_CORE,
+      ROUTE_GEMINI_API_CORE,
+      ROUTE_ANTIGRAVITY_CORE,
+      ANTHROPIC_CORE_SUFFIX_DOMAINS,
+      ANTHROPIC_CORE_EXACT_DOMAINS,
+      GEMINI_API_CORE_EXACT_DOMAINS,
+      ANTIGRAVITY_CORE_EXACT_DOMAINS,
       ROUTE_OPENAI_AUTH,
       ROUTE_OPENAI_WEB_ASSETS,
       OPENAI_CORE_SUFFIX_DOMAINS,

@@ -6,9 +6,8 @@
 AI 应用请求
   -> Mihomo 规则匹配
   -> AI-家宽
-  -> 家宽-SOCKS5
-  -> dialer-proxy 选出的当前 Profile 上游
-  -> 住宅出口
+  -> 经 dialer-proxy 选出的当前 Profile 上游连接家宽 endpoint
+  -> 家宽-SOCKS5 / 住宅出口
   -> AI 服务
 ```
 
@@ -17,16 +16,22 @@ AI 应用请求
 ## DNS 路径
 
 ```text
-AI 域名查询         -> 经 AI-家宽 的住宅 DoH
+启用的 exact/suffix AI 域名查询 -> 经 AI-家宽 的住宅 DoH
 其他海外查询        -> 经当前 Profile 上游的非 AI DoH
 国内域名查询        -> 经 DIRECT 的国内 DoH
 私网/局域网查询     -> 系统解析器
 代理服务器自身查找  -> bootstrap/直连解析，避免递归
 ```
 
-这与「全局 DNS leak test」配置不同。普通 leak test 可能显示机场或国内解析器，因为非 AI 查询不走家宽。项目保证的更窄：AI 域名解析和 AI 应用连接必须走预定的住宅路径。
+这与「全局 DNS leak test」配置不同。普通 leak test 可能显示机场或国内解析器，因为非 AI 查询不走家宽。配置对启用的 exact/suffix AI 域名写入住宅侧解析策略；正则域名存在下述例外，实际路径仍需结合宿主设置验证。
 
-解析时序：在 `enhanced-mode: fake-ip` 下，大多数 A/AAAA 查询由 fake-ip 地址池直接应答，不会访问上游解析器。因此 `nameserver-policy` 主要是回退路径，用于 fake-ip-filter、非 A/AAAA 查询，以及 L3 出站需要的真实 IP。SOCKS5 出站会直接转发主机名（RFC 1928 域名寻址），AI 连接通常由住宅 SOCKS5 服务器完成实际递归解析，这符合预期。Mihomo 必须自行解析 AI 域名时，策略条目仍保证走住宅侧解析。
+解析时序：在 `enhanced-mode: fake-ip` 下，大多数 A/AAAA 查询由 fake-ip 地址池直接应答，不会访问上游解析器。因此 `nameserver-policy` 主要是回退路径，用于 fake-ip-filter、非 A/AAAA 查询，以及 L3 出站需要的真实 IP。SOCKS5 出站会直接转发主机名（RFC 1928 域名寻址），AI 连接通常由住宅 SOCKS5 服务器完成实际递归解析，这符合预期。Mihomo 必须自行解析时，已有 exact/suffix 策略指定住宅侧解析；不能把这项覆盖推广到正则域名。
+
+## 正则域名与配置失败的边界
+
+区域 Vertex 的 `DOMAIN-REGEX` 和启用时的 Cursor `repo[0-9]+.cursor.sh` 只有业务路由，没有等价 `nameserver-policy`。这些主机需要本地真实查询时，可能使用默认的非 AI DoH；fake-IP 应答或 SOCKS 域名转发不证明所有查询都同出口。`respect-rules` 管理 DNS 连接，不会自动把业务正则转换为解析策略。脚本保留窄匹配，不添加 `+.googleapis.com`、`+.cursor.sh` 等宽策略。真实 DNS/UDP 路径仍为 UNVERIFIED。
+
+成功生成的 `AI-家宽` 组只有家宽 SOCKS5 成员。已有同名组的额外节点来源或筛选字段会报错；但 Clash Verge Rev 在脚本抛错后可能放弃脚本输出并使用原 Profile。拒绝生成配置不能证明流量被阻断；应先修正错误并确认配置生效，再验证业务命中链。供应商实际是否提供固定 IP 也需另行确认。
 
 ## Clash Verge Rev 强制恢复的字段
 
@@ -46,7 +51,7 @@ AI 域名查询         -> 经 AI-家宽 的住宅 DoH
 
 ## 脚本能缓解的
 
-- AI 应用流量与 AI 域名解析的 DNS 分叉。
+- 启用的 exact/suffix AI 域名在配置内的业务与 DNS 路径分叉。
 - 无关媒体、市场、下载和共享服务误进家宽。
 - 经 `include-all` 组的递归链路。
 - Mihomo 配置内部使用 IPv6。

@@ -46,7 +46,9 @@ node skills/residential-rule-tuning/scripts/build-inputs.js <out-dir>
 - `rules.json`：`buildInjectedRules()` 的完整模式清单，是模式全集
 - `switches.json`：显式 `supported` / `unsupported` 两个清单
 
-生成器对照 `scripts/sync-local-config.js` 的 `routing` 表做完整性检查：受支持键数 + 不支持清单长度必须等于该表开关总数（21）。检查失败时非零退出，不得把缺失开关写成 0。
+生成器对照 `scripts/sync-local-config.js` 的 `routing` 表做完整性检查：受支持键数 + 不支持清单长度必须等于该表开关总数（24 = 12 supported + 12 unsupported）。检查失败时非零退出，不得把缺失开关写成 0。
+
+Unreleased 新增的 `anthropic_core`、`gemini_api_core`、`antigravity_core` 默认开启，域名分别归属对应 supported 开关。关闭 core 也撤销其专属进程兜底，关闭 `anthropic_core` 还撤销 Anthropic IP 回退；认证、辅助和全局捕获开关仍独立。生成器读取公开模板，不代表真实本地 TOML 或运行配置；host 模式归属不等于开关的因果流量贡献，IP/进程回退不能按域名映射冒充数值。
 
 贴到 issue、PR 或对话记录前，用 `--redact` 重跑 CLI。默认输出不脱敏，因为判读需要真实 host。
 

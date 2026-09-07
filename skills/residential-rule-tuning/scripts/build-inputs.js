@@ -6,6 +6,12 @@ const path = require("node:path");
 const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 
 const SUPPORTED_SWITCH_BUILDERS = Object.freeze({
+  anthropic_core: (constants) => [
+    ...constants.ANTHROPIC_CORE_SUFFIX_DOMAINS,
+    ...constants.ANTHROPIC_CORE_EXACT_DOMAINS
+  ],
+  gemini_api_core: (constants) => [...constants.GEMINI_API_CORE_EXACT_DOMAINS],
+  antigravity_core: (constants) => [...constants.ANTIGRAVITY_CORE_EXACT_DOMAINS],
   openai_core: (constants) => [
     ...constants.OPENAI_CORE_SUFFIX_DOMAINS,
     ...constants.OPENAI_CORE_EXACT_DOMAINS

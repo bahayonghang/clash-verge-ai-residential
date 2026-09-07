@@ -13,7 +13,9 @@
 - Keep code comments, error messages, and `docs/` (except `docs/en/`) in
   Chinese. `docs/en/` is the English docs-site tree. Keep this Trellis spec,
   `package.json`, CI, and GitHub templates in English.
-- Preserve the AI-only routing boundary and fail-closed proxy-chain behavior.
+- Preserve the AI-only routing boundary and the generated singleton residential
+  egress group. Configuration structure does not establish host fail-closed
+  behavior: the Clash host may discard a failed script and use its input profile.
 
 ## Test Pattern
 
@@ -51,7 +53,9 @@ Removing the table from `docs/configuration.md` fails that test even if
 
 ## Validation Gate
 
-Run `just ci` before completion. `package.json` defines the exact gate:
+Run `just ci` before completion. The root `justfile` defines `monitor-check`
+followed by `npm run ci`; the monitor gate includes version checks, its frontend
+install/check/build, and Rust fmt/clippy/tests. Root `package.json` defines:
 
 1. `npm run check`: `node --check` on the extension, all tests, and scripts.
 2. `npm test`: explicitly listed `node:test` suites for routing, the local
@@ -66,6 +70,15 @@ Windows with Node 22. Branch protection depends only on the stable
 `Required checks` aggregate job. For changes to host integration, DNS, or
 routing, also test a sanitized real Clash profile when practical; the Node
 suite cannot emulate the Clash JavaScript host or Mihomo.
+
+For core routing changes, compare the sanitized default projection against
+`tests/fixtures/routing-default-v5.11.json`, sourced from its recorded baseline
+commit rather than the edited implementation. Only the contiguous AI domain-rule
+block may be sorted; private, IP, process and original Profile rule order remains
+significant. Normalize DNS object keys, never resolver-array order. Also test
+core on/off/on, full old-rule cleanup and the dedicated process/IP gate matrix.
+Regex-only routes have no equivalent nameserver-policy; do not widen Google or
+Cursor suffixes to satisfy a DNS assertion, or claim real host behavior from Node tests.
 
 ## Scenario: Main Branch Protection
 

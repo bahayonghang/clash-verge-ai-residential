@@ -4,21 +4,29 @@ The residential link is reserved for core AI product traffic. A domain is not in
 
 ## Carrier caliber
 
-Residential routing covers three kinds of traffic: in-browser Chat product sessions, local CLI calls to official endpoints, and desktop/IDE clients calling official AI endpoints. Everything else stays on the original Profile airport exit.
+Residential routing covers three kinds of traffic: in-browser Chat product sessions, local CLI calls to official endpoints, and desktop/IDE clients calling official AI endpoints. Everything else follows the original Profile rules, which may select an airport, DIRECT, another group or a user-owned residential rule.
 
 - **Carrier A (in-browser Chat)**: `claude.ai`, `claude.com`, `chatgpt.com`, `grok.com`, `gemini.google.com`, `aistudio.google.com`. One browser session concurrently hits several subdomains with the same cookies. Sending only some of those subdomains through the airport lets the server observe two exit IPs inside one signed-in session. Product apex domains stay suffix-matched by default.
 - **Carrier B (local CLI and desktop/IDE clients)**: Claude Code, Codex, Grok CLI, Cursor, Antigravity. Non-inference requests (docs sites, update downloads, extension marketplaces, static assets) do not carry inference-session credentials, so they are narrowed to exact hosts from official docs.
+
+## Core switches and fallbacks
+
+**Unreleased** adds `anthropic_core`, `gemini_api_core` and `antigravity_core`, all defaulting to `true`. Existing default domain coverage and targets stay unchanged. Disabling a core removes its managed domains and exact/suffix DNS entries while preserving other Profile rules. Unknown user-owned residential rules remain, so disabling a switch does not guarantee an airport exit.
+
+When `ai_process_fallback` is enabled, Claude, OpenAI and Antigravity process rules also require `anthropic_core`, `openai_core` and `antigravity_core`, respectively. Cursor requires both `cursor_core` and `cursor_process_fallback`. Anthropic CIDR fallback requires both `anthropic_core` and `anthropic_ip_fallback`. Full managed-rule cleanup remains independent of active switches, including previously generated dedicated fallbacks.
+
+Authentication, auxiliary, static-asset and global realtime/DNS switches remain independent and may still produce residential traffic. To return all Google core traffic, disable `gemini_web_core`, `gemini_api_core`, `vertex_ai_endpoints` and `antigravity_core`, then review optional authentication/project/update switches separately. Defaults are not narrowed; the new controls alone are not evidence of saved traffic.
 
 ## Included categories
 
 | Product | Included traffic |
 |---|---|
-| Claude / Anthropic | Claude product domains, Messages API, `mcp-proxy.anthropic.com` MCP connector proxy, `assets-proxy.anthropic.com` asset proxy, `claudemcpcontent.com` MCP Apps widget isolation domain, `claudeusercontent.com` session content, and official inbound IP fallback |
+| Claude / Anthropic | `routing.anthropic_core` defaults to `true` and controls Claude product domains, Messages API, `mcp-proxy.anthropic.com` MCP connector proxy, `assets-proxy.anthropic.com` asset proxy, `claudemcpcontent.com` MCP Apps widget isolation domain, `claudeusercontent.com` session content, and official inbound IP fallback |
 | ChatGPT / OpenAI | ChatGPT product domain (full suffix, including `ws.chatgpt.com`), five official exact hosts (`chat.openai.com`, `android.chat.openai.com`, `desktop.chat.openai.com`, `ios.chat.openai.com`, `tcr9i.chat.openai.com`), OpenAI model API suffix `api.openai.com` (covers Codex official `us.` / `eu.` data-residency prefixes), and uploaded or generated user content. Optional `routing.openai_auth` only adds the bounded `auth.openai.com` suffix and exact `auth0.openai.com`. `routing.openai_web_assets` independently adds the `oaistatic.com` suffix. Both default to off. |
-| Gemini | Gemini Web, Google AI Studio product RPC/streaming hosts, Gemini Developer API |
+| Gemini | `routing.gemini_web_core` controls Gemini Web and Google AI Studio product RPC/streaming hosts; `routing.gemini_api_core` independently controls `generativelanguage.googleapis.com`. Both default to `true` |
 | Vertex AI / Agent Platform | `routing.vertex_ai_endpoints` defaults to `true` and controls `aiplatform.googleapis.com`, `aiplatform.us.rep.googleapis.com`, `aiplatform.eu.rep.googleapis.com`, and the regional regex `^[a-z0-9-]+-aiplatform\.googleapis\.com$` |
-| Google Antigravity / Gemini Code Assist | Exact host `antigravity.google`, production Code Assist host `cloudcode-pa.googleapis.com`, and the Antigravity `language_server` `--cloud_code_endpoint` host `daily-cloudcode-pa.googleapis.com` |
-| Cursor | Chat/API, Tab, Agent, Cloud Agent/Bugbot API, authorize endpoint, SSO admin portal `adminportal42.cursor.sh`, Cloud Agent VM hosts, and product-specific authentication; `routing.cursor_core` defaults to `true`. Repository indexing hosts `repo[0-9]+.cursor.sh` use the independent `routing.cursor_repository_indexing` switch, which defaults to `false` and falls back to the original Profile/airport upstream |
+| Google Antigravity / Gemini Code Assist | `routing.antigravity_core` defaults to `true` and controls `cloudaicompanion.googleapis.com` plus exact host `antigravity.google`, production Code Assist host `cloudcode-pa.googleapis.com`, and the Antigravity `language_server` `--cloud_code_endpoint` host `daily-cloudcode-pa.googleapis.com` |
+| Cursor | Chat/API, Tab, Agent, Cloud Agent/Bugbot API, authorize endpoint, SSO admin portal `adminportal42.cursor.sh`, Cloud Agent VM hosts, and product-specific authentication; `routing.cursor_core` defaults to `true`. Repository indexing hosts `repo[0-9]+.cursor.sh` use the independent `routing.cursor_repository_indexing` switch, which defaults to `false` and falls back to the original Profile |
 | Grok Build | `routing.grok_core` defaults to `true`. Default injects `DOMAIN-SUFFIX,grok.com` (covers `cli-chat-proxy.grok.com` inference API and `code.grok.com` session sync), `auth.x.ai` OAuth host, and `DOMAIN-SUFFIX,api.x.ai` (covers regional endpoints and `mtls.api.x.ai`). When `routing.grok_web_assets = false`, the `grok.com` suffix is replaced by three exact hosts: `grok.com`, `cli-chat-proxy.grok.com`, `code.grok.com`; the `api.x.ai` suffix is still injected |
 
 Official sources:
@@ -51,7 +59,7 @@ The following classes stay on the original Profile route:
 Hosts no longer injected from v5.10, but still kept in `allPossible*` for upgrade cleanup:
 
 - `clau.de`, `claudemcpclient.com` (no official source)
-- `a-api.anthropic.com` (official Desktop list purpose is Analytics events / telemetry. With `routing.anthropic_ip_fallback` on, the host can still hit IP rules if it resolves to an inbound CIDR)
+- `a-api.anthropic.com` (official Desktop list purpose is Analytics events / telemetry. With both `routing.anthropic_core` and `routing.anthropic_ip_fallback` on, the host can still hit IP rules if it resolves to an inbound CIDR)
 - `geminicloudassist.googleapis.com` (Cloud Assist MCP, not the Antigravity Agent gateway)
 
 Hosts that no longer match after narrowing:

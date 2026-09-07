@@ -6,9 +6,8 @@
 AI application request
   -> Mihomo rule match
   -> AI-家宽
-  -> 家宽-SOCKS5
-  -> current Profile upstream selected by dialer-proxy
-  -> residential exit
+  -> connect to the residential endpoint via the dialer-proxy Profile upstream
+  -> 家宽-SOCKS5 / residential exit
   -> AI service
 ```
 
@@ -17,16 +16,22 @@ The transport connection to the residential SOCKS5 server is dialed through the 
 ## DNS paths
 
 ```text
-AI domain query       -> residential DoH via AI-家宽
+Enabled exact/suffix AI query -> residential DoH via AI-家宽
 Other overseas query  -> non-AI DoH via current Profile upstream
 Chinese domain query  -> domestic DoH via DIRECT
 Private/LAN query     -> system resolver
 Proxy-server lookup   -> bootstrap/direct resolver to avoid recursion
 ```
 
-This is intentionally different from a global DNS-leak-test configuration. A generic DNS leak test may show the airport or domestic resolver because non-AI queries are not sent through the residential route. The invariant is narrower: AI domain resolution and AI application connections must use the intended residential path.
+This is intentionally different from a global DNS-leak-test configuration. A generic DNS leak test may show the airport or domestic resolver because non-AI queries are not sent through the residential route. The configuration assigns residential resolvers to enabled exact/suffix AI domains. Regex domains have the exception below, and actual paths still depend on host settings.
 
-Timing: under `enhanced-mode: fake-ip`, most A/AAAA queries are answered from the fake-ip pool and never hit an upstream resolver. `nameserver-policy` is therefore mainly a fallback for fake-ip-filter hits, non-A/AAAA query types, and real-IP lookups needed by L3 outbound. SOCKS5 outbound forwards the hostname (RFC 1928 domain addressing), so AI connections usually let the residential SOCKS5 server do the recursive resolve. That is expected. When Mihomo must resolve an AI domain itself, the policy entries still keep that lookup on the residential side.
+Timing: under `enhanced-mode: fake-ip`, most A/AAAA queries are answered from the fake-ip pool and never hit an upstream resolver. `nameserver-policy` is therefore mainly a fallback for fake-ip-filter hits, non-A/AAAA query types, and real-IP lookups needed by L3 outbound. SOCKS5 outbound forwards the hostname (RFC 1928 domain addressing), so AI connections usually let the residential SOCKS5 server do the recursive resolve. That is expected. When Mihomo must resolve a domain itself, its exact/suffix policy specifies residential resolution; this coverage does not extend to regex-only hosts.
+
+## Regex domains and configuration errors
+
+Regional Vertex `DOMAIN-REGEX` routes and enabled Cursor `repo[0-9]+.cursor.sh` routes have no equivalent `nameserver-policy`. Local real lookups for those hosts may use the default non-AI DoH. Fake-IP responses or SOCKS domain forwarding do not prove every query uses the same exit. `respect-rules` governs DNS connections; it does not translate application-domain regexes into resolver policies. The script keeps narrow matching without adding broad `+.googleapis.com` or `+.cursor.sh` policies. Actual DNS/UDP paths remain UNVERIFIED.
+
+A successfully generated `AI-家宽` group has only the residential SOCKS5 member. Extra member sources or filtering fields on an existing same-name group cause an error. However, Clash Verge Rev may discard script output after an exception and use the original Profile. Rejection does not prove traffic is blocked. Correct the error, confirm the configuration is active, then check the application chain. A static public IP provided by the SOCKS service also needs separate verification.
 
 ## Fields Clash Verge Rev restores
 
@@ -46,7 +51,7 @@ Shared authentication hosts are outside the default AI-only scope. `auth.openai.
 
 ## What the script mitigates
 
-- DNS divergence between AI application traffic and AI domain resolution.
+- Configured DNS divergence for enabled exact/suffix AI domains.
 - Accidental residential routing of unrelated media, marketplace, download, and shared-service traffic.
 - Recursive chaining through `include-all` groups.
 - IPv6 use inside Mihomo configuration.

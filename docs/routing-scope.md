@@ -4,21 +4,29 @@
 
 ## 载体口径
 
-家宽只覆盖三类流量：网页 Chat 产品会话、本机 CLI 连接官方端点、桌面/IDE 客户端连接官方 AI 端点。其余流量留在原 Profile 的机场出口。
+家宽只覆盖三类流量：网页 Chat 产品会话、本机 CLI 连接官方端点、桌面/IDE 客户端连接官方 AI 端点。其余流量交由原 Profile 规则处理；它可能选择机场、DIRECT、其他组或用户自定义家宽规则。
 
 - **载体 A（浏览器内网页 Chat）**：`claude.ai`、`claude.com`、`chatgpt.com`、`grok.com`、`gemini.google.com`、`aistudio.google.com`。同一浏览器会话会并发访问多个子域并携带同一套 Cookie。把其中一部分子域改走机场，会让服务端在同一个已登录会话内观察到两个出口 IP。产品顶级域默认保持后缀匹配。
 - **载体 B（本机 CLI 与桌面/IDE 客户端）**：Claude Code、Codex、Grok CLI、Cursor、Antigravity。非推理请求（文档站、更新下载、扩展市场、静态资源）不携带推理会话凭据，按官方文档收窄为精确主机。
+
+## 核心开关与兜底
+
+**Unreleased** 新增 `anthropic_core`、`gemini_api_core`、`antigravity_core`，默认均为 `true`；现有域名覆盖与默认目标保持不变。关闭核心开关会清理对应脚本托管域名与 exact/suffix DNS，保留原 Profile 的其他规则。未知的用户家宽规则不被删除，因此不保证关闭后全部流量一定走机场。
+
+开启 `ai_process_fallback` 时，Claude、OpenAI、Antigravity 的进程规则还分别依赖 `anthropic_core`、`openai_core`、`antigravity_core`；Cursor 同时依赖 `cursor_core` 和 `cursor_process_fallback`。Anthropic CIDR 回退依赖 `anthropic_core` 与 `anthropic_ip_fallback`。全量旧规则清理不受这些开关状态影响，关闭后不会残留以前生成的专属兜底。
+
+认证、辅助、静态资源及全局实时/DNS开关继续独立，仍可能产生家宽流量。Google 核心全部退出需关闭 `gemini_web_core`、`gemini_api_core`、`vertex_ai_endpoints`、`antigravity_core`，并另行检查可选认证/项目/更新开关。默认值未收窄，新增开关本身不代表已节省流量。
 
 ## 纳入类别
 
 | 产品 | 纳入的流量 |
 |---|---|
-| Claude / Anthropic | Claude 产品域名、Messages API、`mcp-proxy.anthropic.com` MCP 连接器代理、`assets-proxy.anthropic.com` 资源代理、`claudemcpcontent.com` MCP Apps widget 隔离域、`claudeusercontent.com` 会话内容，以及官方入站 IP 回退 |
+| Claude / Anthropic | `routing.anthropic_core` 默认 `true`，控制 Claude 产品域名、Messages API、`mcp-proxy.anthropic.com` MCP 连接器代理、`assets-proxy.anthropic.com` 资源代理、`claudemcpcontent.com` MCP Apps widget 隔离域、`claudeusercontent.com` 会话内容，以及官方入站 IP 回退 |
 | ChatGPT / OpenAI | ChatGPT 产品域名（整域后缀，含 `ws.chatgpt.com`）、五个官方 exact 主机（`chat.openai.com`、`android.chat.openai.com`、`desktop.chat.openai.com`、`ios.chat.openai.com`、`tcr9i.chat.openai.com`）、OpenAI 模型 API 后缀 `api.openai.com`（覆盖 Codex 官方的 `us.` / `eu.` 数据驻留前缀），以及上传或生成的用户内容。可选的 `routing.openai_auth` 只增加 `auth.openai.com` 有界后缀与 `auth0.openai.com` 精确主机；`routing.openai_web_assets` 独立增加 `oaistatic.com` 后缀；二者默认关闭 |
-| Gemini | Gemini Web、Google AI Studio 产品 RPC/streaming 主机、Gemini Developer API |
+| Gemini | `routing.gemini_web_core` 控制 Gemini Web 与 Google AI Studio 产品 RPC/streaming 主机；`routing.gemini_api_core` 独立控制 `generativelanguage.googleapis.com`，二者默认 `true` |
 | Vertex AI / Agent Platform | `routing.vertex_ai_endpoints` 默认 `true`，一次控制 `aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com` 与区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$` |
-| Google Antigravity / Gemini Code Assist | 精确主机 `antigravity.google`、生产 Code Assist 主机 `cloudcode-pa.googleapis.com`，以及 Antigravity `language_server` 的 `--cloud_code_endpoint` 主机 `daily-cloudcode-pa.googleapis.com` |
-| Cursor | Chat/API、Tab、Agent、Cloud Agent/Bugbot API、authorize 端点、SSO 管理门户 `adminportal42.cursor.sh`、Cloud Agent VM 主机和产品专属认证；`routing.cursor_core` 默认 `true`。仓库索引主机 `repo[0-9]+.cursor.sh` 由独立开关 `routing.cursor_repository_indexing` 控制，默认 `false`，回落原 Profile / 机场上游 |
+| Google Antigravity / Gemini Code Assist | `routing.antigravity_core` 默认 `true`，控制 `cloudaicompanion.googleapis.com` 及精确主机 `antigravity.google`、生产 Code Assist 主机 `cloudcode-pa.googleapis.com`，以及 Antigravity `language_server` 的 `--cloud_code_endpoint` 主机 `daily-cloudcode-pa.googleapis.com` |
+| Cursor | Chat/API、Tab、Agent、Cloud Agent/Bugbot API、authorize 端点、SSO 管理门户 `adminportal42.cursor.sh`、Cloud Agent VM 主机和产品专属认证；`routing.cursor_core` 默认 `true`。仓库索引主机 `repo[0-9]+.cursor.sh` 由独立开关 `routing.cursor_repository_indexing` 控制，默认 `false`，回落原 Profile |
 | Grok Build | `routing.grok_core` 默认 `true`。默认注入 `DOMAIN-SUFFIX,grok.com`（覆盖 `cli-chat-proxy.grok.com` 推理 API 与 `code.grok.com` 会话同步）、`auth.x.ai` OAuth 主机、`DOMAIN-SUFFIX,api.x.ai`（覆盖区域端点与 `mtls.api.x.ai`）。`routing.grok_web_assets = false` 时只把 `grok.com` 后缀换成三条精确主机：`grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`；`api.x.ai` 后缀仍注入 |
 
 官方来源：
@@ -51,7 +59,7 @@ Cursor 依据：官方企业网络配置文档列出精确主机 `authenticate.c
 v5.10 起不再注入、但仍保留在 `allPossible*` 中供升级清理的主机：
 
 - `clau.de`、`claudemcpclient.com`（无官方出处）
-- `a-api.anthropic.com`（官方 Desktop 清单用途为 Analytics events / 遥测。开启 `routing.anthropic_ip_fallback` 时，若该主机解析到 inbound CIDR，仍可能被 IP 规则命中）
+- `a-api.anthropic.com`（官方 Desktop 清单用途为 Analytics events / 遥测。同时开启 `routing.anthropic_core` 和 `routing.anthropic_ip_fallback` 时，若该主机解析到 inbound CIDR，仍可能被 IP 规则命中）
 - `geminicloudassist.googleapis.com`（Cloud Assist MCP，不是 Antigravity Agent 网关）
 
 收窄后不再匹配的主机：

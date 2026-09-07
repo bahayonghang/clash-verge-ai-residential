@@ -64,12 +64,19 @@ test -e clash-verge-ai-residential.local.toml || \
 
 `[routing]` 和 `[runtime]` 都是可选表，并且允许只写需要覆盖的键。同步时，本地 TOML 缺失的开关键（包括整个缺失的表）会按示例文件的默认值自动补全并写回本地文件；已有键值、注释和行尾风格逐字保留，`[home_proxy]` 的凭据字段缺键仍会报错要求手填。因此，旧版只含 `[home_proxy]` 的本地 TOML 也可以直接渲染，渲染器会顺手补齐缺失开关。以下 TOML 键与 JavaScript 常量是一一映射，不要根据 `ROUTE_*` / `ENABLE_*` 前缀自行猜测键名。
 
+三个新增核心开关及专属兜底门控属于 **Unreleased**，默认都为 `true`，不会自动减少家宽用量。关闭核心开关会撤销该类别的脚本托管域名/DNS和专属兜底，剩余流量交回原 Profile；原规则可能选择机场、DIRECT、其他组或用户自定义家宽规则，不能保证一定走机场。认证、辅助、静态资源和全局实时/DNS开关继续独立。
+
+Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`、`gemini_api_core`、`vertex_ai_endpoints`、`antigravity_core`；相关可选认证、项目和更新开关另行控制。已知正则域名的 DNS 例外见 [DNS 与泄漏模型](dns-and-leak-model.md)。
+
 ### 路由范围
 
 | TOML 键 | JavaScript 常量 | 默认值 | 作用 | 依赖或风险 |
 | --- | --- | --- | --- | --- |
+| `routing.anthropic_core` | `ROUTE_ANTHROPIC_CORE` | `true` | 路由 Claude 产品、模型 API、MCP 与会话内容。 | 关闭时同时撤销专属进程兜底及 Anthropic IP 回退；辅助与共享依赖开关独立。 |
+| `routing.gemini_api_core` | `ROUTE_GEMINI_API_CORE` | `true` | 路由 `generativelanguage.googleapis.com` Gemini Developer API。 | 与 Gemini Web、Vertex AI 及 Google 认证开关独立。 |
+| `routing.antigravity_core` | `ROUTE_ANTIGRAVITY_CORE` | `true` | 路由 Antigravity 产品域及 Code Assist 核心主机。 | 关闭时同时撤销 Antigravity 进程兜底；Vertex、认证、项目 API、更新与遥测开关独立。 |
 | `routing.openai_shared_dependencies` | `ROUTE_OPENAI_SHARED_DEPENDENCIES` | `false` | 路由 OpenAI 的 WorkOS、客服、遥测、支付等共享依赖。 | 会扩大到非模型流量。 |
-| `routing.openai_core` | `ROUTE_OPENAI_CORE` | `true` | 路由 ChatGPT 产品、OpenAI 模型 API 和用户上传/生成内容。 | 关闭后 GPT 流量改走机场上游。 |
+| `routing.openai_core` | `ROUTE_OPENAI_CORE` | `true` | 路由 ChatGPT 产品、OpenAI 模型 API 和用户上传/生成内容。 | 关闭时撤销 OpenAI 专属进程兜底，相关流量交回原 Profile。 |
 | `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `false` | 路由第一方登录主机 `auth.openai.com`（含其子域）和精确主机 `auth0.openai.com`。 | 与核心流量、网页资源和共享第三方依赖相互独立；不会匹配整个 `openai.com`。 |
 | `routing.openai_web_assets` | `ROUTE_OPENAI_WEB_ASSETS` | `false` | 路由 `oaistatic.com` 网页静态资源后缀。 | 与第一方登录及共享第三方依赖独立；仅在页面资源确需同出口时开启。 |
 | `routing.claude_shared_dependencies` | `ROUTE_CLAUDE_SHARED_DEPENDENCIES` | `false` | 路由 Claude 的统计、客服、风控等共享依赖。 | 会扩大到非模型流量。 |
@@ -77,15 +84,15 @@ test -e clash-verge-ai-residential.local.toml || \
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | 路由 Service Usage、Resource Manager、IAM、API Hub 等项目 API。 | 属于项目配置而非推理。 |
 | `routing.antigravity_update_and_telemetry` | `ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY` | `false` | 路由 Antigravity 更新、扩展市场和遥测。 | 会扩大到更新和统计流量。 |
 | `routing.gemini_web_core` | `ROUTE_GEMINI_WEB_CORE` | `true` | 路由 Gemini Web 和 Google AI Studio 产品入口。 | 无。 |
-| `routing.vertex_ai_endpoints` | `ROUTE_VERTEX_AI_ENDPOINTS` | `true` | 路由四条 Vertex AI / Agent Platform 规则：`aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com`，以及区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$`。 | 不使用 Antigravity 企业推理或其他 Vertex AI 流量时可改为 `false`，这些主机改走机场上游。 |
+| `routing.vertex_ai_endpoints` | `ROUTE_VERTEX_AI_ENDPOINTS` | `true` | 路由四条 Vertex AI / Agent Platform 规则：`aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com`，以及区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$`。 | 不使用 Antigravity 企业推理或其他 Vertex AI 流量时可改为 `false`，这些主机交回原 Profile。 |
 | `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `true` | 路由 Cursor AI API、Tab、Agent、授权/SSO 门户、Cloud Agent VM 和产品专属认证。 | 不需要 Cursor 核心流量走家宽时可显式改为 `false`。`api2.cursor.sh` 始终由本开关控制。 |
-| `routing.cursor_repository_indexing` | `ROUTE_CURSOR_REPOSITORY_INDEXING` | `false` | 路由 Cursor 仓库索引主机 `repo[0-9]+.cursor.sh`。 | 与 `routing.cursor_core` 独立。默认回落原 Profile / 机场上游；缺字段按 `false` 补全；显式 `true` 恢复 v5.8.1 的 repo 家宽路由。官方与本机 2026-08-17 日志共同确认的精确主机是 `repo42.cursor.sh`；数字通配是项目前向兼容策略，不是 Cursor 官方通配合同。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`，域名规则无法在保留多数 API 的同时隔离该路径，因此不能宣称已排除全部仓库上传。 |
+| `routing.cursor_repository_indexing` | `ROUTE_CURSOR_REPOSITORY_INDEXING` | `false` | 路由 Cursor 仓库索引主机 `repo[0-9]+.cursor.sh`。 | 与 `routing.cursor_core` 独立。默认回落原 Profile；缺字段按 `false` 补全；显式 `true` 恢复 v5.8.1 的 repo 家宽路由。官方与本机 2026-08-17 日志共同确认的精确主机是 `repo42.cursor.sh`；数字通配是项目前向兼容策略，不是 Cursor 官方通配合同。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`，域名规则无法在保留多数 API 的同时隔离该路径，因此不能宣称已排除全部仓库上传。 |
 | `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | 路由 Grok Build（xAI grok CLI）推理 API（`cli-chat-proxy.grok.com`）、Grok 产品域、`auth.x.ai` 与 `api.x.ai`。 | 不需要 Grok 走家宽时可显式改为 `false`。 |
-| `routing.grok_web_assets` | `ROUTE_GROK_WEB_ASSETS` | `true` | 为 `true` 时注入 `DOMAIN-SUFFIX,grok.com`；为 `false` 时把该后缀换成精确主机 `grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`。`DOMAIN-SUFFIX,api.x.ai` 仍由 `routing.grok_core` 控制。 | 依赖 `routing.grok_core = true`。`false` 时 `assets.grok.com` 改走机场上游。 |
-| `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | 增加 Cursor 进程级兜底规则。 | 仅在 `routing.ai_process_fallback = true` 时生效，会捕获非 AI 请求。 |
+| `routing.grok_web_assets` | `ROUTE_GROK_WEB_ASSETS` | `true` | 为 `true` 时注入 `DOMAIN-SUFFIX,grok.com`；为 `false` 时把该后缀换成精确主机 `grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`。`DOMAIN-SUFFIX,api.x.ai` 仍由 `routing.grok_core` 控制。 | 依赖 `routing.grok_core = true`。`false` 时 `assets.grok.com` 交回原 Profile。 |
+| `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | 增加 Cursor 进程级兜底规则。 | 仅在 `routing.ai_process_fallback = true` 且 `routing.cursor_core = true` 时生效，仍会捕获非 AI 请求。 |
 | `routing.claude_code_auxiliary` | `ROUTE_CLAUDE_CODE_AUXILIARY` | `false` | 路由 Claude Code 安装、更新、文档和包管理端点。 | 属于辅助流量而非推理。 |
-| `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | 为已知 AI 应用增加进程级兜底。 | 会把进程中的非 AI 请求一并路由。查找进程由脚本写到 Mihomo 顶层 `find-process-mode: always`，与本开关无关。写在 `profile:` 下的值内核不用。 |
-| `routing.anthropic_ip_fallback` | `ENABLE_ANTHROPIC_IP_FALLBACK` | `true` | 使用 Anthropic 官方入站网段覆盖纯 IP 连接。 | 无。 |
+| `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | 为核心开关开启的 Claude、OpenAI、Antigravity 增加进程兜底；Cursor 还需开启其进程开关。 | 会把进程中的非 AI 请求一并路由。查找进程由脚本写到 Mihomo 顶层 `find-process-mode: always`，与本开关无关。写在 `profile:` 下的值内核不用。 |
+| `routing.anthropic_ip_fallback` | `ENABLE_ANTHROPIC_IP_FALLBACK` | `true` | 使用 Anthropic 官方入站网段覆盖纯 IP 连接。 | 还需 `routing.anthropic_core = true`；可能捕获同网段的非核心主机。 |
 | `routing.shared_realtime_infrastructure` | `ROUTE_SHARED_REALTIME_INFRASTRUCTURE` | `false` | 路由通用 STUN/TURN 实时通信基础设施。 | 可能捕获其他应用的实时流量。 |
 | `routing.global_realtime_ports` | `ROUTE_GLOBAL_REALTIME_PORTS` | `false` | 按通用实时 UDP 端口增加规则。 | 仅在 `routing.shared_realtime_infrastructure = true` 时生效，范围很宽。 |
 | `routing.public_encrypted_dns` | `ROUTE_PUBLIC_ENCRYPTED_DNS` | `false` | 路由公共 DoH/DoT 服务。 | 会影响共享 DNS 流量。 |
@@ -146,4 +153,4 @@ Ubuntu 的 Profile 仍必须能唯一解析脚本中的 `dialer-proxy` 名称，
 just ci
 ```
 
-`just ci` 等价于 `npm run ci`。它不会读取或上传本地 TOML；本地生成脚本也会被模板安全扫描排除，以免凭据干扰公开仓库检查。完成后仍应在 Clash Verge Rev 中确认 `家宽-SOCKS5.dialer-proxy` 能解析到实际机场组，并从 Connections 验证 AI 请求命中 `AI-家宽`。
+`just ci` 包含监控端 `monitor-check` 和根目录 `npm run ci`。它不会读取或上传本地 TOML；本地生成脚本也会被模板安全扫描排除，以免凭据干扰公开仓库检查。完成后仍应在 Clash Verge Rev 中确认 `家宽-SOCKS5.dialer-proxy` 能解析到实际机场组，并从 Connections 验证 AI 请求命中 `AI-家宽`。

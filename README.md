@@ -11,6 +11,8 @@ Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Googl
 
 当前版本：`v5.11.0`。
 
+**Unreleased**：新增默认开启的 `routing.anthropic_core`、`routing.gemini_api_core`、`routing.antigravity_core`；关闭核心开关会同时撤销其专属进程兜底，Claude 核心关闭还会撤销 Anthropic IP 回退。默认路由范围不变，实际节流收益需测量。已有 `AI-家宽` 组的额外节点来源或筛选配置会被拒绝；成功输出只保留家宽成员与允许的展示信息。详见 [配置](docs/configuration.md) 和 [变更记录](CHANGELOG.md)。
+
 ## 核心边界
 
 家宽链路包含：
@@ -94,7 +96,7 @@ node scripts/sync-local-config.js
 1. 双击 **Global Extend Script**，粘贴生成的 `clash-verge-ai-residential.local.js` 全部内容并保存。
 2. 刷新当前 Profile。
 3. 检查生成配置中 `家宽-SOCKS5.dialer-proxy` 是否指向真实机场组。
-4. 用 Connections 验证目标 AI 请求命中 `AI-家宽`，插件市场、下载、YouTube 以及显式关闭的产品不命中。
+4. 用 Connections 验证启用的目标 AI 请求命中 `AI-家宽`；核对关闭类别及非 AI 流量交回原 Profile 后的实际出口，注意独立辅助开关与用户自定义规则仍可能路由到家宽。
 
 如果 Profile 已预置同名 `家宽-SOCKS5` 节点，可以让 TOML 保留 `xxx` 占位符，脚本会复用该节点的 endpoint 和凭据。无认证 SOCKS5 必须将 `username`、`password` 同时设为 `""`。
 
@@ -119,13 +121,13 @@ https://raw.githubusercontent.com/bahayonghang/clash-verge-ai-residential/main/c
 ## DNS 行为
 
 ```text
-AI 域名 DNS       -> AI-家宽 -> 家宽 SOCKS5
+启用的 exact/suffix AI 域名 DNS -> AI-家宽 -> 家宽 SOCKS5
 其他海外域名 DNS  -> 当前 Profile 的机场上游
 中国域名 DNS      -> 国内 DoH / DIRECT
 私有与局域网域名  -> system
 ```
 
-因此普通 DNS leak test 不一定显示住宅地区。项目保证的是 AI 请求及其域名解析路径一致，而不是让所有 DNS 流量占用住宅出口。威胁边界见 [`docs/dns-and-leak-model.md`](docs/dns-and-leak-model.md)。
+因此普通 DNS leak test 不一定显示住宅地区。配置为启用的 exact/suffix AI 域名指定住宅侧解析；区域 Vertex 与可选 Cursor 索引正则没有等价 DNS policy，本地真实查询可能使用默认非 AI DoH。实际 DNS/UDP 路径仍需宿主验证，详见 [`docs/dns-and-leak-model.md`](docs/dns-and-leak-model.md)。
 
 ## 本地验证
 
@@ -141,7 +143,7 @@ npm test
 just ci
 ```
 
-也可直接使用 `npm run ci`，两者包含相同检查：
+`just ci` 先运行监控端 `monitor-check`，再运行根目录 `npm run ci`。仅检查扩展脚本时可使用后者：
 
 - JavaScript 语法检查。
 - 使用 Node.js 标准测试运行器执行路由、幂等、本地 TOML 渲染和安全扫描回归测试。
