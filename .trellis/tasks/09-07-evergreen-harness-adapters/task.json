@@ -1,0 +1,37 @@
+{
+  "id": "evergreen-harness-adapters",
+  "name": "evergreen-harness-adapters",
+  "title": "对齐五套 Harness 的启动与委派边界",
+  "description": "纠正工作流分平台说明，记录 bootstrap 和五工具证据边界",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-07",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "dev",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-07-evergreen-harness-audit",
+  "relatedFiles": [
+    ".trellis/workflow.md",
+    "docs/agents/harnesses.md",
+    ".gitignore",
+    ".codex/config.toml",
+    ".kimi-code/skills/trellis-implement/SKILL.md",
+    ".kimi-code/skills/trellis-check/SKILL.md",
+    ".kimi-code/skills/trellis-research/SKILL.md"
+  ],
+  "notes": "",
+  "meta": {
+    "baseline_commit": "5578576787dba73ba1b96985a2fc408fc246bfed",
+    "implementation_approved": false
+  }
+}

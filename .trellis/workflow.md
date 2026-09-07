@@ -94,6 +94,12 @@ python ./.trellis/scripts/get_context.py --mode packages            # available 
 python ./.trellis/scripts/get_context.py --mode phase --step <X.Y>  # detailed guide for a workflow step
 ```
 
+### Harness adapters
+
+Five-tool entry, dispatch, permissions, bootstrap, and runtime evidence: `docs/agents/harnesses.md`.
+
+Claude Code and Codex inject workflow-state through project hook config. Oh My Pi / OMP injects workflow-state through the project Trellis extension. Grok Build and Kimi Code Trellis in this project pull task context explicitly. Start clients from the repository root. If a hook or extension does not fire, load the active task, JSONL, and specs by hand.
+
 ---
 
 <!--
@@ -101,10 +107,20 @@ python ./.trellis/scripts/get_context.py --mode phase --step <X.Y>  # detailed g
 
   The [workflow-state:STATUS] blocks embedded in the ## Phase Index section
   below are the SINGLE source of truth for the per-turn `<workflow-state>`
-  breadcrumb that every supported AI platform's UserPromptSubmit hook
-  reads. inject-workflow-state.py (Python platforms) and
-  inject-workflow-state.js (OpenCode plugin) only parse them — there is no
-  fallback dict baked into the scripts after v0.5.0-rc.0.
+  breadcrumb. Platform adapters read the same blocks. Not every platform
+  injects the breadcrumb through a UserPromptSubmit hook:
+    - Claude Code and Codex: project hook config (UserPromptSubmit)
+    - Oh My Pi / OMP: project Trellis extension
+    - Grok Build and Kimi Code Trellis in this project: explicit pull
+      (`get_context.py`, task JSONL, role skill). Do not assume SessionStart
+      or UserPromptSubmit fires on every platform.
+
+  Per-platform entry, dispatch, permissions, bootstrap, and fallback:
+  `docs/agents/harnesses.md`.
+
+  inject-workflow-state.py (Python platforms) and
+  inject-workflow-state.js (OpenCode plugin) only parse the tag blocks —
+  there is no fallback dict baked into the scripts after v0.5.0-rc.0.
 
   STATUS charset: [A-Za-z0-9_-]+. When the hook can't find a tag, it
   degrades to a generic "Refer to workflow.md for current step." line —
@@ -220,12 +236,13 @@ Inline mode: skip jsonl curation; Phase 2 reads artifacts/specs via `trellis-bef
      therefore must cover every required step from implementation through
      commit, including Phase 3.3 spec update and Phase 3.4 commit. -->
 
-Sub-agent dispatch protocol applies to all platforms and all sub-agents, including native Codex `SubagentStart` context injection with child-side pull fallback, class-2 Gemini/Qoder/Copilot/Reasonix/Trae/Grok/Kimi Code, hook-backed ZCode/Snow, and `trellis-research`: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions. On Grok Build, use `spawn_subagent` with `subagent_type` set to the Trellis agent name (e.g. `trellis-implement`). On Kimi Code, dispatch the built-in `coder` / `explore` sub-agent with the matching `.kimi-code/skills/trellis-<role>/SKILL.md` instructions.
+Sub-agent dispatch protocol: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions. This includes Codex `SubagentStart` (native injection plus child-side pull fallback), class-2 Gemini/Qoder/Copilot/Reasonix/Trae/Grok, hook-backed ZCode/Snow, and `trellis-research`. On Grok Build, use `spawn_subagent` with `subagent_type` set to the Trellis agent name (e.g. `trellis-implement`). Kimi Code natively supports project custom agents, but this project dispatches the built-in `coder` sub-agent with the matching `.kimi-code/skills/trellis-<role>/SKILL.md` and does not spawn project `trellis-*` agent types. Do not recurse implement/check.
 
 [workflow-state:in_progress]
-Tools: `trellis-implement` / `trellis-research` are sub-agent types only (Task/Agent tool, NOT Skill; there is no skill by these names). `trellis-update-spec` is a skill. `trellis-check` exists as both; prefer the Agent form when verifying after code changes.
-Flow: `trellis-implement` -> `trellis-check` -> `trellis-update-spec` -> commit (Phase 3.4) -> `/trellis:finish-work`.
-Main-session default: dispatch implement/check sub-agents. Sub-agent self-exemption: if already running as `trellis-implement`, do NOT spawn another `trellis-implement` or `trellis-check`; if already running as `trellis-check`, do NOT spawn another `trellis-check` or `trellis-implement`. Dispatch is main session only.
+Tools: `trellis-implement` / `trellis-research` / `trellis-check` are sub-agent types on platforms with project custom agents (Task/Agent tool). `trellis-update-spec` is a skill. `trellis-check` also exists as a skill; prefer the Agent form when verifying after code changes.
+Kimi Code in this project: platform supports project custom agents; dispatch built-in `coder` with `.kimi-code/skills/trellis-<role>/SKILL.md`. Do not spawn project `trellis-*` agent types.
+Flow: implement -> check -> `trellis-update-spec` -> commit (Phase 3.4) -> `/trellis:finish-work`.
+Main-session default: dispatch implement/check. Sub-agent self-exemption: if already running as implement or check, do NOT spawn another implement/check. Dispatch is main session only.
 Dispatch prompt starts with `Active task: <task path from task.py current>`. Read context: jsonl entries -> `prd.md` -> `design.md if present` -> `implement.md if present`.
 [/workflow-state:in_progress]
 
@@ -272,13 +289,21 @@ Code committed. Run `/trellis:finish-work`; if dirty, return to Phase 3.4 first.
 
 When a user request matches one of these intents inside an active task, route first, then load the detailed phase step if needed.
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok, Kimi Code]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok]
 
 - Planning or unclear requirements -> `trellis-brainstorm`.
 - `in_progress` implementation/check -> dispatch `trellis-implement` / `trellis-check`.
 - Repeated debugging -> `trellis-break-loop`; spec updates -> `trellis-update-spec`.
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok, Kimi Code]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok]
+
+[Kimi Code]
+
+- Planning or unclear requirements -> `trellis-brainstorm`.
+- `in_progress` implementation/check -> dispatch built-in `coder` with `.kimi-code/skills/trellis-implement/SKILL.md` or `.kimi-code/skills/trellis-check/SKILL.md`. First prompt line: `Active task: <path>`. Do not spawn project `trellis-*` agent types.
+- Repeated debugging -> `trellis-break-loop`; spec updates -> `trellis-update-spec`.
+
+[/Kimi Code]
 
 [codex-inline, Kilo, Antigravity, Devin]
 
@@ -353,7 +378,7 @@ Return to this step whenever requirements change and revise the relevant artifac
 
 Research can happen at any time during requirement exploration. It isn't limited to local code — you can use any available tool (MCP servers, skills, web search, etc.) to look up external information, including third-party library docs, industry practices, API references, etc.
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok, Kimi Code]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok]
 
 Spawn the research sub-agent:
 
@@ -361,7 +386,18 @@ Spawn the research sub-agent:
 - **Task description**: Research <specific question>
 - **Key requirement**: Research output MUST be persisted to `{TASK_DIR}/research/`
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok, Kimi Code]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok]
+
+[Kimi Code]
+
+Dispatch the built-in `coder` sub-agent with `.kimi-code/skills/trellis-research/SKILL.md`. Do not spawn a project `trellis-research` agent type. Kimi Code supports project custom agents; this project still uses built-in `coder` plus the role skill.
+
+- **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then say the spawned coder is already the research role, may write only under `{TASK_DIR}/research/`, and must not spawn `trellis-implement` / `trellis-check`.
+- **Key requirement**: Research output MUST be persisted to `{TASK_DIR}/research/`
+
+The spawned coder pulls context itself: `task.py current --source`, then jsonl / `prd.md` / `design.md` if present / `implement.md` if present.
+
+[/Kimi Code]
 
 [codex-inline, Kilo, Antigravity, Devin]
 
@@ -487,7 +523,7 @@ The platform hook/plugin auto-handles:
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, CodeBuddy, Droid, Pi, ZCode, Snow, Oh My Pi]
 
-[Gemini, Qoder, Copilot, Reasonix, Trae, Grok, Kimi Code]
+[Gemini, Qoder, Copilot, Reasonix, Trae, Grok]
 
 Spawn the implement sub-agent:
 
@@ -499,7 +535,20 @@ The pull-based sub-agent definition auto-handles the context load requirement:
 - Resolves the active task with `task.py current --source`, then reads `prd.md`, `design.md` if present, and `implement.md` if present
 - Reads `implement.jsonl` and requires the agent to load each referenced spec/research file before coding
 
-[/Gemini, Qoder, Copilot, Reasonix, Trae, Grok, Kimi Code]
+[/Gemini, Qoder, Copilot, Reasonix, Trae, Grok]
+
+[Kimi Code]
+
+Dispatch the built-in `coder` sub-agent with `.kimi-code/skills/trellis-implement/SKILL.md`. Do not spawn a project `trellis-implement` agent type. Kimi Code supports project custom agents; this project still uses built-in `coder` plus the role skill.
+
+- **Task description**: Implement the reviewed task artifacts, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
+- **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then say the spawned coder is already `trellis-implement` and must implement directly without spawning another `trellis-implement` / `trellis-check`.
+
+The spawned coder pulls context itself:
+- Resolves the active task with `task.py current --source`, then reads `prd.md`, `design.md` if present, and `implement.md` if present
+- Reads `implement.jsonl` and loads each referenced spec/research file before coding
+
+[/Kimi Code]
 
 [Kiro]
 
@@ -527,7 +576,7 @@ The platform prelude auto-handles the context load requirement:
 
 #### 2.2 Quality check `[required · repeatable]`
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok, Kimi Code]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok]
 
 Spawn the check sub-agent:
 
@@ -541,7 +590,22 @@ The check agent's job:
 - Auto-fix issues it finds
 - Run lint and typecheck to verify
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok, Kimi Code]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok]
+
+[Kimi Code]
+
+Dispatch the built-in `coder` sub-agent with `.kimi-code/skills/trellis-check/SKILL.md`. Do not spawn a project `trellis-check` agent type. Kimi Code supports project custom agents; this project still uses built-in `coder` plus the role skill.
+
+- **Task description**: Review all code changes against specs and task artifacts; fix any findings directly; ensure lint and type-check pass
+- **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then say the spawned coder is already `trellis-check` and must review/fix directly without spawning another `trellis-check` / `trellis-implement`.
+
+The check agent's job:
+- Review code changes against specs
+- Review code changes against `prd.md`, `design.md` if present, and `implement.md` if present
+- Auto-fix issues it finds
+- Run lint and typecheck to verify
+
+[/Kimi Code]
 
 [codex-inline, Kilo, Antigravity, Devin]
 

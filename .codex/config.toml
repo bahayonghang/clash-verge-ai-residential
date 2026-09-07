@@ -1,0 +1,39 @@
+# Project-scoped Codex defaults for Trellis workflows.
+# Codex merges this layer after the user-level config when the project
+# is marked as a trusted project. To trust this project, add it under
+# `[projects]` in ~/.codex/config.toml, e.g.:
+#
+#   [projects."/abs/path/to/this/repo"]
+#   trust_level = "trusted"
+
+# Keep AGENTS.md as the primary project instruction file.
+project_doc_fallback_filenames = ["AGENTS.md"]
+
+# Codex hooks (`hooks.json` in this directory) are default-on in current
+# Codex. Project-level config.toml still cannot set user-level feature flags.
+# Hooks only run when this project is trusted (see `[projects]` above) and
+# each installed hook has passed a one-time `/hooks` hash review. Until the
+# user approves a hook, it stays inactive. Do not auto-approve hooks.
+# Start Codex from the repository root so the relative `.codex/hooks.json`
+# commands resolve. If a hook does not fire, load task/JSONL/spec explicitly.
+
+# NOTE: Trellis intentionally does NOT write a [features.multi_agent_v2]
+# block here. Codex CLI changed `features` deserialization between 0.130
+# and 0.131: the structured table form (with max_concurrent_threads_per_session
+# / *_wait_timeout_ms) is only accepted by 0.131+. On 0.130 and earlier —
+# including the codex CLI bundled inside the Codex desktop app — it fails
+# with `data did not match any variant of untagged enum FeatureToml`, which
+# aborts the entire config load and blocks Codex from starting. Codex's own
+# default for multi_agent_v2 is used instead; tune it in your user-level
+# config if needed.
+
+# Pin the subagent recursion depth explicitly instead of relying on Codex's
+# default. #445 removed the per-agent `[features] multi_agent = false` guard
+# (the #240/#241 wait_agent-deadlock structural fix) because native subagent
+# dispatch already caps recursion via `agents.max_depth` — but that key is
+# global/user-level, not settable inside an individual agent's .toml. Pinning
+# it here means an upstream default change, or a user's own global override,
+# can't silently reopen the recursion the #240/#241 fix closed. Project config
+# (this file) takes precedence over user-level `~/.codex/config.toml`.
+[agents]
+max_depth = 1
