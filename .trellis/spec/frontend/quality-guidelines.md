@@ -53,9 +53,11 @@ Removing the table from `docs/configuration.md` fails that test even if
 
 ## Validation Gate
 
-Run `just ci` before completion. The root `justfile` defines `monitor-check`
-followed by `npm run ci`; the monitor gate includes version checks, its frontend
-install/check/build, and Rust fmt/clippy/tests. Root `package.json` defines:
+Run `just ci` before completion. `just ci` is `monitor-check` followed by root
+`npm run ci`. `just ci` is not equal to `npm run ci` alone and does not build
+docs. The monitor gate includes version checks, its frontend install and
+`npm run check` (typecheck, lint, test, build), and Rust fmt/clippy/tests.
+Root `package.json` defines:
 
 1. `npm run check`: `node --check` on the extension, all tests, and scripts.
 2. `npm test`: explicitly listed `node:test` suites for routing, the local
@@ -65,11 +67,15 @@ install/check/build, and Rust fmt/clippy/tests. Root `package.json` defines:
    `.toml`, `.yml`, and `.yaml` files outside its excluded directories and local
    artifacts.
 
-GitHub CI runs the same `npm run ci` on Ubuntu with Node 18, 20, and 22, plus
-Windows with Node 22. Branch protection depends only on the stable
-`Required checks` aggregate job. For changes to host integration, DNS, or
-routing, also test a sanitized real Clash profile when practical; the Node
-suite cannot emulate the Clash JavaScript host or Mihomo.
+GitHub CI runs matrix `npm run ci` on Ubuntu with Node 18, 20, and 22, plus
+Windows with Node 22; a Windows monitor job with six separate pwsh native
+steps; and an Ubuntu Node 22 docs job (`npm --prefix docs ci` then
+`npm --prefix docs run build`). The aggregate job named `Required checks`
+needs `[test, monitor, docs]`. Branch protection depends only on that stable
+aggregate job. The VitePress docs toolchain is Node.js 22+; local docs build
+is `just docs-build` and is independent of `just ci`. For changes to host
+integration, DNS, or routing, also test a sanitized real Clash profile when
+practical; the Node suite cannot emulate the Clash JavaScript host or Mihomo.
 
 For core routing changes, compare the sanitized default projection against
 `tests/fixtures/routing-default-v5.11.json`, sourced from its recorded baseline

@@ -131,19 +131,19 @@ https://raw.githubusercontent.com/bahayonghang/clash-verge-ai-residential/main/c
 
 ## 本地验证
 
-需要 Node.js 18 或更高版本，无第三方依赖。快速运行全部标准测试：
+扩展脚本与根目录测试需要 Node.js 18 或更高版本。该表面无第三方依赖。快速运行根目录标准测试：
 
 ```bash
 npm test
 ```
 
-提交前运行完整门禁：
+提交前运行完整产品门禁。`just ci` 先运行监控端 `monitor-check`，再运行根目录 `npm run ci`。`just ci` 不等于单独的 `npm run ci`，也不构建文档：
 
 ```bash
 just ci
 ```
 
-`just ci` 先运行监控端 `monitor-check`，再运行根目录 `npm run ci`。仅检查扩展脚本时可使用后者：
+仅检查扩展脚本与根目录测试时可使用 `npm run ci`：
 
 - JavaScript 语法检查。
 - 使用 Node.js 标准测试运行器执行路由、幂等、本地 TOML 渲染和安全扫描回归测试。
@@ -152,7 +152,9 @@ just ci
 - YouTube、Maps、Marketplace、下载、CDN、Mixpanel 和静态资源负向测试。
 - 多 Profile 解析、循环检测、DNS 收敛、托管规则替换与幂等测试。
 
-GitHub Actions 会在 Ubuntu 的 Node.js 18、20、22 和 Windows 的 Node.js 22 上运行同一门禁。分支保护应只依赖稳定命名的 `Required checks`，该检查仅在所有矩阵任务成功时通过。
+GitHub Actions 在 Ubuntu 的 Node.js 18、20、22 和 Windows 的 Node.js 22 上运行 `npm run ci`；另有 Windows 监控端 job（六条独立 pwsh 步骤）和 Ubuntu Node.js 22 文档 job（先 `npm --prefix docs ci`，再 `npm --prefix docs run build`）。分支保护应只依赖稳定命名的 `Required checks`，该检查需要 `test`、`monitor` 和 `docs` 均成功。
+
+文档站需要 Node.js 22+。本地构建使用 `just docs-build`，不包含在 `just ci` 中。
 
 自动化不能模拟 Clash Verge Rev JavaScript 引擎、Mihomo 内核或真实订阅 Profile。涉及宿主集成、DNS 或路由的变更仍须使用脱敏后的真实 Profile 手工验证；提交日志和截图前必须移除代理地址、凭据、订阅 URL 与未脱敏 Connections 记录。
 

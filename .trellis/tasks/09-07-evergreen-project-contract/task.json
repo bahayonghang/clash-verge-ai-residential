@@ -1,0 +1,35 @@
+{
+  "id": "evergreen-project-contract",
+  "name": "evergreen-project-contract",
+  "title": "统一项目说明与规范导航",
+  "description": "建立中立 AGENTS 项目合同及 Claude 入口，准确描述产品与质量门",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-07",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "dev",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-07-evergreen-harness-audit",
+  "relatedFiles": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "README.md",
+    ".trellis/spec/residential-monitor/index.md",
+    ".trellis/spec/frontend/quality-guidelines.md"
+  ],
+  "notes": "",
+  "meta": {
+    "baseline_commit": "5578576787dba73ba1b96985a2fc408fc246bfed",
+    "implementation_approved": false
+  }
+}
