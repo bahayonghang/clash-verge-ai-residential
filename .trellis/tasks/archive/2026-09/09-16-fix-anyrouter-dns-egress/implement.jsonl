@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Suffix DNS keys, v5.11 projection, and no claiming live TLS from Node tests"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "SWITCH_CONFIG_FIELDS is the only owner of flat routing booleans"}
+{"file": ".trellis/spec/guides/index.md", "reason": "Domain-change checklist: host/SNI only, keep retired values in allPossible*"}
+{"file": ".trellis/tasks/09-16-fix-anyrouter-dns-egress/research/apex-console-dns-tls.md", "reason": "Official apex console evidence and 47.246 vs 43.109 GeoDNS"}
+{"file": ".trellis/tasks/09-16-fix-anyrouter-dns-egress/research/extra-dns-coupling.md", "reason": "Why extra currently binds DOMAIN-SUFFIX to residential DoH"}
