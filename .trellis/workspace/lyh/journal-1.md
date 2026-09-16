@@ -1331,3 +1331,24 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 46: 解耦 AnyRouter DNS 并将 extra 改为分类
+
+**Date**: 2026-09-16
+**Task**: 解耦 AnyRouter DNS 并将 extra 改为分类
+**Branch**: `dev`
+
+### Summary
+
+extra 改为默关分类，新增 extra_anyrouter；AnyRouter 开启时只走 AI-家宽、不写住宅 DNS。just ci 与 docs-build 已通过；AC8 真机 Connections 未补。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `44b9e32` | (see git log) |
+
+### Status
+
+[OK] **Completed**
