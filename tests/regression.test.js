@@ -38,6 +38,7 @@ const {
   ROUTE_GROK_CORE,
   ROUTE_GROK_WEB_ASSETS,
   ROUTE_EXTRA,
+  ROUTE_EXTRA_ANYROUTER,
   ROUTE_CURSOR_PROCESS_FALLBACK,
   ROUTE_OPENAI_AUTH,
   ROUTE_OPENAI_WEB_ASSETS,
@@ -51,6 +52,7 @@ const {
   GROK_SUFFIX_DOMAINS,
   GROK_STRICT_EXACT_DOMAINS,
   GROK_EXACT_DOMAINS,
+  EXTRA_SITES,
   EXTRA_SUFFIX_DOMAINS,
   OPENAI_CORE_EXACT_DOMAINS,
   OPENAI_AUTH_SUFFIX_DOMAINS,
@@ -295,19 +297,9 @@ function normalizeDefaultProjection(projection) {
   return normalizeObjectKeys({ ...projection, rules });
 }
 
-test("默认输出相对固定 v5.11 投影仅增加批准的 extra 路由", () => {
+test("默认输出与固定 v5.11 投影一致", () => {
   assert.equal(routingBaseline.baselineCommit, "063c5561b9e81e42f89d7966a5d1a9772bdc44b3");
   const expected = structuredClone(routingBaseline.projection);
-  const domainBlockEnd = expected.rules.indexOf(
-    `IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`
-  );
-  assert.notEqual(domainBlockEnd, -1);
-  expected.rules.splice(
-    domainBlockEnd,
-    0,
-    `DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`
-  );
-  expected.dns["nameserver-policy"]["+.anyrouter.top"] = RESIDENTIAL_DOH;
 
   const input = baselineProfile();
   const snapshot = structuredClone(input);
@@ -323,6 +315,8 @@ test("默认输出相对固定 v5.11 投影仅增加批准的 extra 路由", () 
   };
   assert.deepEqual(normalizeDefaultProjection(projection), normalizeDefaultProjection(expected));
   assert.deepEqual(quietMain(output, routingBaseline.profileName), output);
+  assert.equal(output.rules.includes(`DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`), false);
+  assert.equal("+.anyrouter.top" in output.dns["nameserver-policy"], false);
 });
 
 test("保留家宽组拒绝动态来源、排除条件、替代选择及未知字段，错误不改输入", () => {
@@ -1209,42 +1203,104 @@ test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走
   assert.equal("x.ai" in policy, false);
 });
 
-test("extra 小站默认路由 AnyRouter，关闭后清理规则与 DNS", () => {
-  assert.equal(ROUTE_EXTRA, true);
+function leftoverAnyRouterConfig(target) {
+  return configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])],
+    rules: [`DOMAIN-SUFFIX,anyrouter.top,${target}`, "MATCH,🚀节点选择"],
+    dns: {
+      "nameserver-policy": {
+        "+.anyrouter.top": RESIDENTIAL_DOH
+      }
+    }
+  });
+}
+
+function assertAnyRouterCleaned(patched) {
+  const target = patched.constants.AI_GROUP;
+  const managedRule = `DOMAIN-SUFFIX,anyrouter.top,${target}`;
+  const first = quietMainWith(patched, leftoverAnyRouterConfig(target), "赔钱机场");
+  assert.equal(ruleMatchesHost(first.rules, "anyrouter.top", target), false);
+  assert.equal(first.rules.includes(managedRule), false);
+  assert.equal("+.anyrouter.top" in first.dns["nameserver-policy"], false);
+  const second = quietMainWith(patched, first, "赔钱机场");
+  assert.deepEqual(second.rules, first.rules);
+  assert.deepEqual(second.dns["nameserver-policy"], first.dns["nameserver-policy"]);
+}
+
+test("extra 分类默认关闭，登记表仍保留 AnyRouter 清理全集", () => {
+  assert.equal(ROUTE_EXTRA, false);
+  assert.equal(ROUTE_EXTRA_ANYROUTER, true);
+  assert.deepEqual(EXTRA_SITES.map((site) => site.id), ["anyrouter"]);
+  assert.equal(EXTRA_SITES[0].residentialDns, false);
+  assert.deepEqual(EXTRA_SITES[0].suffixDomains, ["anyrouter.top"]);
   assert.deepEqual(EXTRA_SUFFIX_DOMAINS, ["anyrouter.top"]);
+  assert.deepEqual(script.allPossibleExtraSuffixDomains(), ["anyrouter.top"]);
 
   const rules = buildInjectedRules();
-  assertAiRoute(rules, ["anyrouter.top", "www.anyrouter.top"]);
-  assertNoAiRoute(rules, ["anyrouter.com", "notanyrouter.top"]);
-  assert.equal(rules.includes(`DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`), true);
+  assertNoAiRoute(rules, ["anyrouter.top", "www.anyrouter.top", "anyrouter.com"]);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`), false);
 
   const policy = buildNameserverPolicy({});
-  assert.deepEqual(policy["+.anyrouter.top"], RESIDENTIAL_DOH);
+  assert.equal("+.anyrouter.top" in policy, false);
   assert.equal("anyrouter.top" in policy, false);
-  assert.equal("+.anyrouter.com" in policy, false);
+});
 
-  withPatchedSwitches({ ROUTE_EXTRA: false }, (patched) => {
+test("extra 与 extra_anyrouter 同时打开时只注入 AnyRouter 规则、不写住宅 DNS", () => {
+  withPatchedSwitches({
+    ROUTE_EXTRA: true,
+    ROUTE_EXTRA_ANYROUTER: true
+  }, (patched) => {
     const target = patched.constants.AI_GROUP;
-    const managedRule = `DOMAIN-SUFFIX,anyrouter.top,${target}`;
-    const config = configFixture({
-      proxies: [airportNode("HK")],
-      groups: [group("🚀节点选择", ["HK"])],
-      rules: [managedRule, "MATCH,🚀节点选择"],
-      dns: {
-        "nameserver-policy": {
-          "+.anyrouter.top": RESIDENTIAL_DOH
-        }
-      }
+    const rules = patched.buildInjectedRules();
+    assert.equal(rules.includes(`DOMAIN-SUFFIX,anyrouter.top,${target}`), true);
+    assert.equal(ruleMatchesHost(rules, "anyrouter.top", target), true);
+    assert.equal(ruleMatchesHost(rules, "www.anyrouter.top", target), true);
+    assert.equal(ruleMatchesHost(rules, "anyrouter.com", target), false);
+    assert.equal(ruleMatchesHost(rules, "notanyrouter.top", target), false);
+
+    const policy = patched.buildNameserverPolicy({});
+    assert.equal("+.anyrouter.top" in policy, false);
+    assert.equal("anyrouter.top" in policy, false);
+    assert.equal("+.anyrouter.com" in policy, false);
+    assert.deepEqual(policy["+.claude.ai"], RESIDENTIAL_DOH);
+    assert.deepEqual(policy["+.api.openai.com"], RESIDENTIAL_DOH);
+  });
+});
+
+test("关闭 extra 分类、关闭 extra_anyrouter 或两者都关时清理 AnyRouter 且幂等", () => {
+  withPatchedSwitches({ ROUTE_EXTRA: false, ROUTE_EXTRA_ANYROUTER: true }, assertAnyRouterCleaned);
+  withPatchedSwitches({ ROUTE_EXTRA: true, ROUTE_EXTRA_ANYROUTER: false }, assertAnyRouterCleaned);
+  withPatchedSwitches({ ROUTE_EXTRA: false, ROUTE_EXTRA_ANYROUTER: false }, assertAnyRouterCleaned);
+});
+
+test("补丁第二 extra 站点后可只开一部分，且默认不写住宅 DNS", () => {
+  withPatchedSwitches({
+    ROUTE_EXTRA: true,
+    ROUTE_EXTRA_ANYROUTER: true
+  }, (patched) => {
+    patched.constants.EXTRA_SITES.push({
+      id: "example",
+      constant: "ROUTE_EXTRA_EXAMPLE",
+      suffixDomains: ["example-extra.test"],
+      exactDomains: [],
+      residentialDns: false
     });
+    patched.constants.EXTRA_SITE_SWITCHES.ROUTE_EXTRA_EXAMPLE = false;
 
-    const first = quietMainWith(patched, config, "赔钱机场");
-    assert.equal(ruleMatchesHost(first.rules, "anyrouter.top", target), false);
-    assert.equal(first.rules.includes(managedRule), false);
-    assert.equal("+.anyrouter.top" in first.dns["nameserver-policy"], false);
-
-    const second = quietMainWith(patched, first, "赔钱机场");
-    assert.deepEqual(second.rules, first.rules);
-    assert.deepEqual(second.dns["nameserver-policy"], first.dns["nameserver-policy"]);
+    const target = patched.constants.AI_GROUP;
+    const rules = patched.buildInjectedRules();
+    const policy = patched.buildNameserverPolicy({});
+    assert.equal(ruleMatchesHost(rules, "anyrouter.top", target), true);
+    assert.equal(ruleMatchesHost(rules, "www.anyrouter.top", target), true);
+    assert.equal(ruleMatchesHost(rules, "example-extra.test", target), false);
+    assert.equal(rules.includes(`DOMAIN-SUFFIX,example-extra.test,${target}`), false);
+    assert.equal("+.anyrouter.top" in policy, false);
+    assert.equal("+.example-extra.test" in policy, false);
+    assert.ok(
+      patched.allPossibleExtraSuffixDomains().includes("example-extra.test"),
+      "第二站点后缀必须进入清理全集"
+    );
   });
 });
 
@@ -1878,9 +1934,9 @@ test("最终注入规则不存在重复项", () => {
   assert.equal(new Set(rules).size, rules.length);
 });
 
-test("默认注入 46 条 AI-家宽 规则", () => {
+test("默认注入 45 条 AI-家宽 规则", () => {
   const rules = buildInjectedRules().filter((rule) => rule.includes(AI_GROUP));
-  assert.equal(rules.length, 46);
+  assert.equal(rules.length, 45);
 });
 
 test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", () => {

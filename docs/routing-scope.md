@@ -28,7 +28,7 @@
 | Google Antigravity / Gemini Code Assist | `routing.antigravity_core` 默认 `true`，控制 `cloudaicompanion.googleapis.com` 及精确主机 `antigravity.google`、生产 Code Assist 主机 `cloudcode-pa.googleapis.com`，以及 Antigravity `language_server` 的 `--cloud_code_endpoint` 主机 `daily-cloudcode-pa.googleapis.com` |
 | Cursor | Chat/API、Tab、Agent、Cloud Agent/Bugbot API、authorize 端点、SSO 管理门户 `adminportal42.cursor.sh`、Cloud Agent VM 主机和产品专属认证；`routing.cursor_core` 默认 `true`。仓库索引主机 `repo[0-9]+.cursor.sh` 由独立开关 `routing.cursor_repository_indexing` 控制，默认 `false`，回落原 Profile |
 | Grok Build | `routing.grok_core` 默认 `true`。默认注入 `DOMAIN-SUFFIX,grok.com`（覆盖 `cli-chat-proxy.grok.com` 推理 API 与 `code.grok.com` 会话同步）、`auth.x.ai` OAuth 主机、`DOMAIN-SUFFIX,api.x.ai`（覆盖区域端点与 `mtls.api.x.ai`）。`routing.grok_web_assets = false` 时只把 `grok.com` 后缀换成三条精确主机：`grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`；`api.x.ai` 后缀仍注入 |
-| Extra 小站 | `routing.extra` 默认 `true`，当前仅注入 `DOMAIN-SUFFIX,anyrouter.top`，覆盖 AnyRouter 主域及子域；关闭后交回原 Profile |
+| Extra 小站 | `routing.extra` 默认 `false`。打开后由站点开关控制；当前仅 `routing.extra_anyrouter`（默认 `true`）注入 `DOMAIN-SUFFIX,anyrouter.top`，不写 `+.anyrouter.top` 住宅 DNS。关闭分类或站点后交回原 Profile |
 
 官方来源：
 
@@ -40,7 +40,9 @@
 - xAI 企业部署：https://docs.x.ai/build/enterprise ；区域端点：https://docs.x.ai/developers/regions ；mTLS：https://docs.x.ai/developers/advanced-api-usage/mtls
 - Vertex AI 端点与 Antigravity Enterprise：https://antigravity.google/docs/enterprise
 - Anthropic 入站网段：https://platform.claude.com/docs/en/api/ip-addresses.md
-- AnyRouter 产品入口：https://anyrouter.top/
+- AnyRouter 控制台：https://anyrouter.top/console
+- AnyRouter API / Claude Code：https://anyrouter.top
+- `www.anyrouter.top` 在健康 ESA 上仍可能返回 530，属第三方源站限制，不是本仓库路由修复的成功条件
 
 Cursor 依据：官方企业网络配置文档列出精确主机 `authenticate.cursor.sh`、`adminportal42.cursor.sh` 和 `*.cursorvm.com` 虚拟机主机，以及此前已覆盖的 API、Tab 和 Agent 端点。`api2.cursor.sh` 与 `authenticate.cursor.sh` 从 v5.10 起改为 `DOMAIN` 精确匹配。官方网络文档与本机 2026-08-17 Cursor 索引日志共同确认 `repo42.cursor.sh` 为仓库索引主机；`repo[0-9]+.cursor.sh` 是本项目的前向兼容策略，不是 Cursor 官方通配合同。默认 `routing.cursor_repository_indexing = false` 只让这些索引专属主机回落原 Profile，不阻止 Chat/Agent 发送代码上下文，也不能在 `disableHttp2` 或服务端强制 HTTP/1.1 把 RepositoryService 放到共享 `api2.cursor.sh` 时继续隔离索引。`api2.cursor.sh` 仍由 `routing.cursor_core` 控制。Privacy Mode 不会停止索引上传。Grok 依据：docs.x.ai/build/enterprise 把 `cli-chat-proxy.grok.com` 与 `auth.x.ai` 列为必需，把 `code.grok.com` 列为可选会话通道，把 `assets.grok.com` 标注为无功能影响。v5.7 依据：Claude Code 官方网络配置文档列出了 `mcp-proxy.anthropic.com` 和 `assets-proxy.anthropic.com`。
 

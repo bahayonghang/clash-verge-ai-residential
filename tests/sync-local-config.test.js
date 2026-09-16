@@ -87,8 +87,7 @@ dialer-proxy = "🚀节点选择"
 const newDefaultOnDomainSwitches = [
   { key: "anthropic_core", constant: "ROUTE_ANTHROPIC_CORE", host: "api.anthropic.com" },
   { key: "gemini_api_core", constant: "ROUTE_GEMINI_API_CORE", host: "generativelanguage.googleapis.com" },
-  { key: "antigravity_core", constant: "ROUTE_ANTIGRAVITY_CORE", host: "daily-cloudcode-pa.googleapis.com" },
-  { key: "extra", constant: "ROUTE_EXTRA", host: "www.anyrouter.top", policyKey: "+.anyrouter.top" }
+  { key: "antigravity_core", constant: "ROUTE_ANTIGRAVITY_CORE", host: "daily-cloudcode-pa.googleapis.com" }
 ];
 
 for (const entry of newDefaultOnDomainSwitches) {
@@ -142,6 +141,96 @@ for (const entry of newDefaultOnDomainSwitches) {
   });
 }
 
+test("本地 extra 缺失补 false，extra_anyrouter 缺失补 true，且不改写已有 extra = true", () => {
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    const originalTemplate = fs.readFileSync(templatePath, "utf8");
+    fs.writeFileSync(configPath, validHomeProxyToml, "utf8");
+    const result = syncLocalConfig({ templatePath, configPath, outputPath });
+    const completed = fs.readFileSync(configPath, "utf8");
+    const generated = require(outputPath);
+    assert.equal(parseLocalToml(completed).routing.extra, false);
+    assert.equal(parseLocalToml(completed).routing.extra_anyrouter, true);
+    assert.equal(generated.constants.ROUTE_EXTRA, false);
+    assert.equal(generated.constants.ROUTE_EXTRA_ANYROUTER, true);
+    assert.equal(result.addedKeys.includes("routing.extra"), true);
+    assert.equal(result.addedKeys.includes("routing.extra_anyrouter"), true);
+    assert.equal(
+      ruleMatchesHost(generated.buildInjectedRules(), "anyrouter.top", generated.constants.AI_GROUP),
+      false
+    );
+    assert.equal("+.anyrouter.top" in generated.buildNameserverPolicy(), false);
+    assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
+  });
+
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    const extraTrueLine = "extra = true # 保留用户选择";
+    fs.writeFileSync(configPath, `${validHomeProxyToml}\n[routing]\n${extraTrueLine}\n`);
+    const result = syncLocalConfig({ templatePath, configPath, outputPath });
+    const completed = fs.readFileSync(configPath, "utf8");
+    const generated = require(outputPath);
+    assert.ok(completed.includes(extraTrueLine));
+    assert.equal(parseLocalToml(completed).routing.extra, true);
+    assert.equal(parseLocalToml(completed).routing.extra_anyrouter, true);
+    assert.equal(generated.constants.ROUTE_EXTRA, true);
+    assert.equal(generated.constants.ROUTE_EXTRA_ANYROUTER, true);
+    assert.equal(result.addedKeys.includes("routing.extra"), false);
+    assert.equal(result.addedKeys.includes("routing.extra_anyrouter"), true);
+    const rules = generated.buildInjectedRules();
+    const policy = generated.buildNameserverPolicy();
+    assert.equal(ruleMatchesHost(rules, "anyrouter.top", generated.constants.AI_GROUP), true);
+    assert.equal(ruleMatchesHost(rules, "www.anyrouter.top", generated.constants.AI_GROUP), true);
+    assert.equal("+.anyrouter.top" in policy, false);
+  });
+});
+
+test("本地 extra=true 且 extra_anyrouter=false 时不注入 AnyRouter 规则或住宅 DNS", () => {
+  withTemporaryDirectory((directory) => {
+    const configPath = path.join(directory, "proxy.local.toml");
+    const outputPath = path.join(directory, "proxy.local.js");
+    const source = `${validHomeProxyToml}
+[routing]
+extra = true
+extra_anyrouter = false
+`;
+    fs.writeFileSync(configPath, source, "utf8");
+    syncLocalConfig({ templatePath, configPath, outputPath });
+    const generated = require(outputPath);
+    assert.equal(generated.constants.ROUTE_EXTRA, true);
+    assert.equal(generated.constants.ROUTE_EXTRA_ANYROUTER, false);
+    const rules = generated.buildInjectedRules();
+    const policy = generated.buildNameserverPolicy();
+    assert.equal(ruleMatchesHost(rules, "anyrouter.top", generated.constants.AI_GROUP), false);
+    assert.equal("+.anyrouter.top" in policy, false);
+  });
+});
+
+for (const entry of [
+  { key: "extra", constant: "ROUTE_EXTRA" },
+  { key: "extra_anyrouter", constant: "ROUTE_EXTRA_ANYROUTER" }
+]) {
+  test(`本地 ${entry.key} 类型错误或重复键拒绝写入`, () => {
+    for (const [body, message] of [
+      [`${entry.key} = "false"`, `routing.${entry.key} 必须是 true 或 false`],
+      [`${entry.key} = true\n${entry.key} = false`, `重复定义字段 routing.${entry.key}`]
+    ]) {
+      withTemporaryDirectory((directory) => {
+        const configPath = path.join(directory, "proxy.local.toml");
+        const outputPath = path.join(directory, "proxy.local.js");
+        const source = `${validHomeProxyToml}\n[routing]\n${body}\n`;
+        fs.writeFileSync(configPath, source);
+        assert.throws(() => syncLocalConfig({ templatePath, configPath, outputPath }),
+          (error) => error.message.includes(message));
+        assert.equal(fs.existsSync(outputPath), false);
+        assert.equal(fs.readFileSync(configPath, "utf8"), source);
+      });
+    }
+  });
+}
+
 test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚本", () => {
   withTemporaryDirectory((directory) => {
     const configPath = path.join(directory, "proxy.local.toml");
@@ -159,10 +248,22 @@ test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚�
     assert.match(output, /const ROUTE_GROK_CORE = true;/);
     assert.match(output, /const ROUTE_OPENAI_AUTH = false;/);
     assert.match(output, /const ROUTE_OPENAI_WEB_ASSETS = false;/);
+    assert.match(output, /const ROUTE_EXTRA = false;/);
+    assert.match(output, /const ROUTE_EXTRA_ANYROUTER = true;/);
     assert.doesNotMatch(output, /server: "xxx"/);
     assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
 
     // 缺失的开关键按示例默认值补全进本地 TOML，且缺失的整表被追加。
+    assert.equal(result.addedKeys.includes("routing.extra"), true);
+    assert.equal(result.addedKeys.includes("routing.extra_anyrouter"), true);
+    assert.equal(
+      result.addedDefaults.find((entry) => entry.key === "routing.extra").value,
+      false
+    );
+    assert.equal(
+      result.addedDefaults.find((entry) => entry.key === "routing.extra_anyrouter").value,
+      true
+    );
     assert.equal(result.addedKeys.includes("routing.cursor_core"), true);
     assert.equal(result.addedKeys.includes("routing.cursor_repository_indexing"), true);
     assert.equal(result.addedKeys.includes("routing.grok_core"), true);
@@ -784,6 +885,8 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
     assert.equal(reparsed.routing.cursor_repository_indexing, false);
     assert.equal(reparsed.routing.grok_core, true);
     assert.equal(reparsed.routing.public_encrypted_dns, false);
+    assert.equal(reparsed.routing.extra, false);
+    assert.equal(reparsed.routing.extra_anyrouter, true);
     assert.equal(reparsed.runtime.enable_domain_sniffer, true);
     assert.equal(reparsed.runtime.warn_on_reachable_udp_disabled, true);
 

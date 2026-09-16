@@ -6,8 +6,8 @@
 
 ### 新增
 
-- 新增三个默认启用的核心路由开关：`routing.anthropic_core`、`routing.gemini_api_core` 和 `routing.antigravity_core`。保留现有的默认域名、DNS 策略和出口目标。家宽审计输入现在可映射 25 个路由开关中的 13 个受支持域名开关；其余 12 个仍不受支持。
-- 新增默认启用的 `routing.extra` 类别，用于独立维护的小型 AI 网站；初始配置将 `anyrouter.top` 后缀路由到家宽链路。
+- 新增三个默认启用的核心路由开关：`routing.anthropic_core`、`routing.gemini_api_core` 和 `routing.antigravity_core`。保留现有的默认域名、DNS 策略和出口目标。家宽审计输入现在可映射 26 个路由开关中的 13 个受支持域名开关；其余 13 个仍不受支持。
+- `routing.extra` 改为默认关闭的小站分类总开关；新增站点开关 `routing.extra_anyrouter`（默认打开，仅在分类打开时生效）。AnyRouter 只注入 `DOMAIN-SUFFIX,anyrouter.top`，不再写 `+.anyrouter.top` 住宅 DNS，避免 ESA GeoDNS 选到不可用边缘。
 - 在 `docs/` 下新增本地双语 VitePress 文档站点（`just docs-dev` / `just docs-build`，Node.js 22+）。中文是默认语言，沿用现有的 `docs/*.md` 路径；英文页面位于 `docs/en/`。`docs/adr/` 保持不变，不属于该站点。扩展脚本的 `just ci` 门禁仍不会安装 VitePress。
 - 桌面壳现已提供真实的系统文件对话框和 Windows Toast 通知。备份、恢复、备份校验、报告导出和诊断信息导出都会打开原生保存/打开对话框（打开对话框时，`pick_file` 命令不再持有 facade 锁）。告警和测试通知按钮会通过 `tauri-plugin-notification` 发出真实的 Windows Toast；将 `RESIDENTIAL_MONITOR_ALLOW_TOAST=0`（或 `false`）可关闭通知。参见 `residential-monitor/docs/notifications.md`。测试替身（`FakeFileDialog` / `FakeNotificationSink`）现在仅用于测试，不再出现在生产组合根或用户可见文案中。
 - 新增家宽专用页面，提供实时监控、类别聚合、在已归因观测量中的占比以及报告导出功能。新增命令 `residential_share`。当 `covered_sec == 0` 时，覆盖率会返回四个 `None` 字段，而不是 0%。

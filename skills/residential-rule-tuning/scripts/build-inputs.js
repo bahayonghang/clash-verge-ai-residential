@@ -41,7 +41,14 @@ const SUPPORTED_SWITCH_BUILDERS = Object.freeze({
     ...constants.GROK_EXACT_DOMAINS
   ],
   grok_web_assets: (constants) => [...constants.GROK_STRICT_EXACT_DOMAINS],
-  extra: (constants) => [...constants.EXTRA_SUFFIX_DOMAINS]
+  extra_anyrouter: (constants) => {
+    const site = (constants.EXTRA_SITES || []).find((item) => item.id === "anyrouter");
+    if (!site) throw new Error("登记表缺少 anyrouter 站点");
+    return uniqueStrings([
+      ...(site.suffixDomains || []),
+      ...(site.exactDomains || [])
+    ]);
+  }
 });
 
 function uniqueStrings(values) {

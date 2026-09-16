@@ -40,6 +40,14 @@ marketplace, update, CDN, media, advertising, telemetry, or public-DNS traffic.
 domains as the bare hostname. DNS on/off assertions must use those keys.
 A bare suffix name such as `chatgpt.com` is absent even when the route is
 on, so `host in policy` cannot prove that GPT DNS routing is disabled.
+Routing and nameserver-policy may be decoupled. An extra site with
+`residentialDns: false` still injects `DOMAIN` / `DOMAIN-SUFFIX` rules when
+its category and site switches are on, but `buildNameserverPolicy` must not
+write `+.${domain}` or the bare hostname for that site. Existing non-extra
+AI domains keep residential DNS. Extra sites live in `EXTRA_SITES`; do not
+bind every new suffix to residential DoH. Node tests must not claim a
+third-party host completed TLS or is available; they only assert generated
+rules and policy keys.
 Managed-rule ownership changes require current-output cleanup, unknown/retired
 rule preservation, and repeated-execution coverage. Renderer changes require
 successful-output and rejection coverage in `tests/sync-local-config.test.js`,
@@ -221,8 +229,11 @@ Generate local output through `just render-local`; do not hand-edit it.
   migration sets, and generated-template handling.
 - Confirm rule order, DNS policy, upstream recursion checks, and idempotence remain
   coherent across `main`.
-- Confirm new domains have official or sanitized connection evidence and a
-  narrow negative-scope analysis, matching `.github/pull_request_template.md`.
+- Confirm new domains have official or sanitized connection evidence, a
+  real TLS check at the intended DNS vantage, and a narrow negative-scope
+  analysis, matching `.github/pull_request_template.md`. CDN/GeoDNS hosts
+  can fail when residential DoH sees a different edge than airport-upstream
+  DoH; do not assume `DOMAIN-SUFFIX` and residential DNS must be paired.
 - Confirm public placeholders and ignored-file boundaries remain intact.
 - Run `just ci` and inspect the final diff for unrelated or generated files.
 

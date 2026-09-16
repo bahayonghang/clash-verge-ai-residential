@@ -143,8 +143,11 @@ const ROUTE_GROK_CORE = true;
 // code.grok.com 精确主机；api.x.ai 后缀仍由 grok_core 注入。
 const ROUTE_GROK_WEB_ASSETS = true;
 
-// 不属于现有大型产品分组的小型 AI 站点；当前仅路由 AnyRouter。
-const ROUTE_EXTRA = true;
+// extra 分类总开关。默认关闭；打开后仍需各站点开关才会注入规则。
+const ROUTE_EXTRA = false;
+
+// AnyRouter（anyrouter.top）。仅在 extra 分类打开时生效；不写住宅 DNS。
+const ROUTE_EXTRA_ANYROUTER = true;
 
 // Cursor 进程会访问插件市场、GitHub、npm、MCP 和用户后端；默认不做进程级全量代理。
 const ROUTE_CURSOR_PROCESS_FALLBACK = false;
@@ -356,10 +359,22 @@ const GROK_EXACT_DOMAINS = [
   "auth.x.ai"
 ];
 
-// 用户明确指定的小型 AI 站点；保持独立开关，避免混入现有产品分组。
-const EXTRA_SUFFIX_DOMAINS = [
-  "anyrouter.top"
+// extra 站点登记表。分类与站点开关同时打开才注入规则。
+// residentialDns: false 表示只走业务路由，不写住宅 DoH。
+const EXTRA_SITES = [
+  {
+    id: "anyrouter",
+    constant: "ROUTE_EXTRA_ANYROUTER",
+    suffixDomains: ["anyrouter.top"],
+    exactDomains: [],
+    residentialDns: false
+  }
 ];
+
+// extra 站点开关名到当前布尔值，供登记表按 constant 查找。
+const EXTRA_SITE_SWITCHES = {
+  ROUTE_EXTRA_ANYROUTER
+};
 
 const OPENAI_SHARED_SUFFIX_DOMAINS = [
   "ct.sendgrid.net",
@@ -1251,6 +1266,86 @@ function grokActiveExactDomains() {
   return [...GROK_EXACT_DOMAINS, ...GROK_STRICT_EXACT_DOMAINS];
 }
 
+function extraSiteEnabled(site) {
+  if (!ROUTE_EXTRA) return false;
+  if (!site || typeof site.constant !== "string") {
+    fail(`[${AI_GROUP}] extra 站点缺少开关名`);
+  }
+  if (!Object.prototype.hasOwnProperty.call(EXTRA_SITE_SWITCHES, site.constant)) {
+    fail(`[${AI_GROUP}] 未知 extra 站点开关：${site.constant}`);
+  }
+  return EXTRA_SITE_SWITCHES[site.constant] === true;
+}
+
+function extraSiteDomainList(fieldName) {
+  const domains = [];
+  for (const site of EXTRA_SITES) {
+    const values = site[fieldName];
+    if (!Array.isArray(values)) continue;
+    for (const domain of values) {
+      if (typeof domain === "string" && domain.length > 0) domains.push(domain);
+    }
+  }
+  return uniqueStrings(domains);
+}
+
+function allPossibleExtraSuffixDomains() {
+  return extraSiteDomainList("suffixDomains");
+}
+
+function allPossibleExtraExactDomains() {
+  return extraSiteDomainList("exactDomains");
+}
+
+function extraSuffixDomains() {
+  return allPossibleExtraSuffixDomains();
+}
+
+function activeExtraSites() {
+  return EXTRA_SITES.filter((site) => extraSiteEnabled(site));
+}
+
+function activeExtraSuffixDomains() {
+  return uniqueStrings(
+    activeExtraSites().flatMap((site) =>
+      Array.isArray(site.suffixDomains) ? site.suffixDomains : []
+    )
+  );
+}
+
+function activeExtraExactDomains() {
+  return uniqueStrings(
+    activeExtraSites().flatMap((site) =>
+      Array.isArray(site.exactDomains) ? site.exactDomains : []
+    )
+  );
+}
+
+function extraResidentialDnsExemptDomains() {
+  const suffixes = new Set();
+  const exact = new Set();
+  for (const site of EXTRA_SITES) {
+    if (site.residentialDns !== false) continue;
+    for (const domain of Array.isArray(site.suffixDomains) ? site.suffixDomains : []) {
+      if (typeof domain === "string" && domain.length > 0) suffixes.add(domain);
+    }
+    for (const domain of Array.isArray(site.exactDomains) ? site.exactDomains : []) {
+      if (typeof domain === "string" && domain.length > 0) exact.add(domain);
+    }
+  }
+  return { suffixes, exact };
+}
+
+function residentialDnsSuffixSet() {
+  const exempt = extraResidentialDnsExemptDomains().suffixes;
+  return new Set(activeSuffixDomains().filter((domain) => !exempt.has(domain)));
+}
+
+function residentialDnsExactSet() {
+  const exempt = extraResidentialDnsExemptDomains().exact;
+  return new Set(activeExactDomains().filter((domain) => !exempt.has(domain)));
+}
+
 function activeSuffixDomains() {
   return uniqueStrings([
     ...(ROUTE_ANTHROPIC_CORE ? ANTHROPIC_CORE_SUFFIX_DOMAINS : []),
@@ -1260,7 +1355,7 @@ function activeSuffixDomains() {
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_SUFFIX_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_SUFFIX_DOMAINS : []),
     ...grokActiveSuffixDomains(),
-    ...(ROUTE_EXTRA ? EXTRA_SUFFIX_DOMAINS : []),
+    ...activeExtraSuffixDomains(),
     ...(ROUTE_OPENAI_SHARED_DEPENDENCIES ? OPENAI_SHARED_SUFFIX_DOMAINS : []),
     ...(ROUTE_CLAUDE_SHARED_DEPENDENCIES ? CLAUDE_SHARED_SUFFIX_DOMAINS : []),
     ...(ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY
@@ -1280,6 +1375,7 @@ function activeExactDomains() {
     ...(ROUTE_VERTEX_AI_ENDPOINTS ? VERTEX_AI_EXACT_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_EXACT_DOMAINS : []),
     ...grokActiveExactDomains(),
+    ...activeExtraExactDomains(),
     ...(ROUTE_OPENAI_SHARED_DEPENDENCIES ? OPENAI_SHARED_EXACT_DOMAINS : []),
     ...(ROUTE_CLAUDE_SHARED_DEPENDENCIES ? CLAUDE_SHARED_EXACT_DOMAINS : []),
     ...(ROUTE_ANTIGRAVITY_GOOGLE_AUTH ? ANTIGRAVITY_GOOGLE_AUTH_DOMAINS : []),
@@ -1316,7 +1412,7 @@ function allPossibleSuffixDomains() {
     "authenticate.cursor.sh",
     "antigravity.google",
     ...GROK_SUFFIX_DOMAINS,
-    ...EXTRA_SUFFIX_DOMAINS,
+    ...allPossibleExtraSuffixDomains(),
     ...OPENAI_SHARED_SUFFIX_DOMAINS,
     ...CLAUDE_SHARED_SUFFIX_DOMAINS,
     ...ANTIGRAVITY_UPDATE_AND_TELEMETRY_SUFFIX_DOMAINS,
@@ -1341,6 +1437,7 @@ function allPossibleExactDomains() {
     ...GROK_STRICT_EXACT_DOMAINS,
     // v5.10 将 api.x.ai 改为 suffix；保留 exact 以便清理旧规则。
     "api.x.ai",
+    ...allPossibleExtraExactDomains(),
     ...OPENAI_SHARED_EXACT_DOMAINS,
     ...CLAUDE_SHARED_EXACT_DOMAINS,
     ...ANTIGRAVITY_GOOGLE_AUTH_DOMAINS,
@@ -1562,10 +1659,11 @@ function buildNameserverPolicy(existingPolicy) {
   for (const key of PRIVATE_DNS_POLICY_KEYS) policy[key] = PRIVATE_DNS;
 
   // 具体 AI / 公共 DoH 域名优先于宽泛 geosite。
-  for (const domain of activeSuffixDomains()) {
+  // extra 站点可只走业务路由、不写住宅 DoH。
+  for (const domain of residentialDnsSuffixSet()) {
     policy[`+.${domain}`] = RESIDENTIAL_DOH;
   }
-  for (const domain of activeExactDomains()) {
+  for (const domain of residentialDnsExactSet()) {
     policy[domain] = RESIDENTIAL_DOH;
   }
   if (ROUTE_PUBLIC_ENCRYPTED_DNS) {
@@ -1805,6 +1903,12 @@ if (typeof module !== "undefined" && module.exports) {
     buildInjectedRules,
     buildNameserverPolicy,
     cleanExistingManagedRules,
+    activeExtraSuffixDomains,
+    activeExtraExactDomains,
+    allPossibleExtraSuffixDomains,
+    allPossibleExtraExactDomains,
+    residentialDnsSuffixSet,
+    extraSuffixDomains,
     constants: {
       SCRIPT_VERSION,
       AI_GROUP,
@@ -1839,6 +1943,7 @@ if (typeof module !== "undefined" && module.exports) {
       ROUTE_GROK_CORE,
       ROUTE_GROK_WEB_ASSETS,
       ROUTE_EXTRA,
+      ROUTE_EXTRA_ANYROUTER,
       ROUTE_CURSOR_PROCESS_FALLBACK,
       GEMINI_WEB_SUFFIX_DOMAINS,
       GEMINI_WEB_EXACT_DOMAINS,
@@ -1850,7 +1955,11 @@ if (typeof module !== "undefined" && module.exports) {
       GROK_SUFFIX_DOMAINS,
       GROK_STRICT_EXACT_DOMAINS,
       GROK_EXACT_DOMAINS,
-      EXTRA_SUFFIX_DOMAINS,
+      EXTRA_SITES,
+      EXTRA_SITE_SWITCHES,
+      get EXTRA_SUFFIX_DOMAINS() {
+        return allPossibleExtraSuffixDomains();
+      },
       RETIRED_CORE_SUFFIX_DOMAINS,
       RETIRED_CORE_EXACT_DOMAINS,
       RETIRED_DOMAIN_REGEXES

@@ -40,6 +40,7 @@ const SWITCH_CONFIG_FIELDS = Object.freeze([
   { table: "routing", key: "grok_core", constant: "ROUTE_GROK_CORE", type: "boolean" },
   { table: "routing", key: "grok_web_assets", constant: "ROUTE_GROK_WEB_ASSETS", type: "boolean" },
   { table: "routing", key: "extra", constant: "ROUTE_EXTRA", type: "boolean" },
+  { table: "routing", key: "extra_anyrouter", constant: "ROUTE_EXTRA_ANYROUTER", type: "boolean" },
   { table: "routing", key: "cursor_process_fallback", constant: "ROUTE_CURSOR_PROCESS_FALLBACK", type: "boolean" },
   { table: "routing", key: "claude_code_auxiliary", constant: "ROUTE_CLAUDE_CODE_AUXILIARY", type: "boolean" },
   { table: "routing", key: "ai_process_fallback", constant: "ENABLE_AI_PROCESS_FALLBACK", type: "boolean" },

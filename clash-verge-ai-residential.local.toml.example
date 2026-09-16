@@ -62,8 +62,10 @@ grok_core = true
 # code.grok.com 精确主机；api.x.ai 后缀不受影响。
 grok_web_assets = true
 
-# 小型 AI 站点独立分组；当前包含 anyrouter.top 及其子域。
-extra = true
+# extra 是小站分类总开关，默认关闭。打开后仍需各站点开关。
+extra = false
+# AnyRouter。仅在 extra = true 时生效；不写住宅 DNS。
+extra_anyrouter = true
 
 # 进程级兜底：按 Cursor 进程名代理其插件市场、GitHub、npm、MCP 和用户后端等
 # 全部连接。须同时开启 ai_process_fallback 与 cursor_core，通常不建议开启。

@@ -1,6 +1,6 @@
 # Clash Verge AI Residential
 
-A Clash Verge Rev global extension script. It sends core AI traffic from Claude, ChatGPT, Gemini, Antigravity, Cursor, and Grok Build, plus explicitly listed small AI sites, through a residential SOCKS5 chain. Marketplace, downloads, YouTube, and other non-AI traffic stay on the original Profile.
+A Clash Verge Rev global extension script. It sends core AI traffic from Claude, ChatGPT, Gemini, Antigravity, Cursor, and Grok Build through a residential SOCKS5 chain. Extra small sites are opt-in through the extra category. Marketplace, downloads, YouTube, and other non-AI traffic stay on the original Profile.
 
 ```text
 this machine -> current Profile airport group/node -> residential SOCKS5 -> AI service
