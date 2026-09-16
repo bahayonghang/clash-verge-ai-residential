@@ -1310,3 +1310,24 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 45: 新增 extra 小站路由
+
+**Date**: 2026-09-16
+**Task**: 新增 extra 小站路由
+**Branch**: `dev`
+
+### Summary
+
+新增 routing.extra 与 AnyRouter 家宽规则，补齐本地配置、审计映射、文档和回归测试；精简脚本头并将更新日志统一为中文。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `018f4c46c0035f6a2252cbac4f567093df76abf7` | (see git log) |
+
+### Status
+
+[OK] **Completed**
