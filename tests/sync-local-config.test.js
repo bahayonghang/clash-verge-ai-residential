@@ -84,13 +84,14 @@ udp = true
 dialer-proxy = "🚀节点选择"
 `;
 
-const newCoreSwitches = [
+const newDefaultOnDomainSwitches = [
   { key: "anthropic_core", constant: "ROUTE_ANTHROPIC_CORE", host: "api.anthropic.com" },
   { key: "gemini_api_core", constant: "ROUTE_GEMINI_API_CORE", host: "generativelanguage.googleapis.com" },
-  { key: "antigravity_core", constant: "ROUTE_ANTIGRAVITY_CORE", host: "daily-cloudcode-pa.googleapis.com" }
+  { key: "antigravity_core", constant: "ROUTE_ANTIGRAVITY_CORE", host: "daily-cloudcode-pa.googleapis.com" },
+  { key: "extra", constant: "ROUTE_EXTRA", host: "www.anyrouter.top", policyKey: "+.anyrouter.top" }
 ];
 
-for (const entry of newCoreSwitches) {
+for (const entry of newDefaultOnDomainSwitches) {
   test(`本地 ${entry.key} 支持 true/false，缺失补 true 且保留显式值与注释`, () => {
     for (const value of [undefined, true, false]) {
       withTemporaryDirectory((directory) => {
@@ -110,8 +111,8 @@ for (const entry of newCoreSwitches) {
         const rules = generated.buildInjectedRules();
         const policy = generated.buildNameserverPolicy();
         assert.equal(ruleMatchesHost(rules, entry.host, generated.constants.AI_GROUP), expected);
-        assert.equal(entry.host in policy, expected);
-        for (const other of newCoreSwitches.filter((item) => item !== entry)) {
+        assert.equal((entry.policyKey || entry.host) in policy, expected);
+        for (const other of newDefaultOnDomainSwitches.filter((item) => item !== entry)) {
           assert.equal(generated.constants[other.constant], true);
           assert.equal(ruleMatchesHost(rules, other.host, generated.constants.AI_GROUP), true);
         }

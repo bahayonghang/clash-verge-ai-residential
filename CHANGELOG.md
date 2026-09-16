@@ -1,198 +1,200 @@
-# Changelog
+# 更新日志
 
-All notable changes are recorded here. The project follows Semantic Versioning for repository releases.
+所有值得关注的变更都记录在此。本项目的仓库发行版遵循语义化版本规范。
 
-## [Unreleased]
+## [未发布]
 
-### Added
+### 新增
 
-- Three default-on core routing switches: `routing.anthropic_core`, `routing.gemini_api_core`, and `routing.antigravity_core`. Existing default domains, DNS policies, and exit targets are preserved. Residential audit input now maps 12 supported domain switches out of 24 routing switches; the remaining 12 stay unsupported.
-- Local bilingual VitePress docs site under `docs/` (`just docs-dev` / `just docs-build`, Node.js 22+). Chinese is the default locale at existing `docs/*.md` paths; English pages live in `docs/en/`. `docs/adr/` is unchanged and is not part of the site. The extension `just ci` gate still does not install VitePress.
-- The desktop shell ships real system file dialogs and Windows toast notifications. Backup, restore, backup validation, report export, and diagnostics export open a native save/open dialog (the `pick_file` command no longer holds the facade lock while a dialog is open). Alerts and the test-notification button emit real Windows toasts via `tauri-plugin-notification`; set `RESIDENTIAL_MONITOR_ALLOW_TOAST=0` (or `false`) to turn them off. See `residential-monitor/docs/notifications.md`. Test doubles (`FakeFileDialog` / `FakeNotificationSink`) are now test-only and no longer appear in production composition roots or user-visible copy.
-- Dedicated residential page with live monitor, category aggregation, share of attributed observation, and report export. New command `residential_share`. Coverage with `covered_sec == 0` returns four `None` fields, not 0%.
-- Ported the reports, alerts, settings/data, recovery, and unavailable pages onto the React shell. Share charts use Recharts. Export, retention, backup, alert-rule, and about behavior stay the same.
-- C3 report queries accept `minute1` / `minute2` / `minute5` / `minute10` granularity on the raw tier. Existing `hour` / `day` / `month` values stay unchanged.
-- C3 materializes `process`, `rule_group`, `chain`, and `network` dimension rows in addition to `host`. Category ranking on the dimension tier groups `category_id` and keeps `dimension_kind = host` so traffic is not counted five times.
-- Ranking identity `__unknown__` marks a missing dimension value. The row stays in the ranking so rank sums can match totals.
-- Host identity uses `metadata.host`, then `sniffHost`, then destination IP. The host page can inspect remaining `__unknown__` rows by rule, chain, and process.
-- Process unknown rows can drill to host and chain. The process page can filter by residential accounting caliber. When process attribution is unavailable the rank bar is replaced by a missing-field note and current-frame process coverage.
+- 新增三个默认启用的核心路由开关：`routing.anthropic_core`、`routing.gemini_api_core` 和 `routing.antigravity_core`。保留现有的默认域名、DNS 策略和出口目标。家宽审计输入现在可映射 25 个路由开关中的 13 个受支持域名开关；其余 12 个仍不受支持。
+- 新增默认启用的 `routing.extra` 类别，用于独立维护的小型 AI 网站；初始配置将 `anyrouter.top` 后缀路由到家宽链路。
+- 在 `docs/` 下新增本地双语 VitePress 文档站点（`just docs-dev` / `just docs-build`，Node.js 22+）。中文是默认语言，沿用现有的 `docs/*.md` 路径；英文页面位于 `docs/en/`。`docs/adr/` 保持不变，不属于该站点。扩展脚本的 `just ci` 门禁仍不会安装 VitePress。
+- 桌面壳现已提供真实的系统文件对话框和 Windows Toast 通知。备份、恢复、备份校验、报告导出和诊断信息导出都会打开原生保存/打开对话框（打开对话框时，`pick_file` 命令不再持有 facade 锁）。告警和测试通知按钮会通过 `tauri-plugin-notification` 发出真实的 Windows Toast；将 `RESIDENTIAL_MONITOR_ALLOW_TOAST=0`（或 `false`）可关闭通知。参见 `residential-monitor/docs/notifications.md`。测试替身（`FakeFileDialog` / `FakeNotificationSink`）现在仅用于测试，不再出现在生产组合根或用户可见文案中。
+- 新增家宽专用页面，提供实时监控、类别聚合、在已归因观测量中的占比以及报告导出功能。新增命令 `residential_share`。当 `covered_sec == 0` 时，覆盖率会返回四个 `None` 字段，而不是 0%。
+- 将报告、告警、设置/数据、恢复和不可用页面迁移到 React 壳。占比图表使用 Recharts。导出、保留期、备份、告警规则和关于页面的行为保持不变。
+- C3 报告查询在原始层支持 `minute1` / `minute2` / `minute5` / `minute10` 粒度。现有的 `hour` / `day` / `month` 值保持不变。
+- 除 `host` 外，C3 还会实体化 `process`、`rule_group`、`chain` 和 `network` 维度行。维度层上的类别排名按 `category_id` 分组，并保留 `dimension_kind = host`，避免流量被重复计算五次。
+- 排名标识 `__unknown__` 表示维度值缺失。该行会保留在排名中，以便排名之和能够与总量一致。
+- 主机标识依次使用 `metadata.host`、`sniffHost` 和目标 IP。主机页面可以按规则、链路和进程检查剩余的 `__unknown__` 行。
+- 未知进程行可以下钻到主机和链路。进程页面可以按家宽统计口径筛选。当进程归因不可用时，排名条会替换为字段缺失说明和当前帧的进程覆盖率。
 
-### Changed
+### 变更
 
-- Dedicated Claude, OpenAI, Antigravity, and Cursor process fallbacks now require their respective core switch. Anthropic IP fallback also requires `routing.anthropic_core`. Authentication, auxiliary, asset, and global capture switches remain independent; disabled core traffic returns to the original Profile rules rather than being forced to an airport exit.
-- Existing `AI-家宽` groups accept only the canonical single residential member and `name`, `type`, `proxies`, `disable-udp`, `icon`, and `hidden` fields. Extra provider sources, filters, and alternate selection fields are rejected without mutating the input; output preserves only supported display metadata. Configuration rejection is not a runtime traffic-blocking guarantee because the host may retain its original configuration after a script error.
-- Documented the existing DNS-policy exception for regional Vertex and optional Cursor indexing regex routes. No broad domain suffixes or new resolver providers are introduced; actual DNS/UDP paths and traffic savings still require runtime evidence.
-- ResiWatch toolchain: `typescript-eslint` 8.69.0, `@types/react-dom` 19.2.5, compatible `cargo update` (`hyper` 1.11.1, `tauri-plugin-dialog` 2.7.3, `tauri-plugin-notification` 2.4.0). GitHub Actions `checkout` and `setup-node` v7. Breaking upgrades: `lucide-react` 1.39.0, `sha2` 0.11, `rand` 0.10, `tokio-tungstenite` 0.30, `eslint-plugin-react-hooks` 7.1.1 (flat `recommended`; `set-state-in-effect` and `refs` stay off), TypeScript 6.0.3, Vitest 4.1.11, Vite 8.2.2 with `@vitejs/plugin-react` 5.x and `esbuild` 0.28 as the optional minify peer. Root `package.json` still has zero third-party deps and `engines.node >=18`. ESLint 10, TypeScript 7, and plugin-react 6 stay out of this round.
-- The extension script writes top-level `find-process-mode: always` even when `routing.ai_process_fallback` is false. It still does not inject `PROCESS-NAME` / `PROCESS-PATH` rules unless that switch is on. A Clash Verge value nested under `profile:` does not reach the kernel.
-- Replaced the vanilla TypeScript + Catppuccin shell with a React + Tailwind desktop UI. Navigation is ten routes. Overview, live connections, and host / rule / chain / process pages ship in the new shell. `src/main.ts` and `src/styles.css` are removed.
-- Residential classification lives in one module with two named functions. Accounting uses exact target match. Live “residential only” still matches a configured target or a node name that contains 家宽.
-- `ReportFilters` now apply to raw totals, series, and rankings, including category. `filters.chain` matches the last chain hop. `filters.rule` matches the SQL rule key.
-- Dimension-layer `exact_top_n` is false when the grouping has no five-dimension materialization. Queries before the `hourly_dim_v2` watermark return `capability_unsupported`.
-- The Windows product name, Start Menu shortcut, window title, and current-user install directory are `ResiWatch`. The identifier and exe stay `residential-monitor`. The sidebar slogan is the short bound-not-bill sentence.
-- Desktop UI route pages load with `React.lazy`. React, Recharts, and Radix emit separate Rollup chunks. The Vite 500 kB chunk warning is the regression guard again; do not raise `chunkSizeWarningLimit` to hide a merged entry.
+- 更新日志统一改为简体中文，并精简扩展脚本文件头中与本文件重复的历史版本记录。
+- Claude、OpenAI、Antigravity 和 Cursor 的专用进程回退现在要求启用各自对应的核心开关。Anthropic IP 回退也要求启用 `routing.anthropic_core`。认证、辅助、资产和全局捕获开关仍保持独立；核心流量被禁用后会回到原始 Profile 规则，而不是被强制送往机场出口。
+- 现有的 `AI-家宽` 组只接受规范的单一家宽成员，以及 `name`、`type`、`proxies`、`disable-udp`、`icon` 和 `hidden` 字段。额外的提供方来源、过滤器和替代选择字段会被拒绝，且不会修改输入；输出仅保留受支持的展示元数据。配置被拒绝并不保证运行时流量一定会被阻断，因为脚本出错后，宿主可能保留其原始配置。
+- 记录了现有 DNS 策略针对区域 Vertex 和可选 Cursor 索引正则路由的例外情况。未引入宽泛的域名后缀或新的解析器提供方；实际 DNS/UDP 路径和流量节省仍需运行时证据验证。
+- ResiWatch 工具链：`typescript-eslint` 8.69.0、`@types/react-dom` 19.2.5，以及兼容范围内的 `cargo update`（`hyper` 1.11.1、`tauri-plugin-dialog` 2.7.3、`tauri-plugin-notification` 2.4.0）。GitHub Actions 的 `checkout` 和 `setup-node` 升级至 v7。破坏性升级包括：`lucide-react` 1.39.0、`sha2` 0.11、`rand` 0.10、`tokio-tungstenite` 0.30、`eslint-plugin-react-hooks` 7.1.1（扁平配置 `recommended`；`set-state-in-effect` 和 `refs` 仍关闭）、TypeScript 6.0.3、Vitest 4.1.11、Vite 8.2.2，以及 `@vitejs/plugin-react` 5.x 和作为可选压缩对等依赖的 `esbuild` 0.28。根目录的 `package.json` 仍保持零第三方依赖，且 `engines.node >=18`。本轮仍不引入 ESLint 10、TypeScript 7 和 plugin-react 6。
+- 即使 `routing.ai_process_fallback` 为 `false`，扩展脚本也会写入顶层 `find-process-mode: always`。除非该开关已启用，否则仍不会注入 `PROCESS-NAME` / `PROCESS-PATH` 规则。Clash Verge 中嵌套在 `profile:` 下的值无法传递到内核。
+- 使用 React + Tailwind 桌面 UI 替换了原生 TypeScript + Catppuccin 壳。导航包含十个路由。概览、实时连接以及主机/规则/链路/进程页面已随新壳提供。已移除 `src/main.ts` 和 `src/styles.css`。
+- 家宽分类集中在一个模块中，并提供两个具名函数。统计使用目标的精确匹配。实时“仅家宽”仍会匹配已配置的目标，或名称中包含“家宽”的节点。
+- `ReportFilters` 现在会应用于原始总量、序列和排名，包括类别。`filters.chain` 匹配链路的最后一跳。`filters.rule` 匹配 SQL 规则键。
+- 当分组没有五维实体化数据时，维度层的 `exact_top_n` 为 `false`。查询 `hourly_dim_v2` 水位线之前的数据会返回 `capability_unsupported`。
+- Windows 产品名称、开始菜单快捷方式、窗口标题和当前用户安装目录均为 `ResiWatch`。标识符和 exe 仍为 `residential-monitor`。侧边栏标语采用简短的“有边界、非账单”表述。
+- 桌面 UI 路由页面使用 `React.lazy` 加载。React、Recharts 和 Radix 会生成独立的 Rollup 分块。Vite 的 500 kB 分块警告再次作为回归防线；不要通过提高 `chunkSizeWarningLimit` 来掩盖合并后的入口分块。
 
-### Fixed
+### 修复
 
-- Controller address without `host:port` is `invalid_address`. Quiet hours block `Activated` instead of only suppressing the toast. Recovery Shell `create_backup` returns `recovery_only` and does not copy the live database.
-- `just tinstall` installs to `%LOCALAPPDATA%\ResiWatch` with NSIS `/D=`. A previous install path under `%TEMP%` or the old Chinese product folder is not reused; data moves to the new `data\` directory.
-- Windows MSVC no longer prints `linker_messages` for `residential_monitor_lib`. The crate type is `rlib` only; `cdylib` / `staticlib` were mobile leftovers.
-- Host rank bars no longer clip long FQDNs on the left of the Y-axis.
+- 不含 `host:port` 的控制器地址会返回 `invalid_address`。免打扰时段会阻止 `Activated`，而不只是抑制 Toast。恢复壳中的 `create_backup` 会返回 `recovery_only`，且不会复制实时数据库。
+- `just tinstall` 使用 NSIS `/D=` 安装到 `%LOCALAPPDATA%\ResiWatch`。不会复用之前位于 `%TEMP%` 下或旧中文产品文件夹中的安装路径；数据会迁移到新的 `data\` 目录。
+- Windows MSVC 不再为 `residential_monitor_lib` 输出 `linker_messages`。crate 类型仅保留 `rlib`；`cdylib` / `staticlib` 是移动端遗留项。
+- 主机排名条的 Y 轴左侧不再裁剪较长的 FQDN。
 
-### Planned
+### 计划
 
-- Add sanitized real-profile integration fixtures.
-- Add automated domain-source freshness checks where upstream providers publish machine-readable inventories.
+- 添加经过脱敏的真实 Profile 集成测试夹具。
+- 在上游提供方发布机器可读清单时，添加自动化域名来源时效性检查。
 
 ## [5.11.0] - 2026-08-21
 
-### Added
+### 新增
 
-- New independent `routing.openai_auth` switch (default `false`) for the bounded `auth.openai.com` suffix and exact `auth0.openai.com` host.
-- New independent `routing.openai_web_assets` switch (default `false`) for the `oaistatic.com` suffix.
-- Local TOML rendering, missing-key completion, managed cleanup, DNS policy, tests, and switch documentation now cover both controls.
+- 新增独立的 `routing.openai_auth` 开关（默认 `false`），用于范围受限的 `auth.openai.com` 后缀和精确主机 `auth0.openai.com`。
+- 新增独立的 `routing.openai_web_assets` 开关（默认 `false`），用于 `oaistatic.com` 后缀。
+- 本地 TOML 渲染、缺失键补全、托管清理、DNS 策略、测试和开关文档现在均覆盖这两个控制项。
 
-### Notes
+### 说明
 
-- Neither switch enables OpenAI shared WorkOS, Intercom, Stripe, Cloudflare Challenge, Sentry, or Datadog dependencies, and no broad `openai.com` suffix is added.
-- A rendered `.local.js` can be copied from Windows to Ubuntu when the target Profile exposes the same resolvable upstream name and capabilities. The rendered file embeds the residential endpoint and credentials, so it must be transferred through a trusted channel and protected as a secret. Actual Ubuntu Clash host execution and end-to-end ChatGPT login behavior remain UNVERIFIED without sanitized Connections evidence.
+- 这两个开关都不会启用 OpenAI 共用的 WorkOS、Intercom、Stripe、Cloudflare Challenge、Sentry 或 Datadog 依赖，也不会添加宽泛的 `openai.com` 后缀。
+- 当目标 Profile 提供相同且可解析的上游名称和能力时，可以将渲染后的 `.local.js` 从 Windows 复制到 Ubuntu。渲染后的文件内嵌家宽端点和凭据，因此必须通过可信渠道传输，并作为机密加以保护。在没有经过脱敏的 Connections 证据时，Ubuntu 上 Clash 宿主的实际执行情况和端到端 ChatGPT 登录行为仍未经验证。
 
 ## [5.10.1] - 2026-08-20
 
-### Fixed
+### 修复
 
-- Restored `daily-cloudcode-pa.googleapis.com` to the active residential catalog. Antigravity `language_server` sets `--cloud_code_endpoint` to this host. v5.10.0 retired the host as undocumented. Local logs show TLS handshake failures, and Clash Connections send the host to the original Profile upstream.
+- 将 `daily-cloudcode-pa.googleapis.com` 恢复到活跃家宽目录。Antigravity 的 `language_server` 会将 `--cloud_code_endpoint` 设置为该主机。v5.10.0 曾因缺少文档而停用该主机。本地日志显示 TLS 握手失败，且 Clash Connections 会将该主机发送到原始 Profile 上游。
 
-### Changed
+### 变更
 
-- Default injected `AI-家宽` rule count is 45.
+- 默认注入的 `AI-家宽` 规则数量为 45。
 
 ## [5.10.0] - 2026-08-19
 
-### Added
+### 新增
 
-- New `routing.grok_web_assets` switch (default `true`). When the switch is `true`, the script injects `DOMAIN-SUFFIX,grok.com`. When the switch is `false`, the script injects exact hosts `grok.com`, `cli-chat-proxy.grok.com`, and `code.grok.com`.
-- New `routing.vertex_ai_endpoints` switch (default `true`). The switch controls four Vertex AI / Agent Platform rules: `aiplatform.googleapis.com`, `aiplatform.us.rep.googleapis.com`, `aiplatform.eu.rep.googleapis.com`, and the regional regex `^[a-z0-9-]+-aiplatform\.googleapis\.com$`.
+- 新增 `routing.grok_web_assets` 开关（默认 `true`）。当该开关为 `true` 时，脚本注入 `DOMAIN-SUFFIX,grok.com`。当该开关为 `false` 时，脚本注入精确主机 `grok.com`、`cli-chat-proxy.grok.com` 和 `code.grok.com`。
+- 新增 `routing.vertex_ai_endpoints` 开关（默认 `true`）。该开关控制四条 Vertex AI / Agent Platform 规则：`aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com`，以及区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$`。
 
-### Changed
+### 变更
 
-- Retired five hosts from the active residential catalog. The hosts stay in `allPossible*` so upgrades can clean old rules: `clau.de`, `claudemcpclient.com`, `a-api.anthropic.com`, `daily-cloudcode-pa.googleapis.com`, and `geminicloudassist.googleapis.com`.
-- Narrowed four rules: `api2.cursor.sh` and `authenticate.cursor.sh` from suffix to exact; the `adminportal` regex to `DOMAIN,adminportal42.cursor.sh`; `antigravity.google` from suffix to exact.
-- Changed `api.x.ai` from exact to suffix so regional hosts and `mtls.api.x.ai` match.
-- Default injected `AI-家宽` rule count is 44.
+- 从活跃家宽目录中停用五个主机。这些主机仍保留在 `allPossible*` 中，以便升级时清理旧规则：`clau.de`、`claudemcpclient.com`、`a-api.anthropic.com`、`daily-cloudcode-pa.googleapis.com` 和 `geminicloudassist.googleapis.com`。
+- 收窄四条规则：`api2.cursor.sh` 和 `authenticate.cursor.sh` 从后缀匹配改为精确匹配；将 `adminportal` 正则改为 `DOMAIN,adminportal42.cursor.sh`；`antigravity.google` 从后缀匹配改为精确匹配。
+- 将 `api.x.ai` 从精确匹配改为后缀匹配，以匹配区域主机和 `mtls.api.x.ai`。
+- 默认注入的 `AI-家宽` 规则数量为 44。
 
-### Notes
+### 说明
 
-- `chatgpt.com` stays a suffix. Subdomains such as `help.` and `status.` stay on the residential link.
-- Three `alkali*` AI Studio hosts stay in `gemini_web_core` and remain UNVERIFIED.
-- `claudemcpcontent.com` stays a suffix for Claude Desktop MCP App widgets.
+- `chatgpt.com` 仍使用后缀匹配。`help.` 和 `status.` 等子域名仍通过家宽链路。
+- 三个 `alkali*` AI Studio 主机仍保留在 `gemini_web_core` 中，且仍未经验证。
+- `claudemcpcontent.com` 仍使用后缀匹配，用于 Claude Desktop MCP App 小组件。
 
 ## [5.9.0] - 2026-08-18
 
-### Added
+### 新增
 
-- New `routing.cursor_repository_indexing` switch (default `false`) for Cursor repository-indexing hosts `repo[0-9]+.cursor.sh`. A missing local TOML field is completed as `false`. Set the field to `true` to restore v5.8.1 residential routing for those hosts without deleting the key.
+- 新增 `routing.cursor_repository_indexing` 开关（默认 `false`），用于 Cursor 仓库索引主机 `repo[0-9]+.cursor.sh`。本地 TOML 字段缺失时会补全为 `false`。将该字段设置为 `true`，即可恢复 v5.8.1 对这些主机的家宽路由，无需删除该键。
 
-### Changed
+### 变更
 
-- Repository-indexing regexes are no longer part of `routing.cursor_core`. By default, `repo42.cursor.sh` and other `repo<N>.cursor.sh` hosts fall back to the original Profile/airport upstream. Cursor Chat, Tab, Agent, auth, and Cloud Agent stay on `routing.cursor_core` (still default `true`). `api2.cursor.sh` stays on cursor_core.
+- 仓库索引正则不再属于 `routing.cursor_core`。默认情况下，`repo42.cursor.sh` 和其他 `repo<N>.cursor.sh` 主机会回退到原始 Profile/机场上游。Cursor Chat、Tab、Agent、认证和 Cloud Agent 仍使用 `routing.cursor_core`（默认仍为 `true`）。`api2.cursor.sh` 仍归属于 cursor_core。
 
-### Notes
+### 说明
 
-- Official docs and local 2026-08-17 logs jointly confirm `repo42.cursor.sh` as the indexing host.
-- `repo[0-9]+.cursor.sh` is this project's forward-compat policy, not an official Cursor wildcard contract.
-- Privacy Mode does not stop indexing uploads.
-- `disableHttp2` or a server-forced HTTP/1.1 fallback can put RepositoryService on shared `api2.cursor.sh`. Clash domain rules cannot isolate that path. This release does not claim that all repository uploads leave the residential link.
+- 官方文档和本地 2026-08-17 日志共同确认 `repo42.cursor.sh` 是索引主机。
+- `repo[0-9]+.cursor.sh` 是本项目的前向兼容策略，并非 Cursor 官方的通配符契约。
+- Privacy Mode（隐私模式）不会阻止索引上传。
+- `disableHttp2` 或服务器强制的 HTTP/1.1 回退可能会使 RepositoryService 使用共用的 `api2.cursor.sh`。Clash 域名规则无法隔离这条路径。本版本并未宣称所有仓库上传流量都不会经过家宽链路。
 
 ## [5.8.1] - 2026-08-17
 
-### Changed
+### 变更
 
-- Build one outbound name index during `main` so large airport profiles do not scan every proxy for each reachable leaf.
-- Collapse reachable `udp: false` leaf warnings into one summary (at most 8 samples).
+- 在 `main` 执行期间构建一次出站名称索引，使大型机场 Profile 无需为每个可达叶节点扫描所有代理。
+- 将可达的 `udp: false` 叶节点警告合并为一条摘要（最多 8 个样例）。
 
 ## [5.8.0] - 2026-08-17
 
-### Added
+### 新增
 
-- Five official ChatGPT exact hosts from OpenAI help article 9247338: `chat.openai.com`, `android.chat.openai.com`, `desktop.chat.openai.com`, `ios.chat.openai.com`, and `tcr9i.chat.openai.com`. The purpose of `tcr9i.chat.openai.com` is undocumented. Native ChatGPT desktop/iOS Connections results remain UNVERIFIED.
+- 根据 OpenAI 帮助文章 9247338，新增五个官方 ChatGPT 精确主机：`chat.openai.com`、`android.chat.openai.com`、`desktop.chat.openai.com`、`ios.chat.openai.com` 和 `tcr9i.chat.openai.com`。`tcr9i.chat.openai.com` 的用途没有文档说明。原生 ChatGPT 桌面端/iOS 的 Connections 结果仍未经验证。
 
-### Changed
+### 变更
 
-- Restored `OPENAI_CORE_EXACT_DOMAINS` under `routing.openai_core`. Generated output uses exact `DOMAIN` rules and bare DNS keys only. A cleanup-only `chat.openai.com` suffix entry removes a mistaken `DOMAIN-SUFFIX,chat.openai.com` rule and `+.chat.openai.com` policy key; that suffix is never re-injected.
+- 在 `routing.openai_core` 下恢复 `OPENAI_CORE_EXACT_DOMAINS`。生成的输出仅使用精确 `DOMAIN` 规则和不带前缀的 DNS 键。仅用于清理的 `chat.openai.com` 后缀条目会移除错误的 `DOMAIN-SUFFIX,chat.openai.com` 规则和 `+.chat.openai.com` 策略键；该后缀绝不会再次注入。
 
 ## [5.7.0] - 2026-08-16
 
-### Added
+### 新增
 
-- Claude catalog additions from the official Claude Code network configuration document: the `mcp-proxy.anthropic.com` MCP connector proxy and the `assets-proxy.anthropic.com` desktop/web asset proxy (the official document warns that blocking it breaks the app UI).
-- Grok catalog additions from the official xAI enterprise deployment document: the `auth.x.ai` OAuth2/OIDC host (must-allow) and the `api.x.ai` direct API inference endpoint. The `x.ai` install host stays on the original Profile.
-- A `warn` log when references to `AI-家宽` / `家宽-SOCKS5` are removed from a reachable upstream group. The recursion-prevention cleanup is no longer silent; the log names the group, the removed entries, and how to route AI traffic instead.
-- An `info` log documenting that current Clash Verge Rev restores `tun` / `ipv6` authoritative fields after the global script runs; TUN DNS hijack and the IPv6 toggle must be configured in the app settings page. Docs now describe this host behavior and the fake-ip DNS resolution timing.
+- 根据 Claude Code 官方网络配置文档，在 Claude 目录中新增：`mcp-proxy.anthropic.com` MCP 连接器代理，以及 `assets-proxy.anthropic.com` 桌面端/Web 资产代理（官方文档警告，阻止该代理会破坏应用 UI）。
+- 根据 xAI 官方企业部署文档，在 Grok 目录中新增：`auth.x.ai` OAuth2/OIDC 主机（必须允许），以及 `api.x.ai` 直接 API 推理端点。`x.ai` 安装主机仍使用原始 Profile。
+- 当从可达上游组中移除对 `AI-家宽` / `家宽-SOCKS5` 的引用时，新增一条 `warn` 日志。递归防护清理不再静默执行；日志会列出组名、被移除的条目，以及应如何改为路由 AI 流量。
+- 新增一条 `info` 日志，说明当前 Clash Verge Rev 会在全局脚本运行后重新写入权威的 `tun` / `ipv6` 字段值；TUN DNS 劫持和 IPv6 开关必须在应用设置页面配置。文档现在也说明了这种宿主行为，以及 fake-ip DNS 的解析时机。
 
-### Changed
+### 变更
 
-- `api.openai.com` moved from an exact rule to a suffix rule so the official Codex data-residency prefixes `us.api.openai.com` / `eu.api.openai.com` also match. Rules generated by v5.6 in exact form are still cleaned up idempotently.
+- `api.openai.com` 从精确规则改为后缀规则，以便同时匹配官方 Codex 数据驻留前缀 `us.api.openai.com` / `eu.api.openai.com`。v5.6 以精确形式生成的规则仍会以幂等方式清理。
 
 ## [5.6.0] - 2026-08-16
 
-### Added
+### 新增
 
-- New `routing.openai_core` switch (default `true`) controlling ChatGPT product, OpenAI model API, and uploaded/generated user-content routing. Setting it to `false` in the local TOML keeps GPT traffic on the airport upstream instead of the residential link.
-- New `routing.grok_core` switch (default `true`) routing the Grok Build (xAI grok CLI) inference API `cli-chat-proxy.grok.com` (`/v1/responses` inference and `/v1/storage` codebase/session uploads) plus the Grok product domain through the residential link. Grok third-party analytics (`api.mixpanel.com`), the `x.ai` install host, and shared `storage.googleapis.com` stay on the original Profile.
-- Cursor catalog additions from the official enterprise network configuration document: the `authenticate.cursor.sh` authorize endpoint, the `adminportal<N>.cursor.sh` SSO portal (bounded regex), and the `*.cursorvm.com` Cloud Agent VM hosts. Marketplace, CDN, download, and update hosts remain excluded.
-- Local TOML auto-completion during `just render-local` / `node scripts/sync-local-config.js`: missing switch keys (including a missing `[routing]` / `[runtime]` table) are appended to the local TOML using the example defaults. Existing values, comments, line endings, and the trailing newline are preserved verbatim; completion is idempotent, and missing `[home_proxy]` credential keys still fail closed.
+- 新增 `routing.openai_core` 开关（默认 `true`），用于控制 ChatGPT 产品、OpenAI 模型 API 以及用户上传/生成内容的路由。在本地 TOML 中将其设置为 `false`，可使 GPT 流量继续使用机场上游，而不是家宽链路。
+- 新增 `routing.grok_core` 开关（默认 `true`），通过家宽链路路由 Grok Build（xAI grok CLI）推理 API `cli-chat-proxy.grok.com`（`/v1/responses` 推理和 `/v1/storage` 代码库/会话上传）以及 Grok 产品域名。Grok 第三方分析服务（`api.mixpanel.com`）、`x.ai` 安装主机和共用的 `storage.googleapis.com` 仍使用原始 Profile。
+- 根据 Cursor 官方企业网络配置文档，在 Cursor 目录中新增：`authenticate.cursor.sh` 授权端点、`adminportal<N>.cursor.sh` SSO 门户（有界正则），以及 `*.cursorvm.com` Cloud Agent VM 主机。Marketplace、CDN、下载和更新主机仍被排除。
+- 在 `just render-local` / `node scripts/sync-local-config.js` 期间自动补全本地 TOML：缺失的开关键（包括缺失的 `[routing]` / `[runtime]` 表）会使用示例默认值追加到本地 TOML。现有值、注释、行尾符和末尾换行会逐字保留；补全过程是幂等的，而缺失 `[home_proxy]` 凭据键时仍会采用失败关闭策略。
 
-### Changed
+### 变更
 
-- `routing.cursor_core` now defaults to `true`: Cursor rules and DNS policy are injected without opt-in. Set it to `false` in the local TOML to keep Cursor on the airport upstream.
+- `routing.cursor_core` 现在默认为 `true`：无需显式启用即可注入 Cursor 规则和 DNS 策略。在本地 TOML 中将其设置为 `false`，可使 Cursor 继续使用机场上游。
 
-### Fixed
+### 修复
 
-- Route the observed Anthropic core API host `a-api.anthropic.com` through the residential connection and DNS paths without broadening the default scope to all `anthropic.com` traffic.
+- 将观测到的 Anthropic 核心 API 主机 `a-api.anthropic.com` 路由到家宽连接和 DNS 路径，同时不将默认范围扩大到所有 `anthropic.com` 流量。
 
 ## [5.5.0] - 2026-07-23
 
-### Added
+### 新增
 
-- Optional `[routing]` and `[runtime]` local TOML tables covering every scalar user switch while preserving home-proxy-only configuration files.
-- Exact-one boolean-anchor validation and atomic local-script rendering for partial switch overrides.
-- Validation that rejects upstream names containing `#` or `&` before constructing a Mihomo DoH URL.
-- Complete `just render-local` and direct Node setup paths, with the Clash Verge Rev Global Extend Script screenshot.
+- 新增可选的 `[routing]` 和 `[runtime]` 本地 TOML 表，覆盖所有标量用户开关，同时保持与仅含 home proxy 的配置文件兼容。
+- 新增“恰好一个布尔锚点”验证，以及针对部分开关覆盖的原子化本地脚本渲染。
+- 新增验证：在构造 Mihomo DoH URL 前，拒绝包含 `#` 或 `&` 的上游名称。
+- 完善 `just render-local` 和直接使用 Node 的设置流程，并提供 Clash Verge Rev Global Extend Script 截图。
 
-### Changed
+### 变更
 
-- Cursor core routing is now opt-in and disabled by default; the narrow catalog remains available through `routing.cursor_core = true`.
-- Removed three redundant Cursor catalog matches covered by retained suffix or bounded repository rules.
-- Current-version managed rules are still replaced when switches change, while unknown rules targeting `AI-家宽` remain user-owned.
-- Documented the retained strict-DNS first-query latency trade-off and the original-Profile login versus residential model-traffic exit split.
+- Cursor 核心路由现在需要显式启用，且默认关闭；仍可通过 `routing.cursor_core = true` 使用收窄后的目录。
+- 移除三条冗余的 Cursor 目录匹配项，这些匹配已被保留的后缀规则或有界仓库规则覆盖。
+- 开关变化时，当前版本的托管规则仍会被替换；而目标为 `AI-家宽` 的未知规则仍归用户所有。
+- 文档记录了继续采用严格 DNS 所带来的首次查询延迟权衡，以及登录流量使用原始 Profile、模型流量使用家宽出口的分流方式。
 
-### Removed
+### 移除
 
-- Removed the unreleased pre-v5.4 legacy migration catalogs, retargeting, group-reference migration, and legacy-group cleanup.
-- If v5.4 generated output was manually persisted in a subscription or Merge layer, remove these now-retired user-owned rules there before refreshing:
+- 移除尚未发布的 v5.4 之前旧版迁移目录、目标重定向、组引用迁移和旧组清理逻辑。
+- 如果 v5.4 生成的输出曾被手动持久化到订阅或 Merge 层，请在刷新前从对应位置移除以下现已停用、归用户所有的规则：
   - `DOMAIN,repo42.cursor.sh,AI-家宽`
   - `DOMAIN-REGEX,^[a-z0-9-]+\.api5\.cursor\.sh$,AI-家宽`
   - `DOMAIN-REGEX,^(?:us-asia|us-eu|us-only)\.gcpp\.cursor\.sh$,AI-家宽`
 
 ## [5.4.0] - 2026-07-22
 
-### Added
+### 新增
 
-- Stable public entry file: `clash-verge-ai-residential.js`.
-- AI-only routing for Claude, ChatGPT, Gemini, Google Antigravity, and Cursor core inference/agent traffic.
-- Multi-Profile `dialer-proxy` resolution with `🚀节点选择` as the preferred default.
-- Recursive proxy-group and `include-all` protection.
-- AI-specific DNS policy with non-AI overseas DNS bound to the current Profile upstream.
-- 28 configuration-level regression tests.
-- CI across Node.js 18, 20, and 22.
-- Template safety check to reject committed residential SOCKS5 credentials.
+- 稳定的公开入口文件：`clash-verge-ai-residential.js`。
+- 为 Claude、ChatGPT、Gemini、Google Antigravity 和 Cursor 核心推理/Agent 流量提供仅限 AI 的路由。
+- 支持多 Profile 的 `dialer-proxy` 解析，并将 `🚀节点选择` 作为首选默认项。
+- 提供递归代理组和 `include-all` 防护。
+- 提供 AI 专用 DNS 策略，并将非 AI 的境外 DNS 绑定到当前 Profile 上游。
+- 新增 28 项配置级回归测试。
+- 在 Node.js 18、20 和 22 上运行 CI。
+- 新增模板安全检查，拒绝提交家宽 SOCKS5 凭据。
 
-### Changed
+### 变更
 
-- Cursor Marketplace, downloads, CDN, update assets, YouTube, Maps, advertising, and shared telemetry are explicitly excluded from the residential route.
-- Versioned archive filenames were replaced by stable repository paths; release versions are represented by Git tags.
+- 明确将 Cursor Marketplace、下载、CDN、更新资产、YouTube、Maps、广告和共用遥测排除在家宽路由之外。
+- 使用稳定的仓库路径取代带版本号的归档文件名；发行版本通过 Git 标签表示。
 
-### Security
+### 安全性
 
-- Residential endpoint and credentials remain placeholders in the public template.
-- Runtime configuration fails closed when required credentials or upstream groups cannot be resolved safely.
+- 公开模板中的家宽端点和凭据仍保留为占位符。
+- 当必需凭据或上游组无法安全解析时，运行时配置会采用失败关闭策略。

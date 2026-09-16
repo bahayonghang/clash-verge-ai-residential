@@ -218,10 +218,10 @@ test("SKILL.md 含六个规定小节", () => {
   }
 });
 
-test("生成器对 routing 表 24 个开关做完整性检查", () => {
+test("生成器对 routing 表 25 个开关做完整性检查", () => {
   const built = buildInputs(path.join(__dirname, ".."));
-  assert.equal(built.routingCount, 24);
-  assert.equal(Object.keys(built.switches.supported).length, 12);
+  assert.equal(built.routingCount, 25);
+  assert.equal(Object.keys(built.switches.supported).length, 13);
   assert.deepEqual(built.switches.unsupported, [
     "openai_shared_dependencies", "claude_shared_dependencies",
     "antigravity_google_auth", "antigravity_project_apis", "antigravity_update_and_telemetry",
@@ -231,12 +231,13 @@ test("生成器对 routing 表 24 个开关做完整性检查", () => {
   ]);
   assert.equal(
     Object.keys(built.switches.supported).length + built.switches.unsupported.length,
-    24
+    25
   );
   assert.ok(Array.isArray(built.rules.rules));
   assert.ok(built.rules.rules.length > 0);
   assert.ok(built.switches.unsupported.includes("openai_shared_dependencies"));
   assert.ok(built.switches.supported.openai_core.length > 0);
+  assert.deepEqual(built.switches.supported.extra, ["anyrouter.top"]);
 });
 
 test("新增核心开关仅映射各自域名，不将 IP 或进程记为域名归属", () => {

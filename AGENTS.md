@@ -118,9 +118,9 @@ frontend spec to `residential-monitor/src/`.
 
 ## Language split
 
-- Code comments, error messages, and `docs/` (except `docs/en/`) are Chinese.
+- Code comments, error messages, `CHANGELOG.md`, and `docs/` (except `docs/en/`) are Chinese.
 - `docs/en/` is the English docs-site tree.
-- `CHANGELOG.md`, `package.json`, CI, and PR/issue templates are English.
+- `package.json`, CI, and PR/issue templates are English.
 - This Trellis spec tree is English.
 
 Match the file you edit. Root extension style: 2-space indent, double quotes,

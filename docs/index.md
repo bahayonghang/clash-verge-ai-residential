@@ -1,6 +1,6 @@
 # Clash Verge AI 家宽路由
 
-Clash Verge Rev 全局扩展脚本：只把 Claude、ChatGPT、Gemini、Antigravity、Cursor、Grok Build 的核心 AI 流量送进住宅 SOCKS5 链路。插件市场、下载、YouTube 和其他非 AI 流量仍走原 Profile。
+Clash Verge Rev 全局扩展脚本：只把 Claude、ChatGPT、Gemini、Antigravity、Cursor、Grok Build 的核心 AI 流量及明确收录的小型 AI 站点送进住宅 SOCKS5 链路。插件市场、下载、YouTube 和其他非 AI 流量仍走原 Profile。
 
 ```text
 本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务

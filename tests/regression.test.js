@@ -37,6 +37,7 @@ const {
   ROUTE_CURSOR_REPOSITORY_INDEXING,
   ROUTE_GROK_CORE,
   ROUTE_GROK_WEB_ASSETS,
+  ROUTE_EXTRA,
   ROUTE_CURSOR_PROCESS_FALLBACK,
   ROUTE_OPENAI_AUTH,
   ROUTE_OPENAI_WEB_ASSETS,
@@ -50,6 +51,7 @@ const {
   GROK_SUFFIX_DOMAINS,
   GROK_STRICT_EXACT_DOMAINS,
   GROK_EXACT_DOMAINS,
+  EXTRA_SUFFIX_DOMAINS,
   OPENAI_CORE_EXACT_DOMAINS,
   OPENAI_AUTH_SUFFIX_DOMAINS,
   OPENAI_AUTH_EXACT_DOMAINS,
@@ -293,8 +295,20 @@ function normalizeDefaultProjection(projection) {
   return normalizeObjectKeys({ ...projection, rules });
 }
 
-test("默认输出与实施前固定的 v5.11 提交投影等价，保留规则层次及 DNS resolver 顺序", () => {
+test("默认输出相对固定 v5.11 投影仅增加批准的 extra 路由", () => {
   assert.equal(routingBaseline.baselineCommit, "063c5561b9e81e42f89d7966a5d1a9772bdc44b3");
+  const expected = structuredClone(routingBaseline.projection);
+  const domainBlockEnd = expected.rules.indexOf(
+    `IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`
+  );
+  assert.notEqual(domainBlockEnd, -1);
+  expected.rules.splice(
+    domainBlockEnd,
+    0,
+    `DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`
+  );
+  expected.dns["nameserver-policy"]["+.anyrouter.top"] = RESIDENTIAL_DOH;
+
   const input = baselineProfile();
   const snapshot = structuredClone(input);
   const output = quietMain(input, routingBaseline.profileName);
@@ -307,7 +321,7 @@ test("默认输出与实施前固定的 v5.11 提交投影等价，保留规则�
     group: findGroup(output, AI_GROUP),
     home: { type: home.type, udp: home.udp, "dialer-proxy": home["dialer-proxy"] }
   };
-  assert.deepEqual(normalizeDefaultProjection(projection), normalizeDefaultProjection(routingBaseline.projection));
+  assert.deepEqual(normalizeDefaultProjection(projection), normalizeDefaultProjection(expected));
   assert.deepEqual(quietMain(output, routingBaseline.profileName), output);
 });
 
@@ -1195,6 +1209,45 @@ test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走
   assert.equal("x.ai" in policy, false);
 });
 
+test("extra 小站默认路由 AnyRouter，关闭后清理规则与 DNS", () => {
+  assert.equal(ROUTE_EXTRA, true);
+  assert.deepEqual(EXTRA_SUFFIX_DOMAINS, ["anyrouter.top"]);
+
+  const rules = buildInjectedRules();
+  assertAiRoute(rules, ["anyrouter.top", "www.anyrouter.top"]);
+  assertNoAiRoute(rules, ["anyrouter.com", "notanyrouter.top"]);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`), true);
+
+  const policy = buildNameserverPolicy({});
+  assert.deepEqual(policy["+.anyrouter.top"], RESIDENTIAL_DOH);
+  assert.equal("anyrouter.top" in policy, false);
+  assert.equal("+.anyrouter.com" in policy, false);
+
+  withPatchedSwitches({ ROUTE_EXTRA: false }, (patched) => {
+    const target = patched.constants.AI_GROUP;
+    const managedRule = `DOMAIN-SUFFIX,anyrouter.top,${target}`;
+    const config = configFixture({
+      proxies: [airportNode("HK")],
+      groups: [group("🚀节点选择", ["HK"])],
+      rules: [managedRule, "MATCH,🚀节点选择"],
+      dns: {
+        "nameserver-policy": {
+          "+.anyrouter.top": RESIDENTIAL_DOH
+        }
+      }
+    });
+
+    const first = quietMainWith(patched, config, "赔钱机场");
+    assert.equal(ruleMatchesHost(first.rules, "anyrouter.top", target), false);
+    assert.equal(first.rules.includes(managedRule), false);
+    assert.equal("+.anyrouter.top" in first.dns["nameserver-policy"], false);
+
+    const second = quietMainWith(patched, first, "赔钱机场");
+    assert.deepEqual(second.rules, first.rules);
+    assert.deepEqual(second.dns["nameserver-policy"], first.dns["nameserver-policy"]);
+  });
+});
+
 test("Cursor 插件市场、下载、CDN、更新与 Remote-SSH 资产不走家宽", () => {
   const rules = buildInjectedRules();
   assertNoAiRoute(rules, [
@@ -1458,6 +1511,7 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
     `DOMAIN-SUFFIX,cursorvm.com,${AI_GROUP}`,
     `DOMAIN,api.cursor.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,grok.com,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`,
     `DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`,
     `DOMAIN-SUFFIX,clau.de,${AI_GROUP}`,
     `DOMAIN-SUFFIX,claudemcpclient.com,${AI_GROUP}`,
@@ -1824,9 +1878,9 @@ test("最终注入规则不存在重复项", () => {
   assert.equal(new Set(rules).size, rules.length);
 });
 
-test("默认注入 45 条 AI-家宽 规则", () => {
+test("默认注入 46 条 AI-家宽 规则", () => {
   const rules = buildInjectedRules().filter((rule) => rule.includes(AI_GROUP));
-  assert.equal(rules.length, 45);
+  assert.equal(rules.length, 46);
 });
 
 test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", () => {

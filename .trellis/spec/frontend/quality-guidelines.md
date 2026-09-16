@@ -10,9 +10,9 @@
   indentation, double quotes, and semicolons for the extension and root
   scripts. There is no formatter or linter; match the surrounding source and
   rely on syntax checks.
-- Keep code comments, error messages, and `docs/` (except `docs/en/`) in
-  Chinese. `docs/en/` is the English docs-site tree. Keep this Trellis spec,
-  `package.json`, CI, and GitHub templates in English.
+- Keep code comments, error messages, `CHANGELOG.md`, and `docs/` (except
+  `docs/en/`) in Chinese. `docs/en/` is the English docs-site tree. Keep this
+  Trellis spec, `package.json`, CI, and GitHub templates in English.
 - Preserve the AI-only routing boundary and the generated singleton residential
   egress group. Configuration structure does not establish host fail-closed
   behavior: the Clash host may discard a failed script and use its input profile.
