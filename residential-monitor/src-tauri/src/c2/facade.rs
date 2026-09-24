@@ -239,6 +239,13 @@ pub struct AppFacade {
     pub writer_epoch: u64,
     pub bundle_seq: u64,
     controller_epoch_ready: bool,
+    controller_epoch: Option<u64>,
+    pending_commit: Option<(CommitBundle, AlertCommitSlice)>,
+    deferred_inputs: std::collections::VecDeque<(ControllerInput, i64, u64)>,
+    backpressure_gap_utc: Option<i64>,
+    previous_sample_utc: Option<i64>,
+    pub archive_scheduler: Option<crate::c3::archive::ArchiveScheduler>,
+    next_maintenance_utc: i64,
     pub last_frame_utc: Option<i64>,
     pub metadata_coverage: crate::controller::MetadataCoverage,
     pub last_period_eval_utc: i64,
@@ -287,6 +294,7 @@ impl StorageState {
                 return Err(error);
             }
         };
+        storage.retire_abandoned_generations(writer_epoch, chrono::Utc::now().timestamp())?;
         let settings: ControllerSettings = storage
             .get_setting("controller")
             .ok()
@@ -423,6 +431,13 @@ impl AppFacade {
                     writer_epoch: state.writer_epoch,
                     bundle_seq: 1,
                     controller_epoch_ready: false,
+                    controller_epoch: None,
+                    pending_commit: None,
+                    deferred_inputs: std::collections::VecDeque::new(),
+                    backpressure_gap_utc: None,
+                    previous_sample_utc: None,
+                    archive_scheduler: Some(crate::c3::archive::ArchiveScheduler::default()),
+                    next_maintenance_utc: 0,
                     last_frame_utc: None,
                     metadata_coverage: crate::controller::MetadataCoverage::default(),
                     last_period_eval_utc: 0,
@@ -475,6 +490,13 @@ impl AppFacade {
             writer_epoch: 0,
             bundle_seq: 1,
             controller_epoch_ready: false,
+            controller_epoch: None,
+            pending_commit: None,
+            deferred_inputs: std::collections::VecDeque::new(),
+            backpressure_gap_utc: None,
+            previous_sample_utc: None,
+            archive_scheduler: Some(crate::c3::archive::ArchiveScheduler::default()),
+            next_maintenance_utc: 0,
             last_frame_utc: None,
             metadata_coverage: crate::controller::MetadataCoverage::default(),
             last_period_eval_utc: 0,
@@ -501,6 +523,14 @@ impl AppFacade {
         self.storage = Some(state.storage);
         self.writer_epoch = state.writer_epoch;
         self.bundle_seq = 1;
+        self.controller_epoch_ready = false;
+        self.controller_epoch = None;
+        self.pending_commit = None;
+        self.deferred_inputs.clear();
+        self.backpressure_gap_utc = None;
+        self.previous_sample_utc = None;
+        self.archive_scheduler = Some(crate::c3::archive::ArchiveScheduler::default());
+        self.next_maintenance_utc = 0;
         self.settings = state.settings;
         self.wizard_complete = state.wizard_complete;
         self.ui_locale = state.ui_locale;
@@ -745,6 +775,15 @@ impl AppFacade {
 
     pub fn apply_lifecycle(&mut self, input: ControllerInput) -> Option<MonitorStreamMessage> {
         let utc = chrono::Utc::now().timestamp();
+        self.ingest_snapshot(input, utc, 0)
+    }
+
+    fn apply_lifecycle_ready(
+        &mut self,
+        input: ControllerInput,
+        utc: i64,
+    ) -> Option<MonitorStreamMessage> {
+        self.previous_sample_utc = None;
         if matches!(
             &input,
             ControllerInput::Restarted { .. } | ControllerInput::Disconnected { .. }
@@ -758,7 +797,7 @@ impl AppFacade {
         } else {
             Vec::new()
         };
-        let commit_error = self.commit_eval(&batch, &live, utc, 0);
+        let commit_error = self.commit_eval(&batch, &live, utc, 0, false, None);
         let mut health = health_from(
             self.session_status,
             self.storage
@@ -782,6 +821,134 @@ impl AppFacade {
         utc: i64,
         mono: u64,
     ) -> Option<MonitorStreamMessage> {
+        // 原 bundle + 最多 7 个输入遵守 C0 上限，短连接的已收到样本不会被 latest-only 覆盖。
+        if let Some(reason) = self.drain_pending_inputs() {
+            self.defer_input(input, utc, mono);
+            let reason = if self.backpressure_gap_utc.is_some() {
+                "storage_backpressure"
+            } else {
+                reason
+            };
+            return Some(self.publish_commit_failure(reason, utc));
+        }
+        if let Err(reason) = self.prepare_snapshot(&input, utc) {
+            self.defer_input(input, utc, mono);
+            return Some(self.publish_commit_failure(&reason, utc));
+        }
+        self.ingest_snapshot_ready(input, utc, mono)
+    }
+
+    fn drain_pending_inputs(&mut self) -> Option<&'static str> {
+        if let Some(reason) = self.retry_pending_commit() {
+            return Some(reason);
+        }
+        while let Some((queued, queued_utc, queued_mono)) = self.deferred_inputs.pop_front() {
+            if self.prepare_snapshot(&queued, queued_utc).is_err() {
+                self.deferred_inputs
+                    .push_front((queued, queued_utc, queued_mono));
+                return Some("storage_backpressure");
+            }
+            self.ingest_snapshot_ready(queued, queued_utc, queued_mono);
+            if self.pending_commit.is_some() {
+                return Some("storage_backpressure");
+            }
+        }
+        if let Some(gap_start) = self.backpressure_gap_utc.take() {
+            self.previous_sample_utc = None;
+            let mut batch = self.engine.apply(ControllerInput::Paused, 0, gap_start);
+            batch.coverage = vec![crate::accounting::CoverageChange {
+                kind: "gap",
+                reason: "storage_backpressure",
+            }];
+            let live = self.hub.rows();
+            if let Some(reason) = self.commit_eval(&batch, &live, gap_start, 0, false, None) {
+                return Some(reason);
+            }
+        }
+        None
+    }
+
+    /// 空闲 tick 仅补齐已收到的输入；不改变手动暂停、不发起 controller 请求。
+    pub fn retry_writer_tick(&mut self) -> Option<MonitorStreamMessage> {
+        if self.pending_commit.is_none()
+            && self.deferred_inputs.is_empty()
+            && self.backpressure_gap_utc.is_none()
+        {
+            return None;
+        }
+        let now = chrono::Utc::now().timestamp();
+        if let Some(reason) = self.drain_pending_inputs() {
+            return Some(self.publish_commit_failure(reason, now));
+        }
+        let health = health_from(
+            self.session_status,
+            self.storage.as_ref().and_then(|s| s.health().ok()).as_ref(),
+        );
+        Some(self.hub.publish_health(health, now))
+    }
+
+    fn defer_input(&mut self, input: ControllerInput, utc: i64, mono: u64) {
+        if self.deferred_inputs.len() < crate::c0_contract::QUEUE_MAX_BATCHES as usize - 1
+            && self.backpressure_gap_utc.is_none()
+        {
+            self.deferred_inputs.push_back((input, utc, mono));
+        } else {
+            self.backpressure_gap_utc.get_or_insert(utc);
+        }
+    }
+
+    /// 只在消费输入前查 durable 身份；失败时调用方保留原输入，避免丢失短连接。
+    fn prepare_snapshot(&mut self, input: &ControllerInput, utc: i64) -> Result<(), String> {
+        let ControllerInput::Snapshot {
+            upload_total,
+            download_total,
+            connections,
+            ..
+        } = input
+        else {
+            return Ok(());
+        };
+        // generation 只消费 FIFO 中已应用的生命周期；界面可提前显示最新连接状态。
+        let mut needs_generation = !self.controller_epoch_ready
+            || self.engine.snapshot_requires_new_generation(
+                connections,
+                *upload_total,
+                *download_total,
+            );
+        if !needs_generation {
+            let unseen = self.engine.newly_seen_ids(connections);
+            let storage = self.storage.as_ref().ok_or("storage_closed")?;
+            needs_generation = storage
+                .contains_session_id(self.engine.current_epoch(), &unseen)
+                .map_err(|error| format!("controller_identity_{}", storage_error_class(&error)))?;
+        }
+        if needs_generation {
+            let storage = self.storage.as_mut().ok_or("storage_closed")?;
+            let epoch = storage
+                .replace_controller_epoch(self.controller_epoch, "collector-http", utc)
+                .map_err(|error| {
+                    let class = storage_error_class(&error);
+                    app_log::emit(
+                        Level::Error,
+                        "controller_epoch_reserve",
+                        serde_json::json!({ "class": class }),
+                    );
+                    format!("controller_epoch_{class}")
+                })?;
+            self.previous_sample_utc = None;
+            self.engine.reset_epoch(epoch);
+            self.controller_epoch = Some(epoch);
+            self.controller_epoch_ready = true;
+        }
+        Ok(())
+    }
+
+    fn ingest_snapshot_ready(
+        &mut self,
+        input: ControllerInput,
+        utc: i64,
+        mono: u64,
+    ) -> Option<MonitorStreamMessage> {
         if let ControllerInput::Snapshot {
             upload_total,
             download_total,
@@ -791,43 +958,6 @@ impl AppFacade {
         {
             self.metadata_coverage =
                 crate::controller::MetadataCoverage::from_connections(&connections);
-            let needs_generation = !self.controller_epoch_ready
-                || self.session_status != SessionStatus::Connected
-                || self.engine.snapshot_requires_new_generation(
-                    &connections,
-                    upload_total,
-                    download_total,
-                );
-            if needs_generation {
-                let epoch = match self
-                    .storage
-                    .as_mut()
-                    .map(|storage| storage.reserve_controller_epoch("collector-http"))
-                {
-                    Some(Ok(epoch)) => epoch,
-                    Some(Err(error)) => {
-                        let class = storage_error_class(&error);
-                        app_log::emit(
-                            Level::Error,
-                            "controller_epoch_reserve",
-                            serde_json::json!({ "class": class }),
-                        );
-                        let mut health = health_from(
-                            self.session_status,
-                            self.storage
-                                .as_ref()
-                                .and_then(|item| item.health().ok())
-                                .as_ref(),
-                        );
-                        health.storage_ok = false;
-                        health.storage_reason = Some(format!("controller_epoch_{class}"));
-                        return Some(self.hub.publish_health(health, utc));
-                    }
-                    None => return None,
-                };
-                self.engine.reset_epoch(epoch);
-                self.controller_epoch_ready = true;
-            }
             let (batch, live) = self.engine.apply_snapshot_and_project(
                 connections,
                 upload_total,
@@ -850,7 +980,12 @@ impl AppFacade {
             }
             self.session_status = SessionStatus::Connected;
             self.log_session_change(SessionStatus::Connected);
-            let commit_error = self.commit_eval(&batch, &live, utc, utc as u64);
+            let observed = self
+                .previous_sample_utc
+                .filter(|start| *start < utc)
+                .map(|start| (start, utc));
+            self.previous_sample_utc = Some(utc);
+            let commit_error = self.commit_eval(&batch, &live, utc, utc as u64, true, observed);
             let mut health = health_from(
                 SessionStatus::Connected,
                 self.storage
@@ -864,7 +999,7 @@ impl AppFacade {
             }
             self.hub.publish(&batch, live, health, utc).ok().flatten()
         } else {
-            self.apply_lifecycle(input)
+            self.apply_lifecycle_ready(input, utc)
         }
     }
 
@@ -874,6 +1009,8 @@ impl AppFacade {
         live: &[crate::c2::hub::LiveConnectionView],
         utc: i64,
         mono: u64,
+        persist_metadata: bool,
+        observed_interval: Option<(i64, i64)>,
     ) -> Option<&'static str> {
         self.storage.as_ref()?;
         let data_version = self
@@ -908,7 +1045,6 @@ impl AppFacade {
             let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
             usages = crate::c4::period::evaluate_period_rules(
                 &path,
-                &mut self.snapshots,
                 &rules,
                 utc,
                 self.raw_retain_days,
@@ -935,7 +1071,13 @@ impl AppFacade {
         let slice = AlertCommitSlice {
             facts: batch.facts.clone(),
             coverage: batch.coverage.clone(),
-            live_rows: live.to_vec(),
+            live_rows: if persist_metadata {
+                self.engine.dirty_metadata(live)
+            } else {
+                Vec::new()
+            },
+            closed_sessions: self.engine.closed_sessions().to_vec(),
+            observed_interval,
             utc,
             writes,
             rule: None,
@@ -952,17 +1094,43 @@ impl AppFacade {
             }
         };
         let bundle = CommitBundle { payload, ..bundle };
+        self.pending_commit = Some((bundle, slice));
+        self.retry_pending_commit()
+    }
+
+    fn publish_commit_failure(&self, reason: &str, utc: i64) -> MonitorStreamMessage {
+        let mut health = health_from(
+            self.session_status,
+            self.storage.as_ref().and_then(|s| s.health().ok()).as_ref(),
+        );
+        health.storage_ok = false;
+        health.storage_reason = Some(reason.into());
+        self.hub.publish_health(health, utc)
+    }
+
+    fn retry_pending_commit(&mut self) -> Option<&'static str> {
+        let (bundle, slice) = self.pending_commit.as_ref()?;
+        let utc = slice.utc;
         let outcome = self
             .storage
             .as_mut()
-            .map(|storage| storage.commit_alert_bundle(&bundle, &slice));
+            .map(|storage| storage.commit_alert_bundle(bundle, slice));
         match outcome {
             Some(Ok(
                 crate::storage::CommitOutcome::Applied(_)
                 | crate::storage::CommitOutcome::Duplicate(_),
             )) => {
+                let (_, slice) = self
+                    .pending_commit
+                    .take()
+                    .expect("confirmed pending commit");
+                self.engine.confirm_metadata(&slice.live_rows);
                 self.bundle_seq = self.bundle_seq.saturating_add(1);
-                self.last_frame_utc = Some(utc);
+                if slice.rule.is_some() {
+                    self.reload_alerts_from_db();
+                } else {
+                    self.last_frame_utc = Some(utc);
+                }
                 let token = format!("lease-{}", self.bundle_seq);
                 if let Some(storage) = self.storage.as_mut() {
                     let _ = crate::c4::outbox::scan_once(
@@ -1160,6 +1328,9 @@ impl AppFacade {
     }
 
     pub fn save_targets(&mut self, targets: Vec<String>) -> Result<u32, AppErrorDto> {
+        if let Some(reason) = self.retry_pending_commit() {
+            return Err(self.err(reason, "error.alert_write", "action.check_disk", true));
+        }
         validate_targets(&targets)
             .map_err(|error| AppErrorDto::from_settings_locale(error, self.ui_locale))?;
         let result = {
@@ -1413,6 +1584,14 @@ impl AppFacade {
     }
 
     pub fn run_retention(&mut self, delete: bool) -> Result<RetentionPreview, AppErrorDto> {
+        if self.pending_commit.is_some() {
+            return Err(self.err(
+                "pending_commit",
+                "error.alert_write",
+                "action.check_disk",
+                true,
+            ));
+        }
         let storage = self
             .storage
             .as_mut()
@@ -1442,10 +1621,45 @@ impl AppFacade {
             serde_json::json!({ "ok": preview.is_ok() }),
         );
         let preview = preview.map_err(|error| self.map_report(error))?;
+        if delete {
+            self.cleanup_retention_ledger(now, &cancel)?;
+        }
         if let Some(storage) = self.storage.as_ref() {
             let _ = crate::c4::store::retain_alerts(storage.connection(), now);
         }
         Ok(preview)
+    }
+
+    fn cleanup_retention_ledger(
+        &mut self,
+        now: i64,
+        cancel: &std::sync::Arc<std::sync::atomic::AtomicBool>,
+    ) -> Result<(), AppErrorDto> {
+        if !crate::c3::query::AUTO_DELETE_ENABLED
+            || self.pending_commit.is_some()
+            || !self.deferred_inputs.is_empty()
+        {
+            return Ok(());
+        }
+        let protected = self.engine.active_identities();
+        let cutoff = now
+            .saturating_sub(self.raw_retain_days * 86_400)
+            .div_euclid(86_400)
+            * 86_400;
+        let locale = self.ui_locale;
+        let Some(storage) = self.storage.as_mut() else {
+            return Ok(());
+        };
+        storage
+            .cleanup_ledger_with_cancel(now, cutoff, 1_000, &protected, cancel)
+            .map_err(|error| {
+                map_report_locale(
+                    error
+                        .maintenance_report_error(cancel.load(std::sync::atomic::Ordering::SeqCst)),
+                    locale,
+                )
+            })?;
+        Ok(())
     }
 
     pub fn list_alert_rules(&self) -> Result<Vec<AlertRule>, AppErrorDto> {
@@ -1455,6 +1669,9 @@ impl AppFacade {
     }
 
     pub fn upsert_alert_rule(&mut self, rule: AlertRule) -> Result<AlertRule, AppErrorDto> {
+        if let Some(reason) = self.retry_pending_commit() {
+            return Err(self.err(reason, "error.alert_write", "action.check_disk", true));
+        }
         validate_rule(&rule).map_err(|error| AppErrorDto {
             code: error.code().into(),
             message_zh: error.message_zh().into(),
@@ -1499,12 +1716,14 @@ impl AppFacade {
             bundle_seq: self.bundle_seq,
             payload,
         };
+        self.pending_commit = Some((bundle.clone(), slice.clone()));
         let outcome = {
             let storage = self.storage.as_mut().expect("storage");
             storage.commit_alert_bundle(&bundle, &slice)
         };
         match outcome {
             Ok(CommitOutcome::Applied(_) | CommitOutcome::Duplicate(_)) => {
+                self.pending_commit = None;
                 self.bundle_seq = self.bundle_seq.saturating_add(1);
             }
             Ok(CommitOutcome::PayloadMismatch) => {
@@ -1723,6 +1942,7 @@ impl AppFacade {
     }
 
     pub fn restore_backup(&mut self, candidate: &Path) -> Result<(), AppErrorDto> {
+        self.require_settled_ledger()?;
         self.storage = None;
         self.branch = BootBranch::RecoveryOnly;
         let live = self.data_dir.join("monitor.sqlite3");
@@ -1771,6 +1991,21 @@ impl AppFacade {
         crate::c5::about()
     }
 
+    fn require_settled_ledger(&self) -> Result<(), AppErrorDto> {
+        if self.pending_commit.is_some()
+            || !self.deferred_inputs.is_empty()
+            || self.backpressure_gap_utc.is_some()
+        {
+            return Err(self.err(
+                "pending_commit",
+                "error.alert_write",
+                "action.check_disk",
+                true,
+            ));
+        }
+        Ok(())
+    }
+
     pub fn preview_delete_local_data(&self) -> crate::c5::DeletePreview {
         crate::c5::preview_delete(&self.data_dir, &app_log::dir())
     }
@@ -1779,6 +2014,7 @@ impl AppFacade {
         &mut self,
         phrase: &str,
     ) -> Result<crate::c5::DeleteReport, AppErrorDto> {
+        self.require_settled_ledger()?;
         let _ = self.desktop.set_collector_running(false);
         self.storage = None;
         let target = self.settings.credential_target.clone();
@@ -1817,6 +2053,7 @@ impl AppFacade {
     }
 
     pub fn run_user_vacuum(&mut self) -> Result<(), AppErrorDto> {
+        self.require_settled_ledger()?;
         let live = self.data_dir.join("monitor.sqlite3");
         self.storage = None;
         let result = crate::c5::run_user_vacuum(&live, &self.space);
@@ -1870,8 +2107,9 @@ pub fn residential_share_unlocked(
     range_start_utc: i64,
     range_end_utc: i64,
     display_timezone: String,
+    operation_id: Option<&str>,
 ) -> Result<ResidentialShare, AppErrorDto> {
-    let (path, locale) = {
+    let (path, locale, cancel) = {
         let guard = lock_facade(state)?;
         let path = guard
             .storage
@@ -1879,15 +2117,22 @@ pub fn residential_share_unlocked(
             .ok_or_else(|| recovery_only_locale(guard.ui_locale))?
             .path()
             .to_path_buf();
-        (path, guard.ui_locale)
+        (
+            path,
+            guard.ui_locale,
+            guard
+                .operations
+                .resolve_cancel(operation_id, "residential-share"),
+        )
     };
     let now = chrono::Utc::now().timestamp();
-    query_residential_share(
+    crate::c3::share::query_residential_share_cancellable(
         &path,
         range_start_utc,
         range_end_utc,
         &display_timezone,
         now,
+        &cancel,
     )
     .map_err(|error| map_report_locale(error, locale))
 }
@@ -1921,40 +2166,30 @@ pub fn run_retention_unlocked(
     delete: bool,
     operation_id: Option<&str>,
 ) -> Result<RetentionPreview, AppErrorDto> {
-    let (path, raw_retain_days, space, cancel, mode, now, locale) = {
-        let guard = lock_facade(state)?;
-        let path = guard
-            .storage
-            .as_ref()
-            .ok_or_else(|| recovery_only_locale(guard.ui_locale))?
-            .path()
-            .to_path_buf();
-        let mode = if delete {
-            RetentionMode::DeleteEnabled
-        } else {
-            RetentionMode::MaterializeOnly
-        };
-        (
-            path,
-            guard.raw_retain_days,
-            guard.space.clone(),
-            guard.operations.resolve_cancel(operation_id, "retention"),
-            mode,
-            chrono::Utc::now().timestamp(),
-            guard.ui_locale,
-        )
+    let mut guard = lock_facade(state)?;
+    if guard.pending_commit.is_some() || !guard.deferred_inputs.is_empty() {
+        return Err(guard.err(
+            "pending_commit",
+            "error.alert_write",
+            "action.check_disk",
+            true,
+        ));
+    }
+    let cancel = guard.operations.resolve_cancel(operation_id, "retention");
+    let raw_retain_days = guard.raw_retain_days;
+    let space = guard.space.clone();
+    let locale = guard.ui_locale;
+    let now = chrono::Utc::now().timestamp();
+    let mode = if delete {
+        RetentionMode::DeleteEnabled
+    } else {
+        RetentionMode::MaterializeOnly
     };
-    let mut coordinator = StorageCoordinator::open(&path)
-        .map_err(|_| map_report_locale(ReportError::Failed("open writer"), locale))?;
-    let preview = RetentionService::run(
-        &mut coordinator,
-        now,
-        raw_retain_days,
-        mode,
-        &space,
-        &cancel,
-    );
-    drop(coordinator);
+    let coordinator = guard
+        .storage
+        .as_mut()
+        .ok_or_else(|| recovery_only_locale(locale))?;
+    let preview = RetentionService::run(coordinator, now, raw_retain_days, mode, &space, &cancel);
     app_log::emit(
         if preview.is_ok() {
             Level::Info
@@ -1965,11 +2200,60 @@ pub fn run_retention_unlocked(
         serde_json::json!({ "ok": preview.is_ok() }),
     );
     let preview = preview.map_err(|error| map_report_locale(error, locale))?;
-    let guard = lock_facade(state)?;
+    if delete {
+        guard.cleanup_retention_ledger(now, &cancel)?;
+    }
     if let Some(storage) = guard.storage.as_ref() {
         let _ = crate::c4::store::retain_alerts(storage.connection(), now);
     }
     Ok(preview)
+}
+
+/// 与手动维护共用 facade 所有的 writer；稳态 tick 仅做常数时间到期判断。
+pub fn run_maintenance_tick(state: &Mutex<AppFacade>, now_utc: i64) -> Result<bool, AppErrorDto> {
+    let mut guard = lock_facade(state)?;
+    if guard.branch != BootBranch::NormalReady
+        || guard.desktop.shutdown != ShutdownPhase::Idle
+        || guard.pending_commit.is_some()
+        || !guard.deferred_inputs.is_empty()
+        || now_utc < guard.next_maintenance_utc
+    {
+        return Ok(false);
+    }
+    guard.next_maintenance_utc = now_utc.saturating_add(60);
+    let raw_days = guard.raw_retain_days;
+    let space = guard.space.clone();
+    let locale = guard.ui_locale;
+    let cancel = guard.operations.archive_tick_cancel();
+    let Some(storage) = guard.storage.as_mut() else {
+        return Ok(false);
+    };
+    let chunk = RetentionService::run_chunk(
+        storage,
+        now_utc,
+        raw_days,
+        RetentionMode::DeleteEnabled,
+        &space,
+        &cancel,
+    )
+    .map_err(|error| map_report_locale(error, locale))?;
+    guard.cleanup_retention_ledger(now_utc, &cancel)?;
+    let auxiliary_pending = if crate::c3::query::AUTO_DELETE_ENABLED {
+        RetentionService::auxiliary_cleanup_pending(
+            guard
+                .storage
+                .as_ref()
+                .ok_or_else(recovery_only)?
+                .connection(),
+        )
+        .map_err(|error| map_report_locale(error, locale))?
+    } else {
+        false
+    };
+    if chunk.more_pending || auxiliary_pending {
+        guard.next_maintenance_utc = now_utc.saturating_add(1);
+    }
+    Ok(chunk.day_utc.is_some())
 }
 
 pub fn create_backup_unlocked(
@@ -2012,6 +2296,7 @@ pub fn restore_backup_unlocked(
 ) -> Result<(), AppErrorDto> {
     let (live, space, cancel) = {
         let mut guard = lock_facade(state)?;
+        guard.require_settled_ledger()?;
         guard.storage = None;
         guard.branch = BootBranch::RecoveryOnly;
         (
@@ -2116,6 +2401,349 @@ pub fn assert_no_forbidden_tables(names: &[String]) {
         for fragment in forbidden_table_fragments() {
             assert!(!name.contains(fragment), "{name} 不得包含 {fragment}");
         }
+    }
+}
+
+#[cfg(test)]
+mod ledger_delta_tests {
+    use super::*;
+    use crate::controller::{ConnectionFact, ConnectionMeta};
+    use crate::storage::CommitKillPoint;
+    use tempfile::tempdir;
+
+    fn frame(counter: u64, short: Option<u64>, host: &str) -> ControllerInput {
+        let mut connections = vec![ConnectionFact {
+            id: "steady".into(),
+            upload: counter,
+            download: counter,
+            chains: vec!["DIRECT".into()],
+            provider_chains: Vec::new(),
+            meta: ConnectionMeta {
+                host: Some(host.into()),
+                ..Default::default()
+            },
+        }];
+        if let Some(counter) = short {
+            connections.push(ConnectionFact {
+                id: "short".into(),
+                upload: counter,
+                download: counter,
+                chains: vec!["DIRECT".into()],
+                provider_chains: Vec::new(),
+                meta: ConnectionMeta::default(),
+            });
+        }
+        ControllerInput::Snapshot {
+            received_monotonic_ms: counter,
+            received_utc: counter as i64,
+            upload_total: counter + 100,
+            download_total: counter + 100,
+            connections,
+        }
+    }
+
+    fn scalar(app: &AppFacade, sql: &str) -> i64 {
+        app.storage
+            .as_ref()
+            .unwrap()
+            .connection()
+            .query_row(sql, [], |r| r.get(0))
+            .unwrap()
+    }
+
+    #[test]
+    fn removed_zero_traffic_id_reuse_is_detected_from_durable_session() {
+        let dir = tempdir().unwrap();
+        let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        app.ingest_snapshot(frame(0, Some(0), "a.test"), 100, 0);
+        app.ingest_snapshot(frame(10, None, "a.test"), 101, 1000);
+        assert_eq!(scalar(&app, "select count(*) from controller_epoch"), 1);
+        assert_eq!(app.engine.active_identities().len(), 1);
+        app.ingest_snapshot(frame(20, Some(7), "a.test"), 102, 2000);
+        assert_eq!(scalar(&app, "select count(*) from controller_epoch"), 2);
+        assert_eq!(
+            scalar(
+                &app,
+                "select count(*) from connection_session where connection_id='short'"
+            ),
+            2
+        );
+        assert_eq!(scalar(&app, "select coalesce(sum(m.upload),0) from connection_minute m join connection_session s using(session_pk) where s.connection_id='short'"), 0);
+        app.ingest_snapshot(frame(30, Some(12), "a.test"), 103, 3000);
+        assert_eq!(scalar(&app, "select sum(m.upload) from connection_minute m join connection_session s using(session_pk) where s.connection_id='short'"), 5);
+    }
+
+    #[test]
+    fn policy_dirty_survives_lifecycle_until_fresh_canonical_projection() {
+        let dir = tempdir().unwrap();
+        let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        app.ingest_snapshot(frame(0, None, "a.test"), 100, 0);
+        let policy = app.save_targets(vec!["DIRECT".into()]).unwrap();
+        app.ingest_snapshot(ControllerInput::Paused, 101, 1000);
+        app.ingest_snapshot(ControllerInput::Resumed, 102, 2000);
+        assert_eq!(scalar(&app,"select count(*) from connection_session_attr where primary_category_id is not null"),0);
+        app.ingest_snapshot(frame(10, None, "a.test"), 103, 3000);
+        assert_eq!(
+            scalar(&app, "select policy_version from connection_session_attr"),
+            i64::from(policy)
+        );
+        assert_eq!(scalar(&app,"select count(*) from connection_session_attr a join dimension_dict d on d.dimension_kind='category' and d.dimension_id=a.primary_category_id where d.value='DIRECT'"),1);
+    }
+
+    #[test]
+    fn queued_snapshot_precedes_newer_visible_disconnect_state() {
+        let dir = tempdir().unwrap();
+        let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        app.ingest_snapshot(frame(0, None, "a.test"), 100, 0);
+        app.storage.as_mut().unwrap().test_kill = Some(CommitKillPoint::BeforeCommit);
+        app.ingest_snapshot(frame(10, None, "a.test"), 101, 1000);
+        app.ingest_snapshot(frame(20, None, "a.test"), 102, 2000);
+        app.session_status = SessionStatus::EndpointMissing;
+        app.ingest_snapshot(
+            ControllerInput::Disconnected {
+                reason: SessionStatus::EndpointMissing,
+            },
+            103,
+            3000,
+        );
+        app.storage.as_mut().unwrap().test_kill = None;
+        app.ingest_snapshot(frame(30, None, "a.test"), 104, 4000);
+        assert_eq!(
+            scalar(&app, "select sum(upload) from connection_minute"),
+            20
+        );
+        assert_eq!(scalar(&app, "select count(*) from controller_epoch"), 2);
+    }
+
+    #[test]
+    fn owner_transition_rejects_unsettled_bundle_and_deferred_input() {
+        for kill in [CommitKillPoint::BeforeCommit, CommitKillPoint::AfterCommit] {
+            let dir = tempdir().unwrap();
+            let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+            app.ingest_snapshot(frame(0, None, "a.test"), 100, 0);
+            app.storage.as_mut().unwrap().test_kill = Some(kill);
+            app.ingest_snapshot(frame(1, None, "a.test"), 101, 1000);
+            // 第二次未知结果的 duplicate 会成功，因此再设成失败来保留本轮 pending。
+            app.storage.as_mut().unwrap().test_kill = Some(CommitKillPoint::BeforeCommit);
+            app.ingest_snapshot(frame(2, None, "a.test"), 102, 2000);
+            let pending = app.pending_commit.as_ref().unwrap().0.clone();
+            let queued = app.deferred_inputs.len();
+            assert_eq!(app.run_user_vacuum().unwrap_err().code, "pending_commit");
+            assert_eq!(
+                app.restore_backup(&dir.path().join("invalid.sqlite3"))
+                    .unwrap_err()
+                    .code,
+                "pending_commit"
+            );
+            assert_eq!(app.pending_commit.as_ref().unwrap().0, pending);
+            assert_eq!(app.deferred_inputs.len(), queued);
+            app.storage.as_mut().unwrap().test_kill = None;
+            app.ingest_snapshot(frame(3, None, "a.test"), 103, 3000);
+            assert_eq!(scalar(&app, "select sum(upload) from connection_minute"), 3);
+        }
+    }
+
+    #[test]
+    fn idle_writer_tick_drains_pending_while_user_stays_paused() {
+        let dir = tempdir().unwrap();
+        let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        app.ingest_snapshot(frame(0, None, "a.test"), 100, 0);
+        app.storage.as_mut().unwrap().test_kill = Some(CommitKillPoint::BeforeCommit);
+        app.ingest_snapshot(frame(10, None, "a.test"), 101, 1000);
+        app.pause_collector();
+        assert!(!app.desktop.collector_running);
+        app.storage.as_mut().unwrap().test_kill = None;
+        assert!(app.retry_writer_tick().is_some());
+        assert!(app.pending_commit.is_none());
+        assert!(app.deferred_inputs.is_empty());
+        assert!(!app.desktop.collector_running);
+        assert_eq!(
+            scalar(&app, "select sum(upload) from connection_minute"),
+            10
+        );
+        assert!(app.retry_writer_tick().is_none());
+    }
+
+    #[test]
+    fn clock_rollback_closes_lifecycle_without_negative_or_invented_observation() {
+        let dir = tempdir().unwrap();
+        let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        app.ingest_snapshot(frame(0, None, "a.test"), 100, 0);
+        app.ingest_snapshot(
+            ControllerInput::Disconnected {
+                reason: SessionStatus::EndpointMissing,
+            },
+            110,
+            10000,
+        );
+        app.ingest_snapshot(frame(10, None, "a.test"), 90, 11000);
+        assert_eq!(
+            scalar(
+                &app,
+                "select count(*) from coverage_interval where ended_utc<started_utc"
+            ),
+            0
+        );
+        assert_eq!(
+            scalar(
+                &app,
+                "select count(*) from coverage_interval where kind='covered'"
+            ),
+            0
+        );
+        app.ingest_snapshot(frame(11, None, "a.test"), 91, 12000);
+        assert_eq!(
+            scalar(
+                &app,
+                "select sum(ended_utc-started_utc) from coverage_interval where kind='covered'"
+            ),
+            1
+        );
+    }
+
+    #[test]
+    fn positive_coverage_uses_samples_splits_days_and_breaks_on_pause() {
+        let dir = tempdir().unwrap();
+        let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        app.ingest_snapshot(frame(0, None, "a.test"), 86399, 0);
+        assert_eq!(
+            scalar(
+                &app,
+                "select count(*) from coverage_interval where kind='covered'"
+            ),
+            0
+        );
+        app.ingest_snapshot(frame(1, None, "a.test"), 86401, 2000);
+        app.ingest_snapshot(ControllerInput::Paused, 86402, 3000);
+        app.ingest_snapshot(frame(2, None, "a.test"), 86410, 11000);
+        app.ingest_snapshot(frame(3, None, "a.test"), 86411, 12000);
+        assert_eq!(
+            scalar(
+                &app,
+                "select sum(ended_utc-started_utc) from coverage_interval where kind='covered'"
+            ),
+            3
+        );
+        assert_eq!(scalar(&app,"select count(*) from coverage_interval where kind='covered' and started_utc/86400 != (ended_utc-1)/86400"),0);
+    }
+
+    #[test]
+    fn identical_metadata_never_mutates_attr_or_chain_in_real_facade() {
+        let dir = tempdir().unwrap();
+        let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        app.ingest_snapshot(frame(0, None, "a.test"), 100, 0);
+        app.storage.as_ref().unwrap().connection().execute_batch("create temp table writes(n integer);
+            create temp trigger attr_write after update on connection_session_attr begin insert into writes values(1); end;
+            create temp trigger chain_insert after insert on connection_chain begin insert into writes values(1); end;
+            create temp trigger chain_delete after delete on connection_chain begin insert into writes values(1); end;").unwrap();
+        app.ingest_snapshot(frame(10, None, "a.test"), 101, 1000);
+        app.ingest_snapshot(frame(20, None, "  a.test  "), 102, 2000);
+        app.ingest_snapshot(frame(30, None, ""), 103, 3000);
+        assert_eq!(scalar(&app, "select count(*) from writes"), 0);
+        assert_eq!(
+            scalar(&app, "select sum(upload) from connection_minute"),
+            30
+        );
+        app.ingest_snapshot(frame(40, None, "upgraded.test"), 104, 4000);
+        assert_eq!(scalar(&app, "select count(*) from writes"), 1);
+        app.save_targets(vec!["DIRECT".into()]).unwrap();
+        app.ingest_snapshot(frame(50, None, ""), 105, 5000);
+        assert_eq!(scalar(&app, "select count(*) from writes"), 2);
+    }
+
+    #[test]
+    fn retry_preserves_exact_bundle_and_short_lived_queued_connection() {
+        let dir = tempdir().unwrap();
+        let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        app.ingest_snapshot(frame(0, None, "a.test"), 100, 0);
+        app.storage.as_mut().unwrap().test_kill = Some(CommitKillPoint::BeforeCommit);
+        app.ingest_snapshot(frame(10, None, "new.test"), 101, 1000);
+        let original = app.pending_commit.as_ref().unwrap().0.clone();
+        app.ingest_snapshot(frame(20, Some(0), ""), 102, 2000);
+        app.ingest_snapshot(frame(30, Some(7), ""), 103, 3000);
+        app.ingest_snapshot(frame(40, None, ""), 104, 4000);
+        assert_eq!(app.pending_commit.as_ref().unwrap().0, original);
+        assert_eq!(
+            scalar(
+                &app,
+                "select coalesce(sum(upload),0) from connection_minute"
+            ),
+            0
+        );
+        app.storage.as_mut().unwrap().test_kill = None;
+        app.ingest_snapshot(frame(50, None, ""), 105, 5000);
+        assert!(app.pending_commit.is_none());
+        assert!(app.deferred_inputs.is_empty());
+        assert_eq!(
+            scalar(&app, "select sum(upload) from connection_minute"),
+            57
+        );
+        assert_eq!(scalar(&app,"select ended_utc from connection_session_attr a join connection_session s using(session_pk) where s.connection_id='short'"),104);
+        assert_eq!(
+            scalar(
+                &app,
+                "select count(*) from connection_session where host='new.test'"
+            ),
+            1
+        );
+    }
+
+    #[test]
+    fn unknown_commit_replays_original_receipt_before_next_metadata_version() {
+        let dir = tempdir().unwrap();
+        let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        app.ingest_snapshot(frame(0, None, "a.test"), 100, 0);
+        app.storage.as_mut().unwrap().test_kill = Some(CommitKillPoint::AfterCommit);
+        app.ingest_snapshot(frame(10, None, "new.test"), 101, 1000);
+        let old_bundle = app.pending_commit.as_ref().unwrap().0.clone();
+        assert_eq!(
+            scalar(&app, "select sum(upload) from connection_minute"),
+            10
+        );
+        app.storage.as_mut().unwrap().test_kill = None;
+        app.ingest_snapshot(frame(20, None, "newer.test"), 102, 2000);
+        assert_eq!(
+            scalar(&app, "select sum(upload) from connection_minute"),
+            20
+        );
+        assert_eq!(
+            scalar(
+                &app,
+                "select count(*) from connection_session where host='newer.test'"
+            ),
+            1
+        );
+        assert!(matches!(
+            app.storage.as_mut().unwrap().commit(&old_bundle).unwrap(),
+            CommitOutcome::Duplicate(_)
+        ));
+        assert!(app.pending_commit.is_none());
+    }
+
+    #[test]
+    fn bounded_backpressure_records_explicit_gap_after_queue_overflow() {
+        let dir = tempdir().unwrap();
+        let mut app = AppFacade::boot(dir.path(), &["app".into()], InstanceClaim::Owner);
+        app.ingest_snapshot(frame(0, None, "a.test"), 100, 0);
+        app.storage.as_mut().unwrap().test_kill = Some(CommitKillPoint::BeforeCommit);
+        for n in 1..=12 {
+            app.ingest_snapshot(frame(n, None, "a.test"), 100 + n as i64, n * 1000);
+        }
+        assert_eq!(
+            app.deferred_inputs.len() + usize::from(app.pending_commit.is_some()),
+            8
+        );
+        assert_eq!(
+            app.hub.overview().health.storage_reason.as_deref(),
+            Some("storage_backpressure")
+        );
+        app.storage.as_mut().unwrap().test_kill = None;
+        app.ingest_snapshot(frame(13, None, "a.test"), 113, 13000);
+        assert_eq!(
+            scalar(&app, "select sum(upload) from connection_minute"),
+            13
+        );
+        assert_eq!(scalar(&app,"select count(*) from coverage_interval where reason='storage_backpressure' and ended_utc>=started_utc"),1);
     }
 }
 
@@ -3334,7 +3962,8 @@ mod c2_facade_contract_tests {
         assert!(!dest.exists());
         let retention = run_retention_unlocked(&state, false, None).expect_err("retention");
         assert_eq!(retention.code, "recovery_only");
-        let share = residential_share_unlocked(&state, 0, 3_600, "UTC".into()).expect_err("share");
+        let share =
+            residential_share_unlocked(&state, 0, 3_600, "UTC".into(), None).expect_err("share");
         assert_eq!(share.code, "recovery_only");
     }
 }

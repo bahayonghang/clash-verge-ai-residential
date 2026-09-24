@@ -3,14 +3,16 @@
 - 应用内图表、数据表和 CSV / JSON / HTML 使用同一个 `ReportResult`。图表是 Recharts 封装；占比环图与趋势图旁保留同口径数据表。悬停或钉住高亮只读当前结果，不改 grouping、不自动重查。
 - `report_snapshot_token` 返回前关闭 SQLite 读事务。
 - 空区间总量可以为 0。缺口、未知和能力不支持不得写成 0。
-- 覆盖并集口径：重叠 / 相邻的 gap 行先合并再计缺口（`gap_union_sec`），开放行按窗口末端闭合。0.2.x 断连期逐帧写入的重复 gap 行由保留层 `coverage_open_gap_v1` 修复收敛。
-- 30 天 raw 支持组合过滤和下钻。13 个月精确层只支持单维。更老的 core daily 只保留总量、历史主分类和 coverage。
+- 覆盖并集口径：有效连续采样才形成正向覆盖，重叠 / 相邻的 gap 合并后计缺口。旧 `epoch` / `closed` 生命周期记录不能证明采样覆盖，未观测区间保持未知；开放 gap 按查询末端闭合。
+- raw 默认保留 30 天、上限 90 天，完整明细支持组合过滤和下钻。精确维度保留 396 天；更老的 core daily 保留总量、历史主分类和 coverage。已清理明细不会因调大期限而恢复。
 - `granularity` 合法值为 `minute1` / `minute2` / `minute5` / `minute10` / `hour` / `day` / `month`。分钟档只在 raw 保留期内可用，不升粒度。
 - 主机 identity 优先级为 `metadata.host` → `sniffHost` → 目的 IP，写入 `connection_session.host`。三者都空时排名 `identity` 为 `__unknown__`；前端按维度显示「未归因主机」，不会把它与连接中、覆盖 gap 或未报告进程混为一谈。
 - `filters.host` 为 `__unknown__` 时匹配空 host，不把哨兵当域名绑定。主机页可对未知行下钻到规则 / 链路 / 进程。
 - `filters.process` 为 `__unknown__` 时匹配空进程 identity。进程页可对未知行下钻到主机 / 链路。规则与链路维的未知行不参与下钻。
 - `filters.category` 为 `__residential__` 时匹配核算口径（`primary_category_id` 非空）。进程页「仅核算口径」开关使用该哨兵，不是某个重点目标名称。
-- 自动 DELETE 保持关闭，直到守恒门通过。
+- 自动 DELETE 保持关闭，直到完整守恒与容量门通过。
+
+明细清理后，一个完整 UTC 日可用已核验的日核心与日维度回答精确总量和排名；跨日去重会话数、重叠分类的时长或任意部分日查询若无法从保留层准确恢复，会返回能力不支持。不会把小时去重数相加冒充日去重数，也不会把缺失明细报告为零。前一等长区间不可查询时不显示比较值。内部周期告警只取可恢复的字节与覆盖，不要求报告中的去重数和时长；计算末端不超出当前时间。
 
 ## Unknown 与维度归因
 
@@ -23,13 +25,15 @@
 
 ## 自动小时 / 日档案
 
-- 采集节拍在 durable commit 之后最多生成 1 份默认报告。窗口是已闭合的本地小时或已闭合的本地自然日。
+- 采集节拍唤醒一个有界后台任务，由它轮流处理档案和分块维护；展示隐藏不会停止采集或告警。窗口是已闭合的本地小时或已闭合的本地自然日。
 - 默认查询：`displayTimezone=local`，`grouping=host`，`targetPolicy=historical`，`topN=20`，`comparison.previousEqualWindow=true`。小时 `granularity=hour`，日 `granularity=day`。
-- 成功结果写入 SQLite 表 `report_archive`，进程退出后仍可 `list_report_archives` / `get_report_archive`。首次成功即冻结；已有 `ok` 不覆盖。`failed` 可在后续节拍重试。
+- 成功结果直接写入 SQLite 表 `report_archive`，不生成临时 spool token；内部周期告警同样不写 spool。首次成功即冻结，已有 `ok` 不覆盖。失败按有界退避重试，不阻塞其它积压档案；档案齐全时不在每秒重扫全部历史窗口。
 - 小时档案保留 30 天，日档案保留 13 个月（`DIMENSION_RETAIN_DAYS`，396 天）。过期删除只针对档案表，与 raw 自动 DELETE 无关。
 - 近 30 天默认走 raw，不在每个整点跑全量 `RetentionService`。更早的日档案走日维；日维未就绪则记失败，不写假总量。
 - 进入分析报告页加载最新成功日档案，否则最新成功小时档案。不自动选手动行。
 - 分析报告「运行报告」、告警跳转与家宽「创建报告」在查询成功后写入 `report_archive`（`kind=manual`），按 `generated_utc` 保留 7 天。同一 `(kind, range_start_utc, query_fingerprint)` 再跑则覆盖。失败查询不写行。不覆盖自动小时 / 日档案。家宽页用 `render_report_html` 生成静态网页，弹窗 iframe 查看；进页 `get_latest_residential_manual` 回看最新家宽手动档案。
 - 概览、四聚合页与家宽聚合的 `useReport` 现查只进 10 分钟 spool token，不写 `report_archive`。spool 对未过期 fingerprint 复用 token；满 8 格或超 128 MiB 时按最近访问淘汰。单 token 超过 32 MiB 仍拒绝。
+- 窗口隐藏或最小化后停止展示性刷新，恢复时合并刷新一次。每个视图最多一个查询在途，只保留最新待执行意图；过期响应不覆盖当前结果。
+- 同 token 可有多个持有者，每次成功取得均需释放；最后一个持有者释放后删除 spool。TTL 和容量淘汰仍生效。导出期间保留租约直到操作结束。
 - 从档案导出时，`get_report_archive` 把冻结 JSON 水合进现有 snapshot token，再走 `export_report`。不为导出再查更新后的库。
 - Recovery Shell 不调度自动档案。

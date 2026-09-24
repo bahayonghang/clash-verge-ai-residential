@@ -1,0 +1,61 @@
+{
+  "days": 29,
+  "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-retention-cache\\corpus-a1000-resume\\monitor.sqlite3",
+  "end_utc": 1789776000,
+  "kind": "bundled-sqlite-readonly-stage-probe",
+  "limits": [
+    "每个阶段单独60秒诊断上限，不替代生产10秒报告预算。",
+    "同一只读快照，未清除OS缓存；只输出计划、行数与摘要，不输出明细。",
+    "仅最后29个完整raw日，不是完整30日验收。"
+  ],
+  "open_flags": "SQLITE_OPEN_READ_ONLY | SQLITE_OPEN_FULL_MUTEX",
+  "query_only": 0,
+  "schema_version": 5,
+  "series_only": true,
+  "source_identity": "[{\"path\":\"residential-monitor/src-tauri/src/c3/service.rs\",\"sha256\":\"F7EF789DC3527DFBA2A42D4925ACBEB23BEEA7FAC42C3D7DC6459DD858D4A32E\"},{\"path\":\"residential-monitor/src-tauri/src/c3/sql.rs\",\"sha256\":\"6FA426D2DEDB18C58634FB153A06D3EA41AAAC2523E6DFD563DF999D5C9560E5\"}]",
+  "sqlite_version": "3.53.2",
+  "stages": [
+    {
+      "deadline_ms": 60000,
+      "error": null,
+      "name": "series_raw",
+      "plan": [
+        "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+        "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+        "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+        "CORRELATED SCALAR SUBQUERY 1",
+        "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+        "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)",
+        "USE TEMP B-TREE FOR GROUP BY",
+        "USE TEMP B-TREE FOR count(DISTINCT)",
+        "USE TEMP B-TREE FOR count(DISTINCT)"
+      ],
+      "result_digest": "b839e385b0f7826291d941d2393ae9733c8d8ae473784f3d74069baaecbd8eac",
+      "row_count": 696,
+      "sql_sha256": "7db4b6ceeacdf55f0ce55673539957ba471b275656853463d1442c5aae65b3b0",
+      "status": "ok",
+      "wall_ms": 35604.2363
+    },
+    {
+      "deadline_ms": 60000,
+      "error": null,
+      "name": "series_raw_bucket",
+      "plan": [
+        "USE TEMP B-TREE FOR count(DISTINCT)",
+        "USE TEMP B-TREE FOR count(DISTINCT)",
+        "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+        "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+        "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+        "CORRELATED SCALAR SUBQUERY 1",
+        "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+        "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)"
+      ],
+      "result_digest": "b839e385b0f7826291d941d2393ae9733c8d8ae473784f3d74069baaecbd8eac",
+      "row_count": 696,
+      "sql_sha256": "bcbd51eca035d522ad9f8553c9c4ce2779db72389108dda075e47eb4b563a0f6",
+      "status": "ok",
+      "wall_ms": 26297.358500000002
+    }
+  ],
+  "start_utc": 1787270400
+}

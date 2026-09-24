@@ -45,17 +45,18 @@ struct SessionAcc {
     meta: ConnectionMeta,
     chains: Vec<String>,
     provider_chains: Vec<String>,
+    metadata_dirty: bool,
 }
 
 #[derive(Debug, Default)]
 pub struct AccountingEngine {
     epoch: u64,
     sessions: HashMap<String, SessionAcc>,
-    retired_ids: HashSet<String>,
     last_meter_up: Option<u64>,
     last_meter_down: Option<u64>,
     targets: Vec<String>,
     policy_version: u32,
+    closed_sessions: Vec<(String, i64)>,
 }
 
 impl AccountingEngine {
@@ -66,6 +67,9 @@ impl AccountingEngine {
     pub fn set_targets(&mut self, targets: Vec<String>) {
         self.targets = targets;
         self.policy_version = self.policy_version.saturating_add(1);
+        for session in self.sessions.values_mut() {
+            session.metadata_dirty = true;
+        }
     }
 
     pub fn current_epoch(&self) -> u64 {
@@ -75,9 +79,54 @@ impl AccountingEngine {
     pub fn reset_epoch(&mut self, epoch: u64) {
         self.epoch = epoch;
         self.sessions.clear();
-        self.retired_ids.clear();
         self.last_meter_up = None;
         self.last_meter_down = None;
+        self.closed_sessions.clear();
+    }
+
+    /// 只复制尚未确认持久化的规范元数据；采样计数不参与 dirty 判定。
+    pub fn dirty_metadata(
+        &self,
+        rows: &[crate::c2::hub::LiveConnectionView],
+    ) -> Vec<crate::c2::hub::LiveConnectionView> {
+        rows.iter()
+            .filter(|row| {
+                self.sessions
+                    .get(&row.identity)
+                    .is_some_and(|s| s.metadata_dirty)
+            })
+            .cloned()
+            .collect()
+    }
+
+    pub fn closed_sessions(&self) -> &[(String, i64)] {
+        &self.closed_sessions
+    }
+
+    pub fn active_identities(&self) -> Vec<String> {
+        self.sessions.keys().cloned().collect()
+    }
+
+    pub fn newly_seen_ids<'a>(&self, connections: &'a [ConnectionFact]) -> Vec<&'a str> {
+        connections
+            .iter()
+            .filter(|connection| {
+                !self
+                    .sessions
+                    .contains_key(&format!("{}:{}", self.epoch, connection.id))
+            })
+            .map(|connection| connection.id.as_str())
+            .collect()
+    }
+
+    /// 门面必须先确认原 bundle，再接收下一帧，避免清除更新版本的 dirty 状态。
+    pub fn confirm_metadata(&mut self, rows: &[crate::c2::hub::LiveConnectionView]) {
+        for row in rows {
+            if let Some(session) = self.sessions.get_mut(&row.identity) {
+                session.metadata_dirty = false;
+            }
+        }
+        self.closed_sessions.clear();
     }
 
     pub fn snapshot_requires_new_generation(
@@ -94,9 +143,6 @@ impl AccountingEngine {
             return true;
         }
         connections.iter().any(|connection| {
-            if self.retired_ids.contains(&connection.id) {
-                return true;
-            }
             let key = format!("{}:{}", self.epoch, connection.id);
             self.sessions.get(&key).is_some_and(|session| {
                 connection.upload < session.last_upload
@@ -271,9 +317,11 @@ impl AccountingEngine {
                     meta: ConnectionMeta::default(),
                     chains: Vec::new(),
                     provider_chains: Vec::new(),
+                    metadata_dirty: true,
                 });
-                merge_meta(&mut entry.meta, &connection.meta);
+                entry.metadata_dirty |= merge_meta(&mut entry.meta, &connection.meta);
                 if !connection.chains.is_empty() {
+                    entry.metadata_dirty |= entry.chains != connection.chains;
                     entry.chains = connection.chains.clone();
                 }
                 if !connection.provider_chains.is_empty() {
@@ -315,6 +363,7 @@ impl AccountingEngine {
                 meta: connection.meta.clone(),
                 chains: connection.chains.clone(),
                 provider_chains: connection.provider_chains.clone(),
+                metadata_dirty: true,
             });
             if !entry.seen {
                 entry.seen = true;
@@ -348,13 +397,12 @@ impl AccountingEngine {
             });
         }
 
-        let retired: Vec<String> = self
-            .sessions
-            .values()
-            .filter(|session| !seen.contains(&session.connection_id))
-            .map(|session| session.connection_id.clone())
-            .collect();
-        self.retired_ids.extend(retired);
+        self.closed_sessions.extend(
+            self.sessions
+                .iter()
+                .filter(|(_, session)| !seen.contains(&session.connection_id))
+                .map(|(identity, _)| (identity.clone(), utc)),
+        );
         self.sessions
             .retain(|_, session| seen.contains(&session.connection_id));
 
@@ -400,30 +448,36 @@ fn start_changed(stored: Option<&str>, incoming: Option<&str>) -> bool {
     matches!((stored, incoming), (Some(left), Some(right)) if left != right)
 }
 
-fn merge_optional(stored: &mut Option<String>, incoming: &Option<String>) {
+fn merge_optional(stored: &mut Option<String>, incoming: &Option<String>) -> bool {
     if let Some(value) = incoming
         .as_deref()
         .map(str::trim)
         .filter(|value| !value.is_empty())
     {
-        *stored = Some(value.to_string());
+        if stored.as_deref() != Some(value) {
+            *stored = Some(value.to_string());
+            return true;
+        }
     }
+    false
 }
 
-fn merge_meta(stored: &mut ConnectionMeta, incoming: &ConnectionMeta) {
-    merge_optional(&mut stored.host, &incoming.host);
-    merge_optional(&mut stored.sniff_host, &incoming.sniff_host);
-    merge_optional(&mut stored.source_ip, &incoming.source_ip);
-    merge_optional(&mut stored.destination_ip, &incoming.destination_ip);
-    merge_optional(&mut stored.source_port, &incoming.source_port);
-    merge_optional(&mut stored.destination_port, &incoming.destination_port);
-    merge_optional(&mut stored.process_name, &incoming.process_name);
-    merge_optional(&mut stored.process_path, &incoming.process_path);
-    merge_optional(&mut stored.network, &incoming.network);
-    merge_optional(&mut stored.inbound, &incoming.inbound);
-    merge_optional(&mut stored.start, &incoming.start);
-    merge_optional(&mut stored.rule, &incoming.rule);
-    merge_optional(&mut stored.rule_payload, &incoming.rule_payload);
+fn merge_meta(stored: &mut ConnectionMeta, incoming: &ConnectionMeta) -> bool {
+    let mut changed = false;
+    changed |= merge_optional(&mut stored.host, &incoming.host);
+    changed |= merge_optional(&mut stored.sniff_host, &incoming.sniff_host);
+    changed |= merge_optional(&mut stored.source_ip, &incoming.source_ip);
+    changed |= merge_optional(&mut stored.destination_ip, &incoming.destination_ip);
+    changed |= merge_optional(&mut stored.source_port, &incoming.source_port);
+    changed |= merge_optional(&mut stored.destination_port, &incoming.destination_port);
+    changed |= merge_optional(&mut stored.process_name, &incoming.process_name);
+    changed |= merge_optional(&mut stored.process_path, &incoming.process_path);
+    changed |= merge_optional(&mut stored.network, &incoming.network);
+    changed |= merge_optional(&mut stored.inbound, &incoming.inbound);
+    changed |= merge_optional(&mut stored.start, &incoming.start);
+    changed |= merge_optional(&mut stored.rule, &incoming.rule);
+    changed |= merge_optional(&mut stored.rule_payload, &incoming.rule_payload);
+    changed
 }
 
 pub fn process_basename(path: &str) -> Option<String> {
@@ -646,15 +700,20 @@ mod accounting_replay_tests {
             )
             .expect("enable v2 materialization");
         let cancel = Arc::new(AtomicBool::new(false));
-        RetentionService::run(
-            &mut coordinator,
-            40 * 86_400,
-            30,
-            RetentionMode::MaterializeOnly,
-            &SpaceBudget::unlimited(),
-            &cancel,
-        )
-        .expect("materialize");
+        for _ in 0..1_000 {
+            let chunk = RetentionService::run_chunk(
+                &mut coordinator,
+                40 * 86_400,
+                30,
+                RetentionMode::MaterializeOnly,
+                &SpaceBudget::unlimited(),
+                &cancel,
+            )
+            .expect("materialize");
+            if !chunk.more_pending {
+                break;
+            }
+        }
         let category_id: i64 = coordinator
             .connection()
             .query_row(
@@ -776,15 +835,37 @@ mod accounting_replay_tests {
     }
 
     #[test]
-    fn retired_id_and_counter_reset_require_new_generation() {
+    fn counter_reset_is_local_and_removed_ids_require_durable_lookup() {
         let mut engine = AccountingEngine::new();
         engine.reset_epoch(1);
         engine.apply(snap(10, 10, vec![fact("a", 10, 10, &[])]), 1, 60);
         assert!(engine.snapshot_requires_new_generation(&[fact("a", 9, 10, &[])], 9, 10));
         engine.apply(snap(10, 10, vec![]), 2, 61);
-        assert!(engine.snapshot_requires_new_generation(&[fact("a", 1, 1, &[])], 11, 11));
+        let returning = [fact("a", 1, 1, &[])];
+        assert!(!engine.snapshot_requires_new_generation(&returning, 11, 11));
+        assert_eq!(engine.newly_seen_ids(&returning), vec!["a"]);
         engine.reset_epoch(2);
         assert!(!engine.snapshot_requires_new_generation(&[fact("a", 1, 1, &[])], 11, 11));
+    }
+
+    #[test]
+    fn long_churn_keeps_only_active_accounting_state() {
+        let mut engine = AccountingEngine::new();
+        engine.reset_epoch(1);
+        for index in 0..10_000 {
+            let id = format!("connection-{index}");
+            let (_, live) = engine.apply_snapshot_and_project(
+                vec![fact(&id, 0, 0, &[])],
+                0,
+                0,
+                index,
+                index as i64,
+            );
+            assert_eq!(engine.sessions.len(), 1);
+            assert!(engine.closed_sessions.len() <= 1);
+            engine.confirm_metadata(&live);
+            assert!(engine.closed_sessions.is_empty());
+        }
     }
 }
 

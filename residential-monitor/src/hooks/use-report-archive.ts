@@ -20,6 +20,8 @@ import { isTauriRuntime } from "../ipc/live-session";
 import { formatTemplate, invokeErrorZh } from "../lib/utils";
 import { DEFAULT_RANK_SORT, type RankSortSpec } from "../rank-sort";
 import { releaseReportToken, runReport } from "./use-report";
+import { useDisplayQuery } from "./use-display-query";
+import type { DisplayRequest } from "./display-query";
 
 export type ReportSource = "auto-hour" | "auto-day" | "manual" | null;
 
@@ -147,7 +149,10 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
 } {
   const seq = useRef(0);
   const listSeq = useRef(0);
+  const { queue, active } = useDisplayQuery();
   const tokenRef = useRef<string | null>(null);
+  const exportingToken = useRef<string | null>(null);
+  const deferredRelease = useRef<string | null>(null);
   const [form, setForm] = useState<ReportForm>(defaultReportForm);
   const [topN, setTopN] = useState(20);
   const [compare, setCompare] = useState(true);
@@ -163,12 +168,19 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
   const [html, setHtml] = useState<string | null>(null);
   const [htmlError, setHtmlError] = useState<string | null>(null);
   const [exportPreview, setExportPreview] = useState<ExportPreview | null>(null);
+  const retained = useRef({ report, reportSource, selectedArchiveId, statusZh });
+  retained.current = { report, reportSource, selectedArchiveId, statusZh };
 
   const applyDecoded = useCallback(
-    (next: ReportResult, status: string, source: ReportSource, archiveId: string | null): void => {
+    async (next: ReportResult, status: string, source: ReportSource, archiveId: string | null,
+      request: DisplayRequest, acquired = true): Promise<void> => {
+      if (!request.isCurrent()) {
+        if (acquired) await releaseReportToken(next.reportSnapshotToken);
+        return;
+      }
       const previous = tokenRef.current;
       tokenRef.current = next.reportSnapshotToken || null;
-      if (previous && previous !== tokenRef.current) {
+      if (previous && acquired) {
         void releaseReportToken(previous);
       }
       setReport(next);
@@ -178,8 +190,18 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
       setForm((current) => formFromQueryEcho(next.queryEcho, current));
       setSort(next.queryEcho.sort);
       setErrorZh(null);
+      if (previewHtml) {
+        setHtml(null);
+        setHtmlError(null);
+        try {
+          const nextHtml = await renderReportHtml(next.reportSnapshotToken);
+          if (request.isCurrent()) setHtml(nextHtml);
+        } catch (caught: unknown) {
+          if (request.isCurrent()) setHtmlError(invokeErrorZh(caught, t(locale, "report.export_fail")));
+        }
+      }
     },
-    []
+    [locale, previewHtml]
   );
 
   const buildQuery = useCallback((): ReportQuery => {
@@ -208,7 +230,7 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
   }, [archiveKindFilter]);
 
   const loadArchives = useCallback(
-    async (selectLatest: boolean): Promise<void> => {
+    (selectLatest: boolean): Promise<void> => queue.request(`list:${archiveKindFilter}:${selectLatest}`, async (request) => {
       const fallback = t(locale, "report.archive.unavailable");
       if (!selectLatest) {
         const token = ++listSeq.current;
@@ -217,12 +239,19 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
         }
         try {
           const page = await loadArchiveList();
-          if (token !== listSeq.current) {
+          if (!request.isCurrent() || token !== listSeq.current) {
             return;
           }
           setArchives(page);
+          const previous = retained.current;
+          if (!tokenRef.current && previous.report) {
+            const next = previous.selectedArchiveId
+              ? decodeReportResult(await invoke<unknown>("get_report_archive", { archiveId: previous.selectedArchiveId }))
+              : await runReport(previous.report.queryEcho, false, request.signal);
+            await applyDecoded(next, previous.statusZh, previous.reportSource, previous.selectedArchiveId, request);
+          }
         } catch (caught: unknown) {
-          if (token !== listSeq.current) {
+          if (!request.isCurrent() || token !== listSeq.current) {
             return;
           }
           setErrorZh(invokeErrorZh(caught, fallback));
@@ -240,7 +269,7 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
       }
       try {
         const page = await loadArchiveList();
-        if (token !== seq.current) {
+        if (!request.isCurrent() || token !== seq.current) {
           return;
         }
         setArchives(page);
@@ -263,78 +292,93 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
           const decoded = decodeReportResult(
             await invoke<unknown>("get_report_archive", { archiveId: latest.archiveId })
           );
-          if (token !== seq.current) {
+          if (!request.isCurrent() || token !== seq.current) {
             void releaseReportToken(decoded.reportSnapshotToken);
             return;
           }
           const source: ReportSource = latest.kind === "day" ? "auto-day" : "auto-hour";
-          applyDecoded(
+          await applyDecoded(
             decoded,
             latest.kind === "day" ? t(locale, "report.archive.loaded_day") : t(locale, "report.archive.loaded_hour"),
             source,
-            latest.archiveId
+            latest.archiveId,
+            request
           );
+          if (!request.isCurrent()) return;
           setForm((current) => ({ ...formFromQueryEcho(decoded.queryEcho, current), windowSource: "archive" }));
         } catch (caught: unknown) {
-          if (token !== seq.current) {
+          if (!request.isCurrent() || token !== seq.current) {
             return;
           }
           setErrorZh(invokeErrorZh(caught, t(locale, "report.fail")));
           setStatusZh(invokeErrorZh(caught, t(locale, "report.fail")));
         }
       } catch (caught: unknown) {
-        if (token !== seq.current) {
+        if (!request.isCurrent() || token !== seq.current) {
           return;
         }
         setErrorZh(invokeErrorZh(caught, fallback));
         setStatusZh(fallback);
       } finally {
-        if (token === seq.current) {
+        if (request.isCurrent() && token === seq.current) {
           setLoading(false);
         }
       }
-    },
-    [applyDecoded, loadArchiveList, locale]
+    }),
+    [applyDecoded, archiveKindFilter, loadArchiveList, locale, queue]
   );
 
   const runQuery = useCallback(
     async (query: ReportQuery): Promise<void> => {
-      const token = ++seq.current;
-      setLoading(true);
-      setStatusZh(t(locale, "report.running"));
-      const fallback = t(locale, "report.fail");
-      if (!isTauriRuntime()) {
-        setLoading(false);
-        setStatusZh(fallback);
-        setErrorZh(fallback);
-        return;
-      }
-      try {
-        const decoded = await runReport(query, true);
-        if (token !== seq.current) {
-          void releaseReportToken(decoded.reportSnapshotToken);
-          return;
-        }
-        applyDecoded(
-          decoded,
-          formatTemplate(t(locale, "report.done"), { token: decoded.reportSnapshotToken.slice(0, 8) }),
-          "manual",
-          null
-        );
-        await loadArchives(false);
-      } catch (caught: unknown) {
-        if (token !== seq.current) {
-          return;
-        }
-        setErrorZh(invokeErrorZh(caught, fallback));
-        setStatusZh(fallback);
-      } finally {
-        if (token === seq.current) {
+      let persistManual = true;
+      return queue.request(`query:${JSON.stringify(query)}`, async (request) => {
+        const token = ++seq.current;
+        setLoading(true);
+        setStatusZh(t(locale, "report.running"));
+        const fallback = t(locale, "report.fail");
+        if (!isTauriRuntime()) {
           setLoading(false);
+          setStatusZh(fallback);
+          setErrorZh(fallback);
+          return;
         }
-      }
+        try {
+          const persist = persistManual;
+          persistManual = false;
+          const decoded = await runReport(query, persist, request.signal);
+          if (!request.isCurrent() || token !== seq.current) {
+            void releaseReportToken(decoded.reportSnapshotToken);
+            return;
+          }
+          await applyDecoded(
+            decoded,
+            formatTemplate(t(locale, "report.done"), { token: decoded.reportSnapshotToken.slice(0, 8) }),
+            "manual",
+            null,
+            request
+          );
+          if (request.isCurrent()) {
+            try {
+              const page = await loadArchiveList();
+              if (request.isCurrent()) setArchives(page);
+            } catch (caught: unknown) {
+              if (request.isCurrent()) setErrorZh(invokeErrorZh(caught, t(locale, "report.archive.unavailable")));
+            }
+          }
+        } catch (caught: unknown) {
+          if (!request.isCurrent() || token !== seq.current) {
+            return;
+          }
+          setErrorZh(invokeErrorZh(caught, fallback));
+          setStatusZh(fallback);
+        } finally {
+          if (request.isCurrent() && token === seq.current) {
+            setLoading(false);
+          }
+        }
+      });
     },
-    [applyDecoded, loadArchives, locale]
+    [applyDecoded, loadArchiveList, locale, queue]
   );
 
   const runManual = useCallback(async (): Promise<void> => {
@@ -349,7 +393,7 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
     [buildQuery, runQuery]
   );
 
-  const restoreResidentialManual = useCallback(async (): Promise<void> => {
+  const restoreResidentialManual = useCallback((): Promise<void> => queue.request("residential-manual", async (request) => {
     const token = ++seq.current;
     const fallback = t(locale, "report.fail");
     if (!isTauriRuntime()) {
@@ -359,7 +403,7 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
     setStatusZh(t(locale, "report.running"));
     try {
       const raw = await invoke<unknown>("get_latest_residential_manual");
-      if (token !== seq.current) {
+      if (!request.isCurrent() || token !== seq.current) {
         if (raw != null) {
           try {
             void releaseReportToken(decodeReportResult(raw).reportSnapshotToken);
@@ -374,22 +418,22 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
         return;
       }
       const decoded = decodeReportResult(raw);
-      applyDecoded(decoded, t(locale, "residential.report.ready"), "manual", null);
+      await applyDecoded(decoded, t(locale, "residential.report.ready"), "manual", null, request);
     } catch (caught: unknown) {
-      if (token !== seq.current) {
+      if (!request.isCurrent() || token !== seq.current) {
         return;
       }
       setErrorZh(invokeErrorZh(caught, fallback));
       setStatusZh(fallback);
     } finally {
-      if (token === seq.current) {
+      if (request.isCurrent() && token === seq.current) {
         setLoading(false);
       }
     }
-  }, [applyDecoded, locale]);
+  }), [applyDecoded, locale, queue]);
 
   const selectArchive = useCallback(
-    async (archiveId: string): Promise<void> => {
+    (archiveId: string): Promise<void> => queue.request(`archive:${archiveId}`, async (request) => {
       const item = archives?.items.find((row) => row.archiveId === archiveId);
       setSelectedArchiveId(archiveId);
       if (!item || item.status !== "ok") {
@@ -409,7 +453,7 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
         const decoded = decodeReportResult(
           await invoke<unknown>("get_report_archive", { archiveId })
         );
-        if (token !== seq.current) {
+        if (!request.isCurrent() || token !== seq.current) {
           void releaseReportToken(decoded.reportSnapshotToken);
           return;
         }
@@ -421,21 +465,22 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
             : item.kind === "manual"
               ? t(locale, "report.archive.loaded_manual")
               : t(locale, "report.archive.loaded_hour");
-        applyDecoded(decoded, loaded, source, archiveId);
+        await applyDecoded(decoded, loaded, source, archiveId, request);
+        if (!request.isCurrent()) return;
         setForm((current) => ({ ...formFromQueryEcho(decoded.queryEcho, current), windowSource: "archive" }));
       } catch (caught: unknown) {
-        if (token !== seq.current) {
+        if (!request.isCurrent() || token !== seq.current) {
           return;
         }
         setErrorZh(invokeErrorZh(caught, t(locale, "report.fail")));
         setStatusZh(invokeErrorZh(caught, t(locale, "report.fail")));
       } finally {
-        if (token === seq.current) {
+        if (request.isCurrent() && token === seq.current) {
           setLoading(false);
         }
       }
-    },
-    [applyDecoded, archives, locale]
+    }),
+    [applyDecoded, archives, locale, queue]
   );
 
   const setArchiveKindFilter = useCallback((filter: ArchiveKindFilter): void => {
@@ -443,7 +488,7 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
   }, []);
 
   const previewExport = useCallback(
-    async (spec: ExportSpec): Promise<void> => {
+    (spec: ExportSpec): Promise<void> => queue.request(`preview:${JSON.stringify(spec)}`, async (request) => {
       const token = ++seq.current;
       const fallback = t(locale, "report.export_fail");
       if (!report) {
@@ -461,98 +506,78 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
             spec
           })
         );
-        if (token !== seq.current) {
+        if (!request.isCurrent() || token !== seq.current) {
           return;
         }
         setExportPreview(next);
         setErrorZh(null);
       } catch (caught: unknown) {
-        if (token !== seq.current) {
+        if (!request.isCurrent() || token !== seq.current) {
           return;
         }
         setErrorZh(invokeErrorZh(caught, fallback));
       }
-    },
-    [locale, report]
+    }, false),
+    [locale, queue, report]
   );
 
   const getStored = useCallback(
-    async (tokenStr: string): Promise<void> => {
+    (tokenStr: string): Promise<void> => queue.request(`stored:${tokenStr}`, async (request) => {
       const token = ++seq.current;
       const fallback = t(locale, "report.fail");
-      if (!isTauriRuntime()) {
+      if (!isTauriRuntime() || tokenStr !== tokenRef.current) {
         setErrorZh(fallback);
         return;
       }
       try {
         const decoded = decodeReportResult(await invoke<unknown>("get_report", { token: tokenStr }));
-        if (token !== seq.current) {
+        if (!request.isCurrent() || token !== seq.current) {
           return;
         }
-        applyDecoded(
+        await applyDecoded(
           decoded,
           formatTemplate(t(locale, "report.done"), { token: decoded.reportSnapshotToken.slice(0, 8) }),
           reportSource,
-          selectedArchiveId
+          selectedArchiveId,
+          request,
+          false
         );
       } catch (caught: unknown) {
-        if (token !== seq.current) {
+        if (!request.isCurrent() || token !== seq.current) {
           return;
         }
         setErrorZh(invokeErrorZh(caught, fallback));
       }
-    },
-    [applyDecoded, locale, reportSource, selectedArchiveId]
+    }, false),
+    [applyDecoded, locale, queue, reportSource, selectedArchiveId]
   );
 
   const release = useCallback(async (): Promise<void> => {
     const token = tokenRef.current;
     tokenRef.current = null;
+    if (token && token === exportingToken.current) {
+      deferredRelease.current = token;
+      return;
+    }
     await releaseReportToken(token);
   }, []);
 
   useEffect(() => {
-    return () => {
-      const token = tokenRef.current;
-      tokenRef.current = null;
-      void releaseReportToken(token);
-    };
-  }, []);
+    if (!active) {
+      setLoading(false);
+      void release();
+    }
+  }, [active, release]);
 
   useEffect(() => {
-    if (!previewHtml) {
-      return;
-    }
-    if (!report || !isTauriRuntime()) {
-      setHtml(null);
-      setHtmlError(null);
-      return;
-    }
-    let cancelled = false;
-    setHtml(null);
-    setHtmlError(null);
-    void renderReportHtml(report.reportSnapshotToken)
-      .then((next) => {
-        if (!cancelled) {
-          setHtml(next);
-        }
-      })
-      .catch((caught: unknown) => {
-        if (!cancelled) {
-          setHtml(null);
-          setHtmlError(invokeErrorZh(caught, t(locale, "report.export_fail")));
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [locale, previewHtml, report]);
+    return () => { void release(); };
+  }, [release]);
 
   const exportReport = useCallback(
-    async (spec: ExportSpec): Promise<void> => {
+    (spec: ExportSpec): Promise<void> => queue.request(`export:${JSON.stringify(spec)}`, async (request) => {
       const token = ++seq.current;
       const fallback = t(locale, "report.export_fail");
-      if (!report) {
+      if (!report || !tokenRef.current) {
         setStatusZh(t(locale, "report.need_run"));
         return;
       }
@@ -560,6 +585,8 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
         setErrorZh(fallback);
         return;
       }
+      const snapshotToken = tokenRef.current;
+      exportingToken.current = snapshotToken;
       try {
         const picked = await invoke<string | null>("pick_file", {
           purpose: "report-export",
@@ -567,30 +594,35 @@ export function useReportArchive(locale: UiLocale, previewHtml = false): {
           locale
         });
         if (!picked) {
-          if (token === seq.current) {
+          if (request.isCurrent() && token === seq.current) {
             setStatusZh(t(locale, "report.export_cancel"));
           }
           return;
         }
         await invoke("export_report", {
-          token: report.reportSnapshotToken,
+          token: snapshotToken,
           spec,
           path: picked
         });
-        if (token !== seq.current) {
+        if (!request.isCurrent() || token !== seq.current) {
           return;
         }
         setErrorZh(null);
         setStatusZh(formatTemplate(t(locale, "report.exported"), { format: spec.format.toUpperCase() }));
       } catch (caught: unknown) {
-        if (token !== seq.current) {
+        if (!request.isCurrent() || token !== seq.current) {
           return;
         }
         setErrorZh(invokeErrorZh(caught, fallback));
         setStatusZh(fallback);
+      } finally {
+        exportingToken.current = null;
+        const abandoned = deferredRelease.current;
+        deferredRelease.current = null;
+        await releaseReportToken(abandoned);
       }
-    },
-    [locale, report]
+    }, false),
+    [locale, queue, report]
   );
 
   return {

@@ -1,0 +1,16 @@
+[WARN ] session events are not being recorded to C:\Users\lyh\AppData\Local\mbx\actions\sessions/v1\1789833727638-15732-ifw4.jsonl: Access is denied. (os error 5)
+[WARN ] this checkout was not recorded as a cache root: Access is denied. (os error 5) at path "C:\\Users\\lyh\\AppData\\Local\\mbx\\actions\\checkouts/v1\\affd788b8126d7761337e59d7bd7a652b20e62a30114325c2dae09d35fa427db\\.mbx-Cr1Sbr"
+[WARN ] incremental state was not recorded: Access is denied. (os error 5)
+[WARN ] build action manifest was not loaded: Access is denied. (os error 5)
+      ┌─────────┐  mr boxington
+     ╱ ═══════ ╱│
+    ╱─────────╱ │
+    │ •    (◉)│≡│
+    │  ◟▄▄▄◞  │ ╱
+    │   ◀◆▶   │╱
+    └─────────┘
+   Compiling residential-monitor v0.3.0 (D:\Documents\Code\Github\clash-verge-ai-residential\residential-monitor\src-tauri)
+mbx[progress]: 15s elapsed; 0 hits, 0 misses, 0 bypassed, 0 not looked up; ~0.0s compiler work saved
+mbx[progress]: 30s elapsed; 0 hits, 0 misses, 0 bypassed, 0 not looked up; ~0.0s compiler work saved
+    Finished `release` profile [optimized] target(s) in 35.80s
+[WARN ] the store was not swept: Access is denied. (os error 5)

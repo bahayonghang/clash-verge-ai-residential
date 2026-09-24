@@ -1,7 +1,7 @@
 //! 家宽占可归因观测的份额。未知由 coverage 决定，不由 totals 是否为 0 决定。
 
 use crate::c3::query::{
-    gap_union_sec, timezone_offset_secs, CoverageSlice, ReportError, MAX_RANGE_SECS,
+    coverage_union_secs, timezone_offset_secs, CoverageSlice, ReportError, MAX_RANGE_SECS,
     REPORT_DTO_VERSION,
 };
 use crate::c3::sql::{render_residential_membership_sql, COVERAGE_RAW, SHARE_RESIDENTIAL_RAW};
@@ -9,6 +9,9 @@ use crate::storage::open_interruptible_reader;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -32,9 +35,45 @@ pub fn query_residential_share(
     display_timezone: &str,
     now_utc: i64,
 ) -> Result<ResidentialShare, ReportError> {
+    query_residential_share_cancellable(
+        db_path,
+        range_start_utc,
+        range_end_utc,
+        display_timezone,
+        now_utc,
+        &Arc::new(AtomicBool::new(false)),
+    )
+}
+
+pub fn query_residential_share_cancellable(
+    db_path: &Path,
+    range_start_utc: i64,
+    range_end_utc: i64,
+    display_timezone: &str,
+    now_utc: i64,
+    cancel: &Arc<AtomicBool>,
+) -> Result<ResidentialShare, ReportError> {
+    let started = Instant::now();
     validate_share_range(range_start_utc, range_end_utc, display_timezone)?;
+    crate::c3::service::poll_interrupt(cancel, "residential share")?;
     let reader = open_interruptible_reader(db_path).map_err(map_storage)?;
-    query_residential_share_on(&reader, range_start_utc, range_end_utc, now_utc)
+    let deadline = Duration::from_millis(crate::c3::query::PAGE_DEADLINE_MS);
+    crate::c3::service::attach_cancel(&reader, cancel, started, deadline)?;
+    reader.execute_batch("begin deferred").map_err(map_sqlite)?;
+    let built = query_residential_share_on(&reader, range_start_utc, range_end_utc, now_utc);
+    let closed = reader.execute_batch("commit");
+    if !reader.is_autocommit() {
+        let _ = reader.execute_batch("rollback");
+    }
+    if cancel.load(Ordering::SeqCst) {
+        return Err(ReportError::Cancelled("residential share"));
+    }
+    if started.elapsed() > deadline {
+        return Err(ReportError::DeadlineExceeded("residential share"));
+    }
+    let report = built?;
+    closed.map_err(map_sqlite)?;
+    Ok(report)
 }
 
 pub fn query_residential_share_on(
@@ -67,10 +106,15 @@ fn build_share(
     range_end_utc: i64,
     now_utc: i64,
 ) -> Result<ResidentialShare, ReportError> {
+    if !crate::c3::service::raw_range_is_retained(connection, range_start_utc, range_end_utc)? {
+        return Err(ReportError::CapabilityUnsupported(
+            "该区间明细已清理，无法精确计算家宽份额",
+        ));
+    }
     let (policy_version, target_count) = load_target_meta(connection);
     let slices = load_coverage_slices(connection, range_start_utc, range_end_utc)?;
     let covered_sec = covered_sec_from_slices(range_start_utc, range_end_utc, &slices);
-    let coverage_status = coverage_status(&slices, covered_sec);
+    let coverage_status = coverage_status(&slices, covered_sec, range_end_utc - range_start_utc);
     let mut named_sql = vec!["coverage_raw"];
     if covered_sec == 0 {
         return Ok(ResidentialShare {
@@ -122,21 +166,16 @@ fn load_coverage_slices(
     rows.collect::<Result<Vec<_>, _>>().map_err(map_sqlite)
 }
 
-/// 无切片视为无采集覆盖，covered_sec = 0。有切片时与报告 raw 覆盖相同：span − gap。
+/// 与报告和保留校验共用区间并集，不能把没有观测的时间补成覆盖。
 fn covered_sec_from_slices(start: i64, end: i64, slices: &[CoverageSlice]) -> i64 {
-    if slices.is_empty() {
-        return 0;
-    }
-    let span = (end - start).max(0);
-    let gap = gap_union_sec(start, end, slices);
-    (span - gap).max(0)
+    coverage_union_secs(start, end, slices).0
 }
 
-fn coverage_status(slices: &[CoverageSlice], covered_sec: i64) -> String {
+fn coverage_status(slices: &[CoverageSlice], covered_sec: i64, span: i64) -> String {
     if covered_sec == 0 {
         return "uncovered".into();
     }
-    if slices.iter().any(|item| item.kind == "gap") {
+    if covered_sec < span || slices.iter().any(|item| item.kind == "gap") {
         "partial".into()
     } else {
         "covered".into()
@@ -223,6 +262,27 @@ mod residential_share_tests {
     }
 
     #[test]
+    fn display_share_cancellation_is_scoped_and_creates_no_spool() {
+        let (dir, coordinator) = setup();
+        let cancel = Arc::new(AtomicBool::new(true));
+        let error = query_residential_share_cancellable(
+            coordinator.path(),
+            0,
+            3_600,
+            "UTC",
+            4_000,
+            &cancel,
+        )
+        .expect_err("cancelled");
+        assert_eq!(error.code(), "cancelled");
+        let independent = query_residential_share(coordinator.path(), 0, 3_600, "UTC", 4_000)
+            .expect("independent consumer");
+        assert_eq!(independent.schema_version, REPORT_DTO_VERSION);
+        assert!(!dir.path().join("report-spool").exists());
+        assert!(coordinator.connection().is_autocommit());
+    }
+
+    #[test]
     fn inverted_range_returns_invalid_query() {
         let dir = tempdir().expect("dir");
         let path = dir.path().join("share.sqlite3");
@@ -254,6 +314,41 @@ mod residential_share_tests {
             lookup("share_residential_raw").map(|_| "share_residential_raw"),
             Some("share_residential_raw")
         );
+    }
+
+    #[test]
+    fn deleted_or_partially_deleted_facts_never_become_a_covered_zero_share() {
+        let (_dir, coordinator) = setup();
+        coordinator
+            .connection()
+            .execute_batch(
+                "insert into retention_state values('day_exact_v1',0,'deleted','fixture',4000);
+            delete from connection_minute where session_pk=1;",
+            )
+            .expect("部分清理");
+        let error = query_residential_share(coordinator.path(), 1000, 2500, "UTC", 4000)
+            .expect_err("raw 已不完整");
+        assert_eq!(error.code(), "capability_unsupported");
+        coordinator
+            .connection()
+            .execute("delete from connection_minute", [])
+            .expect("全部清理");
+        assert_eq!(
+            query_residential_share(coordinator.path(), 1000, 2500, "UTC", 4000)
+                .expect_err("不能返回零")
+                .code(),
+            "capability_unsupported"
+        );
+    }
+
+    #[test]
+    fn legacy_epoch_and_closed_intervals_do_not_prove_positive_coverage() {
+        let (_dir, coordinator) = setup();
+        coordinator.connection().execute_batch("delete from coverage_interval;
+            insert into coverage_interval(kind,reason,started_utc,ended_utc) values('epoch','legacy',0,4000),('closed','legacy',0,4000);").expect("历史区间");
+        let share = query(&coordinator, 1000, 2500);
+        assert_eq!(share.attributed_download, None);
+        assert_eq!(share.coverage_status, "uncovered");
     }
 
     #[test]

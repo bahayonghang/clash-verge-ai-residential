@@ -47,7 +47,7 @@ describe("useResidentialShare 竞态", () => {
 
   it("IPC 只在 hook 内", () => {
     expect(hookSource).toContain("residential_share");
-    expect(hookSource).toContain("seqRef");
+    expect(hookSource).toContain("useDisplayQuery");
   });
 });
 

@@ -597,14 +597,8 @@ pub(crate) fn reject_future_schema(connection: &Connection) -> Result<i32, DbCli
 }
 
 pub(crate) fn data_version(connection: &Connection) -> Result<u64, DbCliError> {
-    connection
-        .query_row(
-            "select watermark from data_version where id = 1",
-            [],
-            |row| row.get::<_, i64>(0),
-        )
-        .map(|value| value.max(0) as u64)
-        .or(Ok(0))
+    crate::storage::durable_data_version(connection)
+        .map_err(|_| DbCliError::FailClosed("读取持久化版本失败".into()))
 }
 
 fn data_version_from_path(path: &Path) -> Result<u64, DbCliError> {

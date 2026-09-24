@@ -1,0 +1,18 @@
+{
+  "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-retention-cache\\corpus-a4-45d",
+  "destination": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-retention-cache\\corpus-a4-vacuum",
+  "files": [
+    {
+      "name": "monitor.sqlite3",
+      "bytes": 428007424,
+      "sha256": "0BB7CBB963C99C2141A016F8A71D066680DC9FFD7A686D29658B250B10873B1F"
+    },
+    {
+      "name": "production-corpus.json",
+      "bytes": 33976,
+      "sha256": "52B3338894A72AC86DEAEB8BB899866427FB54325E104ACAA59ABE1870083068"
+    }
+  ],
+  "wal": "empty_or_absent",
+  "created_utc": "2026-09-19T15:43:34.6810343Z"
+}

@@ -1,0 +1,11 @@
+{
+  "baseline_source_commit": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+  "baseline_source_archive_sha256": "87684724D5E5B1B3A18C0212CD594CA05F9454EDD6C28582CD879270F9749EB7",
+  "baseline_exe_sha256": "11C2542BC2C9F98A4B7517E67215E76884D8C01D25D64AE7FAF478571BF7633E",
+  "candidate_source_manifest_sha256": "7A221F3F43DCDA003094AF86058953416CE7963B4561783A722AD9C92BA6D6A0",
+  "candidate_bench_exe_sha256": "D0600E41C71A326B23BAB12D42F56D5BC88FADDA7142D5E38598D68F63F496AB",
+  "candidate_db_cli_sha256": "0C9C28F498F830419F007C3496A5F53C564E0A337C7DDB22E0221FB91DD380A3",
+  "candidate_source_kind": "uncommitted working tree, Rust source plus Cargo/build/Tauri config manifest",
+  "scope": "isolated facade and synchronous archive; no HTTP/WebView/background worker/installed app",
+  "created_utc": "2026-09-19T10:56:12.9234191Z"
+}

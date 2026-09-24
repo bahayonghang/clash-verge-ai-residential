@@ -186,6 +186,7 @@ fn sidecar(path: &Path, suffix: &str) -> PathBuf {
 fn integrity_ok(path: &Path) -> bool {
     Connection::open(path)
         .and_then(|connection| {
+            crate::c3::rule_name::register_last_chain_hop(&connection)?;
             connection.query_row("pragma integrity_check", [], |row| {
                 let text: String = row.get(0)?;
                 Ok(text == "ok")

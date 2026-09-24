@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, MutexGuard};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -140,9 +140,9 @@ struct OperationEntry {
     cancel: Arc<AtomicBool>,
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct OperationRegistry {
-    items: HashMap<String, OperationEntry>,
+    items: Arc<Mutex<HashMap<String, OperationEntry>>>,
     archive_tick_cancel: Arc<AtomicBool>,
 }
 
@@ -151,7 +151,15 @@ impl OperationRegistry {
         Self::default()
     }
 
-    pub fn start_fixture(&mut self, operation_id: String, kind: String) -> OperationProgress {
+    fn entries(&self) -> MutexGuard<'_, HashMap<String, OperationEntry>> {
+        // 只在短临界区修改进度；即使调用线程 panic，仍保留已有取消标志供其它 owner 中断。
+        self.items
+            .lock()
+            .unwrap_or_else(|poison| poison.into_inner())
+    }
+
+    // 调用方为每次操作生成唯一 ID，并在实际命令结束后调用 finish。
+    pub fn start_fixture(&self, operation_id: String, kind: String) -> OperationProgress {
         let progress = OperationProgress {
             schema_version: 1,
             operation_id: operation_id.clone(),
@@ -164,7 +172,7 @@ impl OperationRegistry {
             status: "running".into(),
             redacted_error: None,
         };
-        self.items.insert(
+        self.entries().insert(
             operation_id,
             OperationEntry {
                 progress: progress.clone(),
@@ -175,7 +183,7 @@ impl OperationRegistry {
     }
 
     pub fn cancel_flag(&self, operation_id: &str) -> Option<Arc<AtomicBool>> {
-        self.items
+        self.entries()
             .get(operation_id)
             .map(|entry| Arc::clone(&entry.cancel))
     }
@@ -184,21 +192,14 @@ impl OperationRegistry {
         Arc::clone(&self.archive_tick_cancel)
     }
 
-    pub fn resolve_cancel(&self, operation_id: Option<&str>, kind: &str) -> Arc<AtomicBool> {
-        if let Some(id) = operation_id {
-            if let Some(flag) = self.cancel_flag(id) {
-                return flag;
-            }
-        }
-        self.items
-            .values()
-            .find(|entry| entry.progress.kind == kind && entry.progress.status == "running")
-            .map(|entry| Arc::clone(&entry.cancel))
+    pub fn resolve_cancel(&self, operation_id: Option<&str>, _kind: &str) -> Arc<AtomicBool> {
+        operation_id
+            .and_then(|id| self.cancel_flag(id))
             .unwrap_or_else(|| Arc::new(AtomicBool::new(false)))
     }
 
-    pub fn cancel(&mut self, operation_id: &str) -> Option<OperationProgress> {
-        if let Some(entry) = self.items.get_mut(operation_id) {
+    pub fn cancel(&self, operation_id: &str) -> Option<OperationProgress> {
+        if let Some(entry) = self.entries().get_mut(operation_id) {
             entry.cancel.store(true, Ordering::SeqCst);
             entry.progress.status = "cancelled".into();
             entry.progress.can_cancel = false;
@@ -208,19 +209,19 @@ impl OperationRegistry {
         None
     }
 
-    pub fn finish(&mut self, operation_id: &str) -> Option<OperationProgress> {
-        if let Some(entry) = self.items.get_mut(operation_id) {
+    pub fn finish(&self, operation_id: &str) -> Option<OperationProgress> {
+        let mut entry = self.entries().remove(operation_id)?;
+        if entry.progress.status != "cancelled" {
             entry.progress.status = "completed".into();
             entry.progress.current = entry.progress.total;
             entry.progress.can_cancel = false;
             entry.progress.phase = "done".into();
-            return Some(entry.progress.clone());
         }
-        None
+        Some(entry.progress)
     }
 
     pub fn get(&self, operation_id: &str) -> Option<OperationProgress> {
-        self.items
+        self.entries()
             .get(operation_id)
             .map(|entry| entry.progress.clone())
     }
@@ -356,7 +357,7 @@ mod shell_seam_tests {
 
     #[test]
     fn operation_progress_can_cancel_fixture() {
-        let mut ops = OperationRegistry::new();
+        let ops = OperationRegistry::new();
         ops.start_fixture("op-1".into(), "export".into());
         let flag = ops.cancel_flag("op-1").expect("flag");
         assert!(!flag.load(std::sync::atomic::Ordering::SeqCst));
@@ -366,6 +367,104 @@ mod shell_seam_tests {
         assert!(!ops
             .archive_tick_cancel()
             .load(std::sync::atomic::Ordering::SeqCst));
+    }
+
+    #[test]
+    fn operation_finish_releases_entry_and_preserves_borrowed_flag() {
+        let ops = OperationRegistry::new();
+        ops.start_fixture("report-1".into(), "report".into());
+        let flag = ops.cancel_flag("report-1").expect("flag");
+        assert_eq!(Arc::strong_count(&flag), 2);
+
+        let completed = ops.finish("report-1").expect("finish");
+        assert_eq!(completed.status, "completed");
+        assert_eq!(completed.current, completed.total);
+        assert!(!completed.can_cancel);
+        assert!(ops.get("report-1").is_none());
+        assert!(ops.cancel_flag("report-1").is_none());
+        assert!(ops.finish("report-1").is_none());
+        assert_eq!(Arc::strong_count(&flag), 1);
+        assert!(!flag.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn operation_cancellation_never_leaks_to_other_queries() {
+        let ops = OperationRegistry::new();
+        ops.start_fixture("report-1".into(), "report".into());
+        ops.start_fixture("report-2".into(), "report".into());
+        let first = ops.resolve_cancel(Some("report-1"), "report");
+        let second = ops.resolve_cancel(Some("report-2"), "report");
+        let unspecified = ops.resolve_cancel(None, "report");
+        let missing = ops.resolve_cancel(Some("missing"), "report");
+
+        ops.cancel("report-1").expect("cancel first");
+        assert!(first.load(Ordering::SeqCst));
+        assert!(!second.load(Ordering::SeqCst));
+        assert!(!unspecified.load(Ordering::SeqCst));
+        assert!(!missing.load(Ordering::SeqCst));
+        let cancelled = ops.finish("report-1").expect("finish cancelled");
+        assert_eq!(cancelled.status, "cancelled");
+        assert!(first.load(Ordering::SeqCst));
+        assert_eq!(Arc::strong_count(&first), 1);
+
+        assert!(ops.cancel("report-1").is_none());
+        ops.cancel("report-2").expect("cancel second");
+        assert!(second.load(Ordering::SeqCst));
+        assert!(!unspecified.load(Ordering::SeqCst));
+        assert!(!missing.load(Ordering::SeqCst));
+        assert!(!ops.archive_tick_cancel().load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn operation_repeated_lifecycle_keeps_only_in_flight_entries() {
+        let ops = OperationRegistry::new();
+        ops.start_fixture("long-report".into(), "report".into());
+        let long_running = ops.cancel_flag("long-report").expect("long report");
+        for sequence in 0..3_600 {
+            let id = format!("report-{sequence}");
+            ops.start_fixture(id.clone(), "report".into());
+            let flag = ops.cancel_flag(&id).expect("flag");
+            assert_eq!(ops.entries().len(), 2);
+            if sequence % 2 == 0 {
+                ops.cancel(&id).expect("cancel");
+            }
+            ops.finish(&id).expect("finish");
+            assert_eq!(ops.entries().len(), 1);
+            assert_eq!(Arc::strong_count(&flag), 1);
+            assert!(!long_running.load(Ordering::SeqCst));
+        }
+        ops.finish("long-report").expect("finish long report");
+        assert!(ops.entries().is_empty());
+    }
+
+    #[test]
+    fn operation_clone_cancels_while_facade_owner_is_locked() {
+        let ops = OperationRegistry::new();
+        ops.start_fixture("retention".into(), "retention".into());
+        let endpoint = ops.clone();
+        let facade = Mutex::new(ops);
+        let writer_owner = facade.lock().expect("writer owner");
+        let running = writer_owner.resolve_cancel(Some("retention"), "retention");
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let cancel_thread = std::thread::spawn(move || {
+            sender
+                .send(endpoint.cancel("retention"))
+                .expect("cancel response");
+        });
+
+        let response = receiver
+            .recv_timeout(std::time::Duration::from_secs(2))
+            .expect("cancel must not wait for facade writer")
+            .expect("registered operation");
+        assert_eq!(response.status, "cancelled");
+        assert!(running.load(Ordering::SeqCst));
+        assert_eq!(
+            writer_owner.get("retention").expect("progress").status,
+            "cancelled"
+        );
+        writer_owner.finish("retention").expect("finish");
+        assert!(writer_owner.entries().is_empty());
+        cancel_thread.join().expect("cancel thread");
     }
 
     #[test]

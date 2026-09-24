@@ -710,5 +710,6 @@ export const ZH: Record<string, string> = {
   "residential.report.current_off": "当前策略重算只在 raw 期内可用。",
   "residential.state.gap": "存在采集缺口。缺口不是零。",
   "residential.state.paused": "采集已暂停。",
-  "residential.state.disconnected": "控制器未连接。"
+  "residential.state.disconnected": "控制器未连接。",
+  "window.visibility_fail": "无法读取窗口状态，展示刷新已暂停。请重新打开窗口。"
 };

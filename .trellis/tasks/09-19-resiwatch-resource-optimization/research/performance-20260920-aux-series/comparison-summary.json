@@ -1,0 +1,500 @@
+{
+  "comparisons": [
+    {
+      "name": "matrix-a1000-counters",
+      "fixture_hash": "ac07ededfa24a46bc1fa2d003adaa60afabfdda8be8cbd2685b5615d0f2282a6",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.953125,
+        0.546875
+      ],
+      "cpu_reduction_percent": 42.622950819672134,
+      "sqlite_xwrite_bytes": [
+        4907688,
+        1363720
+      ],
+      "sqlite_xwrite_reduction_percent": 72.21257749066363,
+      "native_private_p95_bytes": [
+        11866112.0,
+        13041664.0
+      ],
+      "ingest_p95_ms": [
+        26.14,
+        17.8082
+      ],
+      "ingest_max_ms": [
+        31.436600000000002,
+        19.109
+      ],
+      "report_first_reader_p95_ms": [
+        1.3376,
+        1.5865
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "matrix-a1000-metadata",
+      "fixture_hash": "d996698b5a1c60564c2b3affd0e9845b75440eb862f942a0eb5df9343d2bd40e",
+      "virtual_time": false,
+      "cpu_seconds": [
+        1.125,
+        1.265625
+      ],
+      "cpu_reduction_percent": -12.5,
+      "sqlite_xwrite_bytes": [
+        7880872,
+        11268472
+      ],
+      "sqlite_xwrite_reduction_percent": -42.98509098993107,
+      "native_private_p95_bytes": [
+        11886592.0,
+        12816384.0
+      ],
+      "ingest_p95_ms": [
+        27.8172,
+        53.0364
+      ],
+      "ingest_max_ms": [
+        32.1727,
+        54.796699999999994
+      ],
+      "report_first_reader_p95_ms": [
+        1.2612,
+        1.4809
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "matrix-a1000-unchanged",
+      "fixture_hash": "3b863d21eff492ec00e7c7238521690df4a0c099fa9295cda6880795af521739",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.75,
+        0.484375
+      ],
+      "cpu_reduction_percent": 35.416666666666664,
+      "sqlite_xwrite_bytes": [
+        4207672,
+        741600
+      ],
+      "sqlite_xwrite_reduction_percent": 82.37505204778319,
+      "native_private_p95_bytes": [
+        11325440.0,
+        12394496.0
+      ],
+      "ingest_p95_ms": [
+        22.244,
+        14.304
+      ],
+      "ingest_max_ms": [
+        587.6341000000001,
+        17.1476
+      ],
+      "report_first_reader_p95_ms": [
+        1.446,
+        1.3284
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "matrix-a250-backlog",
+      "fixture_hash": "853e1c9de5bbbddbde340ac8c14fa07820a9e82b9749b34bd85e3536624e1c64",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.453125,
+        0.078125
+      ],
+      "cpu_reduction_percent": 82.75862068965517,
+      "sqlite_xwrite_bytes": [
+        3903344,
+        4599168
+      ],
+      "sqlite_xwrite_reduction_percent": -17.826356068027827,
+      "native_private_p95_bytes": [
+        5500928.0,
+        6721536.0
+      ],
+      "ingest_p95_ms": [
+        9.0592,
+        15.3212
+      ],
+      "ingest_max_ms": [
+        12.8235,
+        15.8605
+      ],
+      "report_first_reader_p95_ms": [
+        1.1807,
+        1.328
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "matrix-a250-counters",
+      "fixture_hash": "9b25931e3cfc8abf7fbf10b72a3b4e9ba70e6bef289eafab7a0996ad61d8dd5f",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.9375,
+        0.03125
+      ],
+      "cpu_reduction_percent": 96.66666666666667,
+      "sqlite_xwrite_bytes": [
+        2391472,
+        988800
+      ],
+      "sqlite_xwrite_reduction_percent": 58.65308061311192,
+      "native_private_p95_bytes": [
+        7987200.0,
+        7335936.0
+      ],
+      "ingest_p95_ms": [
+        12.9943,
+        10.4549
+      ],
+      "ingest_max_ms": [
+        17.9005,
+        10.9743
+      ],
+      "report_first_reader_p95_ms": [
+        1.369,
+        1.4948
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "matrix-a250-failed",
+      "fixture_hash": "b82155e6b4c372e3741b0564a69f1b3fc13cc6ea1006f0bcb18a6a38ed5462b7",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.671875,
+        0.46875
+      ],
+      "cpu_reduction_percent": 30.23255813953488,
+      "sqlite_xwrite_bytes": [
+        2743920,
+        4055616
+      ],
+      "sqlite_xwrite_reduction_percent": -47.80372605615324,
+      "native_private_p95_bytes": [
+        5505024.0,
+        6615040.0
+      ],
+      "ingest_p95_ms": [
+        13.8198,
+        14.8212
+      ],
+      "ingest_max_ms": [
+        15.3062,
+        19.232200000000002
+      ],
+      "report_first_reader_p95_ms": [
+        1.2911000000000001,
+        1.1789
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "matrix-a250-metadata",
+      "fixture_hash": "2ac3520c826064ec990044729e4f184bcbae4f9ce38e16aa90a1507c295dc8a6",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.21875,
+        0.453125
+      ],
+      "cpu_reduction_percent": -107.14285714285717,
+      "sqlite_xwrite_bytes": [
+        3145360,
+        3936112
+      ],
+      "sqlite_xwrite_reduction_percent": -25.14027011216522,
+      "native_private_p95_bytes": [
+        7716864.0,
+        8003584.0
+      ],
+      "ingest_p95_ms": [
+        13.0586,
+        13.9969
+      ],
+      "ingest_max_ms": [
+        14.361,
+        14.1986
+      ],
+      "report_first_reader_p95_ms": [
+        1.2712,
+        1.5315
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "matrix-a250-unchanged",
+      "fixture_hash": "e779598d1e51d163d7a3c9f73934ccc219fdd33f7a0c3407996b01aff92f0977",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.484375,
+        0.015625
+      ],
+      "cpu_reduction_percent": 96.7741935483871,
+      "sqlite_xwrite_bytes": [
+        1755120,
+        741600
+      ],
+      "sqlite_xwrite_reduction_percent": 57.74647887323944,
+      "native_private_p95_bytes": [
+        7135232.0,
+        6705152.0
+      ],
+      "ingest_p95_ms": [
+        13.1627,
+        9.9
+      ],
+      "ingest_max_ms": [
+        14.8322,
+        10.1274
+      ],
+      "report_first_reader_p95_ms": [
+        1.1460000000000001,
+        1.3885
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "matrix-a50-counters",
+      "fixture_hash": "b7cd70678accfa7d26b098e43426256d1c607a216e6f841e1b7eaa6d9f0e1602",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.234375,
+        0.0
+      ],
+      "cpu_reduction_percent": 100.0,
+      "sqlite_xwrite_bytes": [
+        1236000,
+        865200
+      ],
+      "sqlite_xwrite_reduction_percent": 30.000000000000004,
+      "native_private_p95_bytes": [
+        5861376.0,
+        6561792.0
+      ],
+      "ingest_p95_ms": [
+        9.883700000000001,
+        8.6243
+      ],
+      "ingest_max_ms": [
+        10.1057,
+        8.8733
+      ],
+      "report_first_reader_p95_ms": [
+        1.3768,
+        1.3517
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "matrix-a50-metadata",
+      "fixture_hash": "f05498752ce3081cc0c3167eec023eeb26fefb53c1a7abfc5787489b7a3d4b38",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.375,
+        0.0625
+      ],
+      "cpu_reduction_percent": 83.33333333333334,
+      "sqlite_xwrite_bytes": [
+        1483200,
+        2597568
+      ],
+      "sqlite_xwrite_reduction_percent": -75.13268608414239,
+      "native_private_p95_bytes": [
+        5795840.0,
+        5804032.0
+      ],
+      "ingest_p95_ms": [
+        9.762,
+        11.390799999999999
+      ],
+      "ingest_max_ms": [
+        12.238000000000001,
+        154.9777
+      ],
+      "report_first_reader_p95_ms": [
+        1.3397999999999999,
+        1.3333
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "matrix-a50-unchanged",
+      "fixture_hash": "e7e4e8747e75029506ac7272058e89560e110e7133f09fe44b9126a40612a840",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.28125,
+        0.015625
+      ],
+      "cpu_reduction_percent": 94.44444444444444,
+      "sqlite_xwrite_bytes": [
+        1112400,
+        741600
+      ],
+      "sqlite_xwrite_reduction_percent": 33.333333333333336,
+      "native_private_p95_bytes": [
+        5799936.0,
+        5836800.0
+      ],
+      "ingest_p95_ms": [
+        9.852500000000001,
+        8.878300000000001
+      ],
+      "ingest_max_ms": [
+        10.620299999999999,
+        9.8283
+      ],
+      "report_first_reader_p95_ms": [
+        1.2043,
+        1.4966000000000002
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "primary-r1",
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "virtual_time": false,
+      "cpu_seconds": [
+        6.734375,
+        1.78125
+      ],
+      "cpu_reduction_percent": 73.54988399071925,
+      "sqlite_xwrite_bytes": [
+        23531752,
+        10942880
+      ],
+      "sqlite_xwrite_reduction_percent": 53.49738515007297,
+      "native_private_p95_bytes": [
+        9846784.0,
+        9265152.0
+      ],
+      "ingest_p95_ms": [
+        14.2259,
+        11.4576
+      ],
+      "ingest_max_ms": [
+        20.0466,
+        285.76610000000005
+      ],
+      "report_first_reader_p95_ms": [
+        null,
+        null
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "primary-r2",
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "virtual_time": false,
+      "cpu_seconds": [
+        5.125,
+        0.203125
+      ],
+      "cpu_reduction_percent": 96.03658536585365,
+      "sqlite_xwrite_bytes": [
+        23531752,
+        10942880
+      ],
+      "sqlite_xwrite_reduction_percent": 53.49738515007297,
+      "native_private_p95_bytes": [
+        9310208.0,
+        9551872.0
+      ],
+      "ingest_p95_ms": [
+        14.0508,
+        11.295
+      ],
+      "ingest_max_ms": [
+        29.421300000000002,
+        12.7212
+      ],
+      "report_first_reader_p95_ms": [
+        null,
+        null
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "primary-r3",
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "virtual_time": false,
+      "cpu_seconds": [
+        3.546875,
+        0.0
+      ],
+      "cpu_reduction_percent": 100.0,
+      "sqlite_xwrite_bytes": [
+        23531752,
+        10942880
+      ],
+      "sqlite_xwrite_reduction_percent": 53.49738515007297,
+      "native_private_p95_bytes": [
+        9625600.0,
+        9551872.0
+      ],
+      "ingest_p95_ms": [
+        13.7228,
+        11.08
+      ],
+      "ingest_max_ms": [
+        1813.5519,
+        27.9043
+      ],
+      "report_first_reader_p95_ms": [
+        null,
+        null
+      ],
+      "frame_budget_overruns": [
+        1,
+        0
+      ]
+    }
+  ],
+  "primary_three_rounds_complete": true,
+  "primary_cpu_reduction_percent": 87.11967545638946,
+  "primary_sqlite_xwrite_reduction_percent": 53.49738515007297,
+  "all_application_file_writes_gate": "UNVERIFIED: SQLite xWrite is only a subset",
+  "native_plus_webview_memory_gate": "UNVERIFIED: this harness has no WebView",
+  "collector_background_worker_gate": "UNVERIFIED: synchronous facade/archive driver"
+}

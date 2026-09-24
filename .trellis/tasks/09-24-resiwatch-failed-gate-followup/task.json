@@ -1,0 +1,32 @@
+{
+  "id": "resiwatch-failed-gate-followup",
+  "name": "resiwatch-failed-gate-followup",
+  "title": "收口 ResiWatch 失败的报告与矩阵门",
+  "description": "收口前序资源优化任务里仍失败的非空报告、矩阵 110% 门和 A1000 30 天报告。不放宽 deadline，不打开自动删除，不覆盖安装态。",
+  "status": "planning",
+  "dev_type": "fullstack",
+  "scope": "residential-monitor",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-24",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "dev",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "residential-monitor/src-tauri/src/c3/raw_fold.rs",
+    "residential-monitor/src-tauri/src/c3/service.rs",
+    "residential-monitor/src-tauri/src/c3/query.rs",
+    "residential-monitor/src-tauri/src/c3/sql.rs",
+    "residential-monitor/src-tauri/src/bench/facade.rs"
+  ],
+  "notes": "Predecessor 09-19-resiwatch-resource-optimization. Planning only until the user approves this plan. No install or auto-delete authorization.",
+  "meta": {}
+}

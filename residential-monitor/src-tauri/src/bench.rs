@@ -12,6 +12,30 @@ use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
+pub mod corpus;
+pub mod facade;
+mod process;
+mod write_vfs;
+
+#[cfg(test)]
+fn run_isolated_test(name: &str) -> bool {
+    if std::env::var("RESIWATCH_BENCH_CHILD").as_deref() == Ok(name) {
+        return false;
+    }
+    let output = std::process::Command::new(std::env::current_exe().expect("test executable"))
+        .args(["--exact", name, "--nocapture", "--test-threads=1"])
+        .env("RESIWATCH_BENCH_CHILD", name)
+        .output()
+        .expect("isolated benchmark test");
+    assert!(
+        output.status.success(),
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    true
+}
+
 #[derive(Debug, Serialize)]
 pub struct ReplayReport {
     pub active: u32,

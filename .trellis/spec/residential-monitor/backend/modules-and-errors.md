@@ -25,9 +25,9 @@
 - C3 排名必须在 `LIMIT top_n` 前应用 `ReportQuery.sort`。排序字段与方向只由 `SortField` / `SortSpec` 枚举白名单生成，不接收调用方 SQL；upload / download 同值时固定以 identity 升序破同值。raw、hourly dimension、daily dimension 与 category 特例保持同一契约，默认仍为 download desc。
 - 家宽判定只在 `src-tauri/src/residential.rs`，实时筛选与核算写入共用一套 matcher：target 精确为 `RESIDENTIAL_SELECTOR`（`家宽`）时匹配包含该词的链路节点，其它自定义 target 只做节点全值精确匹配，空 target 集不匹配。`residential_tags` 保持 target 配置顺序并以首个命中项作为 primary；`is_residential_target` / `is_residential_filter` 不得另建分支。`accounting::classify` 与 `c2/query` 均只调用共享实现，前端不得复制字符串匹配。
 - `list_routes` 与引导 DTO 共用 `c2/shell.rs` 的 `default_routes_for`。十段顺序：`overview`、`live`、`residential`、`host`、`rule`、`chain`、`process`、`reports`、`alerts`、`settings-data`。禁止再维护第二份路由表。
-- `collector_loop_tick` 在 `apply_tick_result` 之后调用 `archive_tick`。`ReportService::run` 不得持 `Mutex<AppFacade>`。每 tick 最多 1 份档案。临时 snapshot 必须打开独立目录（`data_dir/archive-tick`），不得 `ReportSnapshotStore::open(data_dir)`，否则 `cleanup_orphans` 会删掉门面仍有效的 spool token。
+- `collector_loop_tick` 在应用采集结果后只向容量1的后台工作通道发送非阻塞唤醒信号。唯一后台owner公平执行档案/维护，每次最多一个工作项；不能让档案查询阻塞下一次HTTP采集。内部档案通过C3无spool查询，不创建即弃snapshot；公共 `ReportService::run` 不得持 `Mutex<AppFacade>`。
 - Recovery Shell 与 shutdown 跳过档案调度，不初始化 `ReportArchiveService` 循环。
-- C4 代码位于 `residential-monitor/src-tauri/src/c4/`。`AlertEngine` 拥有告警状态机；周期用量只调用 `ReportService`；通知只经 `NotificationSink`。C4 不得另建 writer 或第二套小时 / 日 / 月聚合。`in_quiet` 必须挡住 `Activated` 与 `InstanceStatus::Active`；不得只压 outbox 仍把实例写成 Active。
+- C4 代码位于 `residential-monitor/src-tauri/src/c4/`。`AlertEngine` 拥有告警状态机；周期用量调用 C3 `query_period_usage` 复用查询/取消/deadline，返回所需字节与覆盖，不创建临时spool或伪造ReportResult精确计数；通知只经 `NotificationSink`。C4 不得另建 writer 或第二套小时 / 日 / 月聚合。`in_quiet` 必须挡住 `Activated` 与 `InstanceStatus::Active`；不得只压 outbox 仍把实例写成 Active。
 - C5 代码位于 `residential-monitor/src-tauri/src/c5/`。只做发布硬化：关于页、删除、VACUUM、故障矩阵、并发 fixture、供应链与 C0 基线核验。不得改写 C1 核算、C3 报告 / retention / backup 或 C4 告警语义。
 - Recovery Shell：`restoreAvailable` 为 `true`。restore 不初始化 `ReportService`；失败必须保留当前可用库。`storage.is_none()` 时 `run_report`、`save_targets`、`upsert_alert_rule`、`create_backup` 返回 `recovery_only`，不得写 `target_item` / `alert_rule`，不得把损坏热库复制为备份。
 - C4 前向表：`alert_rule`、`alert_instance`、`alert_event`、`notification_outbox`。不得改写 C1 / C3 已发布 migration。
@@ -96,14 +96,13 @@ apply_autostart(&port, enabled)
 
 ### 2. Signatures
 - `render_rank_sql(sql: &str, filters_sql: &str, sort: &SortSpec, layer: RankLayer) -> String`
-- `fill_raw_rank(..., query: &ReportQuery, ...)`
+- `raw_fold::fold_window` 在截取 `top_n` 前应用同一排序契约。
 - `fill_dimension_layer(..., query: &ReportQuery, ...)`
 
 ### 3. Contracts
 - `{filters}` 只接收由 `ReportFilters` 枚举/字段生成的内部 SQL 片段；用户值只走绑定参数。
-- `{order_by}` 只由 `SortField::{Upload, Download, Name, Identity}`、`SortSpec.descending` 与 `RankLayer::{Raw, Dimension}` 渲染，调用方不能传 SQL。
+- `{order_by}` 只由 `SortField::{Upload, Download, Name, Identity}`、`SortSpec.descending` 与 `RankLayer::{Raw, Dimension}` 渲染，调用方不能传 SQL。raw 窗口的运行时排名由同一次分钟扫描按同一排序契约计算；排名模板保留为对照，不再对 raw 窗口执行。
 - upload / download 用对应层的聚合列排序，并以 identity 升序稳定破同值；name / identity 直接按第一选择列排序。
-- 所有排名模板必须在 `LIMIT ?` 前完成 ORDER BY。默认 `SortSpec` 继续等价于 download desc。
 
 ### 4. Validation & Error Matrix
 - 模板残留 `{filters}` 或 `{order_by}` → 测试失败；不得把带槽位 SQL 交给 SQLite。
@@ -223,4 +222,47 @@ let Some((host, _)) = address.rsplit_once(':') else {
     return Err(SettingsError::InvalidAddress);
 };
 ```
+
+## Scenario: Archive scheduling and internal reports
+
+### 1. Scope / Trigger
+
+Collector ticks must not rebuild the complete archive calendar or create temporary report spool files on every frame.
+
+### 2. Signatures
+
+- `ArchiveScheduler::next_job(db_path, now_utc, cancel) -> Result<Option<ArchiveJob>, ReportError>`
+- `ArchiveScheduler::complete(succeeded, now_utc)` releases the in-flight job and schedules a failed retry.
+- `archive_tick_at(&Mutex<AppFacade>, now_utc) -> bool` reports whether a job was attempted.
+- Automatic archives call C3 `run_uncached`; period alerts call `query_period_usage(db_path, &ReportQuery, now_utc, raw_retain_days, &cancel) -> PeriodUsage` with upload/download, coverage seconds, data version and policy note. Neither acquires a token.
+
+### 3. Contracts
+
+One background work owner holds the archive queue and at most one running archive/maintenance item, sharing the existing facade coordinator. Collector wakeups use a capacity-one channel with nonblocking send; consume a unit signal and recompute current time. Slow work coalesces wakeups without delaying HTTP sampling. Discover missing keys on startup, local period boundaries, clock rollback or detected timezone-offset change. Probe timezone offset at most once per minute. Completed idle ticks use due checks without history discovery. Use local calendar boundaries for DST; never approximate them by adding 3,600 or 86,400 seconds.
+
+Failed work goes to the queue tail with 60-second exponential backoff capped at 3,600 seconds; other due work may proceed. Fairly alternate attempted archive work and maintenance so repeated failures cannot starve retention. Read persisted success/failure state on restart. Purge archive rows at most hourly. Internal queries reuse report planning, exactness and error behavior but do not acquire public snapshot tokens. Archive persistence remains in `report_archive`. Shutdown cancels active background work and joins after releasing the facade lock; exclusive restore/vacuum/delete transitions pause and join this owner before replacing storage.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+| --- | --- |
+| Complete history, no period due | No history-level scan/range generation on every tick |
+| One archive repeatedly fails | Bounded retry; other due jobs advance |
+| Discovery fails | Backoff before rediscovery |
+| Clock rollback/timezone change | Recompute due calendar from current time |
+| RecoveryOnly/shutdown | No archive or maintenance work |
+
+### 5. Good/Base/Bad Cases
+
+Good: one background worker fairly processes archive and maintenance signals. Base: idle wakeup performs constant due checks. Bad: rebuild all 720 hour and 396 day candidates each second, block the collector on a report, or create a token only to release it immediately.
+
+### 6. Tests Required
+
+Exercise 3,600 virtual ticks, completion/backlog/failure, restart, rollback, local day/DST boundaries and internal query equivalence. Internal period/archive tests must assert zero temporary spool writes. Performance results require same-input baseline/candidate measurements beyond these regression tests.
+
+### 7. Wrong vs Correct
+
+Wrong: `ReportService::run` followed immediately by `snapshots.release` for internal usage.
+
+Correct: C3 returns the report or internal period usage directly; only interactive public reports acquire bounded snapshot tokens.
 

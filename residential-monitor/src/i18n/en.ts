@@ -710,5 +710,6 @@ export const EN: Record<string, string> = {
   "residential.report.current_off": "Current-policy recalculation is available on the raw tier only.",
   "residential.state.gap": "A collection gap is present. A gap is not zero.",
   "residential.state.paused": "Collection is paused.",
-  "residential.state.disconnected": "The controller is not connected."
+  "residential.state.disconnected": "The controller is not connected.",
+  "window.visibility_fail": "Window state is unavailable. Display refresh is paused. Reopen the window to retry."
 };

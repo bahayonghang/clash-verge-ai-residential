@@ -1,0 +1,8 @@
+{
+  "source_fixture": "C:/Users/lyh/AppData/Local/Temp/resiwatch-resource-measure-20260919-layout3/corpus-a250-30d",
+  "resume_fixture": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-cleanup1\\corpus-a250-resume",
+  "source_and_copy_sha256": "7D5618EC6C25372B6619D6D380728E23ECBE5887080DF3C8621955EEA141ADA8",
+  "copied_utc": "2026-09-19T13:03:16.7139693Z",
+  "source_state": "after A250 verified first-day deletion and partial durable auxiliary cleanup; no remaining WAL",
+  "old_failure_evidence": "retention-a250-first-day.json"
+}

@@ -365,6 +365,78 @@ pub fn gap_union_sec(win_start: i64, win_end: i64, slices: &[CoverageSlice]) -> 
     total
 }
 
+/// 已观测覆盖与缺口分别求并集；缺口优先，未观测时间不自动标为覆盖。
+pub fn coverage_union_secs(win_start: i64, win_end: i64, slices: &[CoverageSlice]) -> (i64, i64) {
+    let mut events = Vec::with_capacity(slices.len().saturating_mul(2));
+    for item in slices {
+        if item.kind != "covered" && item.kind != "gap" {
+            continue;
+        }
+        let start = item.started_utc.max(win_start);
+        let end = item.ended_utc.unwrap_or(win_end).min(win_end);
+        if end > start {
+            let gap = item.kind == "gap";
+            events.push((start, gap, 1_i64));
+            events.push((end, gap, -1_i64));
+        }
+    }
+    events.sort_unstable();
+    let (mut previous, mut cover_depth, mut gap_depth, mut covered, mut gap) =
+        (win_start, 0, 0, 0, 0);
+    for (at, is_gap, delta) in events {
+        if gap_depth > 0 {
+            gap += at - previous;
+        } else if cover_depth > 0 {
+            covered += at - previous;
+        }
+        if is_gap {
+            gap_depth += delta;
+        } else {
+            cover_depth += delta;
+        }
+        previous = at;
+    }
+    (covered, gap)
+}
+
+#[cfg(test)]
+mod coverage_union_tests {
+    use super::*;
+    #[test]
+    fn coverage_excludes_overlap_and_unknown_time() {
+        let slices = [
+            ("covered", 10, 40),
+            ("covered", 30, 70),
+            ("gap", 20, 30),
+            ("gap", 25, 50),
+        ]
+        .map(|(kind, start, end)| CoverageSlice {
+            kind: kind.into(),
+            reason: String::new(),
+            started_utc: start,
+            ended_utc: Some(end),
+        });
+        assert_eq!(coverage_union_secs(0, 100, &slices), (30, 30));
+        assert_eq!(coverage_union_secs(25, 45, &slices), (0, 20));
+        assert_eq!(coverage_union_secs(0, 100, &[]), (0, 0));
+    }
+    #[test]
+    fn local_offset_uses_requested_timestamp() {
+        use chrono::TimeZone;
+        for timestamp in [0, 1_704_067_200, 1_719_792_000] {
+            let expected = chrono::Local
+                .timestamp_opt(timestamp, 0)
+                .single()
+                .expect("时间");
+            assert_eq!(
+                timezone_offset_secs("local", timestamp).expect("偏移"),
+                expected.offset().local_minus_utc()
+            );
+        }
+        assert!(timezone_offset_secs("local", i64::MAX).is_err());
+    }
+}
+
 #[cfg(test)]
 mod gap_union_tests {
     use super::*;
@@ -559,7 +631,7 @@ pub fn timezone_offset_secs(name: &str, at_utc: i64) -> Result<i32, ReportError>
         "UTC" | "utc" | "+00:00" | "Z" => Ok(0),
         "Asia/Shanghai" | "+08:00" => Ok(8 * 3600),
         "America/New_York" | "US/Eastern" => Ok(new_york_offset(at_utc)),
-        "local" => Ok(local_offset_secs()),
+        "local" => local_offset_secs(at_utc),
         _ => Err(ReportError::InvalidQuery("unknown timezone")),
     }
 }
@@ -705,9 +777,13 @@ fn find_local_hour_end(timezone: &str, start: i64, hour: u32) -> Result<i64, Rep
     Ok(lo)
 }
 
-fn local_offset_secs() -> i32 {
-    let local = chrono::Local::now();
-    local.offset().local_minus_utc()
+fn local_offset_secs(at_utc: i64) -> Result<i32, ReportError> {
+    use chrono::TimeZone;
+    chrono::Local
+        .timestamp_opt(at_utc, 0)
+        .single()
+        .map(|local| local.offset().local_minus_utc())
+        .ok_or(ReportError::InvalidQuery("本地时区时间超出支持范围"))
 }
 
 fn new_york_offset(at_utc: i64) -> i32 {
@@ -803,9 +879,18 @@ pub fn plan_capability_ex(
     raw_retain_days: i64,
     hourly_dim_v2_start: Option<i64>,
 ) -> Result<CapabilityPlan, ReportError> {
-    validate_query(query)?;
     let raw_days = raw_retain_days.clamp(1, RAW_RETAIN_DAYS_MAX);
-    let raw_cutoff = now_utc - raw_days * 86_400;
+    let raw_cutoff = (now_utc - raw_days * 86_400).div_euclid(86_400) * 86_400;
+    plan_capability_with_raw_cutoff(query, now_utc, raw_cutoff, hourly_dim_v2_start)
+}
+
+pub(crate) fn plan_capability_with_raw_cutoff(
+    query: &ReportQuery,
+    now_utc: i64,
+    raw_cutoff: i64,
+    hourly_dim_v2_start: Option<i64>,
+) -> Result<CapabilityPlan, ReportError> {
+    validate_query(query)?;
     let dim_cutoff = now_utc - DIMENSION_RETAIN_DAYS * 86_400;
     let wants_raw = needs_raw(query);
     let wants_dim = needs_exact_dimension(query);
@@ -905,7 +990,7 @@ pub fn plan_capability_ex(
 
 fn raw_named_sql(query: &ReportQuery) -> Vec<&'static str> {
     let mut names = vec![
-        "totals_raw",
+        "totals_raw_attribution",
         "series_raw",
         crate::c3::sql::raw_rank_sql(query.grouping),
         "coverage_raw",
@@ -1100,6 +1185,22 @@ mod query_contract_tests {
             validate_query(&query).expect_err("select").code(),
             "invalid_query"
         );
+    }
+
+    #[test]
+    fn raw_plan_names_fused_totals_and_keeps_comparison_query() {
+        let mut query = ReportQuery::default();
+        query.comparison = Some(ComparisonSpec {
+            previous_equal_window: true,
+        });
+        let plan = plan_capability(&query, 3_600, 30).expect("raw");
+        assert_eq!(plan.tier, DataTier::Raw);
+        assert_eq!(plan.named_sql[0], "totals_raw_attribution");
+        assert_eq!(
+            crate::c3::sql::lookup(plan.named_sql[0]),
+            Some(crate::c3::sql::TOTALS_RAW_ATTRIBUTION)
+        );
+        assert!(plan.named_sql.contains(&"totals_raw_compare"));
     }
 
     #[test]

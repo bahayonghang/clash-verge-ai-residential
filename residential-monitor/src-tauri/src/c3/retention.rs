@@ -8,9 +8,12 @@ use crate::c3::space::SpaceBudget;
 use crate::c3::sql::UNKNOWN_IDENTITY;
 use crate::storage::StorageCoordinator;
 use rusqlite::{params, OptionalExtension};
-use sha2::{Digest, Sha256};
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+
+#[path = "retention_day.rs"]
+mod day;
+pub use day::{RetentionChunk, DAY_EXACT_LAYER};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RetentionMode {
@@ -34,9 +37,17 @@ pub struct RetentionPreview {
 pub struct RetentionService;
 
 const CHAIN_IDENTITY_V1_LAYER: &str = "chain_identity_v1";
+#[cfg(test)]
 const COVERAGE_OPEN_GAP_V1_LAYER: &str = "coverage_open_gap_v1";
 
 impl RetentionService {
+    /// 辅助账本可在 raw 块返回后释放引用；调用者须在该写入之后复核游标。
+    pub(crate) fn auxiliary_cleanup_pending(
+        connection: &rusqlite::Connection,
+    ) -> Result<bool, ReportError> {
+        day::auxiliary_cleanup_pending(connection)
+    }
+
     pub fn preview(
         coordinator: &StorageCoordinator,
         raw_retain_days: i64,
@@ -70,15 +81,79 @@ impl RetentionService {
             coordinator.path().parent().unwrap_or(coordinator.path()),
             4096,
         )?;
-        repair_chain_identity_v1(coordinator)?;
-        repair_coverage_open_gaps_v1(coordinator)?;
-        materialize_hourly(coordinator, now_utc, raw_retain_days)?;
-        materialize_daily_core_coverage(coordinator, now_utc)?;
-        if mode == RetentionMode::DeleteEnabled && AUTO_DELETE_ENABLED {
-            delete_covered_raw(coordinator, now_utc, raw_retain_days)?;
-            delete_expired_dimension(coordinator, now_utc)?;
+        if mode != RetentionMode::DryRun {
+            let started = std::time::Instant::now();
+            let flag = Arc::clone(cancel);
+            let idle_writer = coordinator.connection().is_autocommit();
+            coordinator
+                .connection()
+                .progress_handler(
+                    256,
+                    Some(move || {
+                        flag.load(std::sync::atomic::Ordering::SeqCst)
+                            || started.elapsed() >= std::time::Duration::from_secs(1)
+                    }),
+                )
+                .map_err(|_| ReportError::Failed("保留修复取消句柄失败"))?;
+            let repaired = repair_chain_identity_v1(coordinator);
+            coordinator
+                .connection()
+                .progress_handler(0, None::<fn() -> bool>)
+                .map_err(|_| ReportError::Failed("保留修复取消句柄释放失败"))?;
+            if repaired.is_err() && idle_writer && !coordinator.connection().is_autocommit() {
+                coordinator
+                    .connection()
+                    .execute_batch("rollback")
+                    .map_err(|_| ReportError::Failed("保留修复回滚失败"))?;
+            }
+            if let Err(error) = repaired {
+                crate::c3::service::poll_interrupt(cancel, "retention repair")?;
+                return Err(error);
+            }
+            Self::run_chunk(coordinator, now_utc, raw_retain_days, mode, space, cancel)?;
         }
         Self::preview(coordinator, raw_retain_days)
+    }
+
+    /// 自动与手动入口共用同一个日事务；生产删除仍受完整验收门控制。
+    pub fn run_chunk(
+        coordinator: &mut StorageCoordinator,
+        now_utc: i64,
+        raw_retain_days: i64,
+        mode: RetentionMode,
+        space: &SpaceBudget,
+        cancel: &Arc<AtomicBool>,
+    ) -> Result<RetentionChunk, ReportError> {
+        day::run_chunk(
+            coordinator,
+            now_utc,
+            raw_retain_days,
+            mode,
+            space,
+            cancel,
+            AUTO_DELETE_ENABLED,
+        )
+    }
+
+    /// 仅隔离测试可用，执行与生产相同路径以验证未开放的删除门。
+    #[cfg(test)]
+    pub(crate) fn run_chunk_for_benchmark(
+        coordinator: &mut StorageCoordinator,
+        now_utc: i64,
+        raw_retain_days: i64,
+        mode: RetentionMode,
+        space: &SpaceBudget,
+        cancel: &Arc<AtomicBool>,
+    ) -> Result<RetentionChunk, ReportError> {
+        day::run_chunk(
+            coordinator,
+            now_utc,
+            raw_retain_days,
+            mode,
+            space,
+            cancel,
+            true,
+        )
     }
 }
 
@@ -281,6 +356,7 @@ fn write_chain_repair_marker(
 /// 并集化后仍留冗余。按 (kind, reason) 把多行开放组收敛为一行：保留最小
 /// started_utc 的行并闭合于最大 started_utc（最后一行出现时刻 ≈ 实际恢复
 /// 采集时刻）。单行开放组不动，交给写入侧在恢复采集时闭合。
+#[cfg(test)]
 fn repair_coverage_open_gaps_v1(coordinator: &mut StorageCoordinator) -> Result<(), ReportError> {
     let connection = coordinator.connection_mut();
     let already_applied: bool = connection
@@ -558,205 +634,27 @@ fn count(connection: &rusqlite::Connection, sql: &str) -> Result<i64, ReportErro
         .map_err(|_| ReportError::Failed("count"))
 }
 
+#[cfg(test)]
 fn materialize_hourly(
     coordinator: &mut StorageCoordinator,
     now_utc: i64,
     raw_retain_days: i64,
 ) -> Result<(), ReportError> {
-    let cutoff = now_utc - raw_retain_days.clamp(1, RAW_RETAIN_DAYS_MAX) * 86_400;
-    let start_min = 0;
-    let end_min = cutoff.div_euclid(60);
-    let connection = coordinator.connection_mut();
-    connection
-        .execute_batch("begin immediate")
-        .map_err(|_| ReportError::StorageBusy("retention begin"))?;
-    let result = (|| {
-        connection
-            .execute(
-                "insert or ignore into retention_watermark(layer, watermark_utc, delete_watermark_utc)
-                 values (?1, ?2, 0)",
-                params![HOURLY_DIM_V2_LAYER, cutoff.max(0)],
-            )
-            .map_err(|_| ReportError::Failed("hourly_dim_v2 watermark"))?;
-        let v2_start: i64 = connection
-            .query_row(
-                "select watermark_utc from retention_watermark where layer = ?1",
-                [HOURLY_DIM_V2_LAYER],
-                |row| row.get(0),
-            )
-            .map_err(|_| ReportError::Failed("hourly_dim_v2 read"))?;
-        let v2_start_min = v2_start.div_euclid(60);
-        intern_chain_keys(connection, v2_start_min, end_min)?;
-        intern_rule_groups(connection, v2_start_min, end_min)?;
-        insert_hourly_kind(connection, HOURLY_HOST, start_min, end_min)?;
-        insert_hourly_kind(connection, HOURLY_PROCESS, v2_start_min, end_min)?;
-        insert_hourly_kind(connection, HOURLY_RULE_GROUP, v2_start_min, end_min)?;
-        insert_hourly_kind(connection, HOURLY_CHAIN, v2_start_min, end_min)?;
-        insert_hourly_kind(connection, HOURLY_NETWORK, v2_start_min, end_min)?;
-        verify_layer(connection, "hourly", start_min * 60, end_min * 60)?;
-        Ok(())
-    })();
-    match result {
-        Ok(()) => connection
-            .execute_batch("commit")
-            .map_err(|_| ReportError::Failed("retention commit")),
-        Err(error) => {
-            let _ = connection.execute_batch("rollback");
-            Err(error)
+    for _ in 0..100 {
+        let chunk = RetentionService::run_chunk(
+            coordinator,
+            now_utc,
+            raw_retain_days,
+            RetentionMode::MaterializeOnly,
+            &SpaceBudget::unlimited(),
+            &Arc::new(AtomicBool::new(false)),
+        )?;
+        if !chunk.more_pending {
+            return Ok(());
         }
     }
+    Err(ReportError::Failed("测试构建未结束"))
 }
-
-fn materialize_daily_core_coverage(
-    coordinator: &mut StorageCoordinator,
-    now_utc: i64,
-) -> Result<(), ReportError> {
-    let connection = coordinator.connection_mut();
-    connection
-        .execute_batch("begin immediate")
-        .map_err(|_| ReportError::StorageBusy("daily begin"))?;
-    let result = (|| {
-        materialize_daily_from_hourly(connection, now_utc)?;
-        materialize_core(connection, now_utc)?;
-        materialize_coverage_daily(connection, now_utc)?;
-        Ok(())
-    })();
-    match result {
-        Ok(()) => connection
-            .execute_batch("commit")
-            .map_err(|_| ReportError::Failed("daily commit")),
-        Err(error) => {
-            let _ = connection.execute_batch("rollback");
-            Err(error)
-        }
-    }
-}
-
-fn materialize_daily_from_hourly(
-    connection: &rusqlite::Connection,
-    now_utc: i64,
-) -> Result<(), ReportError> {
-    connection
-        .execute(
-            "insert or replace into traffic_daily_dimension(
-                utc_day, category_id, dimension_kind, dimension_id,
-                upload, download, connection_count, active_duration_sec
-             )
-             select (utc_hour / 86400) * 86400, category_id, dimension_kind, dimension_id,
-                    sum(upload), sum(download), sum(connection_count), sum(active_duration_sec)
-               from traffic_hourly_dimension
-              where utc_hour < ?1
-              group by 1, 2, 3, 4",
-            [now_utc],
-        )
-        .map_err(|_| ReportError::Failed("daily dim materialize"))?;
-    verify_layer(connection, "daily", 0, now_utc)?;
-    Ok(())
-}
-
-fn materialize_core(connection: &rusqlite::Connection, now_utc: i64) -> Result<(), ReportError> {
-    connection
-        .execute(
-            "insert or replace into traffic_daily_core(
-                utc_day, category_id, upload, download, connection_count, active_duration_sec
-             )
-             select utc_day, category_id, sum(upload), sum(download),
-                    sum(connection_count), sum(active_duration_sec)
-               from traffic_daily_dimension
-              where utc_day < ?1
-                and dimension_kind = 'host'
-              group by utc_day, category_id",
-            [now_utc],
-        )
-        .map_err(|_| ReportError::Failed("core materialize"))?;
-    connection
-        .execute(
-            "insert or replace into traffic_daily_core(
-                utc_day, category_id, upload, download, connection_count, active_duration_sec
-             )
-             select utc_day, 0, sum(upload), sum(download),
-                    sum(connection_count), sum(active_duration_sec)
-               from traffic_daily_dimension
-              where utc_day < ?1
-                and dimension_kind = 'host'
-              group by utc_day",
-            [now_utc],
-        )
-        .map_err(|_| ReportError::Failed("core total"))?;
-    verify_layer(connection, "core", 0, now_utc)?;
-    Ok(())
-}
-
-fn materialize_coverage_daily(
-    connection: &rusqlite::Connection,
-    now_utc: i64,
-) -> Result<(), ReportError> {
-    connection
-        .execute(
-            "insert or replace into coverage_daily(utc_day, covered_sec, gap_sec, reasons_json)
-             select (started_utc / 86400) * 86400,
-                    sum(case when kind = 'gap' then 0 else coalesce(ended_utc, ?1) - started_utc end),
-                    sum(case when kind = 'gap' then coalesce(ended_utc, ?1) - started_utc else 0 end),
-                    group_concat(reason, ',')
-               from coverage_interval
-              where started_utc < ?1
-              group by 1",
-            [now_utc],
-        )
-        .map_err(|_| ReportError::Failed("coverage daily"))?;
-    Ok(())
-}
-
-const HOURLY_HOST: &str = "
-insert or replace into traffic_hourly_dimension(
-    utc_hour, category_id, dimension_kind, dimension_id,
-    upload, download, connection_count, active_duration_sec)
-select (m.utc_minute * 60 / 3600) * 3600,
-       coalesce(a.primary_category_id, 0),
-       'host',
-       coalesce(a.host_id, 0),
-       sum(m.upload), sum(m.download),
-       count(distinct m.session_pk),
-       count(distinct m.utc_minute) * 60
-  from connection_minute m
-  left join connection_session_attr a on a.session_pk = m.session_pk
- where m.utc_minute >= ?1 and m.utc_minute < ?2
- group by 1, 2, 4
-";
-
-const HOURLY_PROCESS: &str = "
-insert or replace into traffic_hourly_dimension(
-    utc_hour, category_id, dimension_kind, dimension_id,
-    upload, download, connection_count, active_duration_sec)
-select (m.utc_minute * 60 / 3600) * 3600,
-       coalesce(a.primary_category_id, 0),
-       'process',
-       coalesce(a.process_id, 0),
-       sum(m.upload), sum(m.download),
-       count(distinct m.session_pk),
-       count(distinct m.utc_minute) * 60
-  from connection_minute m
-  left join connection_session_attr a on a.session_pk = m.session_pk
- where m.utc_minute >= ?1 and m.utc_minute < ?2
- group by 1, 2, 4
-";
-
-const HOURLY_NETWORK: &str = "
-insert or replace into traffic_hourly_dimension(
-    utc_hour, category_id, dimension_kind, dimension_id,
-    upload, download, connection_count, active_duration_sec)
-select (m.utc_minute * 60 / 3600) * 3600,
-       coalesce(a.primary_category_id, 0),
-       'network',
-       coalesce(a.network_id, 0),
-       sum(m.upload), sum(m.download),
-       count(distinct m.session_pk),
-       count(distinct m.utc_minute) * 60
-  from connection_minute m
-  left join connection_session_attr a on a.session_pk = m.session_pk
- where m.utc_minute >= ?1 and m.utc_minute < ?2
- group by 1, 2, 4
-";
 
 const HOURLY_CHAIN: &str = "
 insert or replace into traffic_hourly_dimension(
@@ -766,23 +664,6 @@ select (m.utc_minute * 60 / 3600) * 3600,
        coalesce(a.primary_category_id, 0),
        'chain',
        coalesce((select dimension_id from dimension_dict where dimension_kind = 'chain' and value = chain_identity(a.chain_key)), 0),
-       sum(m.upload), sum(m.download),
-       count(distinct m.session_pk),
-       count(distinct m.utc_minute) * 60
-  from connection_minute m
-  left join connection_session_attr a on a.session_pk = m.session_pk
- where m.utc_minute >= ?1 and m.utc_minute < ?2
- group by 1, 2, 4
-";
-
-const HOURLY_RULE_GROUP: &str = "
-insert or replace into traffic_hourly_dimension(
-    utc_hour, category_id, dimension_kind, dimension_id,
-    upload, download, connection_count, active_duration_sec)
-select (m.utc_minute * 60 / 3600) * 3600,
-       coalesce(a.primary_category_id, 0),
-       'rule_group',
-       coalesce((select dimension_id from dimension_dict where dimension_kind = 'rule_group' and value = coalesce(last_chain_hop(a.chain_key), (select value from dimension_dict d2 where d2.dimension_kind = 'rule' and d2.dimension_id = a.rule_id), 'DIRECT')), 0),
        sum(m.upload), sum(m.download),
        count(distinct m.session_pk),
        count(distinct m.utc_minute) * 60
@@ -822,23 +703,6 @@ fn intern_chain_keys(
     )
 }
 
-fn intern_rule_groups(
-    connection: &rusqlite::Connection,
-    start_min: i64,
-    end_min: i64,
-) -> Result<(), ReportError> {
-    intern_distinct(
-        connection,
-        "rule_group",
-        "select distinct coalesce(last_chain_hop(a.chain_key), (select value from dimension_dict d where d.dimension_kind = 'rule' and d.dimension_id = a.rule_id), 'DIRECT')
-           from connection_minute m
-           left join connection_session_attr a on a.session_pk = m.session_pk
-          where m.utc_minute >= ?1 and m.utc_minute < ?2",
-        start_min,
-        end_min,
-    )
-}
-
 fn intern_distinct(
     connection: &rusqlite::Connection,
     kind: &str,
@@ -869,103 +733,30 @@ fn intern_one(
         return Ok(());
     }
     let existing: Option<i64> = connection
-        .query_row(
+        .prepare_cached(
             "select dimension_id from dimension_dict where dimension_kind = ?1 and value = ?2",
-            params![kind, value],
-            |row| row.get(0),
         )
+        .map_err(|_| ReportError::Failed("intern lookup"))?
+        .query_row(params![kind, value], |row| row.get(0))
         .optional()
         .map_err(|_| ReportError::Failed("intern lookup"))?;
     if existing.is_some() {
         return Ok(());
     }
     let next: i64 = connection
-        .query_row(
+        .prepare_cached(
             "select coalesce(max(dimension_id), 0) + 1 from dimension_dict where dimension_kind = ?1",
-            [kind],
-            |row| row.get(0),
         )
+        .map_err(|_| ReportError::Failed("intern max"))?
+        .query_row([kind], |row| row.get(0))
         .map_err(|_| ReportError::Failed("intern max"))?;
     connection
-        .execute(
+        .prepare_cached(
             "insert or ignore into dimension_dict(dimension_kind, dimension_id, value) values (?1, ?2, ?3)",
-            params![kind, next, value],
         )
+        .map_err(|_| ReportError::Failed("intern insert"))?
+        .execute(params![kind, next, value])
         .map_err(|_| ReportError::Failed("intern insert"))?;
-    Ok(())
-}
-
-fn verify_layer(
-    connection: &rusqlite::Connection,
-    layer: &str,
-    start: i64,
-    end: i64,
-) -> Result<(), ReportError> {
-    let payload = format!("{layer}:{start}:{end}");
-    let checksum = hex::encode(Sha256::digest(payload.as_bytes()));
-    connection
-        .execute(
-            "insert or replace into retention_state(layer, chunk_utc, status, checksum, updated_utc)
-             values (?1, ?2, 'verified', ?3, ?2)",
-            params![layer, end, checksum],
-        )
-        .map_err(|_| ReportError::Failed("retention state"))?;
-    connection
-        .execute(
-            "insert into retention_watermark(layer, watermark_utc, delete_watermark_utc)
-             values (?1, ?2, 0)
-             on conflict(layer) do update set watermark_utc = excluded.watermark_utc",
-            params![layer, end],
-        )
-        .map_err(|_| ReportError::Failed("watermark"))?;
-    Ok(())
-}
-
-fn delete_covered_raw(
-    coordinator: &mut StorageCoordinator,
-    now_utc: i64,
-    raw_retain_days: i64,
-) -> Result<(), ReportError> {
-    let cutoff = now_utc - raw_retain_days.clamp(1, RAW_RETAIN_DAYS_MAX) * 86_400;
-    let verified: Option<i64> = coordinator
-        .connection()
-        .query_row(
-            "select watermark_utc from retention_watermark where layer = 'hourly'",
-            [],
-            |row| row.get(0),
-        )
-        .ok();
-    if verified.unwrap_or(0) < cutoff {
-        return Err(ReportError::Failed("delete before verified watermark"));
-    }
-    coordinator
-        .connection_mut()
-        .execute(
-            "delete from connection_minute where utc_minute < ?1",
-            [cutoff.div_euclid(60)],
-        )
-        .map_err(|_| ReportError::Failed("delete raw"))?;
-    Ok(())
-}
-
-fn delete_expired_dimension(
-    coordinator: &mut StorageCoordinator,
-    now_utc: i64,
-) -> Result<(), ReportError> {
-    let cutoff = now_utc - DIMENSION_RETAIN_DAYS * 86_400;
-    let connection = coordinator.connection_mut();
-    connection
-        .execute(
-            "delete from traffic_hourly_dimension where utc_hour < ?1",
-            [cutoff],
-        )
-        .map_err(|_| ReportError::Failed("delete hourly"))?;
-    connection
-        .execute(
-            "delete from traffic_daily_dimension where utc_day < ?1",
-            [cutoff],
-        )
-        .map_err(|_| ReportError::Failed("delete daily dim"))?;
     Ok(())
 }
 
@@ -976,6 +767,27 @@ mod retention_tests {
     use crate::storage::StorageCoordinator;
     use tempfile::tempdir;
 
+    fn drain(
+        coordinator: &mut StorageCoordinator,
+        now: i64,
+        days: i64,
+        mode: RetentionMode,
+        space: &SpaceBudget,
+        cancel: &Arc<AtomicBool>,
+    ) -> Result<RetentionPreview, ReportError> {
+        let preview = RetentionService::run(coordinator, now, days, mode, space, cancel)?;
+        if mode == RetentionMode::DryRun {
+            return Ok(preview);
+        }
+        for _ in 0..100 {
+            let chunk = RetentionService::run_chunk(coordinator, now, days, mode, space, cancel)?;
+            if !chunk.more_pending {
+                return RetentionService::preview(coordinator, days);
+            }
+        }
+        Err(ReportError::Failed("测试构建未结束"))
+    }
+
     #[test]
     fn materialize_is_idempotent_and_auto_delete_stays_off() {
         let dir = tempdir().expect("dir");
@@ -983,7 +795,7 @@ mod retention_tests {
             StorageCoordinator::open(&dir.path().join("r.sqlite3")).expect("open");
         coordinator.seed_report_fixture().expect("seed");
         let cancel = Arc::new(AtomicBool::new(false));
-        let first = RetentionService::run(
+        let first = drain(
             &mut coordinator,
             10_000,
             30,
@@ -992,7 +804,7 @@ mod retention_tests {
             &cancel,
         )
         .expect("first");
-        let second = RetentionService::run(
+        let second = drain(
             &mut coordinator,
             10_000,
             30,
@@ -1010,7 +822,7 @@ mod retention_tests {
             "select count(*) from connection_minute",
         )
         .expect("count");
-        let _ = RetentionService::run(
+        let _ = drain(
             &mut coordinator,
             10_000,
             30,
@@ -1032,7 +844,7 @@ mod retention_tests {
         let dir = tempdir().expect("dir");
         let mut coordinator =
             StorageCoordinator::open(&dir.path().join("r.sqlite3")).expect("open");
-        let error = RetentionService::run(
+        let error = drain(
             &mut coordinator,
             10_000,
             30,
@@ -1050,11 +862,11 @@ mod retention_tests {
         let mut coordinator =
             StorageCoordinator::open(&dir.path().join("r.sqlite3")).expect("open");
         coordinator.seed_report_fixture().expect("seed");
-        materialize_hourly(&mut coordinator, 10_000, 30).expect("hourly");
+        materialize_hourly(&mut coordinator, 40 * 86_400, 30).expect("hourly");
         let path = dir.path().join("r.sqlite3");
         drop(coordinator);
         let mut coordinator = StorageCoordinator::open(&path).expect("reopen");
-        RetentionService::run(
+        drain(
             &mut coordinator,
             10_000,
             30,
@@ -1066,7 +878,7 @@ mod retention_tests {
         let status: String = coordinator
             .connection()
             .query_row(
-                "select status from retention_state where layer = 'hourly'",
+                "select status from retention_state where layer = 'day_exact_v1'",
                 [],
                 |row| row.get(0),
             )
@@ -1088,7 +900,7 @@ mod retention_tests {
                 [],
             )
             .expect("v2");
-        RetentionService::run(
+        drain(
             &mut coordinator,
             40 * 86_400,
             30,
@@ -1170,9 +982,9 @@ mod retention_tests {
             .expect("old materialization");
 
         let cancel = Arc::new(AtomicBool::new(false));
-        RetentionService::run(
+        drain(
             &mut coordinator,
-            10_000,
+            40 * 86_400,
             30,
             RetentionMode::MaterializeOnly,
             &SpaceBudget::unlimited(),
@@ -1230,7 +1042,7 @@ mod retention_tests {
             .expect("marker");
         assert_eq!(marker, 3_600);
 
-        RetentionService::run(
+        drain(
             &mut coordinator,
             10_000,
             30,
@@ -1412,9 +1224,9 @@ mod retention_tests {
             "select count(*) from coverage_daily",
         )
         .expect("coverage before");
-        let error = RetentionService::run(
+        let error = drain(
             &mut coordinator,
-            10_000,
+            40 * 86_400,
             30,
             RetentionMode::MaterializeOnly,
             &SpaceBudget::unlimited(),
@@ -1422,7 +1234,7 @@ mod retention_tests {
         )
         .expect_err("core total killed");
         assert_eq!(error.code(), "storage_failure");
-        assert_eq!(error.to_string(), "core total");
+        assert_eq!(error.to_string(), "保留维护事务失败");
         let daily_after = count(
             coordinator.connection(),
             "select count(*) from traffic_daily_dimension",

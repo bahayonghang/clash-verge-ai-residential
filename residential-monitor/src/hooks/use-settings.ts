@@ -496,10 +496,10 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
     async (
       kind: string,
       fallback: string,
-      task: () => Promise<"done" | "cancelled">
+      task: (operationId: string) => Promise<"done" | "cancelled">
     ): Promise<void> => {
       const token = ++dataSeq.current;
-      const operationId = `op-${Date.now()}`;
+      const operationId = `op-${crypto.randomUUID()}`;
       try {
         if (isTauriRuntime()) {
           const started = decodeProgress(
@@ -509,7 +509,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
             setProgress(started);
           }
         }
-        const result = await task();
+        const result = await task(operationId);
         if (token !== dataSeq.current) {
           return;
         }
@@ -534,6 +534,10 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
             ? { ...current, status: "error", canCancel: false, redactedError: message }
             : current
         );
+      } finally {
+        if (isTauriRuntime()) {
+          await invoke("finish_operation", { operationId }).catch(() => undefined);
+        }
       }
     },
     []
@@ -561,8 +565,8 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [locale]);
 
   const runRetention = useCallback(async (): Promise<void> => {
-    await withOperation("retention", t(locale, "settings.retention_preview"), async () => {
-      const next = decodeRetention(await invoke<unknown>("run_retention", { delete: false }));
+    await withOperation("retention", t(locale, "settings.retention_preview"), async (operationId) => {
+      const next = decodeRetention(await invoke<unknown>("run_retention", { delete: false, operationId }));
       setRetention(next);
       return "done";
     });
@@ -609,7 +613,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
   }, [locale]);
 
   const createBackup = useCallback(async (): Promise<void> => {
-    await withOperation("backup", t(locale, "settings.backup_fail"), async () => {
+    await withOperation("backup", t(locale, "settings.backup_fail"), async (operationId) => {
       const picked = await invoke<string | null>("pick_file", {
         purpose: "backup-create",
         mode: "save",
@@ -618,13 +622,13 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
       if (!picked) {
         return "cancelled";
       }
-      await invoke("create_backup", { path: picked });
+      await invoke("create_backup", { path: picked, operationId });
       return "done";
     });
   }, [withOperation, locale]);
 
   const restoreBackup = useCallback(async (): Promise<void> => {
-    await withOperation("restore", t(locale, "settings.restore_fail"), async () => {
+    await withOperation("restore", t(locale, "settings.restore_fail"), async (operationId) => {
       const picked = await invoke<string | null>("pick_file", {
         purpose: "backup-restore",
         mode: "open",
@@ -633,7 +637,7 @@ export function useSettings(locale: UiLocale, boot: BootstrapDto | null): {
       if (!picked) {
         return "cancelled";
       }
-      await invoke("restore_backup", { path: picked });
+      await invoke("restore_backup", { path: picked, operationId });
       return "done";
     });
   }, [locale, withOperation]);

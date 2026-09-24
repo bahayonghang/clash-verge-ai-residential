@@ -18,6 +18,35 @@ pub const RESIDENTIAL_ACCOUNTING_FILTER: &str = "__residential__";
 /// 与已保存链路恢复。`EXISTS` 保证多个 target / 链路节点不会倍增流量。内置 `家宽`
 /// target 与 [`crate::residential::RESIDENTIAL_SELECTOR`] 一样做包含匹配，其它 target 精确匹配。
 pub const RESIDENTIAL_RAW_MEMBERSHIP_SQL: &str = "(a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0)))))";
+/// 会话投影使用同一家宽谓词，只把相关列从分钟别名改到会话别名。
+pub fn raw_session_projection_sql(residential_only: bool) -> String {
+    let predicate = RESIDENTIAL_RAW_MEMBERSHIP_SQL.replace("m.session_pk", "s.session_pk");
+    let restriction = if residential_only {
+        format!(" and {predicate}")
+    } else {
+        String::new()
+    };
+    format!(
+        "select s.session_pk,
+       case when coalesce(s.host, '') = '' then '__unknown__' else s.host end,
+       case when coalesce(s.host, '') = '' then 1 else 0 end,
+       a.process_id,
+       a.network_id,
+       a.rule_id,
+       a.primary_category_id,
+       a.chain_key,
+       case when ({predicate}) then 1 else 0 end
+  from connection_session s
+  left join connection_session_attr a on a.session_pk = s.session_pk
+ where s.session_pk >= ?{restriction}"
+    )
+}
+
+pub const RAW_MINUTE_SCAN: &str = "
+select m.utc_minute, m.session_pk, m.upload, m.download
+  from connection_minute m
+ where m.utc_minute >= ? and m.utc_minute < ?
+";
 
 /// 进程 identity 缺失。与字段归因、未知下钻共用。
 pub const PROCESS_MISSING_SQL: &str = "a.process_id is null or not exists (select 1 from dimension_dict q where q.dimension_kind='process' and q.dimension_id=a.process_id)";
@@ -37,7 +66,39 @@ select coalesce(sum(m.upload), 0), coalesce(sum(m.download), 0),
  {filters}
 ";
 
-pub const SERIES_RAW: &str = "
+/// 总量与缺失归因共用一次 raw 扫描；已知部分由总量减缺失部分精确得到。
+/// 缺失身份属于 session，同一快照中不会在分钟之间变化。
+pub const TOTALS_RAW_ATTRIBUTION: &str = "
+select coalesce(sum(m.upload), 0), coalesce(sum(m.download), 0),
+       count(distinct m.session_pk), count(distinct m.utc_minute) * 60,
+       coalesce(sum(case when ({missing}) then m.upload else 0 end), 0),
+       coalesce(sum(case when ({missing}) then m.download else 0 end), 0),
+       count(distinct case when ({missing}) then m.session_pk end)
+  from connection_minute m
+  join connection_session s on s.session_pk = m.session_pk
+  left join connection_session_attr a on a.session_pk = m.session_pk
+ where m.utc_minute >= ? and m.utc_minute < ?
+ {filters}
+";
+
+pub fn raw_attribution_missing_sql(kind: DimensionKind) -> &'static str {
+    match kind {
+        DimensionKind::Host => "coalesce(s.host, '') = ''",
+        DimensionKind::Process => PROCESS_MISSING_SQL,
+        DimensionKind::Rule => "0",
+        DimensionKind::Chain => "chain_identity(a.chain_key) is null",
+        DimensionKind::Network => "a.network_id is null or not exists (select 1 from dimension_dict q where q.dimension_kind='network' and q.dimension_id=a.network_id)",
+        DimensionKind::Category => "a.primary_category_id is null or not exists (select 1 from dimension_dict q where q.dimension_kind='category' and q.dimension_id=a.primary_category_id)",
+    }
+}
+
+pub fn render_raw_totals_sql(filters_sql: &str, grouping: DimensionKind) -> String {
+    render_sql(TOTALS_RAW_ATTRIBUTION, filters_sql)
+        .replace("{missing}", raw_attribution_missing_sql(grouping))
+}
+
+#[cfg(test)]
+pub const SERIES_RAW_GROUPED: &str = "
 select (m.utc_minute / ?) * ? as bucket,
        coalesce(sum(m.upload), 0), coalesce(sum(m.download), 0),
        count(distinct m.session_pk),
@@ -49,6 +110,20 @@ select (m.utc_minute / ?) * ? as bucket,
  {filters}
  group by bucket
  order by bucket
+";
+
+// 单桶沿分钟主索引读取；保留零字节观察，空桶不生成行。
+pub const SERIES_RAW: &str = "
+select ? as bucket,
+       coalesce(sum(m.upload), 0), coalesce(sum(m.download), 0),
+       count(distinct m.session_pk),
+       count(distinct m.utc_minute) * 60
+  from connection_minute m
+  join connection_session s on s.session_pk = m.session_pk
+  left join connection_session_attr a on a.session_pk = m.session_pk
+ where m.utc_minute >= ? and m.utc_minute < ?
+ {filters}
+ having count(*) > 0
 ";
 
 pub const RANK_RAW: &str = "
@@ -318,7 +393,36 @@ pub const TOTALS_DAILY_CORE: &str = "
 select coalesce(sum(upload), 0), coalesce(sum(download), 0),
        coalesce(sum(connection_count), 0), coalesce(sum(active_duration_sec), 0)
   from traffic_daily_core
- where utc_day >= ?1 and utc_day < ?2
+  where utc_day >= ?1 and utc_day < ?2
+    and category_id = 0
+";
+
+pub const TOTALS_DAILY_CORE_FILTERED: &str = "
+ select coalesce(sum(upload), 0), coalesce(sum(download), 0),
+        coalesce(sum(connection_count), 0), coalesce(sum(active_duration_sec), 0)
+   from traffic_daily_core
+  where utc_day >= ? and utc_day < ? {filters}
+";
+
+/// 周期告警只需要可加的字节，不读取无法跨桶去重的连接数和时长。
+pub const USAGE_RAW: &str = "
+ select coalesce(sum(m.upload), 0), coalesce(sum(m.download), 0)
+   from connection_minute m
+   join connection_session s on s.session_pk = m.session_pk
+   left join connection_session_attr a on a.session_pk = m.session_pk
+  where m.utc_minute >= ? and m.utc_minute < ? {filters}
+";
+
+pub const USAGE_HOURLY: &str = "
+ select coalesce(sum(h.upload), 0), coalesce(sum(h.download), 0)
+   from traffic_hourly_dimension h
+  where h.utc_hour >= ? and h.utc_hour < ? and h.dimension_kind = ? {filters}
+";
+
+pub const USAGE_DAILY_CORE: &str = "
+ select coalesce(sum(upload), 0), coalesce(sum(download), 0)
+   from traffic_daily_core
+  where utc_day >= ? and utc_day < ? {filters}
 ";
 
 pub const SERIES_DAILY_CORE: &str = "
@@ -339,6 +443,7 @@ select utc_day, covered_sec, gap_sec, reasons_json
 pub fn corpus() -> &'static [(&'static str, &'static str)] {
     &[
         ("totals_raw", TOTALS_RAW),
+        ("totals_raw_attribution", TOTALS_RAW_ATTRIBUTION),
         ("series_raw", SERIES_RAW),
         ("rank_raw", RANK_RAW),
         ("rank_raw_attr", RANK_RAW_ATTR),
@@ -363,17 +468,28 @@ pub fn corpus() -> &'static [(&'static str, &'static str)] {
         ("rank_daily_dimension", RANK_DAILY_DIM),
         ("rank_daily_category", RANK_DAILY_CATEGORY),
         ("totals_daily_core", TOTALS_DAILY_CORE),
+        ("totals_daily_core_filtered", TOTALS_DAILY_CORE_FILTERED),
+        ("usage_raw", USAGE_RAW),
+        ("usage_hourly", USAGE_HOURLY),
+        ("usage_daily_core", USAGE_DAILY_CORE),
         ("series_daily_core", SERIES_DAILY_CORE),
         ("coverage_daily", COVERAGE_DAILY),
+        ("raw_minute_scan", RAW_MINUTE_SCAN),
     ]
 }
 
 pub fn lookup(name: &str) -> Option<&'static str> {
+    if name == "raw_session_projection" {
+        return Some(RAW_SESSION_PROJECTION.as_str());
+    }
     corpus()
         .iter()
         .find(|(key, _)| *key == name)
         .map(|item| item.1)
 }
+
+static RAW_SESSION_PROJECTION: std::sync::LazyLock<String> =
+    std::sync::LazyLock::new(|| raw_session_projection_sql(false));
 
 pub fn render_sql(sql: &str, filters_sql: &str) -> String {
     sql.replace("{filters}", filters_sql)

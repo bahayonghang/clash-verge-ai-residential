@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { decodeResidentialShare, type ResidentialShare } from "../dto";
 import { t } from "../i18n";
@@ -6,6 +6,8 @@ import { isTauriRuntime } from "../ipc/live-session";
 import type { TimeRange } from "../lib/time-range";
 import { invokeErrorZh } from "../lib/utils";
 import { snapMsToMinute } from "./use-report";
+import { useDisplayQuery } from "./use-display-query";
+import { withDisplayOperation } from "./display-operation";
 
 export interface ResidentialShareViewState {
   share: ResidentialShare | null;
@@ -66,13 +68,14 @@ export function shareReadout(share: ResidentialShare | null): ShareReadout {
 export async function fetchResidentialShare(
   rangeStartUtc: number,
   rangeEndUtc: number,
-  displayTimezone = "local"
+  displayTimezone = "local",
+  signal?: AbortSignal
 ): Promise<ResidentialShare> {
-  const raw = await invoke<unknown>("residential_share", {
-    rangeStartUtc,
-    rangeEndUtc,
-    displayTimezone
-  });
+  const args = { rangeStartUtc, rangeEndUtc, displayTimezone };
+  const raw = signal
+    ? await withDisplayOperation(signal, (operationId) =>
+      invoke<unknown>("residential_share", { ...args, operationId }))
+    : await invoke<unknown>("residential_share", args);
   return decodeResidentialShare(raw);
 }
 
@@ -84,7 +87,7 @@ export function useResidentialShare(timeRange: TimeRange, enabled = true): {
   const [share, setShare] = useState<ResidentialShare | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorZh, setErrorZh] = useState<string | null>(null);
-  const seqRef = useRef(0);
+  const { queue, active } = useDisplayQuery(enabled);
   const startUtc = snapMsToMinute(timeRange.startUtc);
   const endUtc = snapMsToMinute(timeRange.endUtc);
   const query = useMemo(
@@ -96,33 +99,26 @@ export function useResidentialShare(timeRange: TimeRange, enabled = true): {
   );
 
   useEffect(() => {
-    if (!enabled || !isTauriRuntime()) {
-      setLoading(false);
-      return;
-    }
-    const seq = ++seqRef.current;
-    setLoading(true);
-    let cancelled = false;
-    void fetchResidentialShare(query.rangeStartUtc, query.rangeEndUtc)
-      .then((next) => {
-        if (cancelled || seq !== seqRef.current) {
-          return;
-        }
+    void queue.request(JSON.stringify(query), async (request) => {
+      if (!isTauriRuntime()) return;
+      setLoading(true);
+      try {
+        const next = await fetchResidentialShare(query.rangeStartUtc, query.rangeEndUtc, "local", request.signal);
+        if (!request.isCurrent()) return;
         setShare(next);
         setErrorZh(null);
         setLoading(false);
-      })
-      .catch((caught: unknown) => {
-        if (cancelled || seq !== seqRef.current) {
-          return;
-        }
+      } catch (caught: unknown) {
+        if (!request.isCurrent()) return;
         setErrorZh(invokeErrorZh(caught, t("zh", "residential.fail")));
         setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled, query]);
+      }
+    });
+  }, [queue, query]);
+
+  useEffect(() => {
+    if (!active) setLoading(false);
+  }, [active]);
 
   return { share, loading, errorZh };
 }

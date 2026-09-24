@@ -97,7 +97,7 @@ describe("pickLatestArchive", () => {
 describe("家宽 HTML 导出", () => {
   it("renderReportHtml 只从 archive hook 调用", () => {
     expect(archiveSource).toContain("async function renderReportHtml");
-    expect(archiveSource).toContain("void renderReportHtml(report.reportSnapshotToken)");
+    expect(archiveSource).toContain("await renderReportHtml(next.reportSnapshotToken)");
     expect(archiveSource).toContain("previewHtml");
   });
 });

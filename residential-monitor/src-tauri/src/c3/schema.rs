@@ -4,6 +4,139 @@ pub const C3_SCHEMA_VERSION: i32 = 2;
 pub const C3_MIGRATION_CHECKSUM: &str = "c3-report-v2";
 pub const C3_ARCHIVE_SCHEMA_VERSION: i32 = 4;
 pub const C3_ARCHIVE_MIGRATION_CHECKSUM: &str = "c3-archive-v4";
+pub const LEDGER_LIFECYCLE_SCHEMA_VERSION: i32 = 5;
+pub const LEDGER_LIFECYCLE_MIGRATION_CHECKSUM: &str = "ledger-lifecycle-v5-layout3";
+
+// 旧收据时间保持 NULL；retired_utc 是 owner 观察到退役的时间，不是提交时间。
+pub const LEDGER_LIFECYCLE_DDL: &str = "
+create table committed_bundle_v5 (
+    data_version integer primary key,
+    writer_epoch integer not null,
+    bundle_seq integer not null,
+    payload_hash text not null,
+    committed_utc integer,
+    unique(writer_epoch, bundle_seq)
+) strict;
+insert into committed_bundle_v5(data_version,writer_epoch,bundle_seq,payload_hash)
+    select data_version,writer_epoch,bundle_seq,payload_hash from committed_bundle;
+drop table committed_bundle;
+alter table committed_bundle_v5 rename to committed_bundle;
+alter table bundle_epoch add column expired_through_seq integer not null default 0;
+alter table bundle_epoch add column expired_payload_digest text not null default '';
+alter table bundle_epoch add column retired_utc integer;
+alter table controller_epoch add column retired_utc integer;
+drop index idx_connection_minute_utc;
+create index idx_connection_minute_session on connection_minute(session_pk, utc_minute);
+create index idx_coverage_sample_tail on coverage_interval(kind,reason,interval_id);
+create index idx_retention_coverage_source on coverage_interval(started_utc,interval_id) where kind in ('covered','gap');
+create index idx_session_attr_process on connection_session_attr(process_id);
+create index idx_session_attr_rule on connection_session_attr(rule_id);
+create index idx_session_attr_network on connection_session_attr(network_id);
+create index idx_session_attr_category on connection_session_attr(primary_category_id);
+create index idx_session_attr_chain_identity on connection_session_attr(chain_identity(chain_key));
+create index idx_session_attr_rule_group on connection_session_attr(last_chain_hop(chain_key),rule_id);
+create index idx_hourly_dimension_identity on traffic_hourly_dimension(dimension_kind,dimension_id);
+create index idx_daily_dimension_identity on traffic_daily_dimension(dimension_kind,dimension_id);
+create index idx_hourly_category on traffic_hourly_dimension(category_id);
+create index idx_daily_dimension_category on traffic_daily_dimension(category_id);
+create index idx_daily_core_category on traffic_daily_core(category_id);
+update bundle_epoch set highest_contiguous_seq = 0;
+create table retention_build (
+    job_id integer primary key check(job_id = 1),
+    day_utc integer not null,
+    phase text not null,
+    cursor_minute integer not null default 0,
+    cursor_session integer not null default 0,
+    build_hash text not null default '',
+    check_hash text not null default '',
+    output_cursor text not null default '',
+    raw_rows integer not null default 0,
+    output_started integer not null default 0,
+    output_protected integer not null default 0,
+    invalidated integer not null default 0
+) strict;
+create table retention_build_aggregate (
+    granularity text not null,
+    bucket_utc integer not null,
+    category_id integer not null,
+    dimension_kind text not null,
+    dimension_id integer not null,
+    upload integer not null default 0,
+    download integer not null default 0,
+    connection_count integer not null default 0,
+    active_duration_sec integer not null default 0,
+    check_upload integer not null default 0,
+    check_download integer not null default 0,
+    check_connection_count integer not null default 0,
+    check_active_duration_sec integer not null default 0,
+    primary key(granularity,bucket_utc,category_id,dimension_kind,dimension_id)
+) strict;
+create table retention_build_member (
+    granularity text not null,
+    bucket_utc integer not null,
+    category_id integer not null,
+    dimension_kind text not null,
+    dimension_id integer not null,
+    member_kind text not null,
+    member_id integer not null,
+    checked integer not null default 0,
+    primary key(granularity,bucket_utc,category_id,dimension_kind,dimension_id,member_kind,member_id)
+) strict;
+create index idx_retention_build_member_session on retention_build_member(member_kind,member_id);
+create trigger retention_build_attr_update after update on connection_session_attr
+when (old.host_id is not new.host_id or old.process_id is not new.process_id
+    or old.rule_id is not new.rule_id or old.network_id is not new.network_id
+    or old.chain_key is not new.chain_key or old.primary_category_id is not new.primary_category_id)
+    and exists(select 1 from retention_build_member where member_kind='session' and member_id=old.session_pk)
+begin update retention_build set invalidated=1 where job_id=1 and phase not in ('delete','clear'); end;
+create trigger retention_build_attr_delete after delete on connection_session_attr
+when exists(select 1 from retention_build_member where member_kind='session' and member_id=old.session_pk)
+begin update retention_build set invalidated=1 where job_id=1 and phase not in ('delete','clear'); end;
+create trigger retention_hourly_insert after insert on traffic_hourly_dimension
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_publish','_prune','discard','clear') and new.utc_hour>=day_utc and new.utc_hour<day_utc+86400; end;
+create trigger retention_hourly_update after update on traffic_hourly_dimension
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_publish','_prune','discard','clear') and
+    ((old.utc_hour>=day_utc and old.utc_hour<day_utc+86400) or (new.utc_hour>=day_utc and new.utc_hour<day_utc+86400)); end;
+create trigger retention_hourly_delete after delete on traffic_hourly_dimension
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_publish','_prune','discard','clear') and old.utc_hour>=day_utc and old.utc_hour<day_utc+86400; end;
+create trigger retention_daily_insert after insert on traffic_daily_dimension
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_publish','_prune','discard','clear') and new.utc_day=day_utc; end;
+create trigger retention_daily_update after update on traffic_daily_dimension
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_publish','_prune','discard','clear') and (old.utc_day=day_utc or new.utc_day=day_utc); end;
+create trigger retention_daily_delete after delete on traffic_daily_dimension
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_publish','_prune','discard','clear') and old.utc_day=day_utc; end;
+create trigger retention_core_insert after insert on traffic_daily_core
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_publish','discard','clear') and new.utc_day=day_utc; end;
+create trigger retention_core_update after update on traffic_daily_core
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_publish','discard','clear') and (old.utc_day=day_utc or new.utc_day=day_utc); end;
+create trigger retention_core_delete after delete on traffic_daily_core
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_publish','discard','clear') and old.utc_day=day_utc; end;
+create trigger retention_coverage_insert after insert on coverage_daily
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_confirm','discard','clear') and new.utc_day=day_utc; end;
+create trigger retention_coverage_update after update on coverage_daily
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_confirm','discard','clear') and (old.utc_day=day_utc or new.utc_day=day_utc); end;
+create trigger retention_coverage_delete after delete on coverage_daily
+begin update retention_build set invalidated=1 where output_protected=1 and phase not in ('_confirm','discard','clear') and old.utc_day=day_utc; end;
+create trigger retention_raw_insert after insert on connection_minute
+begin update retention_build set invalidated=1 where new.utc_minute>=day_utc/60 and new.utc_minute<(day_utc+86400)/60; end;
+create trigger retention_raw_update after update on connection_minute
+begin update retention_build set invalidated=1 where
+    (old.utc_minute>=day_utc/60 and old.utc_minute<(day_utc+86400)/60)
+    or (new.utc_minute>=day_utc/60 and new.utc_minute<(day_utc+86400)/60); end;
+create trigger retention_raw_delete after delete on connection_minute
+begin update retention_build set invalidated=1 where phase not in ('delete','clear','discard','prune_check','prune_hour','prune_day','prune_finish')
+    and old.utc_minute>=day_utc/60 and old.utc_minute<(day_utc+86400)/60; end;
+create trigger retention_interval_insert after insert on coverage_interval
+begin update retention_build set invalidated=1 where phase not in ('delete','clear')
+    and new.started_utc<day_utc+86400 and coalesce(new.ended_utc,day_utc+86400)>day_utc; end;
+create trigger retention_interval_update after update on coverage_interval
+begin update retention_build set invalidated=1 where phase not in ('delete','clear') and
+    ((old.started_utc<day_utc+86400 and coalesce(old.ended_utc,day_utc+86400)>day_utc)
+    or (new.started_utc<day_utc+86400 and coalesce(new.ended_utc,day_utc+86400)>day_utc)); end;
+create trigger retention_interval_delete after delete on coverage_interval
+begin update retention_build set invalidated=1 where phase not in ('delete','clear')
+    and old.started_utc<day_utc+86400 and coalesce(old.ended_utc,day_utc+86400)>day_utc; end;
+";
 
 pub const C3_TABLES: &[&str] = &[
     "dimension_dict",
@@ -16,6 +149,9 @@ pub const C3_TABLES: &[&str] = &[
     "retention_watermark",
     "report_snapshot_meta",
     "report_archive",
+    "retention_build",
+    "retention_build_aggregate",
+    "retention_build_member",
 ];
 
 pub const C3_DDL: &str = "

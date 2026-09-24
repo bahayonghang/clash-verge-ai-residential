@@ -1,0 +1,9 @@
+{
+  "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-layout3\\corpus-a250-30d",
+  "clone": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-final-local\\corpus-a250-resume",
+  "source_db_sha256": "7D5618EC6C25372B6619D6D380728E23ECBE5887080DF3C8621955EEA141ADA8",
+  "clone_db_sha256": "7D5618EC6C25372B6619D6D380728E23ECBE5887080DF3C8621955EEA141ADA8",
+  "source_wal_bytes": 0,
+  "copied_utc": "2026-09-19T13:27:00.8879470Z",
+  "reason": "Resume preserved cleanup1 A250 failure with corrected test completion observer"
+}

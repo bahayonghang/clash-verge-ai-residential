@@ -1,0 +1,1 @@
+{"observed_utc": "2026-09-19T13:28:54.590698+00:00", "job": null, "cleanup_cursors": {"receipt_cleanup_cursor": "0", "session_cleanup_cursor": "77000"}, "page_count": 414454, "freelist_count": 70915, "db_bytes": 1697603584, "wal_bytes": 0}

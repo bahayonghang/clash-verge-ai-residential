@@ -1,0 +1,322 @@
+{
+  "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-retention-cache\\corpus-a1000-resume\\monitor.sqlite3",
+  "force_cross": false,
+  "kind": "bundled-sqlite-session-first-stage-proof",
+  "limits": [
+    "每个 SQL 阶段单独 60 秒诊断上限；不改变生产 10 秒报告预算。",
+    "同一只读快照，不清除 OS 缓存；只记录计划、摘要、行数和耗时。",
+    "session-first 仅为候选证明，不写入生产 SQL 模板。"
+  ],
+  "open_flags": "SQLITE_OPEN_READ_ONLY | SQLITE_OPEN_FULL_MUTEX",
+  "pairs": [
+    {
+      "equivalent": false,
+      "m_first": {
+        "deadline_ms": 60000,
+        "error": "interrupted",
+        "name": "totals_raw_attribution",
+        "plan": [
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)"
+        ],
+        "result_digest": null,
+        "row_count": 0,
+        "sql_sha256": "2dd33467778422092f8e8ba57fd447143729227368fbb19158ece17f2ea9156c",
+        "status": "deadline",
+        "wall_ms": 60006.459200000005
+      },
+      "query": "totals_raw_attribution",
+      "session_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "session_first",
+        "plan": [
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)"
+        ],
+        "result_digest": "19dcd965d028173ae462ac9e0b713100a46f706784b0bff24c8a4e6acab04f51",
+        "row_count": 1,
+        "sql_sha256": "280973c54390380614a43050121ba47371516f2a4245a351055cb555e014f721",
+        "status": "ok",
+        "wall_ms": 34942.1944
+      },
+      "window": "broad_29d"
+    },
+    {
+      "equivalent": true,
+      "m_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "rank_raw_host",
+        "plan": [
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)",
+          "USE TEMP B-TREE FOR GROUP BY",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ],
+        "result_digest": "fb348e3f94c6d524883f8e438526d545fe947d98e489015115448e49b9f43c21",
+        "row_count": 20,
+        "sql_sha256": "42f91d2dc7b8dfb1c71d77421920920dfc16c4cec227e4ed46ebb457076d8e98",
+        "status": "ok",
+        "wall_ms": 47882.5874
+      },
+      "query": "rank_raw_host",
+      "session_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "session_first",
+        "plan": [
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)",
+          "USE TEMP B-TREE FOR GROUP BY",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ],
+        "result_digest": "fb348e3f94c6d524883f8e438526d545fe947d98e489015115448e49b9f43c21",
+        "row_count": 20,
+        "sql_sha256": "6fcffa5224cda0bff6916d97db86015df626570baf4de9efafaf970754766ad0",
+        "status": "ok",
+        "wall_ms": 45019.694899999995
+      },
+      "window": "broad_29d"
+    },
+    {
+      "equivalent": true,
+      "m_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "totals_raw_attribution",
+        "plan": [
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)"
+        ],
+        "result_digest": "9ba7a13b1d4c6d8af0628f1a67b133fa4c18f114f9c2f827211d0f8cf860053b",
+        "row_count": 1,
+        "sql_sha256": "2dd33467778422092f8e8ba57fd447143729227368fbb19158ece17f2ea9156c",
+        "status": "ok",
+        "wall_ms": 999.6310000000001
+      },
+      "query": "totals_raw_attribution",
+      "session_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "session_first",
+        "plan": [
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)"
+        ],
+        "result_digest": "9ba7a13b1d4c6d8af0628f1a67b133fa4c18f114f9c2f827211d0f8cf860053b",
+        "row_count": 1,
+        "sql_sha256": "280973c54390380614a43050121ba47371516f2a4245a351055cb555e014f721",
+        "status": "ok",
+        "wall_ms": 1027.3967
+      },
+      "window": "one_day"
+    },
+    {
+      "equivalent": true,
+      "m_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "rank_raw_host",
+        "plan": [
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)",
+          "USE TEMP B-TREE FOR GROUP BY",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ],
+        "result_digest": "7fb1f91f69ac2a7ecea2cc449292b0781756ab4eb53365617fc4c9ebe5ca0c52",
+        "row_count": 20,
+        "sql_sha256": "42f91d2dc7b8dfb1c71d77421920920dfc16c4cec227e4ed46ebb457076d8e98",
+        "status": "ok",
+        "wall_ms": 1471.9114
+      },
+      "query": "rank_raw_host",
+      "session_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "session_first",
+        "plan": [
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)",
+          "USE TEMP B-TREE FOR GROUP BY",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ],
+        "result_digest": "7fb1f91f69ac2a7ecea2cc449292b0781756ab4eb53365617fc4c9ebe5ca0c52",
+        "row_count": 20,
+        "sql_sha256": "6fcffa5224cda0bff6916d97db86015df626570baf4de9efafaf970754766ad0",
+        "status": "ok",
+        "wall_ms": 1407.9161
+      },
+      "window": "one_day"
+    },
+    {
+      "equivalent": true,
+      "m_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "totals_raw_attribution",
+        "plan": [
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)"
+        ],
+        "result_digest": "dd0b832f9c66aab1c80123f9d7fb3a58dfcb28c67edec6bab3e27989a139f1a6",
+        "row_count": 1,
+        "sql_sha256": "2dd33467778422092f8e8ba57fd447143729227368fbb19158ece17f2ea9156c",
+        "status": "ok",
+        "wall_ms": 33.8893
+      },
+      "query": "totals_raw_attribution",
+      "session_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "session_first",
+        "plan": [
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)"
+        ],
+        "result_digest": "dd0b832f9c66aab1c80123f9d7fb3a58dfcb28c67edec6bab3e27989a139f1a6",
+        "row_count": 1,
+        "sql_sha256": "280973c54390380614a43050121ba47371516f2a4245a351055cb555e014f721",
+        "status": "ok",
+        "wall_ms": 34.3331
+      },
+      "window": "sparse_short_1h"
+    },
+    {
+      "equivalent": true,
+      "m_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "rank_raw_host",
+        "plan": [
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)",
+          "USE TEMP B-TREE FOR GROUP BY",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ],
+        "result_digest": "a6429902078a01a47879f2d678131992e2db00932e89d3f125cd1ca3e3f5f6fb",
+        "row_count": 20,
+        "sql_sha256": "42f91d2dc7b8dfb1c71d77421920920dfc16c4cec227e4ed46ebb457076d8e98",
+        "status": "ok",
+        "wall_ms": 46.8459
+      },
+      "query": "rank_raw_host",
+      "session_first": {
+        "deadline_ms": 60000,
+        "error": null,
+        "name": "session_first",
+        "plan": [
+          "SEARCH m USING INDEX sqlite_autoindex_connection_minute_1 (utc_minute>? AND utc_minute<?)",
+          "SEARCH s USING INTEGER PRIMARY KEY (rowid=?)",
+          "SEARCH a USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "CORRELATED SCALAR SUBQUERY 1",
+          "SEARCH rc USING INDEX sqlite_autoindex_connection_chain_1 (session_pk=?)",
+          "SEARCH rt USING INDEX sqlite_autoindex_target_item_1 (set_id=?)",
+          "USE TEMP B-TREE FOR GROUP BY",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR count(DISTINCT)",
+          "USE TEMP B-TREE FOR ORDER BY"
+        ],
+        "result_digest": "a6429902078a01a47879f2d678131992e2db00932e89d3f125cd1ca3e3f5f6fb",
+        "row_count": 20,
+        "sql_sha256": "6fcffa5224cda0bff6916d97db86015df626570baf4de9efafaf970754766ad0",
+        "status": "ok",
+        "wall_ms": 49.0985
+      },
+      "window": "sparse_short_1h"
+    }
+  ],
+  "query_only": 0,
+  "schema_version": 5,
+  "source_identity": "[{\"path\":\"residential-monitor/src-tauri/src/c3/service.rs\",\"sha256\":\"F571887669C0B3C254496957BA1A01759A71C00BA1E4C015C6053CA99F006C72\"},{\"path\":\"residential-monitor/src-tauri/src/c3/sql.rs\",\"sha256\":\"6FA426D2DEDB18C58634FB153A06D3EA41AAAC2523E6DFD563DF999D5C9560E5\"}]",
+  "sqlite_version": "3.53.2",
+  "windows": [
+    {
+      "end_utc": 1789776000,
+      "name": "broad_29d",
+      "start_utc": 1787270400
+    },
+    {
+      "end_utc": 1789776000,
+      "name": "one_day",
+      "start_utc": 1789689600
+    },
+    {
+      "end_utc": 1787274000,
+      "name": "sparse_short_1h",
+      "start_utc": 1787270400
+    }
+  ]
+}

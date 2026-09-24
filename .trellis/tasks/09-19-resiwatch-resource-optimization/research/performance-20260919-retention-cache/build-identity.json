@@ -1,0 +1,16 @@
+{
+  "baseline_source_commit": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+  "baseline_source_archive_sha256": "87684724D5E5B1B3A18C0212CD594CA05F9454EDD6C28582CD879270F9749EB7",
+  "baseline_exe_sha256": "11C2542BC2C9F98A4B7517E67215E76884D8C01D25D64AE7FAF478571BF7633E",
+  "candidate_source_manifest_sha256": "EF0619E162AD78AA63F2AB164ADA8817BEE393E0D1BCEDBC461E22E95A33A1E4",
+  "build_date_utc": "2026-09-19T13:56:29.1564403Z",
+  "source_kind": "uncommitted layout3 query1 cleanup1 benchmark retry/completion driver and seven retention prepared-statement caches",
+  "product_gate": "retention-cache-checks.md: command-local isolated TEMP/TMP just ci 51.49s, frontend300 Rust529+3 root139",
+  "schema_checksum": "ledger-lifecycle-v5-layout3",
+  "desktop_execution": "built/copied only, not installed or launched",
+  "release_build_seconds": 36.04,
+  "monitor-bench_exe_sha256": "71D33B0C00C8F30D4E0C51F60172EA643D1A126B5BFDF9E45D72F0C4F95E27A1",
+  "monitor-db_exe_sha256": "FA5753F5D357FBC039BF83903B165597EAE75A56AC6DDB911B8107FD281E71E8",
+  "residential-monitor_exe_sha256": "B477B60E981D57DAA904AA93CA41862AA1FA81C7982FB85DE47C8CA14FC6C081",
+  "retention-test_exe_sha256": "86B5F56E18E6A717B2E8A868CC432E961AAC633B2C66C0A66400944501EBEEE6"
+}

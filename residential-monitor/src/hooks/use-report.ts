@@ -7,6 +7,8 @@ import { isTauriRuntime } from "../ipc/live-session";
 import type { TimeRange, TimeRangePreset } from "../lib/time-range";
 import { invokeErrorZh } from "../lib/utils";
 import { DEFAULT_RANK_SORT } from "../rank-sort";
+import { useDisplayQuery } from "./use-display-query";
+import { withDisplayOperation } from "./display-operation";
 
 export { emptyReportFilters, filtersForDrilldown, UNKNOWN_RANK_IDENTITY } from "../format/rank";
 
@@ -126,9 +128,13 @@ export function finishReportRequest(
 
 export async function runReport(
   query: ReportQuery,
-  persistManual = false
+  persistManual = false,
+  signal?: AbortSignal
 ): Promise<ReportResult> {
-  const raw = await invoke<unknown>("run_report", { query, persistManual });
+  const raw = signal
+    ? await withDisplayOperation(signal, (operationId) =>
+      invoke<unknown>("run_report", { query, persistManual, operationId }))
+    : await invoke<unknown>("run_report", { query, persistManual });
   return decodeReportResult(raw);
 }
 
@@ -151,9 +157,9 @@ export function useReport(input: UseReportInput): UseReportResult {
   const [result, setResult] = useState<ReportResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorZh, setErrorZh] = useState<string | null>(null);
-  const seqRef = useRef(0);
   const tokenRef = useRef<string | null>(null);
   const enabled = input.enabled !== false;
+  const { queue, active } = useDisplayQuery(enabled);
   const startUtc = snapMsToMinute(input.timeRange.startUtc);
   const endUtc = snapMsToMinute(input.timeRange.endUtc);
   const filterKey = JSON.stringify(input.filters ?? emptyReportFilters());
@@ -176,17 +182,13 @@ export function useReport(input: UseReportInput): UseReportResult {
   );
 
   useEffect(() => {
-    if (!enabled || !isTauriRuntime()) {
-      setLoading(false);
-      return;
-    }
-    const seq = ++seqRef.current;
-    setLoading(true);
-    let cancelled = false;
-    void runReport(query)
-      .then((next) => {
-        if (shouldReleaseAbandoned(cancelled, seq, seqRef.current)) {
-          void releaseReportToken(next.reportSnapshotToken);
+    void queue.request(JSON.stringify(query), async (request) => {
+      if (!isTauriRuntime()) return;
+      setLoading(true);
+      try {
+        const next = await runReport(query, false, request.signal);
+        if (!request.isCurrent()) {
+          await releaseReportToken(next.reportSnapshotToken);
           return;
         }
         const previous = tokenRef.current;
@@ -194,30 +196,26 @@ export function useReport(input: UseReportInput): UseReportResult {
         setResult(next);
         setErrorZh(null);
         setLoading(false);
-        if (previous && previous !== next.reportSnapshotToken) {
+        if (previous) {
           void releaseReportToken(previous);
         }
-      })
-      .catch((caught: unknown) => {
-        if (shouldReleaseAbandoned(cancelled, seq, seqRef.current)) {
-          return;
-        }
+      } catch (caught: unknown) {
+        if (!request.isCurrent()) return;
         setErrorZh(invokeErrorZh(caught, t("zh", "report.fail")));
         setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled, query]);
+      }
+    });
+  }, [queue, query]);
 
   useEffect(() => {
-    if (enabled) {
+    if (active) {
       return;
     }
     const token = tokenRef.current;
     tokenRef.current = null;
+    setLoading(false);
     void releaseReportToken(token);
-  }, [enabled]);
+  }, [active]);
 
   useEffect(() => {
     return () => {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { ReportQuery } from "../../../dto";
 import { reportShareModel } from "../../../format/report-view";
 import { t, type UiLocale } from "../../../i18n";
@@ -54,6 +54,7 @@ export function ReportsPage({
   jumpQuery?: ReportQuery | null;
 }) {
   const archive = useReportArchive(locale);
+  const archiveLoaded = useRef(false);
   const timeRange = useMemo(
     () => timeRangeFromPreset(presetToTimePreset(archive.form.preset)),
     [archive.form.preset]
@@ -80,14 +81,9 @@ export function ReportsPage({
   );
 
   useEffect(() => {
-    void archive.loadArchives(true);
-    // 进页只拉一次最新档案。
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    void archive.loadArchives(false);
-    // 筛选变化后重拉列表，不自动改选中项。
+    void archive.loadArchives(!archiveLoaded.current);
+    archiveLoaded.current = true;
+    // 进页读取最新档案；后续筛选变化只拉列表。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [archive.archiveKindFilter]);
 

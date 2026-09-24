@@ -98,3 +98,46 @@ const tableSeries = [...result.series].sort((a, b) => b.bucketUtc - a.bucketUtc)
 - The connection section renders `state.snapshot ?? boot.overview` for health and uses `tray_summary.collector_running` for collector status. Entering the connection section refreshes tray once; staying on settings does not refresh collector status on `connectionDelta`. A `test_controller` result is explicitly a single-frame probe; `reconnect_now` is the continuous-monitoring recovery action.
 - Locale, theme, font, font size, and density controls persist immediately through `save_ui_locale` / `save_ui_theme` / `save_ui_font` / `save_ui_font_size` / `save_ui_density`, then localize routes and repaint. Font choices come from a searchable local-family list plus the `system` sentinel. The family list is a session cache from `list_ui_fonts`; filter keystrokes must not `paint`. Settings section buttons expose `aria-current="page"`; narrow layouts use a horizontally scrollable secondary nav without changing top-level routes.
 - Settings workspace fill: `#app:has(.settings-page)` uses `height: 100vh`. `.settings-layout` must set `grid-template-rows: minmax(0, 1fr)` (narrow: `auto minmax(0, 1fr)`). Flex on `.settings-page` alone leaves the implicit grid row as `auto`, so the card shrink-wraps and `--main` shows below. The last `.settings-card` uses `min-height: 100%`.
+
+## Scenario: Window visibility and bounded display queries
+
+### 1. Scope / Trigger
+
+Live, report, share and archive views must not continuously query while the native owner window is hidden. Collector and alert activity remain owned by Rust.
+
+### 2. Signatures
+
+- Command `get_window_visibility` and event `window-visibility` both carry `{ visible: boolean }`.
+- `observeWindowVisibility(onVisible, onError, port) -> Promise<unlisten>` subscribes before reading the initial value.
+- `DisplayQuery.request(key, run, replay?)`, `setActive(active)` and `clear()` own one view's pending work.
+- `withDisplayOperation(signal, run)` supplies a fresh operation ID and balances native start/cancel/finish.
+
+### 3. Contracts
+
+Decode visibility at the IPC boundary. A visibility event received after subscription takes precedence over a late initial read. Unknown native visibility suspends display work and surfaces an error; browser fixtures keep their existing visible behavior.
+
+Each view keeps at most one running query and one latest pending intent. A changed selection invalidates the earlier result and cancels its operation. Hidden state cancels current display work without starting pending work; showing the window coalesces visibility, rolling-range alignment and refresh into one current request. Manual refresh pause remains independent of native visibility. The shell remains the only rolling-range timer owner.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+| --- | --- |
+| Hidden native window | No new steady-state display query or token acquisition |
+| Show with several pending refresh triggers | One active query for latest intent |
+| Older query settles after selection change | No overwrite; release any token it acquired |
+| Visibility payload invalid/read fails | Display work paused with localized error |
+| Query fails | Preserve previous result and expose error; latest pending intent can run |
+
+### 5. Good/Base/Bad Cases
+
+Good: one `DisplayQuery` per mounted view, shared visibility context and one shell clock. Base: a visible query settles before the next begins. Bad: hook-local repeating timers continue while hidden, or a stale result token is discarded without releasing its acquisition.
+
+### 6. Tests Required
+
+Use delayed IPC promises to assert maximum concurrency one, latest intent wins, hidden steady-state zero queries, a single resume refresh, stale result cleanup, manual pause preservation and event-before-initial-read ordering. Native/WebView installed behavior remains a separate acceptance check.
+
+### 7. Wrong vs Correct
+
+Wrong: invoke independently on every clock, visibility and live event.
+
+Correct: enqueue the latest intent through the view's single-flight controller and render only when `request.isCurrent()` remains true.

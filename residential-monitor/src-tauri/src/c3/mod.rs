@@ -6,6 +6,7 @@ pub mod archive;
 pub mod backup;
 pub mod export;
 pub mod query;
+pub mod raw_fold;
 pub mod retention;
 pub mod rule_name;
 pub mod schema;

@@ -1,0 +1,16 @@
+{
+  "baseline_source_commit": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+  "baseline_source_archive_sha256": "87684724D5E5B1B3A18C0212CD594CA05F9454EDD6C28582CD879270F9749EB7",
+  "baseline_exe_sha256": "11C2542BC2C9F98A4B7517E67215E76884D8C01D25D64AE7FAF478571BF7633E",
+  "candidate_source_manifest_sha256": "5EE8BA6B57D9E293F94C52927B51742746D9F2FA0B0A78E614C0A00727C3C629",
+  "candidate_bench_exe_sha256": "3B1DCE49B9B0A0F7DCB393D3AA3B0938D8B23B16CCACB76D2ED88AFE73D2DE34",
+  "candidate_db_cli_sha256": "1DF4504747E568AA188C405B54720DF41DD34C8996745D31007117E65CCC7A05",
+  "candidate_retention_test_exe_sha256": "217CC577E042B1E0F79FF12CDA693589A3B1EDF6FC016A1F8F6F8A6DC62D28DE",
+  "candidate_source_kind": "uncommitted layout3 working tree, Rust source plus Cargo/build/Tauri config manifest",
+  "scope": "isolated facade and synchronous archive; no HTTP/WebView/background worker/installed app",
+  "schema_checksum": "ledger-lifecycle-v5-layout3",
+  "product_gate": "layout3-checks.md: just ci passed; 521 Rust, 3 process, 300 frontend, 139 root tests",
+  "release_build_seconds": 38.63,
+  "release_tests_build_seconds": 17.65,
+  "build_date_utc": "2026-09-19T11:58:12.5774353Z"
+}

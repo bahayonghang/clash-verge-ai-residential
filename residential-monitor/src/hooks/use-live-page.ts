@@ -20,6 +20,7 @@ import {
 } from "../live-filter-workspace";
 import { parseLiveTableLayout, type LiveTableLayout } from "../live-table-layout";
 import type { LiveSortState } from "../live-table-sort";
+import { useDisplayQuery } from "./use-display-query";
 
 export type LiveQueryTrigger = "view" | "delta";
 
@@ -220,68 +221,74 @@ export function useLivePage(input: UseLivePageInput): {
   }
   const pagerRef = useRef(pager);
   pagerRef.current = pager;
+  const { queue, active } = useDisplayQuery(input.active !== false);
 
-  const run = useCallback(async (trigger: LiveQueryTrigger): Promise<void> => {
-    const started = startLiveQuery(sliceRef.current, trigger);
-    sliceRef.current = started;
-    setSlice(started);
-    const seq = started.seq;
+  const run = useCallback((trigger: LiveQueryTrigger): void => {
     const { applied, sort, locale } = inputRef.current;
     const cursor = pagerRef.current.cursor;
-    if (!isTauriRuntime()) {
-      const next: LiveQuerySlice = { ...started, loading: false };
-      if (isCurrentLiveRequest(seq, sliceRef.current.seq)) {
-        sliceRef.current = next;
-        setSlice(next);
+    const query = buildLiveQuery(applied, sort, cursor);
+    void queue.request(JSON.stringify(query), async (request) => {
+      const started = startLiveQuery(sliceRef.current, trigger);
+      sliceRef.current = started;
+      setSlice(started);
+      const seq = started.seq;
+      if (!isTauriRuntime()) {
+        const next: LiveQuerySlice = { ...started, loading: false };
+        if (isCurrentLiveRequest(seq, sliceRef.current.seq)) {
+          sliceRef.current = next;
+          setSlice(next);
+        }
+        return;
       }
-      return;
-    }
-    try {
-      const page = await queryLiveConnections(buildLiveQuery(applied, sort, cursor));
-      const summary = pinLiveSummary(pinnedRef.current, page, cursor);
-      pinnedRef.current = summary;
-      const display = withPinnedSummary(page, summary);
-      setSlice((current) => {
-        const next = applyLiveQuerySuccess(current, seq, display);
-        sliceRef.current = next;
-        return next;
-      });
-    } catch (caught: unknown) {
-      const errorZh = invokeErrorZh(caught, t(locale, "live.filter.failed"));
-      setSlice((current) => {
-        const next = applyLiveQueryFailure(current, seq, errorZh);
-        sliceRef.current = next;
-        return next;
-      });
-    }
-    try {
-      const tray = await fetchTraySummary();
-      if (isCurrentLiveRequest(seq, sliceRef.current.seq)) {
-        setCollectorRunning(tray.collectorRunning);
+      try {
+        const page = await queryLiveConnections(query);
+        if (!request.isCurrent()) return;
+        const summary = pinLiveSummary(pinnedRef.current, page, cursor);
+        pinnedRef.current = summary;
+        const display = withPinnedSummary(page, summary);
+        setSlice((current) => {
+          const next = applyLiveQuerySuccess(current, seq, display);
+          sliceRef.current = next;
+          return next;
+        });
+      } catch (caught: unknown) {
+        if (!request.isCurrent()) return;
+        const errorZh = invokeErrorZh(caught, t(locale, "live.filter.failed"));
+        setSlice((current) => {
+          const next = applyLiveQueryFailure(current, seq, errorZh);
+          sliceRef.current = next;
+          return next;
+        });
       }
-    } catch {
-      if (isCurrentLiveRequest(seq, sliceRef.current.seq)) {
-        setCollectorRunning(null);
+      if (!request.isCurrent()) return;
+      try {
+        const tray = await fetchTraySummary();
+        if (request.isCurrent() && isCurrentLiveRequest(seq, sliceRef.current.seq)) {
+          setCollectorRunning(tray.collectorRunning);
+        }
+      } catch {
+        if (request.isCurrent() && isCurrentLiveRequest(seq, sliceRef.current.seq)) {
+          setCollectorRunning(null);
+        }
       }
-    }
-  }, []);
+    });
+  }, [queue]);
 
   const cursorKey = JSON.stringify(pager.cursor);
-  const active = input.active !== false;
+  const lastViewRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const view = `${filterKey}|${cursorKey}`;
+    const trigger = view !== lastViewRef.current ? "view" : "delta";
+    lastViewRef.current = view;
+    run(trigger);
+  }, [run, filterKey, cursorKey, input.refreshSignal]);
 
   useEffect(() => {
     if (!active) {
-      return;
+      setSlice((current) => ({ ...current, loading: false }));
     }
-    void run("view");
-  }, [run, appliedKey, input.sort.sortField, input.sort.descending, cursorKey, active]);
-
-  useEffect(() => {
-    if (!active || input.refreshSignal == null) {
-      return;
-    }
-    void run("delta");
-  }, [run, input.refreshSignal, active]);
+  }, [active]);
 
   const loadNext = useCallback((): void => {
     if (sliceRef.current.loading) {

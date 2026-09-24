@@ -1,4 +1,8 @@
 use clap::{Parser, Subcommand};
+use residential_monitor_lib::bench::corpus::{generate_corpus, retain_corpus};
+use residential_monitor_lib::bench::facade::{
+    replay_facade, ArchiveScenario, FacadeOptions, FacadeWorkload,
+};
 use residential_monitor_lib::bench::{
     analyze_all, binding_evidence, compare_batches, generate_profile, replay_c1, replay_peak,
     verify_design_db,
@@ -19,6 +23,64 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// 批量生成生产 schema 的完整容量库；days=0 仅三分钟 smoke。
+    GenerateCorpus {
+        #[arg(long)]
+        average_active: u32,
+        #[arg(long, default_value_t = 30)]
+        days: u32,
+        #[arg(long, default_value_t = 20260919)]
+        seed: u64,
+        #[arg(long, default_value_t = 1_800_000_000)]
+        start_utc: i64,
+        #[arg(long)]
+        dir: PathBuf,
+    },
+    /// 仅对 generate-corpus 标记的隔离库运行真实分块维护。
+    RetainCorpus {
+        #[arg(long)]
+        dir: PathBuf,
+        #[arg(long)]
+        now_utc: i64,
+        #[arg(long, default_value_t = 30)]
+        raw_retain_days: i64,
+        #[arg(long, default_value_t = 32)]
+        chunks: u32,
+        #[arg(long)]
+        delete: bool,
+    },
+    /// 真实门面 + 档案 tick；只使用指定的空隔离目录。
+    ReplayFacade {
+        #[arg(long, default_value_t = 250)]
+        active: u32,
+        #[arg(long, default_value_t = 1)]
+        hz: u32,
+        #[arg(long, default_value_t = 300)]
+        duration_secs: u32,
+        #[arg(long, default_value_t = 30)]
+        warmup_secs: u32,
+        #[arg(long)]
+        virtual_time: bool,
+        #[arg(long, default_value_t = 1_800_001_800)]
+        start_utc: i64,
+        #[arg(long, default_value_t = 20260919)]
+        seed: u64,
+        #[arg(long, value_enum, default_value = "counters")]
+        workload: FacadeWorkload,
+        #[arg(long, default_value_t = 10)]
+        metadata_change_percent: u32,
+        #[arg(long, value_enum, default_value = "complete")]
+        archive: ArchiveScenario,
+        /// 0 关闭展示查询；每次查询包含 live、首次 reader 和重复 reader。
+        #[arg(long, default_value_t = 0)]
+        query_every_frames: u32,
+        #[arg(long)]
+        period_rule: bool,
+        #[arg(long)]
+        source_revision: String,
+        #[arg(long)]
+        dir: PathBuf,
+    },
     Generate {
         #[arg(long)]
         average_active: u32,
@@ -113,6 +175,73 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
     match cli.command {
+        Commands::GenerateCorpus {
+            average_active,
+            days,
+            seed,
+            start_utc,
+            dir,
+        } => match generate_corpus(&dir, average_active, days, seed, start_utc) {
+            Ok(report) => println!("{}", serde_json::to_string_pretty(&report).expect("json")),
+            Err(error) => {
+                eprintln!("生产容量库生成失败：{error}");
+                std::process::exit(1);
+            }
+        },
+        Commands::RetainCorpus {
+            dir,
+            now_utc,
+            raw_retain_days,
+            chunks,
+            delete,
+        } => match retain_corpus(&dir, now_utc, raw_retain_days, chunks, delete) {
+            Ok(report) => println!("{}", serde_json::to_string_pretty(&report).expect("json")),
+            Err(error) => {
+                eprintln!("容量库维护失败：{error}");
+                std::process::exit(1);
+            }
+        },
+        Commands::ReplayFacade {
+            active,
+            hz,
+            duration_secs,
+            warmup_secs,
+            virtual_time,
+            start_utc,
+            seed,
+            workload,
+            metadata_change_percent,
+            archive,
+            query_every_frames,
+            period_rule,
+            source_revision,
+            dir,
+        } => {
+            let options = FacadeOptions {
+                active,
+                hz,
+                duration_secs,
+                warmup_secs,
+                virtual_time,
+                start_utc,
+                seed,
+                workload,
+                metadata_change_percent,
+                archive,
+                query_every_frames,
+                period_rule,
+                source_revision,
+                dir,
+            };
+            // SAFETY: 独立同步基准进程；所有 SQLite 连接由此次回放创建并在返回前关闭。
+            match unsafe { replay_facade(&options) } {
+                Ok(report) => println!("{}", serde_json::to_string_pretty(&report).expect("json")),
+                Err(error) => {
+                    eprintln!("真实门面基准失败：{error}");
+                    std::process::exit(1);
+                }
+            }
+        }
         Commands::Generate {
             average_active,
             days,

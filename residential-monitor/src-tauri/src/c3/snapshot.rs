@@ -11,6 +11,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Clone)]
 pub struct SnapshotRecord {
+    leases: usize,
     pub token: String,
     pub fingerprint: String,
     pub schema_version: u32,
@@ -51,7 +52,7 @@ impl ReportSnapshotStore {
             .map(|(token, _)| token.clone())
             .collect();
         for token in expired {
-            self.release(&token);
+            self.evict(&token);
         }
     }
 
@@ -94,7 +95,7 @@ impl ReportSnapshotStore {
         if let Some(token) = self.live_token_for(&fingerprint, now_utc) {
             return self.replace_token(&token, result, encoded, bytes, now_utc, fingerprint);
         }
-        self.evict_lru_until_fits(bytes);
+        self.evict_lru_until_fits(bytes, None);
         if self.items.len() >= MAX_ACTIVE_TOKENS
             || self.total_bytes.saturating_add(bytes) > MAX_SPOOL_BYTES
         {
@@ -106,6 +107,7 @@ impl ReportSnapshotStore {
         std::fs::write(&spool_path, &encoded).map_err(|_| ReportError::Failed("spool write"))?;
         result.report_snapshot_token = token.clone();
         let record = SnapshotRecord {
+            leases: 1,
             token: token.clone(),
             fingerprint,
             schema_version: result.schema_version,
@@ -160,6 +162,15 @@ impl ReportSnapshotStore {
             .unwrap_or_else(|| self.spool_dir.join(format!("{token}.json")));
         let old_bytes = existing.bytes;
         let created_utc = existing.created_utc;
+        self.evict_lru_until_fits(bytes.saturating_sub(old_bytes), Some(token));
+        if self
+            .total_bytes
+            .saturating_sub(old_bytes)
+            .saturating_add(bytes)
+            > MAX_SPOOL_BYTES
+        {
+            return Err(ReportError::QuotaExceeded("spool quota"));
+        }
         std::fs::write(&spool_path, &encoded).map_err(|_| ReportError::Failed("spool write"))?;
         self.total_bytes = self
             .total_bytes
@@ -167,6 +178,7 @@ impl ReportSnapshotStore {
             .saturating_add(bytes);
         result.report_snapshot_token = token.to_string();
         if let Some(record) = self.items.get_mut(token) {
+            record.leases += 1;
             record.fingerprint = fingerprint;
             record.schema_version = result.schema_version;
             record.data_version = result.data_version;
@@ -181,23 +193,37 @@ impl ReportSnapshotStore {
         Ok(result)
     }
 
-    fn evict_lru_until_fits(&mut self, extra_bytes: u64) {
-        while self.items.len() >= MAX_ACTIVE_TOKENS
+    fn evict_lru_until_fits(&mut self, extra_bytes: u64, replacing_token: Option<&str>) {
+        while (replacing_token.is_none() && self.items.len() >= MAX_ACTIVE_TOKENS)
             || self.total_bytes.saturating_add(extra_bytes) > MAX_SPOOL_BYTES
         {
             let victim = self
                 .items
                 .values()
+                .filter(|item| Some(item.token.as_str()) != replacing_token)
                 .min_by_key(|item| (item.last_access_utc, item.created_utc, item.token.as_str()))
                 .map(|item| item.token.clone());
             let Some(token) = victim else {
                 break;
             };
-            self.release(&token);
+            self.evict(&token);
         }
     }
 
     pub fn release(&mut self, token: &str) -> bool {
+        let Some(item) = self.items.get_mut(token) else {
+            return false;
+        };
+        // 每次成功 insert 都交付一份使用权；复用 token 不合并调用方的生命周期。
+        if item.leases > 1 {
+            item.leases -= 1;
+            return true;
+        }
+        self.evict(token)
+    }
+
+    // TTL 与配额仍然强制淘汰，使用权计数不能绕过既有资源上限。
+    fn evict(&mut self, token: &str) -> bool {
         if let Some(item) = self.items.remove(token) {
             self.total_bytes = self.total_bytes.saturating_sub(item.bytes);
             if let Some(path) = item.spool_path {
@@ -265,13 +291,74 @@ mod snapshot_store_tests {
     }
 
     #[test]
+    fn releasing_shared_fingerprint_preserves_the_other_owner() {
+        let dir = tempfile::tempdir().expect("dir");
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let (query, result) = sample(0);
+        let first = store
+            .insert(&query, result.clone(), 100, false)
+            .expect("first owner");
+        let second = store
+            .insert(&query, result, 101, false)
+            .expect("second owner");
+        let token = &first.report_snapshot_token;
+        assert_eq!(token, &second.report_snapshot_token);
+        let spool_path = store.spool_dir.join(format!("{token}.json"));
+        let bytes = store.total_bytes();
+
+        assert!(store.release(token));
+        assert!(store.get(token, 102).is_ok());
+        assert!(spool_path.exists());
+        assert_eq!(store.total_bytes(), bytes);
+        assert_eq!(store.active_count(), 1);
+
+        assert!(store.release(token));
+        assert!(store.get(token, 102).is_err());
+        assert!(!spool_path.exists());
+        assert_eq!(store.active_count(), 0);
+        assert_eq!(store.total_bytes(), 0);
+        assert!(!store.release(token));
+    }
+
+    #[test]
+    fn same_token_refresh_balances_previous_ownership() {
+        let dir = tempfile::tempdir().expect("dir");
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let (query, result) = sample(0);
+        let first = store
+            .insert(&query, result.clone(), 100, false)
+            .expect("initial");
+        let token = first.report_snapshot_token;
+        for now in 101..201 {
+            let mut next = result.clone();
+            next.data_version = now as u64;
+            let refreshed = store.insert(&query, next, now, false).expect("refresh");
+            assert_eq!(refreshed.report_snapshot_token, token);
+            assert!(store.release(&token));
+            assert_eq!(
+                store.get(&token, now).expect("new owner").data_version,
+                now as u64
+            );
+            assert_eq!(store.active_count(), 1);
+        }
+        assert!(store.release(&token));
+        assert_eq!(store.active_count(), 0);
+        assert_eq!(store.total_bytes(), 0);
+    }
+
+    #[test]
     fn ninth_insert_evicts_oldest_access() {
         let dir = tempfile::tempdir().expect("dir");
         let mut store = ReportSnapshotStore::open(dir.path());
         let mut tokens = Vec::new();
         for index in 0..MAX_ACTIVE_TOKENS {
             let (query, result) = sample(i64::from(index as u32) * 10);
-            let stored = store.insert(&query, result, 100, false).expect("insert");
+            store
+                .insert(&query, result.clone(), 100, false)
+                .expect("first owner");
+            let stored = store
+                .insert(&query, result, 100, false)
+                .expect("second owner");
             tokens.push(stored.report_snapshot_token);
         }
         store
@@ -288,6 +375,44 @@ mod snapshot_store_tests {
             .filter(|token| store.get(token, 102).is_err())
             .count();
         assert_eq!(missing, 1);
+    }
+
+    #[test]
+    fn growing_reused_token_evicts_other_lru_owners_within_spool_quota() {
+        let dir = tempfile::tempdir().expect("dir");
+        let mut store = ReportSnapshotStore::open(dir.path());
+        let (query, initial) = sample(0);
+        let original = store.insert(&query, initial, 100, false).expect("initial");
+        let mut other_tokens = Vec::new();
+        for index in 1..=4 {
+            let (other_query, mut result) = sample(index * 10);
+            result.policy_metadata.note_zh = "x".repeat(26 * 1024 * 1024);
+            let stored = store
+                .insert(&other_query, result, 100 + index, false)
+                .expect("large report");
+            other_tokens.push(stored.report_snapshot_token);
+        }
+        assert_eq!(store.active_count(), 5);
+        let (_, mut growing) = sample(0);
+        growing.policy_metadata.note_zh = "x".repeat(31 * 1024 * 1024);
+        let refreshed = store.insert(&query, growing, 110, false).expect("grow");
+        assert_eq!(
+            refreshed.report_snapshot_token,
+            original.report_snapshot_token
+        );
+        assert_eq!(store.active_count(), 4);
+        assert!(store.total_bytes() <= MAX_SPOOL_BYTES);
+        assert!(store.get(&other_tokens[0], 110).is_err());
+        for token in &other_tokens[1..] {
+            assert!(store.get(token, 110).is_ok());
+        }
+        let file_bytes: u64 = std::fs::read_dir(&store.spool_dir)
+            .expect("spool")
+            .map(|entry| entry.expect("entry").metadata().expect("metadata").len())
+            .sum();
+        assert_eq!(file_bytes, store.total_bytes());
+        assert!(store.release(&original.report_snapshot_token));
+        assert!(store.get(&refreshed.report_snapshot_token, 110).is_ok());
     }
 
     #[test]
@@ -313,6 +438,9 @@ mod snapshot_store_tests {
         let stored = store
             .insert(&query, empty_result(query.clone(), &plan, 1), 10, false)
             .expect("insert");
+        store
+            .insert(&query, empty_result(query.clone(), &plan, 1), 10, false)
+            .expect("second owner");
         store.cleanup_expired(10 + TOKEN_TTL_SECS as i64 + 1);
         let error = store
             .get(
@@ -321,5 +449,8 @@ mod snapshot_store_tests {
             )
             .expect_err("expired");
         assert_eq!(error.code(), "token_expired");
+        assert_eq!(store.active_count(), 0);
+        assert_eq!(store.total_bytes(), 0);
+        assert!(!store.release(&stored.report_snapshot_token));
     }
 }

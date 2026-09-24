@@ -1,0 +1,26 @@
+{
+  "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-layout3\\corpus-a1000-30d",
+  "clone": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-retention-cache\\corpus-a1000-resume",
+  "copied_utc": "2026-09-19T13:43:40.0185619Z",
+  "writer_state": "owned writer stopped; copy DB and WAL together; no SHM copy; SQLite recovery on clone open",
+  "files": [
+    {
+      "name": "monitor.sqlite3",
+      "bytes": 6188589056,
+      "source_sha256": "BA23A3A247FF0E9FEE77AE24002FA6692C704B8FB22A4F19A0634797542C3920",
+      "clone_sha256": "BA23A3A247FF0E9FEE77AE24002FA6692C704B8FB22A4F19A0634797542C3920"
+    },
+    {
+      "name": "production-corpus.json",
+      "bytes": 29178,
+      "source_sha256": "5D8144A949891FB1CC6FF53854197DA6845194037146518F8EA1A0FD87655259",
+      "clone_sha256": "5D8144A949891FB1CC6FF53854197DA6845194037146518F8EA1A0FD87655259"
+    },
+    {
+      "name": "monitor.sqlite3-wal",
+      "bytes": 9714992,
+      "source_sha256": "DDF4E34E0315DC3E3B3D7126C8E69413F6568F821FA0D953867210F9D9A741A7",
+      "clone_sha256": "DDF4E34E0315DC3E3B3D7126C8E69413F6568F821FA0D953867210F9D9A741A7"
+    }
+  ]
+}
