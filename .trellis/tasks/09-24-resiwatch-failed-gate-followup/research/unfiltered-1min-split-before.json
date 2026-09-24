@@ -1,0 +1,23 @@
+{
+  "connection_count": 250,
+  "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+  "download": 11725,
+  "filter": "all",
+  "kind": "raw-fold-stage-proof",
+  "limits": [
+    "诊断计时不使用生产 10 秒 deadline",
+    "不清除 OS 缓存",
+    "只读打开，不写安装库"
+  ],
+  "previous_connection_count": 0,
+  "previous_download": 0,
+  "previous_scan_ms": 15.7876,
+  "previous_upload": 0,
+  "projection_ms": 9972.096300000001,
+  "rank_rows": 20,
+  "scan_ms": 16.6464,
+  "series_rows": 1,
+  "session_count": 2160000,
+  "top_identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+  "upload": 3497
+}

@@ -815,36 +815,41 @@ fn fill_raw(
     start_min: i64,
     end_min: i64,
 ) -> Result<(), ReportError> {
-    let sessions = crate::c3::raw_fold::load_sessions(connection, query)?;
-    let folded =
-        crate::c3::raw_fold::fold_window(connection, query, &sessions, start_min, end_min)?;
-    result.totals = folded.totals;
-    result.attribution_quality = folded.attribution;
-    result.series = folded.series;
-    result.rankings = folded.rankings;
+    let mut projection_start = start_min;
+    let mut previous_min = None;
     if query
         .comparison
         .as_ref()
         .is_some_and(|item| item.previous_equal_window)
     {
         let span = query.range_end_utc - query.range_start_utc;
-        if raw_range_is_retained(
-            connection,
-            query.range_start_utc - span,
-            query.range_start_utc,
-        )? {
-            let prev_start = (query.range_start_utc - span).div_euclid(60);
-            let previous = crate::c3::raw_fold::fold_window(
-                connection, query, &sessions, prev_start, start_min,
-            )?;
-            result.totals.previous_upload = Some(previous.totals.upload);
-            result.totals.previous_download = Some(previous.totals.download);
+        let previous_utc = query.range_start_utc - span;
+        if raw_range_is_retained(connection, previous_utc, query.range_start_utc)? {
+            let minute = previous_utc.div_euclid(60);
+            if minute < projection_start {
+                projection_start = minute;
+            }
+            previous_min = Some(minute);
         } else {
             result
                 .drilldown_capability
                 .note_zh
                 .push_str(" 前一区间明细已清理，比较量未知。");
         }
+    }
+    let sessions =
+        crate::c3::raw_fold::load_sessions(connection, query, projection_start, end_min)?;
+    let folded =
+        crate::c3::raw_fold::fold_window(connection, query, &sessions, start_min, end_min)?;
+    result.totals = folded.totals;
+    result.attribution_quality = folded.attribution;
+    result.series = folded.series;
+    result.rankings = folded.rankings;
+    if let Some(minute) = previous_min {
+        let previous =
+            crate::c3::raw_fold::fold_window(connection, query, &sessions, minute, start_min)?;
+        result.totals.previous_upload = Some(previous.totals.upload);
+        result.totals.previous_download = Some(previous.totals.download);
     }
     result.named_sql = crate::c3::raw_fold::executed_names();
     result.named_sql.push("coverage_raw".to_string());

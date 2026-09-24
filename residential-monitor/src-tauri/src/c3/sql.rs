@@ -19,13 +19,22 @@ pub const RESIDENTIAL_ACCOUNTING_FILTER: &str = "__residential__";
 /// target 与 [`crate::residential::RESIDENTIAL_SELECTOR`] 一样做包含匹配，其它 target 精确匹配。
 pub const RESIDENTIAL_RAW_MEMBERSHIP_SQL: &str = "(a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0)))))";
 /// 会话投影使用同一家宽谓词，只把相关列从分钟别名改到会话别名。
-pub fn raw_session_projection_sql(residential_only: bool) -> String {
+///
+/// `window_scoped` 为真时，再要求 `session_pk` 出现在绑定的分钟区间内。
+/// 绑定顺序是 `session_pk` 下界，然后 `utc_minute` 起点和终点。
+/// 长区间保持全表投影，避免在分钟折叠之外再扫描一遍分钟索引。
+pub fn raw_session_projection_sql(residential_only: bool, window_scoped: bool) -> String {
     let predicate = RESIDENTIAL_RAW_MEMBERSHIP_SQL.replace("m.session_pk", "s.session_pk");
-    let restriction = if residential_only {
-        format!(" and {predicate}")
-    } else {
-        String::new()
-    };
+    let mut restriction = String::new();
+    if residential_only {
+        restriction.push_str(" and ");
+        restriction.push_str(&predicate);
+    }
+    if window_scoped {
+        restriction.push_str(
+            " and s.session_pk in (select distinct m.session_pk from connection_minute m where m.utc_minute >= ? and m.utc_minute < ?)",
+        );
+    }
     format!(
         "select s.session_pk,
        case when coalesce(s.host, '') = '' then '__unknown__' else s.host end,
@@ -488,8 +497,9 @@ pub fn lookup(name: &str) -> Option<&'static str> {
         .map(|item| item.1)
 }
 
+/// 命名 corpus 保留长区间全表投影。短区间在运行时另建带分钟约束的语句，诊断名仍是 `raw_session_projection`。
 static RAW_SESSION_PROJECTION: std::sync::LazyLock<String> =
-    std::sync::LazyLock::new(|| raw_session_projection_sql(false));
+    std::sync::LazyLock::new(|| raw_session_projection_sql(false, false));
 
 pub fn render_sql(sql: &str, filters_sql: &str) -> String {
     sql.replace("{filters}", filters_sql)

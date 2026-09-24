@@ -19,6 +19,10 @@ use std::collections::{HashMap, HashSet};
 const RAW_SESSION_PROJECTION_NAME: &str = "raw_session_projection";
 const RAW_MINUTE_SCAN_NAME: &str = "raw_minute_scan";
 
+/// 短窗口投影的最长分钟数，含前一等长窗口。
+/// 两次 26 小时覆盖夏令时日界。更长的 raw 区间仍投影全表。
+const WINDOW_SCOPED_PROJECTION_MAX_MINUTES: i64 = 2 * 26 * 60;
+
 pub(crate) struct SessionIndex {
     sessions: HashMap<i64, SessionFact>,
     pool: Pool,
@@ -106,15 +110,25 @@ pub(crate) fn executed_names() -> Vec<String> {
 pub(crate) fn load_sessions(
     connection: &Connection,
     query: &ReportQuery,
+    start_min: i64,
+    end_min: i64,
 ) -> Result<SessionIndex, ReportError> {
     let residential_only = query.filters.category.as_deref() == Some(RESIDENTIAL_ACCOUNTING_FILTER);
+    let span = end_min.saturating_sub(start_min);
+    let window_scoped = span <= WINDOW_SCOPED_PROJECTION_MAX_MINUTES;
     let dict = load_dict(connection)?;
     let mut pool = Pool::new();
     let unknown = pool.intern(UNKNOWN_IDENTITY);
     let mut sessions = HashMap::new();
-    let sql = raw_session_projection_sql(residential_only);
+    let sql = raw_session_projection_sql(residential_only, window_scoped);
     let mut statement = connection.prepare(&sql).map_err(map_sqlite)?;
-    let mut rows = statement.query(params![i64::MIN]).map_err(map_sqlite)?;
+    let mut rows = if window_scoped {
+        statement
+            .query(params![i64::MIN, start_min, end_min])
+            .map_err(map_sqlite)?
+    } else {
+        statement.query(params![i64::MIN]).map_err(map_sqlite)?
+    };
     while let Some(row) = rows.next().map_err(map_sqlite)? {
         let session_pk: i64 = row.get(0).map_err(map_sqlite)?;
         let host_missing: i64 = row.get(2).map_err(map_sqlite)?;
@@ -818,7 +832,7 @@ mod tests {
 
     #[test]
     fn projection_predicate_matches_membership_sql() {
-        let sql = raw_session_projection_sql(false);
+        let sql = raw_session_projection_sql(false, false);
         let expected = RESIDENTIAL_RAW_MEMBERSHIP_SQL.replace("m.session_pk", "s.session_pk");
         assert!(sql.contains(&expected), "{sql}");
         assert!(sql.contains('?'));
@@ -883,7 +897,7 @@ mod tests {
             granularity: Granularity::Hour,
             ..ReportQuery::default()
         };
-        let index = load_sessions(connection, &query).expect("sessions");
+        let index = load_sessions(connection, &query, -122, 71).expect("sessions");
         let folded = fold_window(connection, &query, &index, -122, 71).expect("fold");
         assert_sql_match(connection, &query, &folded, -122, 71);
         assert_eq!(folded.totals.upload, 123);
@@ -900,7 +914,7 @@ mod tests {
         let residential = fold_window(connection, &query, &index, -122, 71).expect("residential");
         assert_sql_match(connection, &query, &residential, -122, 71);
         assert_eq!(residential.totals.download, 52);
-        let pushed = load_sessions(connection, &query).expect("residential projection");
+        let pushed = load_sessions(connection, &query, -122, 71).expect("residential projection");
         let pushed_fold = fold_window(connection, &query, &pushed, -122, 71).expect("pushed fold");
         assert_eq!(pushed_fold.totals, residential.totals);
         assert_eq!(pushed_fold.series, residential.series);
@@ -1061,6 +1075,111 @@ mod tests {
         );
     }
     #[test]
+    fn window_scoped_projection_matches_oracle_and_keeps_cross_window_sessions() {
+        let dir = tempdir().expect("dir");
+        let coordinator =
+            StorageCoordinator::open(&dir.path().join("window.sqlite3")).expect("open");
+        coordinator
+            .connection()
+            .execute_batch(
+                "
+                insert or ignore into target_set(set_id, policy_version) values (1, 1);
+                insert or ignore into target_item(set_id, position, name) values (1, 0, '家宽');
+                insert into dimension_dict(dimension_kind, dimension_id, value) values
+                    ('host', 1, 'inside.example'),
+                    ('process', 1, 'app.exe'),
+                    ('network', 1, 'udp'),
+                    ('rule', 1, 'PROXY'),
+                    ('category', 1, '家宽');
+                insert into connection_session(session_pk, epoch_id, connection_id, started_utc, host) values
+                    (1, 1, 'prev', 0, 'prev.example'),
+                    (2, 1, 'span', 0, 'span.example'),
+                    (3, 1, 'current', 0, 'current.example'),
+                    (4, 1, 'outside', 0, 'outside.example');
+                insert into connection_session_attr(
+                    session_pk, host_id, process_id, rule_id, network_id, chain_key,
+                    policy_version, primary_category_id, started_utc, ended_utc
+                ) values
+                    (1, 1, 1, 1, 1, 'DIRECT', 1, null, 0, null),
+                    (2, 1, 1, 1, 1, '家宽 > exit', 1, 1, 0, null),
+                    (3, 1, 1, 1, 1, 'PROXY', 1, null, 0, null),
+                    (4, 1, 1, 1, 1, 'PROXY', 1, null, 0, null);
+                insert into connection_chain(session_pk, position, node) values
+                    (2, 0, '家宽'),
+                    (2, 1, 'exit');
+                insert into connection_minute(utc_minute, session_pk, upload, download) values
+                    (9, 1, 1, 2),
+                    (9, 2, 3, 4),
+                    (10, 2, 7, 8),
+                    (10, 3, 5, 9),
+                    (11, 3, 4, 1),
+                    (70, 4, 100, 100);
+                ",
+            )
+            .expect("fixture");
+        let connection = coordinator.connection();
+        let mut query = ReportQuery {
+            range_start_utc: 10 * 60,
+            range_end_utc: 12 * 60,
+            granularity: Granularity::Hour,
+            ..ReportQuery::default()
+        };
+        let scoped = load_sessions(connection, &query, 8, 12).expect("scoped");
+        let full = load_sessions(
+            connection,
+            &query,
+            8,
+            8 + WINDOW_SCOPED_PROJECTION_MAX_MINUTES + 1,
+        )
+        .expect("full");
+        assert!(scoped.len() < full.len(), "窗口外会话仍进入短窗口投影");
+        assert_eq!(scoped.len(), 3);
+        assert_eq!(full.len(), 4);
+        let current = fold_window(connection, &query, &scoped, 10, 12).expect("current");
+        assert_sql_match(connection, &query, &current, 10, 12);
+        assert_eq!(current.totals.upload, 16);
+        assert_eq!(current.totals.download, 18);
+        let previous = fold_window(connection, &query, &scoped, 8, 10).expect("previous");
+        assert_sql_match(connection, &query, &previous, 8, 10);
+        assert_eq!(previous.totals.upload, 4);
+        assert_eq!(previous.totals.download, 6);
+        let outside = fold_window(connection, &query, &scoped, 70, 71).expect("outside");
+        assert_eq!(outside.totals.upload, 0);
+        assert_eq!(outside.totals.download, 0);
+
+        query.filters.category = Some(RESIDENTIAL_ACCOUNTING_FILTER.into());
+        let residential = load_sessions(connection, &query, 8, 12).expect("residential");
+        assert_eq!(residential.len(), 1);
+        let residential_fold =
+            fold_window(connection, &query, &residential, 10, 12).expect("residential fold");
+        assert_sql_match(connection, &query, &residential_fold, 10, 12);
+        assert_eq!(residential_fold.totals.download, 8);
+        let residential_prev =
+            fold_window(connection, &query, &residential, 8, 10).expect("residential previous");
+        assert_sql_match(connection, &query, &residential_prev, 8, 10);
+        assert_eq!(residential_prev.totals.download, 4);
+
+        let scoped_sql = raw_session_projection_sql(false, true);
+        let full_sql = raw_session_projection_sql(true, false);
+        assert!(scoped_sql.contains("utc_minute >= ?"));
+        assert!(!full_sql.contains("utc_minute"));
+        let mut plan = connection
+            .prepare(&format!("explain query plan {scoped_sql}"))
+            .expect("plan");
+        let details: Vec<String> = plan
+            .query_map(params![i64::MIN, 8_i64, 12_i64], |row| row.get(3))
+            .expect("plan rows")
+            .collect::<Result<_, _>>()
+            .expect("plan collect");
+        let joined = details.join(" ").to_ascii_uppercase();
+        assert!(!joined.contains("AUTOMATIC INDEX"), "{joined}");
+        assert!(
+            joined.contains("UTC_MINUTE") && joined.contains("CONNECTION_MINUTE"),
+            "{joined}"
+        );
+    }
+
+    #[test]
     #[ignore = "只读隔离库；分别记录会话投影和分钟扫描耗时，不改变生产 deadline"]
     fn isolated_raw_fold_stage_proof() {
         let db = std::path::PathBuf::from(
@@ -1078,46 +1197,95 @@ mod tests {
             .unwrap()
             .parse()
             .unwrap();
+        let filter =
+            std::env::var("RESIWATCH_RAW_FOLD_FILTER").unwrap_or_else(|_| "residential".into());
         let connection = crate::storage::open_interruptible_reader(&db).expect("reader");
         connection
             .execute_batch("begin deferred")
             .expect("snapshot");
-        let query = crate::c3::query::ReportQuery {
-            range_start_utc: start_utc,
-            range_end_utc: end_utc,
-            display_timezone: "UTC".into(),
-            granularity: crate::c3::query::Granularity::Hour,
-            filters: crate::c3::query::ReportFilters {
-                category: Some(crate::c3::sql::RESIDENTIAL_ACCOUNTING_FILTER.into()),
-                ..crate::c3::query::ReportFilters::default()
-            },
-            grouping: crate::c3::query::DimensionKind::Host,
-            top_n: 20,
-            ..crate::c3::query::ReportQuery::default()
+        let query = if filter == "all" {
+            crate::c3::query::default_auto_report_query(
+                crate::c3::query::Granularity::Hour,
+                start_utc,
+                end_utc,
+            )
+        } else if filter == "residential" {
+            crate::c3::query::ReportQuery {
+                range_start_utc: start_utc,
+                range_end_utc: end_utc,
+                display_timezone: "UTC".into(),
+                granularity: crate::c3::query::Granularity::Hour,
+                filters: crate::c3::query::ReportFilters {
+                    category: Some(crate::c3::sql::RESIDENTIAL_ACCOUNTING_FILTER.into()),
+                    ..crate::c3::query::ReportFilters::default()
+                },
+                grouping: crate::c3::query::DimensionKind::Host,
+                top_n: 20,
+                ..crate::c3::query::ReportQuery::default()
+            }
+        } else {
+            panic!("RESIWATCH_RAW_FOLD_FILTER 只能是 all 或 residential");
         };
+        let start_min = start_utc.div_euclid(60);
+        let end_min = end_utc.div_euclid(60);
+        let mut projection_start = start_min;
+        if query
+            .comparison
+            .as_ref()
+            .is_some_and(|item| item.previous_equal_window)
+        {
+            let span = end_utc - start_utc;
+            let previous_utc = start_utc - span;
+            if crate::c3::service::raw_range_is_retained(&connection, previous_utc, start_utc)
+                .expect("previous retention")
+            {
+                let minute = previous_utc.div_euclid(60);
+                if minute < projection_start {
+                    projection_start = minute;
+                }
+            }
+        }
         let projection_started = std::time::Instant::now();
-        let sessions = load_sessions(&connection, &query).expect("projection");
+        let sessions =
+            load_sessions(&connection, &query, projection_start, end_min).expect("projection");
         let projection_ms = projection_started.elapsed().as_secs_f64() * 1000.0;
         let scan_started = std::time::Instant::now();
-        let folded = fold_window(
-            &connection,
-            &query,
-            &sessions,
-            start_utc.div_euclid(60),
-            end_utc.div_euclid(60),
-        )
-        .expect("scan");
+        let folded = fold_window(&connection, &query, &sessions, start_min, end_min).expect("scan");
         let scan_ms = scan_started.elapsed().as_secs_f64() * 1000.0;
+        let (previous_scan_ms, previous_upload, previous_download, previous_connections) = if query
+            .comparison
+            .as_ref()
+            .is_some_and(|item| item.previous_equal_window)
+        {
+            let previous_started = std::time::Instant::now();
+            let previous = fold_window(&connection, &query, &sessions, projection_start, start_min)
+                .expect("previous");
+            (
+                Some(previous_started.elapsed().as_secs_f64() * 1000.0),
+                Some(previous.totals.upload),
+                Some(previous.totals.download),
+                Some(previous.totals.connection_count),
+            )
+        } else {
+            (None, None, None, None)
+        };
         let top = folded.rankings.first().map(|row| row.identity.clone());
         let report = serde_json::json!({
             "kind": "raw-fold-stage-proof",
             "db": db,
+            "filter": filter,
+            "projection_start_min": projection_start,
+            "projection_end_min": end_min,
             "session_count": sessions.len(),
             "projection_ms": projection_ms,
             "scan_ms": scan_ms,
+            "previous_scan_ms": previous_scan_ms,
             "upload": folded.totals.upload,
             "download": folded.totals.download,
             "connection_count": folded.totals.connection_count,
+            "previous_upload": previous_upload,
+            "previous_download": previous_download,
+            "previous_connection_count": previous_connections,
             "series_rows": folded.series.len(),
             "rank_rows": folded.rankings.len(),
             "top_identity": top,
