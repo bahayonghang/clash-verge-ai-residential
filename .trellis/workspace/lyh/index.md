@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 46
-- **Last Active**: 2026-09-16
+- **Total Sessions**: 47
+- **Last Active**: 2026-09-24
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1354 | Active |
+| `journal-1.md` | ~1375 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 47 | 2026-09-24 | 收窄短窗口会话投影 | `e5d19b15e7e7cca78cca4c4adabd2d755560c724` | `dev` |
 | 46 | 2026-09-16 | 解耦 AnyRouter DNS 并将 extra 改为分类 | `44b9e32` | `dev` |
 | 45 | 2026-09-16 | 新增 extra 小站路由 | `018f4c46c0035f6a2252cbac4f567093df76abf7` | `dev` |
 | 44 | 2026-09-03 | 按业务风险补齐核心测试覆盖 | `d6019ea`, `75c7ff8`, `f459282` | `dev` |

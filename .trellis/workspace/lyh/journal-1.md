@@ -1352,3 +1352,24 @@ extra 改为默关分类，新增 extra_anyrouter；AnyRouter 开启时只走 AI
 ### Status
 
 [OK] **Completed**
+
+
+## Session 47: 收窄短窗口会话投影
+
+**Date**: 2026-09-24
+**Task**: 收窄短窗口会话投影
+**Branch**: `dev`
+
+### Summary
+
+短窗口报告不再读全表会话。1 分钟生产首读 7.271 ms。A1000、矩阵同窗口和主场景按用户决定保持未通过并归档。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e5d19b15e7e7cca78cca4c4adabd2d755560c724` | (see git log) |
+
+### Status
+
+[OK] **Completed**
