@@ -35,7 +35,21 @@ A successfully generated `AI-家宽` group has only the residential SOCKS5 membe
 
 ## Fields Clash Verge Rev restores
 
-Current Clash Verge Rev saves control-plane fields (`tun`, `ipv6`, `mode`, ports, and similar) before the global script runs, then restores them afterward. Script-side `hardenTun` DNS-hijack completion and `config.ipv6 = false` therefore do not take effect on these hosts. The script keeps that logic for older hosts and logs an `info` line. Turn IPv6 off in the settings page and configure DNS hijack in TUN settings. DNS servers, `nameserver-policy`, and fake-ip rebuilt by the script are kept; if Clash Verge Rev DNS override is enabled, `dns.ipv6` is also restored from app settings.
+Current Clash Verge Rev saves the fields that its settings page manages before the global script runs, then restores them afterward. These fields are:
+
+- Top-level control-plane fields: `external-controller*`, `secret`, the port fields, `mode`, `allow-lan`, `log-level`, `ipv6`, and `unified-delay`.
+- `tun.enable`, and the saved TUN settings fields: `stack`, `device`, `auto-route`, `route-exclude-address`, `auto-redirect` (Linux), `auto-detect-interface`, `dns-hijack`, `strict-route`, and `mtu`.
+- When DNS override is on: all non-empty `dns.*` fields in `dns_config.yaml`, and a non-empty `hosts`.
+
+From Clash Verge Rev v2.5.5, when an extension changes one of these fields, the app shows the notice "Extensions wrote …, which Settings manages, so those values were discarded" and discards the written value.
+
+The script therefore does not write any `tun` key or the top-level `ipv6`. It only reads these fields and logs a `warn` when a value is unsafe:
+
+- TUN is on and `dns-hijack` does not contain `any:53` or `tcp://any:53`. The script skips this check when `runtime.harden_existing_tun_dns_hijack = false`.
+- `runtime.harden_existing_tun_dns_hijack` and `runtime.enable_tun_strict_route` are both `true`, TUN is on, and `strict-route` is not on.
+- The top-level `ipv6` is `true`.
+
+Turn IPv6 off in the settings page and configure DNS hijack in TUN settings. When DNS override is off, the DNS servers, `nameserver-policy`, and fake-ip that the script rebuilds are kept. When DNS override is on, the settings page owns all non-empty `dns.*` fields in `dns_config.yaml`. The host discards script changes to those fields and can show a `dns.*` notice.
 
 ## geosite dependency
 
@@ -54,14 +68,14 @@ Shared authentication hosts are outside the default AI-only scope. `auth.openai.
 - Configured DNS divergence for enabled exact/suffix AI domains.
 - Accidental residential routing of unrelated media, marketplace, download, and shared-service traffic.
 - Recursive chaining through `include-all` groups.
-- IPv6 use inside Mihomo configuration.
-- Missing TUN DNS interception entries when TUN is already enabled.
+- IPv6 queries at the DNS layer (the rebuilt `dns.ipv6: false`, effective when DNS override is off).
+- Top-level `ipv6` on, or missing TUN DNS interception entries when TUN is on: the script logs a `warn`, and the user changes the value in the settings page.
 
 ## What the script cannot guarantee alone
 
 - Operating-system traffic that bypasses Clash Verge Rev.
 - Browser or application private DoH to an unknown endpoint.
-- IPv6 leaks outside Mihomo/TUN routing. On current Clash Verge Rev hosts, also check the app IPv6 switch, because the host restores the script's `ipv6: false`.
+- IPv6 leaks outside Mihomo/TUN routing. The Clash Verge Rev settings-page IPv6 switch sets the top-level `ipv6`. The script does not write that field.
 - UDP support of the currently selected provider node. Airport subscription nodes often omit `udp`, and Mihomo treats that as `false`; unless the provider sets `udp: true`, the chain silently drops UDP.
 - Runtime selector choices such as `DIRECT`.
 - WebRTC behavior of arbitrary applications when shared STUN/TURN capture is disabled.

@@ -109,8 +109,8 @@ To return all Google core traffic to the original Profile, disable `gemini_web_c
 | `runtime.allow_heuristic_upstream_fallback` | `ALLOW_HEURISTIC_UPSTREAM_FALLBACK` | `false` | Guesses an upstream from group-name semantics. | Used only after earlier candidates fail; can pick the wrong exit. |
 | `runtime.preserve_unmanaged_nameserver_policy` | `PRESERVE_UNMANAGED_NAMESERVER_POLICY` | `false` | Keeps subscription `nameserver-policy` entries the script does not manage. | Relaxes the strict DNS-rebuild boundary. |
 | `runtime.enable_domain_sniffer` | `ENABLE_DOMAIN_SNIFFER` | `true` | Hardens domain sniffing for IP-only connections and missing DNS mappings. | Does not globally rewrite destinations. |
-| `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | Completes DNS-hijack entries for an already enabled TUN. | Effective only when the Profile already has TUN on. |
-| `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | Enables `strict-route` on the existing TUN. | Requires TUN on and `runtime.harden_existing_tun_dns_hijack = true`; may affect VMs or special routes. |
+| `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | When TUN is on, checks that DNS hijack contains `any:53` and `tcp://any:53`, and logs a `warn` when an entry is missing. Does not write. | Checks only when TUN is on; add the entries in Verge TUN settings. |
+| `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | When TUN is on, checks that `strict-route` is on, and logs a `warn` when it is off. Does not write. | Requires TUN on and `runtime.harden_existing_tun_dns_hijack = true`; strict-route may affect VMs or special routes. |
 | `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | Emits one summary warning when reachable leaves explicitly disable UDP (at most 8 samples). | A top-level upstream with UDP disabled still fails validation. |
 
 ## Generate the local script

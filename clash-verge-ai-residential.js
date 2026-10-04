@@ -176,9 +176,11 @@ const PRESERVE_UNMANAGED_NAMESERVER_POLICY = false;
 // 域名嗅探用于补偿纯 IP 连接和 DNS 映射缺失；采用保守的全局 override-destination=false。
 const ENABLE_DOMAIN_SNIFFER = true;
 
-// 仅当用户已经启用 TUN 时补齐 DNS 劫持，不擅自开启 TUN。
+// 已启用 TUN 时检查 dns-hijack 是否含 any:53 与 tcp://any:53，缺少时输出 warn。
+// 只检查不写入：tun 由 Verge 设置页管理，脚本写入会被还原并触发丢弃提示。
 const HARDEN_EXISTING_TUN_DNS_HIJACK = true;
 
+// 检查已启用 TUN 的 strict-route 是否开启，未开启时输出 warn；不写入。
 // Windows strict-route 可降低多宿主 DNS 泄漏，但可能影响虚拟机或特殊路由。
 const ENABLE_TUN_STRICT_ROUTE = false;
 
@@ -1767,23 +1769,40 @@ function buildAiGroup(config) {
   return group;
 }
 
-function hardenTun(config) {
-  // 新版 Clash Verge Rev 在全局脚本执行后会按“权威字段”把 tun/ipv6 还原为
-  // 应用设置页的值，此函数的改动在这类宿主上无效；TUN 的 dns-hijack 与
-  // IPv6 开关需在 Verge 设置页配置。保留实现以兼容旧版宿主。
-  if (!HARDEN_EXISTING_TUN_DNS_HIJACK) return;
-  if (!isPlainObject(config.tun) || config.tun.enable !== true) return;
+function checkHostOwnedFields(config) {
+  // Clash Verge Rev 设置页管理 tun 与顶层 ipv6：脚本执行后宿主按设置页还原，
+  // v2.5.5 起还会弹出“扩展写入的值已被丢弃”提示。此函数只读取并告警，不写入。
+  if (
+    HARDEN_EXISTING_TUN_DNS_HIJACK &&
+    isPlainObject(config.tun) &&
+    config.tun.enable === true
+  ) {
+    const current = Array.isArray(config.tun["dns-hijack"])
+      ? config.tun["dns-hijack"]
+      : [];
+    const missing = ["any:53", "tcp://any:53"].filter(
+      (entry) => !current.includes(entry)
+    );
+    if (missing.length > 0) {
+      warn(
+        `[${AI_GROUP}] TUN 的 dns-hijack 缺少 ${missing.join("、")}；` +
+        "请在 Verge 设置 → TUN 设置 → DNS 劫持中添加。"
+      );
+    }
+    if (ENABLE_TUN_STRICT_ROUTE && config.tun["strict-route"] !== true) {
+      warn(
+        `[${AI_GROUP}] TUN 的 strict-route 未开启；` +
+        "请在 Verge 设置 → TUN 设置中开启严格路由。"
+      );
+    }
+  }
 
-  const current = Array.isArray(config.tun["dns-hijack"])
-    ? config.tun["dns-hijack"]
-    : [];
-  config.tun["dns-hijack"] = uniqueStrings([
-    ...current,
-    "any:53",
-    "tcp://any:53"
-  ]);
-
-  if (ENABLE_TUN_STRICT_ROUTE) config.tun["strict-route"] = true;
+  if (config.ipv6 === true) {
+    warn(
+      `[${AI_GROUP}] Mihomo IPv6 已开启；AI 流量可能经 IPv6 绕过家宽链路，` +
+      "请在 Verge 设置页关闭 IPv6。"
+    );
+  }
 }
 
 function mergeSniffProtocol(existingProtocol, defaultPorts, overrideDestination) {
@@ -1870,22 +1889,16 @@ function main(config, profileName) {
   // 7. 重建严格 DNS 路径。
   working.dns = buildDnsConfig(working.dns, upstreamName);
 
-  // 8. 加固已启用的 TUN 与域名嗅探。查找进程写顶层 always；进程路由默认关闭。
-  hardenTun(working);
+  // 8. 加固域名嗅探。查找进程写顶层 always；进程路由默认关闭。
   hardenSniffer(working);
   ensureProcessLookup(working);
 
-  // 9. 统一关闭 Mihomo IPv6；操作系统层仍需由 TUN/系统路由约束。
-  // 新版 Clash Verge Rev 会把 ipv6 还原为应用设置值（见 hardenTun 注释）。
-  working.ipv6 = false;
+  // 9. 只检查 Verge 设置页管理的 tun 与 ipv6，不安全时 warn；不写入这些字段。
+  checkHostOwnedFields(working);
 
   info(
     `[${AI_GROUP} v${SCRIPT_VERSION}] Profile“${profileName || "<未命名>"}”` +
     `：dialer-proxy -> ${upstreamName}`
-  );
-  info(
-    `[${AI_GROUP}] 提示：新版 Clash Verge Rev 会在脚本执行后还原 tun/ipv6 ` +
-    "等权威字段；TUN 的 dns-hijack 与 IPv6 开关请在 Verge 设置页配置。"
   );
 
   return working;

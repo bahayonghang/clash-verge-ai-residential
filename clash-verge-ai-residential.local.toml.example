@@ -87,7 +87,7 @@ global_realtime_ports = false
 # 扩大到非 AI DNS 流量。
 public_encrypted_dns = false
 
-# 运行时行为开关：控制上游代理选择、DNS 策略、域名嗅探及已有 TUN 的加固方式。
+# 运行时行为开关：控制上游代理选择、DNS 策略、域名嗅探及已有 TUN 的检查方式。
 [runtime]
 
 # 未找到候选上游时，允许采用当前 Profile 最后一条 MATCH/FINAL 规则指定的目标。
@@ -103,10 +103,12 @@ preserve_unmanaged_nameserver_policy = false
 # 启用域名嗅探和 DNS 映射，用于补偿纯 IP 连接或 DNS 映射缺失；不会覆盖目标地址。
 enable_domain_sniffer = true
 
-# 仅在原 Profile 已启用 TUN 时补充 DNS 劫持规则，不会自行开启 TUN。
+# TUN 已启用时检查 dns-hijack 是否含 any:53 与 tcp://any:53，缺少时输出 warn。
+# 只检查并告警，不写入：tun 由 Verge 设置页管理，请在 TUN 设置 → DNS 劫持中添加。
 harden_existing_tun_dns_hijack = true
-# 为现有 TUN 启用 strict-route。可降低 Windows 多网卡环境的 DNS 泄漏，但可能影响
-# 虚拟机、局域网或特殊路由；仅在 harden_existing_tun_dns_hijack = true 时生效。
+# TUN 已启用时检查 strict-route 是否开启，未开启时输出 warn；不写入。strict-route
+# 可降低 Windows 多网卡环境的 DNS 泄漏，但可能影响虚拟机、局域网或特殊路由；
+# 仅在 harden_existing_tun_dns_hijack = true 时检查。
 enable_tun_strict_route = false
 
 # 若可达的代理组或节点显式关闭 UDP，则输出警告；顶层上游关闭 UDP 会直接拒绝配置。

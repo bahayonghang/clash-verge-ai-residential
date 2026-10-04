@@ -1853,21 +1853,179 @@ test("严格 DNS 模式移除独立旁路，并保持私有域名使用系统 DN
   assert.equal(dns["prefer-h3"], false);
 });
 
-test("已开启 TUN 时只补齐 DNS 劫持；AI-only 写顶层查找进程 always，不注入进程路由", () => {
+function tunWarnings(warnings) {
+  return warnings.filter((line) => line.includes("TUN"));
+}
+
+function ipv6Warnings(warnings) {
+  return warnings.filter((line) => line.includes("IPv6"));
+}
+
+test("已开启 TUN 缺少 DNS 劫持时只 warn 不写入；AI-only 写顶层查找进程 always，不注入进程路由", () => {
   const config = configFixture({
     proxies: [airportNode("HK")],
     groups: [group("🚀节点选择", ["HK"])],
     tun: { enable: true, "dns-hijack": ["udp://any:53"] },
     findProcessMode: "off"
   });
-  const output = quietMain(config, "赔钱机场");
-  assert.equal(output.tun["dns-hijack"].includes("any:53"), true);
-  assert.equal(output.tun["dns-hijack"].includes("tcp://any:53"), true);
+  const inputTun = structuredClone(config.tun);
+  const { output, warnings } = captureMain(config, "赔钱机场");
+  assert.deepEqual(output.tun, inputTun);
+  const tunWarning = tunWarnings(warnings);
+  assert.equal(tunWarning.length, 1, `实际：${warnings.join(" | ")}`);
+  assert.match(tunWarning[0], /any:53/);
+  assert.match(tunWarning[0], /tcp:\/\/any:53/);
+  assert.match(tunWarning[0], /Verge 设置/);
   assert.equal(output["find-process-mode"], "always");
   assert.deepEqual(
     output.rules.filter((rule) => String(rule).startsWith("PROCESS-")),
     []
   );
+  assert.deepEqual(quietMain(output, "赔钱机场"), output);
+});
+
+test("已开启 TUN 且 DNS 劫持已齐全时不输出 TUN warn", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])],
+    tun: { enable: true, "dns-hijack": ["any:53", "tcp://any:53"] }
+  });
+  const inputTun = structuredClone(config.tun);
+  const { output, warnings } = captureMain(config, "赔钱机场");
+  assert.deepEqual(output.tun, inputTun);
+  assert.deepEqual(tunWarnings(warnings), []);
+});
+
+test("未开启 TUN 时不输出 TUN warn，也不新增 tun", () => {
+  for (const tun of [undefined, { enable: false }, { enable: "true", "dns-hijack": [] }]) {
+    const config = configFixture({
+      proxies: [airportNode("HK")],
+      groups: [group("🚀节点选择", ["HK"])],
+      tun
+    });
+    const { output, warnings } = captureMain(config, "赔钱机场");
+    assert.deepEqual(tunWarnings(warnings), [], JSON.stringify(tun));
+    if (tun === undefined) assert.equal("tun" in output, false);
+    else assert.deepEqual(output.tun, tun);
+  }
+});
+
+test("TUN 检查开关矩阵：只按开关 warn，不写入 tun", () => {
+  const cases = [
+    { harden: true, strict: false, hijackWarn: 1, strictWarn: 0 },
+    { harden: true, strict: true, hijackWarn: 1, strictWarn: 1 },
+    { harden: false, strict: true, hijackWarn: 0, strictWarn: 0 },
+    { harden: false, strict: false, hijackWarn: 0, strictWarn: 0 }
+  ];
+  for (const { harden, strict, hijackWarn, strictWarn } of cases) {
+    withPatchedSwitches({
+      HARDEN_EXISTING_TUN_DNS_HIJACK: harden,
+      ENABLE_TUN_STRICT_ROUTE: strict
+    }, (patched) => {
+      const label = JSON.stringify({ harden, strict });
+      const config = configFixture({
+        proxies: [airportNode("HK")],
+        groups: [group("🚀节点选择", ["HK"])],
+        tun: { enable: true, "dns-hijack": ["udp://any:53"], "strict-route": false }
+      });
+      const inputTun = structuredClone(config.tun);
+      const warnings = [];
+      const originalInfo = console.info;
+      const originalWarn = console.warn;
+      console.info = () => {};
+      console.warn = (message) => warnings.push(String(message));
+      let output;
+      try {
+        output = patched.main(config, "赔钱机场");
+      } finally {
+        console.info = originalInfo;
+        console.warn = originalWarn;
+      }
+      assert.deepEqual(output.tun, inputTun, label);
+      assert.equal(
+        warnings.filter((line) => line.includes("dns-hijack")).length,
+        hijackWarn,
+        label
+      );
+      assert.equal(
+        warnings.filter((line) => line.includes("strict-route")).length,
+        strictWarn,
+        label
+      );
+
+      const strictOn = configFixture({
+        proxies: [airportNode("HK")],
+        groups: [group("🚀节点选择", ["HK"])],
+        tun: { enable: true, "dns-hijack": ["any:53", "tcp://any:53"], "strict-route": true }
+      });
+      const quietWarnings = [];
+      console.info = () => {};
+      console.warn = (message) => quietWarnings.push(String(message));
+      try {
+        patched.main(strictOn, "赔钱机场");
+      } finally {
+        console.info = originalInfo;
+        console.warn = originalWarn;
+      }
+      assert.deepEqual(tunWarnings(quietWarnings), [], label);
+    });
+  }
+});
+
+test("顶层 ipv6 为 true 时保留原值并输出 IPv6 warn；无 ipv6 或 false 时不改不 warn", () => {
+  const enabled = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])]
+  });
+  enabled.ipv6 = true;
+  const on = captureMain(enabled, "赔钱机场");
+  assert.equal(on.output.ipv6, true);
+  const warning = ipv6Warnings(on.warnings);
+  assert.equal(warning.length, 1, `实际：${on.warnings.join(" | ")}`);
+  assert.match(warning[0], /Verge 设置页/);
+
+  const absent = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])]
+  });
+  const none = captureMain(absent, "赔钱机场");
+  assert.equal("ipv6" in none.output, false);
+  assert.deepEqual(ipv6Warnings(none.warnings), []);
+
+  const disabled = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])]
+  });
+  disabled.ipv6 = false;
+  const off = captureMain(disabled, "赔钱机场");
+  assert.equal(off.output.ipv6, false);
+  assert.deepEqual(ipv6Warnings(off.warnings), []);
+});
+
+test("模拟 Verge 丢弃检测：输出的 tun 与顶层 ipv6 与输入一致", () => {
+  const cases = [
+    { tun: undefined, ipv6: undefined },
+    { tun: { enable: true }, ipv6: true },
+    { tun: { enable: true, "dns-hijack": ["udp://any:53"], "strict-route": false }, ipv6: false },
+    { tun: { enable: true, "dns-hijack": ["any:53", "tcp://any:53"], stack: "mixed" }, ipv6: true },
+    { tun: { enable: false, "dns-hijack": [] }, ipv6: undefined }
+  ];
+  for (const { tun, ipv6 } of cases) {
+    const config = configFixture({
+      proxies: [airportNode("HK")],
+      groups: [group("🚀节点选择", ["HK"])],
+      tun
+    });
+    if (ipv6 !== undefined) config.ipv6 = ipv6;
+    const snapshot = structuredClone(config);
+    const output = quietMain(config, "赔钱机场");
+    const label = JSON.stringify({ tun, ipv6 });
+    assert.deepEqual(output.tun, snapshot.tun, label);
+    assert.equal("tun" in output, "tun" in snapshot, label);
+    assert.equal(output.ipv6, snapshot.ipv6, label);
+    assert.equal("ipv6" in output, "ipv6" in snapshot, label);
+    assert.deepEqual(quietMain(output, "赔钱机场"), output, label);
+  }
 });
 
 test("profile 嵌套的 find-process-mode 仍写出顶层 always", () => {

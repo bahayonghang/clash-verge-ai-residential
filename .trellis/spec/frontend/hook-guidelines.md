@@ -9,7 +9,8 @@ Node local-renderer CLI.
 Clash Verge Rev calls `main(config, profileName)` from
 `clash-verge-ai-residential.js`. Keep it synchronous and deterministic apart
 from guarded logging. It validates reserved names and the upstream graph before
-injecting the proxy, rules, DNS, TUN, and sniffer configuration.
+injecting the proxy, rules, DNS, and sniffer configuration. It reads TUN and
+IPv6 settings only to emit warnings.
 
 ```js
 function warn(message) {
@@ -34,11 +35,22 @@ actual networking lifecycle.
   original Profile instead of the residential chain. Treat any script error as
   a routing incident, inspect the logs, and stop AI traffic until validation
   succeeds; do not rely on throwing as a fail-closed enforcement mechanism.
-- Control-plane keys (`tun`, `ipv6`, `mode`, ports, ...) are snapshotted before
-  and restored after script execution. Never rely on script writes to these
-  fields on current hosts; point users at the app settings page instead. Most
-  rebuilt `dns` fields survive, but `dns.ipv6` is also restored from app
-  settings when the Clash Verge Rev DNS override is enabled.
+- Settings-owned keys are snapshotted before and restored after script
+  execution. The set is: top-level control-plane keys (`external-controller*`,
+  `secret`, `mixed-port`, `socks-port`, `port`, `redir-port`, `tproxy-port`,
+  `mode`, `allow-lan`, `log-level`, `ipv6`, `unified-delay`); `tun.enable`
+  and the saved TUN GUI keys (`stack`, `device`, `auto-route`,
+  `route-exclude-address`, `auto-redirect` on Linux, `auto-detect-interface`,
+  `dns-hijack`, `strict-route`, `mtu`); and, when the DNS override is enabled,
+  every non-empty `dns.*` field in `dns_config.yaml` plus a non-empty `hosts`.
+- From Clash Verge Rev v2.5.5, a script change to any settings-owned key shows
+  the notice "Extensions wrote <keys>, which Settings manages, so those values
+  were discarded" (deduplicated by key set). The script must not write `tun`
+  keys or the top-level `ipv6`. `checkHostOwnedFields` only reads these
+  fields and emits at most three conditional `warn` lines (missing
+  `any:53` / `tcp://any:53` in `dns-hijack`, `strict-route` off when
+  `ENABLE_TUN_STRICT_ROUTE`, `ipv6 === true`) that point users at the settings
+  page. Rebuilt `dns` fields survive only while the DNS override is off.
 - Engine is boa_engine 0.21: no network/file IO, 5s timeout, 10M loop-iteration
   limit, 1000-line/1MB console cap, 10MB config JSON cap. `profileName` is the
   profile display name (Chinese passes through verbatim).

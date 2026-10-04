@@ -35,7 +35,21 @@ AI 应用请求
 
 ## Clash Verge Rev 强制恢复的字段
 
-当前 Clash Verge Rev 会在全局脚本运行前保存控制平面字段（`tun`、`ipv6`、`mode`、端口等），运行后再恢复。因此脚本里的 `hardenTun` DNS 劫持补全和 `config.ipv6 = false` 在这些宿主上不生效；脚本保留这些逻辑是为了兼容旧宿主，并打一条 `info`。请在设置页关闭 IPv6，并在 TUN 设置里配置 DNS 劫持。脚本重建的 DNS 服务器、`nameserver-policy` 和 fake-ip 会保留；但若启用 Clash Verge Rev 的 DNS 覆盖，`dns.ipv6` 也会从应用设置恢复。
+当前 Clash Verge Rev 会在全局脚本运行前保存设置页管理的字段，运行后再恢复。这些字段包括：
+
+- 顶层控制平面字段：`external-controller*`、`secret`、各端口、`mode`、`allow-lan`、`log-level`、`ipv6`、`unified-delay`。
+- `tun.enable`，以及设置页已保存的 TUN 字段：`stack`、`device`、`auto-route`、`route-exclude-address`、`auto-redirect`（Linux）、`auto-detect-interface`、`dns-hijack`、`strict-route`、`mtu`。
+- 启用 DNS 覆盖时：`dns_config.yaml` 中所有非空 `dns.*` 字段，以及非空 `hosts`。
+
+Clash Verge Rev v2.5.5 起，扩展改写这些字段后，应用会弹出提示「Extensions wrote …, which Settings manages, so those values were discarded」，并丢弃写入的值。
+
+因此脚本不写 `tun` 下任何键，也不写顶层 `ipv6`，只读取并在不安全时输出 `warn`：
+
+- TUN 已启用且 `dns-hijack` 缺少 `any:53` 或 `tcp://any:53` 时告警。`runtime.harden_existing_tun_dns_hijack = false` 时跳过。
+- `runtime.harden_existing_tun_dns_hijack` 与 `runtime.enable_tun_strict_route` 均为 `true`、TUN 已启用且 `strict-route` 未开启时告警。
+- 顶层 `ipv6: true` 时告警。
+
+请在设置页关闭 IPv6，并在 TUN 设置里配置 DNS 劫持。DNS 覆盖关闭时，脚本重建的 DNS 服务器、`nameserver-policy` 和 fake-ip 会保留。DNS 覆盖开启时，`dns_config.yaml` 中非空的 `dns.*` 字段全部以设置页为准，脚本对这些字段的改写会被丢弃，并可能出现 `dns.*` 提示。
 
 ## geosite 依赖
 
@@ -54,14 +68,14 @@ AI 应用请求
 - 启用的 exact/suffix AI 域名在配置内的业务与 DNS 路径分叉。
 - 无关媒体、市场、下载和共享服务误进家宽。
 - 经 `include-all` 组的递归链路。
-- Mihomo 配置内部使用 IPv6。
-- TUN 已启用时缺失的 TUN DNS 拦截项。
+- DNS 层的 IPv6 查询（重建的 `dns.ipv6: false`，DNS 覆盖关闭时生效）。
+- 顶层 `ipv6` 开启，或 TUN 已启用但缺失 DNS 拦截项：脚本输出 `warn`，需用户在设置页修改。
 
 ## 脚本单独保证不了的
 
 - 绕过 Clash Verge Rev 的操作系统流量。
 - 浏览器或应用把私有 DoH 指到未知 endpoint。
-- Mihomo/TUN 路由之外的 IPv6 泄漏。对当前 Clash Verge Rev 宿主，还要看应用自己的 IPv6 开关，因为宿主会恢复脚本设置的 `ipv6: false`。
+- Mihomo/TUN 路由之外的 IPv6 泄漏。顶层 `ipv6` 由 Clash Verge Rev 设置页的 IPv6 开关决定，脚本不写入该字段。
 - 当前所选机场节点的 UDP 能力。订阅节点经常省略 `udp`，Mihomo 默认视为 `false`；服务商未显式 `udp: true` 时，链路会静默丢弃 UDP。
 - 运行时选择器选中 `DIRECT` 这类值。
 - 未开启共享 STUN/TURN 捕获时，任意应用的 WebRTC 行为。

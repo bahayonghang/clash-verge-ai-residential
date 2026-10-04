@@ -89,8 +89,8 @@ Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`�
 | `runtime.allow_heuristic_upstream_fallback` | `ALLOW_HEURISTIC_UPSTREAM_FALLBACK` | `false` | 根据组名语义猜测上游。 | 仅在更早候选未命中时使用，可能选错出口。 |
 | `runtime.preserve_unmanaged_nameserver_policy` | `PRESERVE_UNMANAGED_NAMESERVER_POLICY` | `false` | 保留订阅中脚本未托管的 `nameserver-policy`。 | 会放宽严格 DNS 重建边界。 |
 | `runtime.enable_domain_sniffer` | `ENABLE_DOMAIN_SNIFFER` | `true` | 加固域名嗅探以补偿纯 IP 连接和 DNS 映射缺失。 | 不会全局改写目标地址。 |
-| `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | 为已经启用的 TUN 补齐 DNS 劫持项。 | 仅在 Profile 已启用 TUN 时生效。 |
-| `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | 为已有 TUN 开启 `strict-route`。 | 依赖 TUN 已启用且 `runtime.harden_existing_tun_dns_hijack = true`，可能影响虚拟机或特殊路由。 |
+| `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | TUN 已启用时检查 DNS 劫持是否含 `any:53` 与 `tcp://any:53`，缺少时输出 `warn`，不写入。 | 仅在 TUN 已启用时检查；请在 Verge TUN 设置中添加。 |
+| `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | TUN 已启用时检查 `strict-route` 是否开启，未开启时输出 `warn`，不写入。 | 依赖 TUN 已启用且 `runtime.harden_existing_tun_dns_hijack = true`；strict-route 可能影响虚拟机或特殊路由。 |
 | `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | 对可达叶子显式关闭 UDP 汇总为一条警告（最多 8 个样本）。 | 顶层上游禁用 UDP 仍会直接失败。 |
 
 ## Clash Verge Rev 设置
@@ -100,7 +100,7 @@ Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`�
 - 规则模式。
 - 若 Clash Verge Merge 仍把 `find-process-mode` 写在 `profile:` 下，请在 Mihomo YAML 顶层放 `find-process-mode: always`。内核不读 `profile.find-process-mode`。
 - 需要系统级拦截或进程规则时启用 TUN。
-- 在 Clash Verge Rev 的 TUN 设置中启用 DNS 劫持。TUN 已启用时，脚本还会补充 `any:53` 和 `tcp://any:53`。当前版本会在全局脚本运行后从设置页恢复 `tun` 和 `ipv6`；这两个字段以设置页为准，并在该页关闭 IPv6。
+- 在 Clash Verge Rev 的 TUN 设置中启用 DNS 劫持，并包含 `any:53` 和 `tcp://any:53`。`tun` 和顶层 `ipv6` 由设置页管理，脚本不写入；TUN 已启用但缺少这两项，或 `ipv6` 为 `true` 时，脚本输出 `warn`。请在设置页关闭 IPv6。
 - 浏览器的私有/安全 DNS 若绕过系统解析器，应关掉。
 - 选中的上游组不得解析到 `DIRECT`、`REJECT` 或家宽节点自身。
 - 目标功能需要 UDP 时，选中的机场线路和住宅 SOCKS5 都必须支持 UDP。机场订阅节点若省略 `udp` 字段，Mihomo 默认禁用 UDP。

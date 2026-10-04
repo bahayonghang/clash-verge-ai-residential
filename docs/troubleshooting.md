@@ -82,9 +82,17 @@ DOMAIN,marketplace.cursorapi.com,AI-家宽
 
 重建后的 DNS 策略包含 `geosite:cn` 和 `geosite:private`，两者依赖 `geosite.dat`。Mihomo 首次使用时会下载该文件；设备离线且没有已有副本时，配置解析会失败，Clash Verge Rev 会报告验证错误。若发生在首次启动，应用会回退到最小默认配置。请让设备联网一次，使 Mihomo 能够获取地理数据库（大多数订阅配置也会触发相同下载）；也可以将有效的 `geosite.dat` 放入 Mihomo 工作目录，然后刷新 Profile。
 
-## 脚本中的 TUN DNS 劫持和 IPv6 设置未生效
+## Script 日志提示 TUN DNS 劫持或 IPv6 需在设置页修改
 
-当前版本的 Clash Verge Rev 会在全局脚本运行后，将控制平面字段（`tun`、`ipv6`、模式、端口）恢复为应用设置值。因此，脚本补全的 TUN DNS 劫持和 `ipv6: false` 在这些宿主上不会生效；相关逻辑仅用于兼容旧版宿主。请改为在 Clash Verge Rev 设置页面配置 IPv6 开关和 TUN DNS 劫持。脚本重建的 DNS 服务器、`nameserver-policy` 和 fake-ip 字段不受影响；但启用 Clash Verge Rev 的 DNS 覆盖后，`dns.ipv6` 也会从应用设置恢复。
+Clash Verge Rev 会在全局脚本运行后，把设置页管理的字段（`tun`、顶层 `ipv6`、模式、端口等）恢复为应用设置值。v2.5.5 起，扩展改写这些字段时应用会弹出「Extensions wrote …, which Settings manages, so those values were discarded」提示。
+
+脚本因此不写 `tun` 与顶层 `ipv6`，只在以下情况输出 `warn`：
+
+- TUN 已启用，`dns-hijack` 缺少 `any:53` 或 `tcp://any:53`：在 Verge 设置 → TUN 设置 → DNS 劫持中添加缺少的条目。
+- 开启了 `runtime.enable_tun_strict_route`，TUN 已启用但 `strict-route` 未开启：在 TUN 设置中开启严格路由。
+- 顶层 `ipv6` 为 `true`：在 Verge 设置页关闭 IPv6。
+
+条目齐全后这些 `warn` 不再出现。DNS 覆盖关闭时，脚本重建的 DNS 服务器、`nameserver-policy` 和 fake-ip 字段不受影响。DNS 覆盖开启时，`dns_config.yaml` 中非空的 `dns.*` 字段全部以设置页为准，脚本对这些字段的改写会被丢弃，应用可能弹出 `dns.*` 提示。
 
 ## 警告提示已从上游组移除引用
 

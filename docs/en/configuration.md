@@ -91,8 +91,8 @@ To return all Google core traffic to the original Profile, disable `gemini_web_c
 | `runtime.allow_heuristic_upstream_fallback` | `ALLOW_HEURISTIC_UPSTREAM_FALLBACK` | `false` | Guesses an upstream from group-name semantics. | Used only after earlier candidates fail; can pick the wrong exit. |
 | `runtime.preserve_unmanaged_nameserver_policy` | `PRESERVE_UNMANAGED_NAMESERVER_POLICY` | `false` | Keeps subscription `nameserver-policy` entries the script does not manage. | Relaxes the strict DNS-rebuild boundary. |
 | `runtime.enable_domain_sniffer` | `ENABLE_DOMAIN_SNIFFER` | `true` | Hardens domain sniffing for IP-only connections and missing DNS mappings. | Does not globally rewrite destinations. |
-| `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | Completes DNS-hijack entries for an already enabled TUN. | Effective only when the Profile already has TUN on. |
-| `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | Enables `strict-route` on the existing TUN. | Requires TUN on and `runtime.harden_existing_tun_dns_hijack = true`; may affect VMs or special routes. |
+| `runtime.harden_existing_tun_dns_hijack` | `HARDEN_EXISTING_TUN_DNS_HIJACK` | `true` | When TUN is on, checks that DNS hijack contains `any:53` and `tcp://any:53`, and logs a `warn` when an entry is missing. Does not write. | Checks only when TUN is on; add the entries in Verge TUN settings. |
+| `runtime.enable_tun_strict_route` | `ENABLE_TUN_STRICT_ROUTE` | `false` | When TUN is on, checks that `strict-route` is on, and logs a `warn` when it is off. Does not write. | Requires TUN on and `runtime.harden_existing_tun_dns_hijack = true`; strict-route may affect VMs or special routes. |
 | `runtime.warn_on_reachable_udp_disabled` | `WARN_ON_REACHABLE_UDP_DISABLED` | `true` | Emits one summary warning when reachable leaves explicitly disable UDP (at most 8 samples). | A top-level upstream with UDP disabled still fails validation. |
 
 ## Clash Verge Rev settings
@@ -102,7 +102,7 @@ Recommended runtime settings:
 - Rule mode.
 - Put `find-process-mode: always` at the Mihomo YAML top level when Clash Verge Merge still nests it under `profile:`. The kernel does not read `profile.find-process-mode`.
 - Enable TUN when system-wide interception or process rules are required.
-- Enable DNS hijack in Clash Verge Rev TUN settings. When TUN is already on, the script also adds `any:53` and `tcp://any:53`. The current host restores `tun` and `ipv6` from the settings page after the global script runs; treat those fields as owned by the settings page and turn IPv6 off there.
+- Enable DNS hijack in Clash Verge Rev TUN settings, with `any:53` and `tcp://any:53`. The settings page owns `tun` and the top-level `ipv6`; the script does not write them. When TUN is on and these entries are missing, or `ipv6` is `true`, the script logs a `warn`. Turn IPv6 off in the settings page.
 - Disable browser private/secure DNS when it bypasses the system resolver.
 - The selected upstream group must not resolve to `DIRECT`, `REJECT`, or the residential proxy itself.
 - When the target feature needs UDP, both the selected airport path and the residential SOCKS5 service must support UDP. Airport subscription nodes that omit `udp` are treated as UDP-disabled by Mihomo.
