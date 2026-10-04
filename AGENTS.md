@@ -27,6 +27,22 @@ Build, Kimi Code, and OMP. Shared facts live in this file. Do not depend on
 `@` imports to expand them. Claude-specific loader notes belong in `CLAUDE.md`
 only. `AGENTS.md` must not import `CLAUDE.md`.
 
+## Authorization and review
+
+These rules apply to Claude Code, Codex, Grok Build, Kimi Code, and OMP.
+Read-only review may run checks and write explicitly authorized research
+artifacts. It must not repair product code or configuration. Self-fix in any
+`trellis-check` role or skill applies only after implementation is approved,
+within the approved task and file scope. A task directory, an `in_progress`
+status, or an available write tool does not grant authorization. If a finding
+needs additional files, behavior, permissions, or a lower validation gate,
+return the finding to the planning/review model before expanding the work.
+
+Harness capabilities and role prompts do not expand authorization. Do not
+auto-trust projects or hooks, bypass permissions, or treat prompt recursion
+guards as a hard sandbox. Dispatch only through the applicable workflow;
+already dispatched implement/check agents must not spawn those roles again.
+
 ## What this repository contains
 
 This repository is three surfaces, not a single no-dependency script:
@@ -72,15 +88,32 @@ Local full product gate: `just ci` (monitor + root). `just ci` is not equal to
 
 Local docs: `just docs-build` (independent of `just ci`).
 
+Dependency security: `just dependency-audit` is independent of `just ci` and
+`just docs-build`. Run it for dependency/lockfile and audit-gate changes. It
+runs full monitor/docs npm audits, including dev dependencies, with
+`--include=dev --audit-level=high`, then
+`cargo audit --file residential-monitor/src-tauri/Cargo.lock`. The explicit
+`--include=dev` keeps development dependencies in the audit when environment
+or npm configuration sets `omit=dev`.
+Prerequisites: npm, Cargo, an already installed `cargo-audit`, and network
+access to the configured npm registry and RustSec advisory database. Do not
+install tools globally without authorization. Registry/database/network or
+missing-tool failures are blocked checks, not vulnerability findings or PASS.
+Keep RustSec unmaintained/unsound warnings separate from vulnerabilities and
+record the affected target. A successful `npm ci` does not satisfy the audit
+gate. These rules apply to Claude Code, Codex, Grok Build, Kimi Code, and OMP.
+
 Hosted GitHub CI (`.github/workflows/ci.yml`):
 
 - Ubuntu Node.js 18/20/22 and Windows Node.js 22 run `npm run ci`.
-- Windows `monitor` job: version alignment, then six separate pwsh native
-  steps (frontend install, frontend check, Rust fmt, clippy, workspace tests,
-  secret scan).
-- Ubuntu Node.js 22 `docs` job: `npm --prefix docs ci`, then
+- Windows `monitor` job: version alignment, then seven separate pwsh native
+  steps (frontend install, full npm audit, frontend check, Rust fmt, clippy,
+  workspace tests, secret scan).
+- Ubuntu Node.js 22 `docs` job: `npm --prefix docs ci`, independent
+  `npm --prefix docs audit --include=dev --audit-level=high`, then
   `npm --prefix docs run build`.
 - Aggregate job named `Required checks` needs `[test, monitor, docs]`.
+- RustSec audit remains an independent local check; hosted CI does not run it.
 
 Root-only `npm run ci` is syntax check plus listed Node tests plus the secret
 scan. Use `just ci` when monitor must pass as well.
@@ -94,9 +127,14 @@ Mihomo.
 - Never put real credentials in the public template. `HOME_PROXY_TEMPLATE`
   `server` / `username` / `password` stay `"xxx"` / `""`. `npm run check:secrets`
   enforces this.
-- Never commit or hand-edit `*.local.toml` or `*.local.js`. Generate local
-  output with `just render-local`. First run copies `*.local.toml.example` to
-  `*.local.toml` and exits 1 until the file is filled in.
+- Never commit `*.local.toml` or `*.local.js`. By default, agents must not
+  hand-edit either file. For personal tuning, produce recommendations for
+  the user to apply to `*.local.toml`. An agent may edit that TOML only when
+  the user explicitly authorizes the exception and names the change scope;
+  a skill or task does not supply that exception. Never hand-edit generated
+  `*.local.js`. Generate local output with `just render-local`. First run
+  copies `*.local.toml.example` to `*.local.toml` and exits 1 until the user
+  fills in the file.
 - New routed domains need an official source or sanitized Connections evidence
   plus a negative test. Broad provider suffixes, marketplace/CDN, and telemetry
   are rejected by default (README and PR template).

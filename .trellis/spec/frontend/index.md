@@ -41,15 +41,17 @@ and repository secret scanner.
 
 ## Pre-Development Checklist
 
-- Read `CLAUDE.md` and the guide matching the code being changed.
+- Read the shared `AGENTS.md` and the guide matching the code being changed.
+  `CLAUDE.md` is the Claude Code loader only; other tools do not require it.
 - Read the relevant section of `clash-verge-ai-residential.js` before changing a
   constant, rule list, DNS policy, or reserved name.
 - Search `tests/regression.test.js` for the existing positive, negative,
   managed-rule ownership, and idempotence coverage for that behavior.
 - For local rendering changes, read `scripts/sync-local-config.js`,
   `tests/sync-local-config.test.js`, and `docs/local-configuration.md` together.
-- Keep the public `HOME_PROXY_TEMPLATE` credentials as `"xxx"` or `""`; never
-  edit or commit `*.local.toml` or `*.local.js`.
+- Keep the public `HOME_PROXY_TEMPLATE` credentials as `"xxx"` or `""`. Never
+  commit `*.local.toml` or `*.local.js`. Follow the `AGENTS.md` authorization
+  boundary for local TOML; never hand-edit generated local JavaScript.
 
 ## Quality Check
 

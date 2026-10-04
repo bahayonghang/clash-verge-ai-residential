@@ -173,6 +173,17 @@ test("真实 payload 写入全部七个平台且二次安装幂等", () => {
       assert.ok(sourceBytes.equals(repoBytes), `${rel} 夹具不是仓库源文件`);
       assert.ok(destBytes.equals(repoBytes), `${platform}/${rel} 与源文件不一致`);
     }
+    const installedGenerator = require(path.join(
+      root, platform, "skills", "residential-rule-tuning", "scripts", "build-inputs.js"
+    ));
+    const built = installedGenerator.buildInputs(path.join(__dirname, ".."));
+    assert.equal(built.routingCount, 26, platform);
+    assert.equal(Object.keys(built.switches.supported).length, 13, platform);
+    assert.equal(built.switches.unsupported.length, 13, platform);
+    assert.deepEqual(built.switches.supported.extra_anyrouter, ["anyrouter.top"], platform);
+    assert.equal(built.switches.unsupported.includes("extra_anyrouter"), false, platform);
+    assert.equal(built.switches.unsupported.includes("extra"), true, platform);
+    assert.equal(Object.hasOwn(built.switches.supported, "extra"), false, platform);
   }
   const extra = path.join(root, ".claude", "skills", "residential-rule-tuning", "user-notes.md");
   fs.writeFileSync(extra, "keep extra\n");

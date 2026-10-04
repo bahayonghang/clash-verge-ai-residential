@@ -153,9 +153,19 @@ just ci
 - YouTube、Maps、Marketplace、下载、CDN、Mixpanel 和静态资源负向测试。
 - 多 Profile 解析、循环检测、DNS 收敛、托管规则替换与幂等测试。
 
-GitHub Actions 在 Ubuntu 的 Node.js 18、20、22 和 Windows 的 Node.js 22 上运行 `npm run ci`；另有 Windows 监控端 job（六条独立 pwsh 步骤）和 Ubuntu Node.js 22 文档 job（先 `npm --prefix docs ci`，再 `npm --prefix docs run build`）。分支保护应只依赖稳定命名的 `Required checks`，该检查需要 `test`、`monitor` 和 `docs` 均成功。
+GitHub Actions 在 Ubuntu 的 Node.js 18、20、22 和 Windows 的 Node.js 22 上运行 `npm run ci`；另有 Windows 监控端 job（七条独立 pwsh 步骤，包含安装后的完整 npm 审计）和 Ubuntu Node.js 22 文档 job（依次独立运行 `npm --prefix docs ci`、`npm --prefix docs audit --include=dev --audit-level=high`、`npm --prefix docs run build`）。分支保护应只依赖稳定命名的 `Required checks`，该检查需要 `test`、`monitor` 和 `docs` 均成功。
 
 文档站需要 Node.js 22+。本地构建使用 `just docs-build`，不包含在 `just ci` 中。
+
+依赖、锁文件或审计门变更还须运行独立安全检查：
+
+```bash
+just dependency-audit
+```
+
+该命令不包含在 `just ci` 或 `just docs-build` 中。它使用 `--include=dev --audit-level=high` 审计 monitor 和 docs 的完整 npm 依赖（含开发依赖），以 `high` 为失败阈值，然后执行 `cargo audit --file residential-monitor/src-tauri/Cargo.lock`。显式 `--include=dev` 防止环境或 npm 配置中的 `omit=dev` 跳过开发依赖。需要 npm、Cargo、已安装的 `cargo-audit`，以及配置的 npm 注册表与 RustSec 公告数据库的网络访问。未经授权不自动全局安装工具。`npm ci` 安装成功不能替代独立审计。
+
+缺少工具或注册表、公告数据库、网络访问失败时，记录为检查受阻并保留退出码。漏洞发现另行记录；RustSec 的 unmaintained / unsound 警告保留独立分类及受影响 target。GitHub CI 的 npm 审计失败会阻断 `Required checks`；RustSec 审计仍由本地独立运行。Claude Code、Codex、Grok Build、Kimi Code 和 OMP 均遵守这些验收边界。
 
 自动化不能模拟 Clash Verge Rev JavaScript 引擎、Mihomo 内核或真实订阅 Profile。涉及宿主集成、DNS 或路由的变更仍须使用脱敏后的真实 Profile 手工验证；提交日志和截图前必须移除代理地址、凭据、订阅 URL 与未脱敏 Connections 记录。
 

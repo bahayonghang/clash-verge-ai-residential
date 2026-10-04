@@ -76,6 +76,10 @@ jobs:
         shell: pwsh
         run: npm --prefix residential-monitor ci
 
+      - name: Audit monitor frontend dependencies
+        shell: pwsh
+        run: npm --prefix residential-monitor audit --include=dev --audit-level=high
+
       - name: Check monitor frontend
         shell: pwsh
         run: npm --prefix residential-monitor run check
@@ -113,6 +117,9 @@ jobs:
 
       - name: Install docs dependencies
         run: npm --prefix docs ci
+
+      - name: Audit docs dependencies
+        run: npm --prefix docs audit --include=dev --audit-level=high
 
       - name: Build docs
         run: npm --prefix docs run build

@@ -32,6 +32,7 @@
 - 当分组没有五维实体化数据时，维度层的 `exact_top_n` 为 `false`。查询 `hourly_dim_v2` 水位线之前的数据会返回 `capability_unsupported`。
 - Windows 产品名称、开始菜单快捷方式、窗口标题和当前用户安装目录均为 `ResiWatch`。标识符和 exe 仍为 `residential-monitor`。侧边栏标语采用简短的“有边界、非账单”表述。
 - 桌面 UI 路由页面使用 `React.lazy` 加载。React、Recharts 和 Radix 会生成独立的 Rollup 分块。Vite 的 500 kB 分块警告再次作为回归防线；不要通过提高 `chunkSizeWarningLimit` 来掩盖合并后的入口分块。
+- `.codex/` 与 `.kimi-code/` 完全退出 Git 跟踪：`.gitignore` 改为整目录忽略，四个本机 harness 覆盖（`.codex/config.toml` 与三份 Kimi role skill）从索引移除但保留本机文件。`npm run check:agents` 与 `just check-harness-environment` 改为“本机覆盖存在才校验”，干净 clone 缺少这些文件不再报错；`bootstrap.status` 不再把覆盖缺失列为阻断项。仓库不再持有任何本机 harness 资产。
 
 ### 修复
 

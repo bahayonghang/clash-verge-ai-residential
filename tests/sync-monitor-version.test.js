@@ -202,6 +202,7 @@ test("非法 SemVer 失败", () => {
 
 const MONITOR_NATIVE_COMMANDS = [
   "npm --prefix residential-monitor ci",
+  "npm --prefix residential-monitor audit --include=dev --audit-level=high",
   "npm --prefix residential-monitor run check",
   "cargo fmt --manifest-path residential-monitor/src-tauri/Cargo.toml --check",
   "cargo clippy --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace --all-targets -- -D warnings",
@@ -346,7 +347,9 @@ function parseSteps(stepLines) {
         shell: null,
         run: null,
         multiline: false,
-        uses: null
+        uses: null,
+        if: null,
+        continueOnError: null
       };
       const nameMatch = line.match(/^      - name:\s*(.*)$/);
       if (nameMatch) {
@@ -372,6 +375,17 @@ function parseSteps(stepLines) {
     }
 
     if (!current) {
+      continue;
+    }
+
+    const conditionMatch = line.match(/^        if:\s*(.*)$/);
+    if (conditionMatch) {
+      current.if = unquoteYamlScalar(conditionMatch[1]);
+      continue;
+    }
+    const continueMatch = line.match(/^        continue-on-error:\s*(.*)$/);
+    if (continueMatch) {
+      current.continueOnError = unquoteYamlScalar(continueMatch[1]);
       continue;
     }
 
@@ -471,11 +485,14 @@ test("CI required-checks 聚合 test、monitor 与 docs", () => {
   assert.ok(docs, "缺少 docs job");
   assert.equal(docs.runsOn, "ubuntu-latest");
   const docsRuns = docs.steps.map((step) => step.run).filter(Boolean);
-  assert.equal(docsRuns.includes("npm --prefix docs ci"), true);
-  assert.equal(docsRuns.includes("npm --prefix docs run build"), true);
+  assert.deepEqual(docsRuns, [
+    "npm --prefix docs ci",
+    "npm --prefix docs audit --include=dev --audit-level=high",
+    "npm --prefix docs run build"
+  ]);
   assert.equal(
     docs.steps.filter((step) => step.run && step.run.includes("npm --prefix docs")).length,
-    2
+    3
   );
   assert.ok(docs.steps.some((step) => step.uses === "actions/checkout@v7"));
   assert.ok(docs.steps.some((step) => step.uses === "actions/setup-node@v7"));
@@ -491,6 +508,80 @@ test("CI required-checks 聚合 test、monitor 与 docs", () => {
   assert.match(verify.run, /needs\.test\.result[^\n]*success/);
   assert.match(verify.run, /needs\.monitor\.result[^\n]*success/);
   assert.match(verify.run, /needs\.docs\.result[^\n]*success/);
+});
+
+function assertDependencyAuditSteps(yaml) {
+  const jobs = parseWorkflowJobs(yaml);
+  for (const [jobId, prefix, nextCommand] of [
+    ["monitor", "residential-monitor", "check"],
+    ["docs", "docs", "build"]
+  ]) {
+    const job = jobs[jobId];
+    assert.ok(job, `缺少 ${jobId} job`);
+    const auditCommand = `npm --prefix ${prefix} audit --include=dev --audit-level=high`;
+    const audits = job.steps.filter((step) => step.run === auditCommand);
+    assert.equal(audits.length, 1, `${jobId} 必须恰有一条完整依赖审计命令`);
+    const audit = audits[0];
+    assert.equal(audit.multiline, false, `${jobId} 审计必须独立运行`);
+    assert.equal(audit.if, null, `${jobId} 审计不得有跳过条件`);
+    assert.equal(audit.continueOnError, null, `${jobId} 审计不得忽略失败`);
+    const auditIndex = job.steps.indexOf(audit);
+    assert.equal(job.steps[auditIndex - 1].run, `npm --prefix ${prefix} ci`);
+    assert.equal(job.steps[auditIndex + 1].run, `npm --prefix ${prefix} run ${nextCommand}`);
+  }
+}
+
+test("CI 安装后独立审计完整依赖并阻断 high", () => {
+  assertDependencyAuditSteps(readCiWorkflowYaml());
+});
+
+test("CI 审计合同拒绝缺失、跳过、降级和合并步骤", () => {
+  const yaml = readCiWorkflowYaml();
+  for (const prefix of ["residential-monitor", "docs"]) {
+    const run = `        run: npm --prefix ${prefix} audit --include=dev --audit-level=high`;
+    for (const replacement of [
+      "",
+      run.replace(" --include=dev", ""),
+      run.replace("--include=dev", "--omit=dev"),
+      run.replace("--audit-level=high", "--audit-level=critical"),
+      `        continue-on-error: true\n${run}`,
+      `        if: false\n${run}`,
+      `        run: |\n          npm --prefix ${prefix} audit --include=dev --audit-level=high\n          node -e \"process.exit(0)\"`
+    ]) {
+      const fixture = yaml.replace(run, replacement);
+      assert.notEqual(fixture, yaml, "负向 fixture 必须实际修改 workflow");
+      assert.throws(() => assertDependencyAuditSteps(fixture), assert.AssertionError);
+    }
+  }
+});
+
+test("独立 dependency-audit recipe 逐条运行 npm 与 Rust 审计", () => {
+  const justfile = fs.readFileSync(path.join(__dirname, "..", "justfile"), "utf8")
+    .replace(/\r\n/g, "\n");
+  const recipe = /^dependency-audit:\n((?:[ \t]+[^\n]+\n)+)/m.exec(justfile);
+  assert.ok(recipe, "缺少 dependency-audit recipe");
+  assert.deepEqual(recipe[1].trim().split("\n").map((line) => line.trim()), [
+    "npm --prefix residential-monitor audit --include=dev --audit-level=high",
+    "npm --prefix docs audit --include=dev --audit-level=high",
+    "cargo audit --file residential-monitor/src-tauri/Cargo.lock"
+  ]);
+});
+
+test("pwsh 保留 CI monitor 审计的非零退出码", { skip: !pwshAvailable() }, () => {
+  const jobs = parseWorkflowJobs(readCiWorkflowYaml());
+  const audit = jobs.monitor.steps.find((step) => (
+    step.run === "npm --prefix residential-monitor audit --include=dev --audit-level=high"
+  ));
+  assert.ok(audit);
+  withTemporaryDirectory((directory) => {
+    const scriptPath = path.join(directory, "audit-failure.ps1");
+    fs.writeFileSync(scriptPath, githubPwshWrapper([
+      "function npm { node -e \"process.exit(7)\" }",
+      audit.run
+    ].join("\n")), "utf8");
+    const result = runPwshFile(scriptPath);
+    assert.equal(result.status, 7);
+  });
 });
 
 test("pwsh 多命令脚本会把中间 native 失败覆盖为成功", { skip: !pwshAvailable() }, () => {

@@ -100,6 +100,28 @@ Five-tool entry, dispatch, permissions, bootstrap, and runtime evidence: `docs/a
 
 Claude Code and Codex inject workflow-state through project hook config. Oh My Pi / OMP injects workflow-state through the project Trellis extension. Grok Build and Kimi Code Trellis in this project pull task context explicitly. Start clients from the repository root. If a hook or extension does not fire, load the active task, JSONL, and specs by hand.
 
+### Review authorization
+
+The shared authority is `AGENTS.md` for Claude Code, Codex, Grok Build, Kimi
+Code, and OMP. Read-only review must not repair product code or configuration;
+only explicitly authorized research artifacts may be written. Self-fix in a
+check role or skill requires approved implementation and stays within the
+approved task and file scope. A task status or tool capability grants no
+additional permission. Dispatch prompts must state the review mode and file
+scope. Findings that require a scope or validation-gate change return to the
+planning/review model. Do not auto-trust hooks or bypass client permissions.
+
+Compare the dispatch `Active task:` path with the injected task path and
+`task.py current --source`. If those paths differ, stop using the injected
+task context and ask the main session to confirm the dispatch target. A
+`trellis-hook-injected` marker alone does not prove the correct task loaded.
+After confirmation, explicitly pull the target artifacts and JSONL entries;
+do not change shared task pointers to hide the mismatch.
+
+All Phase 2 check instructions below use this authorization boundary. Commit,
+archive, push, PR, and remote workflow actions require their own user
+authorization; a workflow step does not supply that authorization.
+
 ---
 
 <!--
@@ -153,8 +175,8 @@ Claude Code and Codex inject workflow-state through project hook config. Oh My P
       matching phase's `[required · once]` walkthrough steps for sync
     - Run `trellis update` after editing to push the new bodies to
       downstream user projects (block-level managed replacement)
-    - Full runtime contract:
-      .trellis/spec/cli/backend/workflow-state-contract.md
+    - Local phase parser: .trellis/scripts/common/workflow_phase.py
+      Local adapter and fallback contract: docs/agents/harnesses.md
 -->
 
 ## Phase Index
@@ -239,6 +261,7 @@ Inline mode: skip jsonl curation; Phase 2 reads artifacts/specs via `trellis-bef
 Sub-agent dispatch protocol: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions. This includes Codex `SubagentStart` (native injection plus child-side pull fallback), class-2 Gemini/Qoder/Copilot/Reasonix/Trae/Grok, hook-backed ZCode/Snow, and `trellis-research`. On Grok Build, use `spawn_subagent` with `subagent_type` set to the Trellis agent name (e.g. `trellis-implement`). Kimi Code natively supports project custom agents, but this project dispatches the built-in `coder` sub-agent with the matching `.kimi-code/skills/trellis-<role>/SKILL.md` and does not spawn project `trellis-*` agent types. Do not recurse implement/check.
 
 [workflow-state:in_progress]
+Authorization: follow AGENTS.md; self-fix only within approved implementation and file scope. Read-only review records findings without product/configuration repairs.
 Tools: `trellis-implement` / `trellis-research` / `trellis-check` are sub-agent types on platforms with project custom agents (Task/Agent tool). `trellis-update-spec` is a skill. `trellis-check` also exists as a skill; prefer the Agent form when verifying after code changes.
 Kimi Code in this project: platform supports project custom agents; dispatch built-in `coder` with `.kimi-code/skills/trellis-<role>/SKILL.md`. Do not spawn project `trellis-*` agent types.
 Flow: implement -> check -> `trellis-update-spec` -> commit (Phase 3.4) -> `/trellis:finish-work`.
@@ -252,6 +275,7 @@ Dispatch prompt starts with `Active task: <task path from task.py current>`. Rea
      instead of dispatching sub-agents. -->
 
 [workflow-state:in_progress-inline]
+Authorization: follow AGENTS.md; self-fix only within approved implementation and file scope. Read-only review records findings without product/configuration repairs.
 Flow: `trellis-before-dev` -> edit -> `trellis-check` -> validation -> `trellis-update-spec` -> commit (Phase 3.4) -> `/trellis:finish-work`.
 Do not dispatch implement/check sub-agents in inline mode.
 Read context: `prd.md` -> `design.md if present` -> `implement.md if present`, plus relevant spec/research loaded by skills.
@@ -576,18 +600,23 @@ The platform prelude auto-handles the context load requirement:
 
 #### 2.2 Quality check `[required · repeatable]`
 
+Apply the Review authorization section and `AGENTS.md` before every check.
+Read-only review reports findings and may write only authorized research
+artifacts. Self-fix requires approved implementation and named file scope.
+Task status alone does not authorize a fix.
+
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok]
 
 Spawn the check sub-agent:
 
 - **Agent type**: `trellis-check`
-- **Task description**: Review all code changes against specs and task artifacts; fix any findings directly; ensure lint and type-check pass
+- **Task description**: Review the task changes against specs and artifacts; fix findings only within approved implementation and file scope; run required checks
 - **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then tell the spawned agent it is already the `trellis-check` sub-agent and must review/fix directly, not spawn another `trellis-check` / `trellis-implement`.
 
 The check agent's job:
 - Review code changes against specs
 - Review code changes against `prd.md`, `design.md` if present, and `implement.md` if present
-- Auto-fix issues it finds
+- Self-fix only within approved implementation and file scope; report other findings
 - Run lint and typecheck to verify
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Snow, Reasonix, Trae, Grok]
@@ -596,13 +625,13 @@ The check agent's job:
 
 Dispatch the built-in `coder` sub-agent with `.kimi-code/skills/trellis-check/SKILL.md`. Do not spawn a project `trellis-check` agent type. Kimi Code supports project custom agents; this project still uses built-in `coder` plus the role skill.
 
-- **Task description**: Review all code changes against specs and task artifacts; fix any findings directly; ensure lint and type-check pass
+- **Task description**: Review the task changes against specs and artifacts; fix findings only within approved implementation and file scope; run required checks
 - **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then say the spawned coder is already `trellis-check` and must review/fix directly without spawning another `trellis-check` / `trellis-implement`.
 
 The check agent's job:
 - Review code changes against specs
 - Review code changes against `prd.md`, `design.md` if present, and `implement.md` if present
-- Auto-fix issues it finds
+- Self-fix only within approved implementation and file scope; report other findings
 - Run lint and typecheck to verify
 
 [/Kimi Code]
@@ -614,7 +643,9 @@ Load the `trellis-check` skill and verify the code per its guidance:
 - lint / type-check / tests
 - Cross-layer consistency (when changes span layers)
 
-If issues are found → fix → re-check, until green.
+For approved implementation, fix within the approved file scope and re-check.
+For read-only review, record the failures and proposed fixes. Never lower a
+validation gate to report success.
 
 [/codex-inline, Kilo, Antigravity, Devin]
 
@@ -767,7 +798,7 @@ Supported events: `after_create / after_start / after_finish / after_archive`. N
 
 ### Full contract
 
-For the workflow state machine's runtime contract, the locations of all status writers, pseudo-statuses (`no_task` / `stale_<source_type>`), the hook reachability matrix, and other deep details, see:
+For this checkout's phase parser and adapter boundaries, see:
 
-- `.trellis/spec/cli/backend/workflow-state-contract.md` — runtime contract + writer table + test invariants
-- `.trellis/scripts/inject-workflow-state.py` — actual parser (reads workflow.md only, no embedded text)
+- `.trellis/scripts/common/workflow_phase.py` — local workflow phase parser
+- `docs/agents/harnesses.md` — hook reachability, explicit pull, and runtime evidence
