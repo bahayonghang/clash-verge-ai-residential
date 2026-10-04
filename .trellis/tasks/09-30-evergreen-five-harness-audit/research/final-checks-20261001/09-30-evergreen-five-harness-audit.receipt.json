@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "python",
+    "-X",
+    "utf8",
+    ".trellis/scripts/task.py",
+    "validate",
+    ".trellis/tasks/09-30-evergreen-five-harness-audit"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "status": "finished",
+  "started_utc": "2026-10-02T01:48:44.256815+00:00",
+  "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+  "pid": 49432,
+  "stdout_raw_sha256": "40fd62ce830920b28af44360e9e88f62ed4188da4751efedd40d1100dcee0998",
+  "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "exit_code": 0,
+  "finished_utc": "2026-10-02T01:48:44.418947+00:00",
+  "wall_seconds": 0.1621368999999504
+}

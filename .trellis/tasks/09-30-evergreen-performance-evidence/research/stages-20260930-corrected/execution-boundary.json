@@ -1,0 +1,9 @@
+{
+  "previous_receipts": "../stages-20260930-initial",
+  "previous_production_probe": "zero tests; no JSON; FAIL",
+  "database_first_read_this_round": "initial a250-minute-all diagnostic",
+  "cache": "此前阶段已读取数据库；本次补测已受页缓存读取影响，没有物理冷缓存证明",
+  "production_probe": "c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof",
+  "list_verified": true,
+  "executable_sha256": "91FF44C0EB081C3E1F572F4ABA7C9574C18FECE73CB172BBBF0881FEC0ACA1DA"
+}

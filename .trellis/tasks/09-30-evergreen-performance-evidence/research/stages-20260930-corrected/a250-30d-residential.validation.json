@@ -1,0 +1,9 @@
+{
+  "native_exit_zero": true,
+  "ran_exactly_one_test": true,
+  "json_exists": true,
+  "timezone": "UTC",
+  "previous_equal_window": false,
+  "cache": "already read by preceding probes",
+  "production_deadline": false
+}

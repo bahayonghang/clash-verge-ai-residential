@@ -1,0 +1,41 @@
+{
+  "synthetic_only": true,
+  "syntax": "pass",
+  "plan_rows": 10,
+  "plan_process_launch_guard": "pass",
+  "utf8_and_trailing_whitespace": "pass",
+  "clients_started": 0,
+  "candidate_manifest_exists": false,
+  "files": [
+    {
+      "file": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture.py",
+      "sha256": "d44c0d1ea51e4e55095f81daadcb39367d333d13f7faa631f19bd6aea2a88c79",
+      "lines": 519,
+      "bytes": 29570
+    },
+    {
+      "file": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-parent-prompt.txt",
+      "sha256": "6929c11cb6b906783c49256202fde9d01ce94c1cf74101591109ae4fbe4632ed",
+      "lines": 22,
+      "bytes": 1788
+    },
+    {
+      "file": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-child-prompt.txt",
+      "sha256": "673051d7d0b80266e5efb8d4abd594265ae87844a8e4467a30fed00b6164f084",
+      "lines": 23,
+      "bytes": 2326
+    },
+    {
+      "file": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture-plan.md",
+      "sha256": "6633b6186b91b4d589743ad736fed6a073385acbf61b9d42b155e72afaf5cf4a",
+      "lines": 94,
+      "bytes": 10638
+    },
+    {
+      "file": ".trellis/tasks/09-30-evergreen-runtime-validation/research/omp-native-entry-review.md",
+      "sha256": "ed16cf0b2064f5d1d40696261177cbacadc3892ccdc40f0a464adc2cc018a522",
+      "lines": 47,
+      "bytes": 4187
+    }
+  ]
+}

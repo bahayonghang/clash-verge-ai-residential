@@ -1,0 +1,21 @@
+{
+  "checks": {
+    "native_exit_zero": true,
+    "identity": false,
+    "window": false,
+    "production_ok_raw": false,
+    "wall_valid_below_deadline": false,
+    "improved_from_historical_minute": false,
+    "series_nonempty": false,
+    "connection_count_oracle": false,
+    "upload_oracle": false,
+    "download_oracle": false
+  },
+  "pass": false,
+  "production_first_read": {},
+  "production_first_read_ms": null,
+  "query_timezone": "local",
+  "previous_equal_window": true,
+  "now_utc": 1787184060,
+  "cache": "本轮未主动预热；没有物理冷缓存证明"
+}

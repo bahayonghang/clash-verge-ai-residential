@@ -1,0 +1,14 @@
+{
+  "scenario": "缺失四可选覆盖的最小公开合同隔离 init",
+  "fresh_checkout": false,
+  "native_loading": "UNVERIFIED",
+  "started_utc": "2026-10-02T14:14:43.375468+00:00",
+  "steps": [],
+  "driver_pid": 56828,
+  "driver_sha256": "baca471ee8a16129b5c6e86abe7ace83fb632e79916f3c51ba19c2210ca376c4",
+  "isolated_root": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_",
+  "tool": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\tool",
+  "cache": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\npm-cache",
+  "candidate": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\candidate",
+  "isolated_evidence": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\evidence"
+}

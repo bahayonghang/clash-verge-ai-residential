@@ -1,0 +1,9 @@
+{
+  "command": "git diff --check",
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T12:51:16.440889+00:00",
+  "finished_utc": "2026-09-30T12:51:16.769305+00:00",
+  "exit_code": 0,
+  "raw_sha256": "738546e2733b038b627a593baee23e62b037bfafe72b19c0b94cdec7093829c3",
+  "readable_normalization": "ANSI removed; trailing line whitespace removed; LF"
+}

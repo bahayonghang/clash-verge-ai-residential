@@ -1,0 +1,74 @@
+{
+  "isolated-install.log": {
+    "raw": "isolated-install.log.gz",
+    "raw_sha256": "b044f1cce109cb9799e573f083e41793e490918111c80579dfa858b6570682d4",
+    "normalized_sha256": "cd6b36996deb3900015f7d3d3cd5de31825a1e8cd3309f9a5d97c9ad2be558fc",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "isolated-install-attempt1.log": {
+    "raw": "isolated-install-attempt1.log.gz",
+    "raw_sha256": "b044f1cce109cb9799e573f083e41793e490918111c80579dfa858b6570682d4",
+    "normalized_sha256": "cd6b36996deb3900015f7d3d3cd5de31825a1e8cd3309f9a5d97c9ad2be558fc",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "isolated-install-attempt2.log": {
+    "raw": "isolated-install-attempt2.log.gz",
+    "raw_sha256": "ca18e1dfd049553a38158b7b2b2529cbcd1bf75ca95d42343b21b8936834e032",
+    "normalized_sha256": "b7b66d895796a37c431d1a5bf1ffe6e3483ceeb563f7b9714892ba66cf573a65",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "isolated-init.log": {
+    "raw": "isolated-init.log.gz",
+    "raw_sha256": "e653c636c4092c4f6323168ba191cef50d68e77209f29a75e6bfb2924230d946",
+    "normalized_sha256": "07613144a6d72788114fd04832a9825e5c859b3287269efc6abb3ba27f522a3a",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "isolated-version.log": {
+    "raw": "isolated-version.log.gz",
+    "raw_sha256": "13b68b5cb79c82f9cda020f1758364f90ebe6731a75ae41471e872e36c4f66d9",
+    "normalized_sha256": "2ec4848206eabd7db9d28c14dc79cf8f98347ee7c974e124a52416afa13bd4af",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "focused-tests.log": {
+    "raw": "focused-tests.log.gz",
+    "raw_sha256": "30d32ac12e176601d3d3baabc7d43b98ff756314f1f28ada37a99a607ee9417c",
+    "normalized_sha256": "1ae30d3ac2d25da7e5b2fe6d129bdfdc20b0ecb946ec555ac7f32a6cad9e0c0f",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "syntax.log": {
+    "raw": "syntax.log.gz",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "current-ignore.log": {
+    "raw": "current-ignore.log.gz",
+    "raw_sha256": "8eb3ab79c5cf6cd247a6830bf30d2dbc719b5295d04fd38a10e61d12956e7bf0",
+    "normalized_sha256": "cd4b1e1d5d6957774915e69464254d7c9cf64cfdda5f456a486cc522000af035",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "candidate-ignore.log": {
+    "raw": "candidate-ignore.log.gz",
+    "raw_sha256": "8eb3ab79c5cf6cd247a6830bf30d2dbc719b5295d04fd38a10e61d12956e7bf0",
+    "normalized_sha256": "cd4b1e1d5d6957774915e69464254d7c9cf64cfdda5f456a486cc522000af035",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "environment-default.stderr.log": {
+    "raw": "environment-default.stderr.log.gz",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "environment-default-after-review.stderr.log": {
+    "raw": "environment-default-after-review.stderr.log.gz",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  },
+  "isolated-dependency-tree.stderr.log": {
+    "raw": "isolated-dependency-tree.stderr.log.gz",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalization": "Only line-ending normalization and line-end whitespace removal"
+  }
+}

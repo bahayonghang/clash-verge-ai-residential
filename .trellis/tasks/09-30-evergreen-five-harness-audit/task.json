@@ -1,0 +1,51 @@
+{
+  "id": "evergreen-five-harness-audit",
+  "name": "evergreen-five-harness-audit",
+  "title": "常青项目五套 harness 审查与改造规划",
+  "description": "审查与规划已完成；用户已批准六项项目内实施，按依赖顺序验收。",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": "cross-harness",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-30",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "09-30-evergreen-dependency-gate",
+    "09-30-evergreen-skill-sync",
+    "09-30-evergreen-harness-contract",
+    "09-30-evergreen-bootstrap-check",
+    "09-30-evergreen-performance-evidence",
+    "09-30-evergreen-runtime-validation"
+  ],
+  "parent": null,
+  "relatedFiles": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/agents/harnesses.md",
+    ".trellis/workflow.md",
+    "justfile",
+    ".github/workflows/ci.yml"
+  ],
+  "notes": "用户于 2026-09-30 批准项目内实施。按父任务顺序执行；提交、归档、远端操作、全局配置和真实私有数据操作仍不在授权内。",
+  "meta": {
+    "approval": "approved-project-scope",
+    "source_sha": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+    "audit_complete": true,
+    "approval_date": "2026-09-30",
+    "approval_text": "批准实施",
+    "local_override_policy_approval": {
+      "date": "2026-10-01",
+      "text": "保留当前不跟踪策略，更新任务合同和规范",
+      "scope": "T03/T04及父任务合同、相关规范；四份Codex/Kimi本机覆盖保持ignored，不修改覆盖或Git索引"
+    }
+  }
+}

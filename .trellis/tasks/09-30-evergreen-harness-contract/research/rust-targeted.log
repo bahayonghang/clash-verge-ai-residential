@@ -1,0 +1,10 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.62s
+     Running unittests src\lib.rs (residential-monitor\src-tauri\target\debug\deps\residential_monitor_lib-8c9211dd5db70bc1.exe)
+
+running 1 test
+有界 session 前缀删除 30 行，用时 105.9169ms，reopen 后继续清空
+test storage::lifecycle::tests::session_fanout_yields_a_durable_prefix_before_hard_deadline ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 547 filtered out; finished in 0.34s
+
+mbx[gc]: evicted 0 objects and 0 action results (259.0 KiB logical); 41.6 GiB logical remain

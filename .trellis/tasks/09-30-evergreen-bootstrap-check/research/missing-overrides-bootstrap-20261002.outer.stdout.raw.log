@@ -1,0 +1,9 @@
+{"milestone": "contract-before-init", "exit": 0, "wall_seconds": 0.07088899999507703}
+{"milestone": "npm-ci-attempt1", "exit": 0, "wall_seconds": 11.018060199996398}
+{"milestone": "selected-cli-version", "exit": 0, "wall_seconds": 0.354026499997417}
+{"milestone": "environment-before-init", "exit": 0, "wall_seconds": 4.7845921000043745}
+{"milestone": "isolated-init", "exit": 0, "wall_seconds": 0.7431949000019813}
+{"milestone": "contract-after-init", "exit": 1, "wall_seconds": 0.07839980000426294}
+{"milestone": "environment-after-init", "exit": 0, "wall_seconds": 4.740870800000266}
+{"milestone": "candidate-ignore", "exit": 0, "wall_seconds": 0.04004659999918658}
+{"milestone": "complete", "research": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\bootstrap-missing-overrides-20261002", "driver_exit": 1, "protected_unchanged": true}

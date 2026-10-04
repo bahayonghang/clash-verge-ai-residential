@@ -1,0 +1,62 @@
+{
+  "invocation_id": "20261002T135932Z-090bb8d7/grok/child",
+  "harness": "grok",
+  "phase": "child",
+  "parent_only": false,
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "executable_binding": "grok",
+  "executable_sha256": "e09c0893cee4850a569bd90e7aed956ea503b34f551637d58187ca4dfb931611",
+  "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#grok",
+  "status": "BLOCKED_OR_FAILED_REQUIRES_REVIEW",
+  "effective_model": "UNKNOWN",
+  "model_evidence": "UNVERIFIED",
+  "rules": "UNVERIFIED",
+  "planning": "UNVERIFIED",
+  "permissions": "UNVERIFIED",
+  "runtime_enforcement": "UNVERIFIED",
+  "native_child": "UNVERIFIED",
+  "role_persistence": "NOT_COVERED_PURE_OUTPUT",
+  "hook_extension_pull": "UNVERIFIED",
+  "negative_case": "UNVERIFIED",
+  "product_hash_unchanged": true,
+  "protected_snapshot_diff": {
+    "same": true,
+    "changed": [],
+    "added": [],
+    "removed": [],
+    "index_changed": false,
+    "head_changed": false,
+    "branch_changed": false
+  },
+  "started_utc": "2026-10-02T13:59:36.691846+00:00",
+  "ended_utc": "2026-10-02T14:02:36.760920+00:00",
+  "pid": 64480,
+  "exit_code": 0,
+  "capture_stop_reason": "TIMEOUT",
+  "termination_requested": true,
+  "capture_representation": "normalized_redacted_events_not_original_bytes",
+  "stream_hash_scope": "captured_bytes_only_if_limit_hit",
+  "streams": {
+    "stdout": {
+      "bytes": 374295,
+      "records": 12,
+      "sha256": "1bc7de15646c4139eb5f0c950af48d58c368b6b777c2be95ffac716126fa031d"
+    },
+    "stderr": {
+      "bytes": 0,
+      "records": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "redactions": [
+    {
+      "event_index": 7,
+      "field": "$.message.content[3].content",
+      "category": "home_path"
+    }
+  ],
+  "sensitive_output_detected": false,
+  "events": 12,
+  "cross_stream_order": "receiver_observation_only",
+  "job_cleanup": "best_effort_owned_job; post_Popen_attach_race; no_permission_sandbox; no_absolute_no_orphan_claim"
+}

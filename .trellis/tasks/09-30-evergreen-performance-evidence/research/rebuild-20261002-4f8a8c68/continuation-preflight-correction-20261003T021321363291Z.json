@@ -1,0 +1,96 @@
+{
+  "observed_utc": "2026-10-03T02:13:21.363291+00:00",
+  "observed_local": "2026-10-02T21:13:21.363291-05:00",
+  "source_preflight": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\continuation-preflight-20261003T021142150518Z.json",
+  "source_sha256": "7AA781157B3BCD7996CE27713871498160A85ED0C89F3C96CBA43A6BE0DE70C4",
+  "correction": "Comparator false report. v1 patch hash strings in the independent review include a note after the 64 hex characters. The live hash matches all 64 hex characters for both files.",
+  "corrections": [
+    {
+      "check": "reviewed hash runners/run-formal-replay.v1.patch",
+      "expected_recorded": "742E5AB8C0DEA8C349AF5EE155ED5874B3DC73291F9E5D081D32385F297D662D (unchanged from first review)",
+      "expected_hash": "742E5AB8C0DEA8C349AF5EE155ED5874B3DC73291F9E5D081D32385F297D662D",
+      "actual_hash": "742E5AB8C0DEA8C349AF5EE155ED5874B3DC73291F9E5D081D32385F297D662D",
+      "corrected_status": "PASS",
+      "basis": "Existing first preflight live hash; no rehash or runner execution"
+    },
+    {
+      "check": "reviewed hash runners/run-capacity.v1.patch",
+      "expected_recorded": "EC3D715B683311127976B595E93C99F241AA121CF078C0429266904C755439D0 (unchanged from first review)",
+      "expected_hash": "EC3D715B683311127976B595E93C99F241AA121CF078C0429266904C755439D0",
+      "actual_hash": "EC3D715B683311127976B595E93C99F241AA121CF078C0429266904C755439D0",
+      "corrected_status": "PASS",
+      "basis": "Existing first preflight live hash; no rehash or runner execution"
+    }
+  ],
+  "technical_binding_status": "PASS",
+  "overall_status": "BLOCKED_NOT_RUN",
+  "actual_binding_failures": [],
+  "scope": "Only correct the conclusion using existing first preflight data; no expanded checks, process rescan, hashes, runner/native/DB/test/build/install/new-client/quiet-probes execution or old artifact rewrite.",
+  "blockers": [
+    {
+      "kind": "COMPETING_LOAD",
+      "count": 6,
+      "pids": [
+        43996,
+        48028,
+        51228,
+        52584,
+        55612,
+        62832
+      ]
+    },
+    {
+      "kind": "MAIN_SESSION_GO_REQUIRED",
+      "source": "dispatch excludes execution of formal loads and quiet-probes"
+    }
+  ],
+  "competitive_snapshot_utc": "2026-10-03T02:11:46.256427+00:00",
+  "competitive_count": 6,
+  "competitive_pids": [
+    43996,
+    48028,
+    51228,
+    52584,
+    55612,
+    62832
+  ],
+  "formal_matrix": "NOT_RUN 0/22",
+  "formal_primary": "NOT_RUN 0/6",
+  "formal_capacity": "NOT_RUN 0/106",
+  "passed_preflight_check_count": 39,
+  "pending_commands": [
+    {
+      "stage": "matrix",
+      "native_count": 22,
+      "command": "python -B \"D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\runners\\run-formal-replay.py\" --set matrix"
+    },
+    {
+      "stage": "primary",
+      "native_count": 6,
+      "command": "python -B \"D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\runners\\run-formal-replay.py\" --set primary"
+    },
+    {
+      "stage": "capacity",
+      "native_count": 106,
+      "command": "python -B \"D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\runners\\run-capacity.py\""
+    }
+  ],
+  "required_boundaries": [
+    "Explicit GO from main after competition ends and fresh stage preflight",
+    "No termination of user processes; serialize build/generator/oracle/diagnostic/formal stages",
+    "Keep original P4 22, P5 6, P6 106 counts and order; do not merge partial batches",
+    "Recheck identity/source/exe/dist/runner/hash and fresh-only outputs immediately before launch",
+    "Capacity runner must live rehash DB and check quick_check/WAL; current DB hashes are P2 receipt-derived",
+    "No quiet-probes during P4-P6. Any new diagnostic must remain separate; current all/residential probes NOT_RUN",
+    "Ordinary metric FAIL or all_application UNVERIFIED is not a new capacity startup gate"
+  ],
+  "thresholds": {
+    "deadline_ms": 10000,
+    "matrix_ratio_max": 1.1,
+    "primary_cpu_ratio_max": 0.7,
+    "all_application_write_ratio_max": 0.5,
+    "capacity_count": 106
+  },
+  "first_failures_preserved": "P2 driver KeyError and production DeadlineExceeded remain separate; original preflight report and reporting-tool failures retained.",
+  "stop": "STOP_WRITING"
+}

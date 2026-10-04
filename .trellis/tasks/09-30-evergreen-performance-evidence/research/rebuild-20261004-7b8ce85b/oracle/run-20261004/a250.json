@@ -1,0 +1,2071 @@
+{
+  "active": 250,
+  "db": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\corpus-a250-30d\\monitor.sqlite3",
+  "started_utc": "2026-10-04T05:24:59.401777+00:00",
+  "status": "PASS_SQL_ORACLE",
+  "cache": "hash/integrity/oracle 将触页缓存；不提供物理冷页证据",
+  "queries": [
+    {
+      "name": "query_only",
+      "sql": "pragma query_only",
+      "params": [],
+      "status": "ok",
+      "rows": [
+        [
+          1
+        ]
+      ],
+      "wall_seconds": 1.340000017080456e-05
+    },
+    {
+      "name": "quick_check",
+      "sql": "pragma quick_check",
+      "params": [],
+      "status": "ok",
+      "rows": [
+        [
+          "ok"
+        ]
+      ],
+      "wall_seconds": 5.511030800000299
+    },
+    {
+      "name": "user_version",
+      "sql": "pragma user_version",
+      "params": [],
+      "status": "ok",
+      "rows": [
+        [
+          5
+        ]
+      ],
+      "wall_seconds": 2.4499999199179e-05
+    },
+    {
+      "name": "journal_mode",
+      "sql": "pragma journal_mode",
+      "params": [],
+      "status": "ok",
+      "rows": [
+        [
+          "wal"
+        ]
+      ],
+      "wall_seconds": 1.3299999409355223e-05
+    },
+    {
+      "name": "migration_identity",
+      "sql": "select version, checksum from schema_migration order by version",
+      "params": [],
+      "status": "ok",
+      "rows": [
+        [
+          1,
+          "c1-core-v1"
+        ],
+        [
+          2,
+          "c3-report-v2"
+        ],
+        [
+          3,
+          "c4-alert-v3"
+        ],
+        [
+          4,
+          "c3-archive-v4"
+        ],
+        [
+          5,
+          "ledger-lifecycle-v5-layout4"
+        ]
+      ],
+      "wall_seconds": 6.690000009257346e-05
+    },
+    {
+      "name": "minutes_count",
+      "sql": "select count(*) from connection_minute",
+      "params": [],
+      "status": "ok",
+      "rows": [
+        [
+          10800000
+        ]
+      ],
+      "wall_seconds": 0.2519928000001528
+    },
+    {
+      "name": "sessions_count",
+      "sql": "select count(*) from connection_session",
+      "params": [],
+      "status": "ok",
+      "rows": [
+        [
+          2160000
+        ]
+      ],
+      "wall_seconds": 0.04699339999933727
+    },
+    {
+      "name": "chains_count",
+      "sql": "select count(*) from connection_chain",
+      "params": [],
+      "status": "ok",
+      "rows": [
+        [
+          6480000
+        ]
+      ],
+      "wall_seconds": 0.12965190000068105
+    },
+    {
+      "name": "receipts_count",
+      "sql": "select count(*) from committed_bundle",
+      "params": [],
+      "status": "ok",
+      "rows": [
+        [
+          2592000
+        ]
+      ],
+      "wall_seconds": 0.058229799999026
+    },
+    {
+      "name": "durable_data_version",
+      "sql": "select max(watermark, coalesce((select max(data_version) from committed_bundle), 0)) from data_version where id=1",
+      "params": [],
+      "status": "ok",
+      "rows": [
+        [
+          2592000
+        ]
+      ],
+      "wall_seconds": 0.00011240000094403513
+    },
+    {
+      "name": "all_and_residential_totals_30d",
+      "sql": "select sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute),sum(case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.upload else 0 end),sum(case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.download else 0 end),count(distinct case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.session_pk end),count(distinct case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.utc_minute end) from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk where m.utc_minute>=? and m.utc_minute<?",
+      "params": [
+        29786400,
+        29829600
+      ],
+      "status": "ok",
+      "rows": [
+        [
+          151200035,
+          507599545,
+          2160000,
+          43200,
+          113399990,
+          380699625,
+          1620000,
+          43200
+        ]
+      ],
+      "wall_seconds": 12.620813600000474
+    },
+    {
+      "name": "all_and_residential_totals_1d",
+      "sql": "select sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute),sum(case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.upload else 0 end),sum(case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.download else 0 end),count(distinct case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.session_pk end),count(distinct case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.utc_minute end) from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk where m.utc_minute>=? and m.utc_minute<?",
+      "params": [
+        29828160,
+        29829600
+      ],
+      "status": "ok",
+      "rows": [
+        [
+          5040035,
+          16919610,
+          72000,
+          1440,
+          3780005,
+          12689625,
+          54000,
+          1440
+        ]
+      ],
+      "wall_seconds": 0.4562788000002911
+    },
+    {
+      "name": "host-30d",
+      "sql": "select coalesce(nullif(s.host,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29786400,
+        29829600,
+        20
+      ],
+      "status": "ok",
+      "rows": [
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+          188990,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-800.example.test",
+          189005,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-211.example.test",
+          189020,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-242.example.test",
+          189050,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-304.example.test",
+          188980,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-31.example.test",
+          188970,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-335.example.test",
+          189010,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-366.example.test",
+          189040,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-428.example.test",
+          188970,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-459.example.test",
+          189000,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-490.example.test",
+          189030,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-552.example.test",
+          188960,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-583.example.test",
+          188990,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-614.example.test",
+          189020,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-62.example.test",
+          189000,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-676.example.test",
+          188950,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-707.example.test",
+          188980,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-738.example.test",
+          189010,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-520.example.test",
+          188950,
+          634620,
+          2700,
+          810000
+        ],
+        [
+          "host-148.example.test",
+          188980,
+          634620,
+          2700,
+          810000
+        ]
+      ],
+      "wall_seconds": 11.891632999999274,
+      "grouped_expectations": [
+        {
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+          "upload": 188990,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-800.example.test",
+          "upload": 189005,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-211.example.test",
+          "upload": 189020,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-242.example.test",
+          "upload": 189050,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-304.example.test",
+          "upload": 188980,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-31.example.test",
+          "upload": 188970,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-335.example.test",
+          "upload": 189010,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-366.example.test",
+          "upload": 189040,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-428.example.test",
+          "upload": 188970,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-459.example.test",
+          "upload": 189000,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-490.example.test",
+          "upload": 189030,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-552.example.test",
+          "upload": 188960,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-583.example.test",
+          "upload": 188990,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-614.example.test",
+          "upload": 189020,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-62.example.test",
+          "upload": 189000,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-676.example.test",
+          "upload": 188950,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-707.example.test",
+          "upload": 188980,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-738.example.test",
+          "upload": 189010,
+          "download": 634635,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-520.example.test",
+          "upload": 188950,
+          "download": 634620,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-148.example.test",
+          "upload": 188980,
+          "download": 634620,
+          "connectionCount": 2700,
+          "distinct_minute_seconds": 810000,
+          "unknown": false,
+          "zeroFlow": false
+        }
+      ]
+    },
+    {
+      "name": "host-1d",
+      "sql": "select coalesce(nullif(s.host,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29828160,
+        29829600,
+        20
+      ],
+      "status": "ok",
+      "rows": [
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+          6285,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-800.example.test",
+          6305,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-211.example.test",
+          6325,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-242.example.test",
+          6300,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-304.example.test",
+          6315,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-31.example.test",
+          6280,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-335.example.test",
+          6290,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-366.example.test",
+          6330,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-428.example.test",
+          6280,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-459.example.test",
+          6320,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-490.example.test",
+          6295,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-552.example.test",
+          6310,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-583.example.test",
+          6285,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-614.example.test",
+          6325,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-62.example.test",
+          6320,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-676.example.test",
+          6275,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-707.example.test",
+          6315,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-738.example.test",
+          6290,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-460.example.test",
+          6315,
+          21270,
+          90,
+          27000
+        ],
+        [
+          "host-150.example.test",
+          6305,
+          21270,
+          90,
+          27000
+        ]
+      ],
+      "wall_seconds": 0.34598039999946195,
+      "grouped_expectations": [
+        {
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+          "upload": 6285,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-800.example.test",
+          "upload": 6305,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-211.example.test",
+          "upload": 6325,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-242.example.test",
+          "upload": 6300,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-304.example.test",
+          "upload": 6315,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-31.example.test",
+          "upload": 6280,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-335.example.test",
+          "upload": 6290,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-366.example.test",
+          "upload": 6330,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-428.example.test",
+          "upload": 6280,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-459.example.test",
+          "upload": 6320,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-490.example.test",
+          "upload": 6295,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-552.example.test",
+          "upload": 6310,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-583.example.test",
+          "upload": 6285,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-614.example.test",
+          "upload": 6325,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-62.example.test",
+          "upload": 6320,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-676.example.test",
+          "upload": 6275,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-707.example.test",
+          "upload": 6315,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-738.example.test",
+          "upload": 6290,
+          "download": 21285,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-460.example.test",
+          "upload": 6315,
+          "download": 21270,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "host-150.example.test",
+          "upload": 6305,
+          "download": 21270,
+          "connectionCount": 90,
+          "distinct_minute_seconds": 27000,
+          "unknown": false,
+          "zeroFlow": false
+        }
+      ]
+    },
+    {
+      "name": "network-30d",
+      "sql": "select coalesce(nullif(d.value,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk left join dimension_dict d on d.dimension_kind='network' and d.dimension_id=a.network_id where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29786400,
+        29829600,
+        100
+      ],
+      "status": "ok",
+      "rows": [
+        [
+          "network-4",
+          37800005,
+          126899930,
+          540000,
+          2592000
+        ],
+        [
+          "network-3",
+          37799975,
+          126899875,
+          540000,
+          2592000
+        ],
+        [
+          "network-2",
+          37800010,
+          126899820,
+          540000,
+          2592000
+        ]
+      ],
+      "wall_seconds": 10.326970199999778,
+      "grouped_expectations": [
+        {
+          "identity": "network-4",
+          "upload": 37800005,
+          "download": 126899930,
+          "connectionCount": 540000,
+          "distinct_minute_seconds": 2592000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "network-3",
+          "upload": 37799975,
+          "download": 126899875,
+          "connectionCount": 540000,
+          "distinct_minute_seconds": 2592000,
+          "unknown": false,
+          "zeroFlow": false
+        },
+        {
+          "identity": "network-2",
+          "upload": 37800010,
+          "download": 126899820,
+          "connectionCount": 540000,
+          "distinct_minute_seconds": 2592000,
+          "unknown": false,
+          "zeroFlow": false
+        }
+      ]
+    }
+  ],
+  "mode": "ro",
+  "query_only": true,
+  "transaction": "single deferred snapshot",
+  "sqlite_version": "3.50.4",
+  "marker_sha256_before": "03bfda2a56cf662159ae4d2e6abda0a08383124cb44aa0743d9d48cb94b71c96",
+  "marker": {
+    "actual": {
+      "chains": 6480000,
+      "minutes": 10800000,
+      "receipts": 2592000,
+      "sessions": 2160000
+    },
+    "counts_match": true,
+    "end_utc": 1789776000,
+    "expected": {
+      "chains": 6480000,
+      "minutes": 10800000,
+      "receipts": 2592000,
+      "sessions": 2160000
+    },
+    "files_and_pages": {
+      "active_page_bytes": 1724293120,
+      "db_bytes": 1724293120,
+      "freelist_count": 0,
+      "page_count": 420970,
+      "page_size": 4096,
+      "reusable_page_bytes": 0,
+      "wal_bytes": 0
+    },
+    "full_30_day_input": true,
+    "generation_cache_kib": 65536,
+    "generation_wall_secs": 117.5897728,
+    "kind": "production-corpus",
+    "limits": [
+      "通过生产 migration 建库，批量写入生产表；不代表真实门面提交或1Hz实时耗时。",
+      "生成专用连接使用64MiB页缓存；仅用于批量fixture生成，其内存样本不代表生产运行时占用。",
+      "固定5分钟会话寿命与3跳chain，复用C0维度基数；所有session已关闭，未伪造活跃保护/legacy证明。",
+      "receipt为显式合成的逐秒连续序列，payload_hash是固定fixture摘要；不用于重放安全证明。",
+      "进程路径未写入生产schema；host按5%长标签、process按进程名分布。尚未物化任何派生汇总。"
+    ],
+    "minutes": 43200,
+    "native_after": {
+      "cpu_seconds": 80.625,
+      "handles": 114,
+      "io_read_bytes": 7381012772,
+      "io_write_bytes": 40525896776,
+      "io_write_operations": 17940678,
+      "private_bytes": 86405120,
+      "working_set_bytes": 93646848
+    },
+    "native_before": {
+      "cpu_seconds": 0.015625,
+      "handles": 114,
+      "io_read_bytes": 12580,
+      "io_write_bytes": 770972,
+      "io_write_operations": 376,
+      "private_bytes": 2551808,
+      "working_set_bytes": 11218944
+    },
+    "progress": [
+      {
+        "minutes": 1440,
+        "native": {
+          "cpu_seconds": 1.5625,
+          "handles": 114,
+          "io_read_bytes": 112029988,
+          "io_write_bytes": 687700356,
+          "io_write_operations": 307163,
+          "private_bytes": 72822784,
+          "working_set_bytes": 79859712
+        },
+        "wall_secs": 3.9539952
+      },
+      {
+        "minutes": 2880,
+        "native": {
+          "cpu_seconds": 3.359375,
+          "handles": 114,
+          "io_read_bytes": 278540580,
+          "io_write_bytes": 1666069828,
+          "io_write_operations": 742784,
+          "private_bytes": 84803584,
+          "working_set_bytes": 91443200
+        },
+        "wall_secs": 6.4658416
+      },
+      {
+        "minutes": 4320,
+        "native": {
+          "cpu_seconds": 5.484375,
+          "handles": 114,
+          "io_read_bytes": 469954852,
+          "io_write_bytes": 2780008460,
+          "io_write_operations": 1238429,
+          "private_bytes": 85209088,
+          "working_set_bytes": 91742208
+        },
+        "wall_secs": 9.523816
+      },
+      {
+        "minutes": 5760,
+        "native": {
+          "cpu_seconds": 7.78125,
+          "handles": 114,
+          "io_read_bytes": 683655460,
+          "io_write_bytes": 4019457296,
+          "io_write_operations": 1789812,
+          "private_bytes": 85614592,
+          "working_set_bytes": 91951104
+        },
+        "wall_secs": 12.7797117
+      },
+      {
+        "minutes": 7200,
+        "native": {
+          "cpu_seconds": 10.1875,
+          "handles": 114,
+          "io_read_bytes": 908353828,
+          "io_write_bytes": 5317156792,
+          "io_write_operations": 2366904,
+          "private_bytes": 85614592,
+          "working_set_bytes": 92049408
+        },
+        "wall_secs": 16.209609
+      },
+      {
+        "minutes": 8640,
+        "native": {
+          "cpu_seconds": 13.015625,
+          "handles": 114,
+          "io_read_bytes": 1139343652,
+          "io_write_bytes": 6639066684,
+          "io_write_operations": 2954263,
+          "private_bytes": 85614592,
+          "working_set_bytes": 92332032
+        },
+        "wall_secs": 20.0035016
+      },
+      {
+        "minutes": 10080,
+        "native": {
+          "cpu_seconds": 15.578125,
+          "handles": 114,
+          "io_read_bytes": 1375830308,
+          "io_write_bytes": 7977750568,
+          "io_write_operations": 3548457,
+          "private_bytes": 85614592,
+          "working_set_bytes": 92356608
+        },
+        "wall_secs": 23.6514808
+      },
+      {
+        "minutes": 11520,
+        "native": {
+          "cpu_seconds": 18.09375,
+          "handles": 114,
+          "io_read_bytes": 1619771684,
+          "io_write_bytes": 9337696976,
+          "io_write_operations": 4151220,
+          "private_bytes": 85684224,
+          "working_set_bytes": 92598272
+        },
+        "wall_secs": 27.3613364
+      },
+      {
+        "minutes": 12960,
+        "native": {
+          "cpu_seconds": 21.0,
+          "handles": 114,
+          "io_read_bytes": 1873420580,
+          "io_write_bytes": 10734298148,
+          "io_write_operations": 4769491,
+          "private_bytes": 85721088,
+          "working_set_bytes": 92635136
+        },
+        "wall_secs": 31.3572317
+      },
+      {
+        "minutes": 14400,
+        "native": {
+          "cpu_seconds": 23.796875,
+          "handles": 114,
+          "io_read_bytes": 2134114596,
+          "io_write_bytes": 12152184764,
+          "io_write_operations": 5396448,
+          "private_bytes": 85995520,
+          "working_set_bytes": 93040640
+        },
+        "wall_secs": 35.3610778
+      },
+      {
+        "minutes": 15840,
+        "native": {
+          "cpu_seconds": 26.734375,
+          "handles": 114,
+          "io_read_bytes": 2396250404,
+          "io_write_bytes": 13574563356,
+          "io_write_operations": 6025182,
+          "private_bytes": 86130688,
+          "working_set_bytes": 93196288
+        },
+        "wall_secs": 39.5389379
+      },
+      {
+        "minutes": 17280,
+        "native": {
+          "cpu_seconds": 29.671875,
+          "handles": 114,
+          "io_read_bytes": 2659438884,
+          "io_write_bytes": 15000488620,
+          "io_write_operations": 6655377,
+          "private_bytes": 86265856,
+          "working_set_bytes": 93278208
+        },
+        "wall_secs": 43.5628111
+      },
+      {
+        "minutes": 18720,
+        "native": {
+          "cpu_seconds": 32.578125,
+          "handles": 114,
+          "io_read_bytes": 2928505124,
+          "io_write_bytes": 16443950508,
+          "io_write_operations": 7292777,
+          "private_bytes": 86265856,
+          "working_set_bytes": 93409280
+        },
+        "wall_secs": 47.8747634
+      },
+      {
+        "minutes": 20160,
+        "native": {
+          "cpu_seconds": 35.46875,
+          "handles": 114,
+          "io_read_bytes": 3186114852,
+          "io_write_bytes": 17841070420,
+          "io_write_operations": 7910908,
+          "private_bytes": 86265856,
+          "working_set_bytes": 93413376
+        },
+        "wall_secs": 51.9785764
+      },
+      {
+        "minutes": 21600,
+        "native": {
+          "cpu_seconds": 38.328125,
+          "handles": 114,
+          "io_read_bytes": 3439526180,
+          "io_write_bytes": 19230969620,
+          "io_write_operations": 8526330,
+          "private_bytes": 86265856,
+          "working_set_bytes": 93417472
+        },
+        "wall_secs": 56.0745029
+      },
+      {
+        "minutes": 23040,
+        "native": {
+          "cpu_seconds": 41.125,
+          "handles": 114,
+          "io_read_bytes": 3704799524,
+          "io_write_bytes": 20660410132,
+          "io_write_operations": 9157884,
+          "private_bytes": 86265856,
+          "working_set_bytes": 93425664
+        },
+        "wall_secs": 60.2584206
+      },
+      {
+        "minutes": 24480,
+        "native": {
+          "cpu_seconds": 44.125,
+          "handles": 114,
+          "io_read_bytes": 3969638692,
+          "io_write_bytes": 22087907808,
+          "io_write_operations": 9788713,
+          "private_bytes": 86265856,
+          "working_set_bytes": 93425664
+        },
+        "wall_secs": 64.5262302
+      },
+      {
+        "minutes": 25920,
+        "native": {
+          "cpu_seconds": 46.859375,
+          "handles": 114,
+          "io_read_bytes": 4225016100,
+          "io_write_bytes": 23479598000,
+          "io_write_operations": 10404795,
+          "private_bytes": 86265856,
+          "working_set_bytes": 93462528
+        },
+        "wall_secs": 68.480139
+      },
+      {
+        "minutes": 27360,
+        "native": {
+          "cpu_seconds": 49.703125,
+          "handles": 114,
+          "io_read_bytes": 4481949988,
+          "io_write_bytes": 24882235484,
+          "io_write_operations": 11025424,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93519872
+        },
+        "wall_secs": 72.5900046
+      },
+      {
+        "minutes": 28800,
+        "native": {
+          "cpu_seconds": 52.40625,
+          "handles": 114,
+          "io_read_bytes": 4750831908,
+          "io_write_bytes": 26321356692,
+          "io_write_operations": 11660888,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93589504
+        },
+        "wall_secs": 76.659977
+      },
+      {
+        "minutes": 30240,
+        "native": {
+          "cpu_seconds": 55.5,
+          "handles": 114,
+          "io_read_bytes": 5011165476,
+          "io_write_bytes": 27732310216,
+          "io_write_operations": 12284979,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93589504
+        },
+        "wall_secs": 80.9158387
+      },
+      {
+        "minutes": 31680,
+        "native": {
+          "cpu_seconds": 58.34375,
+          "handles": 114,
+          "io_read_bytes": 5268312356,
+          "io_write_bytes": 29130696068,
+          "io_write_operations": 12903788,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93589504
+        },
+        "wall_secs": 84.8597024
+      },
+      {
+        "minutes": 33120,
+        "native": {
+          "cpu_seconds": 61.078125,
+          "handles": 114,
+          "io_read_bytes": 5530554660,
+          "io_write_bytes": 30549546260,
+          "io_write_operations": 13530952,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93589504
+        },
+        "wall_secs": 88.8556669
+      },
+      {
+        "minutes": 34560,
+        "native": {
+          "cpu_seconds": 64.0625,
+          "handles": 114,
+          "io_read_bytes": 5801058596,
+          "io_write_bytes": 31996541368,
+          "io_write_operations": 14169879,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93589504
+        },
+        "wall_secs": 93.0934743
+      },
+      {
+        "minutes": 36000,
+        "native": {
+          "cpu_seconds": 66.859375,
+          "handles": 114,
+          "io_read_bytes": 6061371684,
+          "io_write_bytes": 33407090484,
+          "io_write_operations": 14793937,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93589504
+        },
+        "wall_secs": 97.2734275
+      },
+      {
+        "minutes": 37440,
+        "native": {
+          "cpu_seconds": 69.609375,
+          "handles": 114,
+          "io_read_bytes": 6320787748,
+          "io_write_bytes": 34814237992,
+          "io_write_operations": 15416248,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93589504
+        },
+        "wall_secs": 101.3012344
+      },
+      {
+        "minutes": 38880,
+        "native": {
+          "cpu_seconds": 72.421875,
+          "handles": 114,
+          "io_read_bytes": 6590255396,
+          "io_write_bytes": 36259409004,
+          "io_write_operations": 16054518,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93614080
+        },
+        "wall_secs": 105.4551526
+      },
+      {
+        "minutes": 40320,
+        "native": {
+          "cpu_seconds": 75.296875,
+          "handles": 114,
+          "io_read_bytes": 6859538724,
+          "io_write_bytes": 37703026216,
+          "io_write_operations": 16692282,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93614080
+        },
+        "wall_secs": 109.5430691
+      },
+      {
+        "minutes": 41760,
+        "native": {
+          "cpu_seconds": 77.953125,
+          "handles": 114,
+          "io_read_bytes": 7118594340,
+          "io_write_bytes": 39106952988,
+          "io_write_operations": 17313421,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93642752
+        },
+        "wall_secs": 113.5929584
+      },
+      {
+        "minutes": 43200,
+        "native": {
+          "cpu_seconds": 80.625,
+          "handles": 114,
+          "io_read_bytes": 7381000484,
+          "io_write_bytes": 40525880312,
+          "io_write_operations": 17940671,
+          "private_bytes": 86405120,
+          "working_set_bytes": 93642752
+        },
+        "wall_secs": 117.5807631
+      }
+    ],
+    "schema_version": 1,
+    "spec_hash": "3c163f819d02827bf4b1f4bc2036eb44b499bd8ff64b155fb9965789ab096c47",
+    "sqlite_schema_version": 5,
+    "start_utc": 1787184000,
+    "tables_and_indexes": {
+      "dbstat_available": true,
+      "objects": [
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "alert_event",
+          "rows": 0,
+          "table": "alert_event"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "alert_instance",
+          "rows": 0,
+          "table": "alert_instance"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "alert_instance_active_uniq",
+          "rows": null,
+          "table": "alert_instance"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "alert_instance_identity",
+          "rows": null,
+          "table": "alert_instance"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": 585.1428571428571,
+          "kind": "table",
+          "name": "alert_rule",
+          "rows": 7,
+          "table": "alert_rule"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "backup_manifest",
+          "rows": 0,
+          "table": "backup_manifest"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": 4096.0,
+          "kind": "table",
+          "name": "bundle_epoch",
+          "rows": 1,
+          "table": "bundle_epoch"
+        },
+        {
+          "bytes": 221700096,
+          "bytes_per_row": 85.53244444444445,
+          "kind": "table",
+          "name": "committed_bundle",
+          "rows": 2592000,
+          "table": "committed_bundle"
+        },
+        {
+          "bytes": 151531520,
+          "bytes_per_row": 23.384493827160494,
+          "kind": "table",
+          "name": "connection_chain",
+          "rows": 6480000,
+          "table": "connection_chain"
+        },
+        {
+          "bytes": 226291712,
+          "bytes_per_row": 20.952936296296297,
+          "kind": "table",
+          "name": "connection_minute",
+          "rows": 10800000,
+          "table": "connection_minute"
+        },
+        {
+          "bytes": 114786304,
+          "bytes_per_row": 53.141807407407406,
+          "kind": "table",
+          "name": "connection_session",
+          "rows": 2160000,
+          "table": "connection_session"
+        },
+        {
+          "bytes": 138289152,
+          "bytes_per_row": 64.02275555555556,
+          "kind": "table",
+          "name": "connection_session_attr",
+          "rows": 2160000,
+          "table": "connection_session_attr"
+        },
+        {
+          "bytes": 55799808,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "connection_session_identity",
+          "rows": null,
+          "table": "connection_session"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": 4096.0,
+          "kind": "table",
+          "name": "controller_epoch",
+          "rows": 1,
+          "table": "controller_epoch"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "coverage_daily",
+          "rows": 0,
+          "table": "coverage_daily"
+        },
+        {
+          "bytes": 40960,
+          "bytes_per_row": 56.888888888888886,
+          "kind": "table",
+          "name": "coverage_interval",
+          "rows": 720,
+          "table": "coverage_interval"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": 4096.0,
+          "kind": "table",
+          "name": "data_version",
+          "rows": 1,
+          "table": "data_version"
+        },
+        {
+          "bytes": 45056,
+          "bytes_per_row": 41.526267281105994,
+          "kind": "table",
+          "name": "dimension_dict",
+          "rows": 1085,
+          "table": "dimension_dict"
+        },
+        {
+          "bytes": 45056,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "dimension_dict_value",
+          "rows": null,
+          "table": "dimension_dict"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_alert_event_retention",
+          "rows": null,
+          "table": "alert_event"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_alert_instance_center",
+          "rows": null,
+          "table": "alert_instance"
+        },
+        {
+          "bytes": 203382784,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_connection_minute_session",
+          "rows": null,
+          "table": "connection_minute"
+        },
+        {
+          "bytes": 32174080,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_connection_session_started",
+          "rows": null,
+          "table": "connection_session"
+        },
+        {
+          "bytes": 36864,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_coverage_sample_tail",
+          "rows": null,
+          "table": "coverage_interval"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_daily_core_category",
+          "rows": null,
+          "table": "traffic_daily_core"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_daily_core_day",
+          "rows": null,
+          "table": "traffic_daily_core"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_daily_dim_lookup",
+          "rows": null,
+          "table": "traffic_daily_dimension"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_daily_dimension_category",
+          "rows": null,
+          "table": "traffic_daily_dimension"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_daily_dimension_identity",
+          "rows": null,
+          "table": "traffic_daily_dimension"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_hourly_category",
+          "rows": null,
+          "table": "traffic_hourly_dimension"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_hourly_dim_lookup",
+          "rows": null,
+          "table": "traffic_hourly_dimension"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_hourly_dimension_identity",
+          "rows": null,
+          "table": "traffic_hourly_dimension"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_outbox_due",
+          "rows": null,
+          "table": "notification_outbox"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_outbox_lease",
+          "rows": null,
+          "table": "notification_outbox"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_report_archive_kind_start",
+          "rows": null,
+          "table": "report_archive"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_retention_build_member_session",
+          "rows": null,
+          "table": "retention_build_member"
+        },
+        {
+          "bytes": 16384,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_retention_coverage_source",
+          "rows": null,
+          "table": "coverage_interval"
+        },
+        {
+          "bytes": 22220800,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_session_attr_category",
+          "rows": null,
+          "table": "connection_session_attr"
+        },
+        {
+          "bytes": 108257280,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_session_attr_chain_rule",
+          "rows": null,
+          "table": "connection_session_attr"
+        },
+        {
+          "bytes": 26480640,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_session_attr_host",
+          "rows": null,
+          "table": "connection_session_attr"
+        },
+        {
+          "bytes": 24109056,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_session_attr_network",
+          "rows": null,
+          "table": "connection_session_attr"
+        },
+        {
+          "bytes": 24203264,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_session_attr_process",
+          "rows": null,
+          "table": "connection_session_attr"
+        },
+        {
+          "bytes": 24100864,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "idx_session_attr_rule",
+          "rows": null,
+          "table": "connection_session_attr"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "machine_setting",
+          "rows": 0,
+          "table": "machine_setting"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "notification_outbox",
+          "rows": 0,
+          "table": "notification_outbox"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "report_archive",
+          "rows": 0,
+          "table": "report_archive"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "report_archive_period_uniq",
+          "rows": null,
+          "table": "report_archive"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "report_snapshot_meta",
+          "rows": 0,
+          "table": "report_snapshot_meta"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "retention_build",
+          "rows": 0,
+          "table": "retention_build"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "retention_build_aggregate",
+          "rows": 0,
+          "table": "retention_build_aggregate"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "retention_build_member",
+          "rows": 0,
+          "table": "retention_build_member"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "retention_state",
+          "rows": 0,
+          "table": "retention_state"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": 1024.0,
+          "kind": "table",
+          "name": "retention_watermark",
+          "rows": 4,
+          "table": "retention_watermark"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": 819.2,
+          "kind": "table",
+          "name": "schema_migration",
+          "rows": 5,
+          "table": "schema_migration"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_alert_event_1",
+          "rows": null,
+          "table": "alert_event"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_alert_event_2",
+          "rows": null,
+          "table": "alert_event"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_alert_instance_1",
+          "rows": null,
+          "table": "alert_instance"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_alert_rule_1",
+          "rows": null,
+          "table": "alert_rule"
+        },
+        {
+          "bytes": 38576128,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_committed_bundle_1",
+          "rows": null,
+          "table": "committed_bundle"
+        },
+        {
+          "bytes": 98656256,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_connection_chain_1",
+          "rows": null,
+          "table": "connection_chain"
+        },
+        {
+          "bytes": 213258240,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_connection_minute_1",
+          "rows": null,
+          "table": "connection_minute"
+        },
+        {
+          "bytes": 24576,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_dimension_dict_1",
+          "rows": null,
+          "table": "dimension_dict"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_machine_setting_1",
+          "rows": null,
+          "table": "machine_setting"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_notification_outbox_1",
+          "rows": null,
+          "table": "notification_outbox"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_notification_outbox_2",
+          "rows": null,
+          "table": "notification_outbox"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_report_archive_1",
+          "rows": null,
+          "table": "report_archive"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_report_snapshot_meta_1",
+          "rows": null,
+          "table": "report_snapshot_meta"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_retention_build_aggregate_1",
+          "rows": null,
+          "table": "retention_build_aggregate"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_retention_build_member_1",
+          "rows": null,
+          "table": "retention_build_member"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_retention_state_1",
+          "rows": null,
+          "table": "retention_state"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_retention_watermark_1",
+          "rows": null,
+          "table": "retention_watermark"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_target_item_1",
+          "rows": null,
+          "table": "target_item"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_traffic_daily_core_1",
+          "rows": null,
+          "table": "traffic_daily_core"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_traffic_daily_dimension_1",
+          "rows": null,
+          "table": "traffic_daily_dimension"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "index",
+          "name": "sqlite_autoindex_traffic_hourly_dimension_1",
+          "rows": null,
+          "table": "traffic_hourly_dimension"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": 4096.0,
+          "kind": "table",
+          "name": "target_item",
+          "rows": 1,
+          "table": "target_item"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": 4096.0,
+          "kind": "table",
+          "name": "target_set",
+          "rows": 1,
+          "table": "target_set"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "traffic_daily_core",
+          "rows": 0,
+          "table": "traffic_daily_core"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "traffic_daily_dimension",
+          "rows": 0,
+          "table": "traffic_daily_dimension"
+        },
+        {
+          "bytes": 4096,
+          "bytes_per_row": null,
+          "kind": "table",
+          "name": "traffic_hourly_dimension",
+          "rows": 0,
+          "table": "traffic_hourly_dimension"
+        }
+      ]
+    },
+    "workload": {
+      "average_active": 250,
+      "chain_cardinality": 60,
+      "days": 30,
+      "domain_cardinality": 800,
+      "frame_change_ratio": 1.0,
+      "hostile_domain_mix": true,
+      "long_process_path": true,
+      "mean_chain_nodes": 3.0,
+      "mean_session_minutes": 5.0,
+      "network_cardinality": 4,
+      "nonzero_minute_ratio": 1.0,
+      "peak_active": 10000,
+      "peak_minutes": 30,
+      "process_cardinality": 120,
+      "rule_cardinality": 40,
+      "sample_hz": 1,
+      "seed": 20260919,
+      "version": 1
+    }
+  },
+  "sidecars_before": {
+    "-wal": {
+      "present": false,
+      "bytes": 0
+    },
+    "-shm": {
+      "present": false,
+      "bytes": 0
+    }
+  },
+  "database_sha256_before": "b6e024fcb505e1fca41dbc8fe186c0480dcf63fc0104d6d754cb197d74cf733b",
+  "database_bytes": 1724293120,
+  "database_sha256_after": "b6e024fcb505e1fca41dbc8fe186c0480dcf63fc0104d6d754cb197d74cf733b",
+  "marker_sha256_after": "03bfda2a56cf662159ae4d2e6abda0a08383124cb44aa0743d9d48cb94b71c96",
+  "sidecars_after": {
+    "-wal": {
+      "present": true,
+      "bytes": 0
+    },
+    "-shm": {
+      "present": true,
+      "bytes": 32768
+    }
+  },
+  "database_hash_unchanged": true,
+  "marker_hash_unchanged": true,
+  "completed_utc": "2026-10-04T05:25:43.061144+00:00"
+}

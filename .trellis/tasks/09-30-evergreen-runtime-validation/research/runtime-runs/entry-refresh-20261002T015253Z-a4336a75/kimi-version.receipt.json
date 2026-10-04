@@ -1,0 +1,15 @@
+{
+  "metadata_only": true,
+  "inference_started": false,
+  "argv": [
+    "<HOME>\\.kimi-code\\bin\\kimi.exe",
+    "--version"
+  ],
+  "started_utc": "2026-10-02T01:52:55.228679+00:00",
+  "ended_utc": "2026-10-02T01:52:56.987431+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "c28fcca53637bc88e124af1725df13cb98c69dedefd62fb3cdbe1cdb6b760624",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "redactions": [],
+  "representation": "redacted_decoded_output_not_original_bytes"
+}

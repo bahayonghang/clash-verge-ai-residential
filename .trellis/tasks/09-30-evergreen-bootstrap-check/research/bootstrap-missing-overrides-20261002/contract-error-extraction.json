@@ -1,0 +1,14 @@
+{
+  "source_sha256": "0626fc6793db7c851e22542794520ec866f5521706175bb3b43cd0c5c123ab3f",
+  "count": 7,
+  "errors": [
+    "[AUTH] .kimi-code/skills/trellis-check/SKILL.md：缺少合同内容：Follow `AGENTS.md`",
+    "[AUTH] .kimi-code/skills/trellis-check/SKILL.md：缺少合同内容：Read-only review must not repair product code or configuration",
+    "[AUTH] .kimi-code/skills/trellis-check/SKILL.md：缺少合同内容：approved task and file scope",
+    "[DISPATCH] .kimi-code/skills/trellis-check/SKILL.md：缺少合同内容：even when the dispatch prompt supplies a path",
+    "[DISPATCH] .kimi-code/skills/trellis-check/SKILL.md：缺少合同内容：ask the main session to confirm the dispatch target",
+    "[DEPTH] .codex/config.toml：缺少合同内容：V1 agent threads only; V2 ignores this field",
+    "[DEPTH] .codex/config.toml：缺少合同内容：prompt guards are not a hard sandbox"
+  ],
+  "defaults_changed_after_failure": false
+}

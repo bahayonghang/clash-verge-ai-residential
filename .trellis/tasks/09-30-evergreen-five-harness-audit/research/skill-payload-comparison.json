@@ -1,0 +1,16 @@
+{
+  "source": {
+    "routing": 26,
+    "supported": 13,
+    "unsupported": 13,
+    "anyrouter": [
+      "anyrouter.top"
+    ]
+  },
+  "installed": {
+    "routing": 26,
+    "supported": 12,
+    "unsupported": 14,
+    "extra_anyrouter_unsupported": true
+  }
+}

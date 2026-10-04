@@ -1,0 +1,30 @@
+{
+  ".claude/agents/trellis-implement.md": {
+    "present": true,
+    "sha256": "73b56b3047c0e852382c4630aa181fb847d1e5ea1f63459dac4bf728f43fd097"
+  },
+  ".claude/settings.json": {
+    "present": true,
+    "sha256": "ef17139b8e167fe4d34da87907e3e4ddb88852e6af9883ca0a1bc8f5b44acc10"
+  },
+  ".codex/hooks.json": {
+    "present": true,
+    "sha256": "d8dc84ec5096b5082f6415deb655426dd7eb32770c14fbfb24aeca32554fcd55"
+  },
+  ".grok/agents/trellis-implement.md": {
+    "present": true,
+    "sha256": "8bda5db4efd4d0ed35f38245b3dacfa13f2addf22936f7e807040e4bd0a7136d"
+  },
+  ".kimi-code/skills/trellis-start/SKILL.md": {
+    "present": true,
+    "sha256": "604eccc19452f86774a0c51952a7805ceb2331a10e1b67126da6af9dcd48fc37"
+  },
+  ".omp/agents/trellis-implement.md": {
+    "present": true,
+    "sha256": "0401d018cc24c0ca5285fca35fe493e8891a5f5fb06b595377508bed864dac34"
+  },
+  ".omp/extensions/trellis/index.ts": {
+    "present": true,
+    "sha256": "712cf679a6690f8949ab043a9fe94822ce4fda7136cea6cdf30f390660f251e9"
+  }
+}

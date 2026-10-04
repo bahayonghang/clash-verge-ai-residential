@@ -1,0 +1,9 @@
+{
+  "command": "node --test tests/check-agent-contract.test.js",
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T12:55:09.238014+00:00",
+  "finished_utc": "2026-09-30T12:55:11.421297+00:00",
+  "exit_code": 0,
+  "raw_sha256": "b6cefb802df91d546ad480aeab23fe5882331baae617dca95ef7800724891f0c",
+  "readable_normalization": "ANSI removed; trailing line whitespace removed; LF"
+}

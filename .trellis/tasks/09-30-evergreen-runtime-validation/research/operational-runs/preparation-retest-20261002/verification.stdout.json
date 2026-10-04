@@ -1,0 +1,211 @@
+{
+  "status": "SYNTHETIC_PASS",
+  "model_clients_started": 0,
+  "real_candidate_freezes": 0,
+  "checks": [
+    {
+      "case": "prompt_whole_argument:claude",
+      "pass": true
+    },
+    {
+      "case": "no_model_or_auto_override:claude",
+      "pass": true
+    },
+    {
+      "case": "unchanged_parent_limits:claude",
+      "pass": true
+    },
+    {
+      "case": "prompt_whole_argument:codex",
+      "pass": true
+    },
+    {
+      "case": "no_model_or_auto_override:codex",
+      "pass": true
+    },
+    {
+      "case": "unchanged_parent_limits:codex",
+      "pass": true
+    },
+    {
+      "case": "prompt_whole_argument:grok",
+      "pass": true
+    },
+    {
+      "case": "no_model_or_auto_override:grok",
+      "pass": true
+    },
+    {
+      "case": "unchanged_parent_limits:grok",
+      "pass": true
+    },
+    {
+      "case": "prompt_whole_argument:kimi",
+      "pass": true
+    },
+    {
+      "case": "no_model_or_auto_override:kimi",
+      "pass": true
+    },
+    {
+      "case": "kimi_plan_prompt_not_combined",
+      "pass": true
+    },
+    {
+      "case": "prompt_whole_argument:omp",
+      "pass": true
+    },
+    {
+      "case": "no_model_or_auto_override:omp",
+      "pass": true
+    },
+    {
+      "case": "unchanged_parent_limits:omp",
+      "pass": true
+    },
+    {
+      "case": "prompt_ascii_utf8_instruction",
+      "pass": true
+    },
+    {
+      "case": "snapshot_sources_included_outputs_excluded",
+      "pass": true
+    },
+    {
+      "case": "private_db_local_remain_excluded",
+      "pass": true
+    },
+    {
+      "case": "initialize_has_no_write_terminal_auth",
+      "pass": true
+    },
+    {
+      "case": "initialize_then_new",
+      "pass": true
+    },
+    {
+      "case": "new_then_plan",
+      "pass": true
+    },
+    {
+      "case": "no_prompt_before_mode_notification",
+      "pass": true
+    },
+    {
+      "case": "prompt_only_after_both_confirmations",
+      "pass": true
+    },
+    {
+      "case": "prompt_completion_then_close",
+      "pass": true
+    },
+    {
+      "case": "close_completion",
+      "pass": true
+    },
+    {
+      "case": "initialize_has_no_write_terminal_auth",
+      "pass": true
+    },
+    {
+      "case": "initialize_then_new",
+      "pass": true
+    },
+    {
+      "case": "new_then_plan",
+      "pass": true
+    },
+    {
+      "case": "notification_alone_no_prompt",
+      "pass": true
+    },
+    {
+      "case": "reverse_confirmation_order",
+      "pass": true
+    },
+    {
+      "case": "permission_cancel_never_selected",
+      "pass": true
+    },
+    {
+      "case": "mode_loss_stops",
+      "pass": true
+    },
+    {
+      "case": "write_callback_refused",
+      "pass": true
+    },
+    {
+      "case": "private_read_refused_before_open",
+      "pass": true
+    },
+    {
+      "case": "unchanged_sensitive_redaction",
+      "pass": true
+    },
+    {
+      "case": "unchanged_sensitive_redaction",
+      "pass": true
+    },
+    {
+      "case": "no_go_no_capture_or_snapshot",
+      "pass": true
+    },
+    {
+      "case": "acp_no_go_before_native",
+      "pass": true
+    },
+    {
+      "case": "acp_no_go_native_not_started",
+      "pass": true
+    },
+    {
+      "case": "synthetic_native_driver_independent_exit_zero",
+      "pass": true
+    },
+    {
+      "case": "native_utf8_forwarding",
+      "pass": true
+    },
+    {
+      "case": "acp_native_fixture_stop:sensitive",
+      "pass": true
+    },
+    {
+      "case": "acp_sensitive_never_forwarded_raw",
+      "pass": true
+    },
+    {
+      "case": "acp_native_fixture_stop:permission",
+      "pass": true
+    },
+    {
+      "case": "acp_permission_refusal_sent",
+      "pass": true
+    },
+    {
+      "case": "acp_native_fixture_stop:timeout",
+      "pass": true
+    },
+    {
+      "case": "outer_failure_exit_independent",
+      "pass": true
+    },
+    {
+      "case": "native_fixture_capture:sensitive",
+      "pass": true
+    },
+    {
+      "case": "secret_never_saved_raw",
+      "pass": true
+    },
+    {
+      "case": "native_fixture_capture:timeout",
+      "pass": true
+    },
+    {
+      "case": "native_fixture_capture:native_exit",
+      "pass": true
+    }
+  ]
+}

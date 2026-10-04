@@ -1,0 +1,26 @@
+[
+  {
+    "name": "grok-subagents",
+    "url": "https://raw.githubusercontent.com/xai-org/grok-build/main/crates/codegen/xai-grok-pager/docs/user-guide/16-subagents.md",
+    "status": "OK",
+    "bytes": 23044,
+    "checked_on": "2026-09-30",
+    "analysis_location": "audit.md section 5 and 7"
+  },
+  {
+    "name": "grok-rules",
+    "url": "https://raw.githubusercontent.com/xai-org/grok-build/main/crates/codegen/xai-grok-pager/docs/user-guide/12-project-rules.md",
+    "status": "OK",
+    "bytes": 10451,
+    "checked_on": "2026-09-30",
+    "analysis_location": "audit.md section 5 and 7"
+  },
+  {
+    "name": "omp-context",
+    "url": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/docs/context-files.md",
+    "status": "OK",
+    "bytes": 29577,
+    "checked_on": "2026-09-30",
+    "analysis_location": "audit.md section 5 and 7"
+  }
+]

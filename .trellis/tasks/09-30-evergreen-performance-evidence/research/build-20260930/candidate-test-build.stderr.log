@@ -1,0 +1,6 @@
+   Compiling fastrand v2.5.0
+   Compiling tempfile v3.27.0
+   Compiling residential-monitor v0.3.0 (D:\Documents\Code\Github\clash-verge-ai-residential\residential-monitor\src-tauri)
+    Finished `release` profile [optimized] target(s) in 19.20s
+mbx[cache]: 0 hits, 0 misses, 2 not looked up, 1 bypassed; 0 B downloaded, 0 B uploaded, 1.2 MiB stored locally
+mbx[savings]: across 938 builds, rustc has been excused from 35m 5s of its duties.

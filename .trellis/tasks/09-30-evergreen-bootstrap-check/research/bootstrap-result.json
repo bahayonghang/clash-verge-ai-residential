@@ -1,0 +1,83 @@
+{
+  "candidate": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+  "expected_version": "0.7.0-beta.3",
+  "version_command": [
+    "D:\\GreenSoftware\\node\\node.EXE",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\@mindfoldhq\\trellis\\bin\\trellis.js",
+    "--version"
+  ],
+  "version_exit_code": 0,
+  "actual_version": "0.7.0-beta.3",
+  "overrides_before": {
+    ".codex/config.toml": "0696030d4c8d9b33fb1286081146207114106e26f74bd2b9a0308b56d3212035",
+    ".kimi-code/skills/trellis-implement/SKILL.md": "61013b2aaef14b1da347553da645f5343f73ae17c8ec9a2cb0ad3fdc44cc444c",
+    ".kimi-code/skills/trellis-check/SKILL.md": "43536cc2e41e119634e85848c67acbadc582e6fe84ab195a6a8645f8e97fd273",
+    ".kimi-code/skills/trellis-research/SKILL.md": "646f070f6ed7598bccc91a0275ed1f3fa78783c043db5ff16caab587b0cbbb61"
+  },
+  "init_executed": true,
+  "init_command": [
+    "D:\\GreenSoftware\\node\\node.EXE",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\@mindfoldhq\\trellis\\bin\\trellis.js",
+    "init",
+    "--claude",
+    "--codex",
+    "--grok",
+    "--kimi",
+    "--omp",
+    "--skip-existing",
+    "-y"
+  ],
+  "started_utc": "2026-09-30T13:25:54.329057+00:00",
+  "init_exit_code": 0,
+  "finished_utc": "2026-09-30T13:25:55.189342+00:00",
+  "overrides_after": {
+    ".codex/config.toml": "0696030d4c8d9b33fb1286081146207114106e26f74bd2b9a0308b56d3212035",
+    ".kimi-code/skills/trellis-implement/SKILL.md": "61013b2aaef14b1da347553da645f5343f73ae17c8ec9a2cb0ad3fdc44cc444c",
+    ".kimi-code/skills/trellis-check/SKILL.md": "43536cc2e41e119634e85848c67acbadc582e6fe84ab195a6a8645f8e97fd273",
+    ".kimi-code/skills/trellis-research/SKILL.md": "646f070f6ed7598bccc91a0275ed1f3fa78783c043db5ff16caab587b0cbbb61"
+  },
+  "assets": {
+    ".claude/agents/trellis-implement.md": {
+      "present": true,
+      "sha256": "73b56b3047c0e852382c4630aa181fb847d1e5ea1f63459dac4bf728f43fd097"
+    },
+    ".claude/settings.json": {
+      "present": true,
+      "sha256": "ef17139b8e167fe4d34da87907e3e4ddb88852e6af9883ca0a1bc8f5b44acc10"
+    },
+    ".codex/hooks.json": {
+      "present": true,
+      "sha256": "d8dc84ec5096b5082f6415deb655426dd7eb32770c14fbfb24aeca32554fcd55"
+    },
+    ".grok/agents/trellis-implement.md": {
+      "present": true,
+      "sha256": "8bda5db4efd4d0ed35f38245b3dacfa13f2addf22936f7e807040e4bd0a7136d"
+    },
+    ".kimi-code/skills/trellis-start/SKILL.md": {
+      "present": true,
+      "sha256": "604eccc19452f86774a0c51952a7805ceb2331a10e1b67126da6af9dcd48fc37"
+    },
+    ".omp/agents/trellis-implement.md": {
+      "present": true,
+      "sha256": "0401d018cc24c0ca5285fca35fe493e8891a5f5fb06b595377508bed864dac34"
+    },
+    ".omp/extensions/trellis/index.ts": {
+      "present": true,
+      "sha256": "712cf679a6690f8949ab043a9fe94822ce4fda7136cea6cdf30f390660f251e9"
+    }
+  },
+  "current_protected_after": {
+    ".trellis/.template-hashes.json": "61058f644764515363f2b7d9c5b2877eb167d474a38fc08955e7eef22c3e5f79",
+    ".trellis/.version": "0fb2a9d4b97b5ee5f3c24bd0c969d5eb2c7729ace23df3729a60fb6a30fe9bde",
+    ".codex/config.toml": "0696030d4c8d9b33fb1286081146207114106e26f74bd2b9a0308b56d3212035",
+    ".kimi-code/skills/trellis-implement/SKILL.md": "61013b2aaef14b1da347553da645f5343f73ae17c8ec9a2cb0ad3fdc44cc444c",
+    ".kimi-code/skills/trellis-check/SKILL.md": "43536cc2e41e119634e85848c67acbadc582e6fe84ab195a6a8645f8e97fd273",
+    ".kimi-code/skills/trellis-research/SKILL.md": "646f070f6ed7598bccc91a0275ed1f3fa78783c043db5ff16caab587b0cbbb61",
+    "AGENTS.md": "f602d7e74cada3cd9c6d617dad36cbc1a90d90c19b92bd5ccb40d9794b557bb9",
+    "CLAUDE.md": "c0a67ce322c8394a7e34c9ccbe03addce4cf40a900134638cd04e94fd7669236",
+    ".gitignore": "86fb25db72a9a2158628c5197f1eac306824085d258a4d163640ba06c11cba92"
+  },
+  "current_protected_unchanged": true,
+  "candidate_template_hashes_sha256": "17f59eff0b31446fd476bc84a6203e223458cfc674cb018ce53d412b9892ad52",
+  "candidate_template_hashes_copied_back": false
+}

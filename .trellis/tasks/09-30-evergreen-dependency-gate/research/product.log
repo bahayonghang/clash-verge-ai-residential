@@ -1,0 +1,853 @@
+node scripts/sync-monitor-version.js --check
+家宽监控版本已对齐 0.3.0
+npm --prefix residential-monitor ci
+npm warn install-scripts .npmrc allow-scripts setting is being ignored because package.json declares its own allowScripts field
+
+added 430 packages, and audited 431 packages in 15s
+
+149 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm --prefix residential-monitor run check
+npm notice run residential-monitor@0.3.0 check
+npm notice run npm run check:icons && npm run typecheck && npm run lint && npm test && npm run build
+npm notice run residential-monitor@0.3.0 check:icons
+npm notice run node scripts/check-icons.mjs
+check-icons: icon.ico 层 16, 24, 32, 48, 64, 256；PNG 与托盘齐全
+npm notice run residential-monitor@0.3.0 typecheck
+npm notice run tsc --noEmit
+npm notice run residential-monitor@0.3.0 lint
+npm notice run eslint src
+npm notice run residential-monitor@0.3.0 test
+npm notice run vitest run
+
+ RUN  v4.1.11 D:/Documents/Code/Github/clash-verge-ai-residential/residential-monitor
+
+
+ Test Files  73 passed (73)
+      Tests  300 passed (300)
+   Start at  07:30:06
+   Duration  5.86s (transform 54.56s, setup 0ms, import 74.95s, tests 831ms, environment 7ms)
+
+npm notice run residential-monitor@0.3.0 build
+npm notice run vite build
+vite v8.2.2 building client environment for production...
+transforming...
+✓ 2613 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                     1.47 kB │ gzip:   0.88 kB
+dist/assets/alerts-Bx4GoUCf.jpg                    59.64 kB
+dist/assets/reports-Dtubk-uf.jpg                   68.63 kB
+dist/assets/live-DdJ2lJHf.jpg                      68.66 kB
+dist/assets/overview-CsePzCxx.jpg                  69.95 kB
+dist/assets/settings-DvUrh-VT.jpg                 109.01 kB
+dist/assets/mark-app-bpEXdmtM.png                 334.40 kB
+dist/assets/index-ATMCB5bk.css                     49.43 kB │ gzip:   9.53 kB
+dist/assets/form-styles-IEljBRW0.js                 0.23 kB │ gzip:   0.17 kB
+dist/assets/units-CMrBX937.js                       0.39 kB │ gzip:   0.28 kB
+dist/assets/attribution-quality-note-Cs5NGShI.js    0.64 kB │ gzip:   0.38 kB
+dist/assets/rolldown-runtime-CXHxssQy.js            0.71 kB │ gzip:   0.42 kB
+dist/assets/overview-CPhBd8j-.js                    0.75 kB │ gzip:   0.42 kB
+dist/assets/switch-BJ-i8aQA.js                      0.85 kB │ gzip:   0.49 kB
+dist/assets/sortable-th-B7ktUSOS.js                 1.05 kB │ gzip:   0.58 kB
+dist/assets/use-display-query-BqFMWqzo.js           1.35 kB │ gzip:   0.60 kB
+dist/assets/capability-note-CHkw11cC.js             1.39 kB │ gzip:   0.64 kB
+dist/assets/recovery-B6IVx6O6.js                    1.89 kB │ gzip:   0.79 kB
+dist/assets/col-resizer-DWEZ4Gez.js                 2.32 kB │ gzip:   1.15 kB
+dist/assets/data-table-CovW2Zkl.js                  3.34 kB │ gzip:   1.44 kB
+dist/assets/dimension-page-B0oygBSg.js             10.42 kB │ gzip:   3.80 kB
+dist/assets/use-settings-B0wSAR06.js               10.85 kB │ gzip:   3.04 kB
+dist/assets/trend-area-BTPZ2CqO.js                 10.89 kB │ gzip:   4.38 kB
+dist/assets/hotspot-cards-CEI4uJvD.js              11.58 kB │ gzip:   4.17 kB
+dist/assets/overview-CsGFsE7J.js                   14.09 kB │ gzip:   4.16 kB
+dist/assets/export-panel-D4FQKErF.js               15.63 kB │ gzip:   4.74 kB
+dist/assets/reports-aV7mG5WP.js                    18.32 kB │ gzip:   4.64 kB
+dist/assets/live-B7udjdSM.js                       18.73 kB │ gzip:   6.11 kB
+dist/assets/alerts-CpejMWLp.js                     18.85 kB │ gzip:   4.43 kB
+dist/assets/residential-CBHSRqpI.js                23.13 kB │ gzip:   6.39 kB
+dist/assets/settings-Dc4sjzPA.js                   25.21 kB │ gzip:   5.92 kB
+dist/assets/index-DJcgw2eO.js                      53.35 kB │ gzip:  17.19 kB
+dist/assets/radix-luJ-1des.js                     111.07 kB │ gzip:  37.19 kB
+dist/assets/live-session-BUfguXgt.js              125.07 kB │ gzip:  37.58 kB
+dist/assets/react-WTBKx2fN.js                     179.28 kB │ gzip:  57.09 kB
+dist/assets/recharts-9zeMv3As.js                  408.53 kB │ gzip: 118.41 kB
+
+✓ built in 4.19s
+[33m[PLUGIN_TIMINGS] [0mPlugin hooks ran for 4.1s of this 4.2s build (98%).
+The slowest hooks, timed inside each callback (the wait before a callback starts is excluded, the time it awaits is included):
+  - vite:css transform (90%, 3.8s, 1 call)
+Additional hook time came from the hooks below and from hooks under 1s.
+2 hooks are listed without a time. Their calls overlapped, so the time inside one call includes work from other calls. To find their cost, profile the build with `node --cpu-prof`:
+  - vite:esbuild-transpile renderChunk (28 calls)
+  - vite:asset load (11 calls)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+
+cargo fmt --manifest-path residential-monitor/src-tauri/Cargo.toml --check
+cargo clippy --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace --all-targets -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.70s
+mbx[gc]: evicted 0 objects and 0 action results (381.0 KiB logical); 41.6 GiB logical remain
+mbx[savings]: 2103 compilations. rustc did each once; mbx did the rest of the showing up.
+cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.14s
+     Running unittests src\lib.rs (residential-monitor\src-tauri\target\debug\deps\residential_monitor_lib-8c9211dd5db70bc1.exe)
+
+running 548 tests
+test accounting::accounting_coverage_tests::accounting_coverage_disconnect_is_gap_not_zero_fact ... ok
+test app_log::app_log_tests::data_dir_does_not_move_log_dir ... ok
+test accounting::accounting_replay_tests::process_identity_uses_safe_cross_platform_basename ... ok
+test accounting::accounting_replay_tests::project_live_resolves_sniff_host_and_destination_ip ... ok
+test autostart_command_tests::reading_default_state_never_writes ... ok
+test app_log::app_log_tests::emit_does_not_panic_when_uninitialized ... ok
+test accounting::accounting_replay_tests::canonical_metadata_enriches_and_does_not_downgrade_on_empty_frame ... ok
+test accounting::accounting_replay_tests::accounting_replay_disappear_does_not_invent_tail ... ok
+test accounting::accounting_replay_tests::canonical_metadata_enriches_at_zero_delta_and_isolated_by_epoch ... ok
+test accounting::accounting_replay_tests::accounting_replay_first_frame_is_unknown_then_delta ... ok
+test accounting::accounting_policy_tests::accounting_policy_ignores_chain_order ... ok
+test accounting::accounting_replay_tests::counter_reset_is_local_and_removed_ids_require_durable_lookup ... ok
+test accounting::accounting_properties_tests::accounting_properties_categories_sum_to_attributed ... ok
+test background_worker_tests::exclusive_failure_resumes_once_after_all_pauses_and_never_during_shutdown ... ok
+test background_worker_tests::failed_archive_attempts_do_not_starve_maintenance ... ok
+test background_worker_tests::busy_worker_keeps_one_signal_and_does_not_block_the_collector ... ok
+test background_worker_tests::background_shutdown_cancels_active_work_and_joins ... ok
+test background_worker_tests::exclusive_pause_joins_before_taking_the_facade_lock ... ok
+test bench::corpus::tests::isolated_corpus_retention_capacity_gate ... ignored, 仅显式指定的隔离容量库；完整规模可能耗时数分钟
+test bench::corpus::tests::maintenance_retry_uses_production_mapping_and_never_retries_cancellation ... ok
+test bench::write_vfs::tests::write_forwards_buffer_offset_and_error_without_counting_failed_bytes ... ok
+test c0_contract::c0_contract_tests::c0_contract_runtime_uses_approved_full_wal ... ok
+test c0_contract::schema_allowlist_tests::schema_allowlist_excludes_report_and_alert_tables ... ok
+test c2::close::close_request_tests::accepted_stays_until_remove ... ok
+test c2::close::close_request_tests::timeout_is_unconfirmed ... ok
+test app_log::app_log_tests::redacts_secret_password_and_host_payload ... ok
+test bench::corpus::tests::completion_latches_async_scan_ends_until_other_maintenance_finishes ... ok
+test accounting::accounting_replay_tests::long_churn_keeps_only_active_accounting_state ... ok
+test bench::corpus::tests::completion_inventory_waits_for_both_persisted_scan_ends ... ok
+test app_log::app_log_tests::rotation_keeps_at_most_five_files ... ok
+test c2::desktop::desktop_lifecycle_tests::autostart_command_uses_background_flag ... ok
+test c2::desktop::desktop_lifecycle_tests::autostart_reads_os_state_not_request ... ok
+test c2::desktop::desktop_lifecycle_tests::close_hides_and_background_stays_hidden ... ok
+test c2::desktop::desktop_lifecycle_tests::opening_hidden_owner_reports_transition_once ... ok
+test c2::desktop::desktop_lifecycle_tests::pause_resume_and_sleep_map_to_c1_inputs ... ok
+test c2::desktop::desktop_lifecycle_tests::second_instance_does_not_start_collector ... ok
+test c2::desktop::desktop_lifecycle_tests::shutdown_is_idempotent ... ok
+test c2::desktop::desktop_lifecycle_tests::tray_chrome_maps_running_and_health ... ok
+test bench::bench_smoke_tests::generate_smoke_profile_writes_candidate_db ... ok
+test bench::bench_smoke_tests::replay_peak_smoke_completes_without_unexplained_drops ... ok
+test bench::write_vfs::tests::counts_only_isolated_files_and_preserves_wal_and_errors ... ok
+test c2::facade::c2_facade_contract_tests::c2_only_names_frozen_c1_owners ... ok
+test bench::bench_smoke_tests::verify_design_db_smoke_matches_generated_counts ... ok
+test bench::bench_smoke_tests::replay_c1_smoke_commits_through_writer ... ok
+test archive_scheduler_tests::archive_tick_persist_failure_logs_class_without_secret ... ok
+test autostart_command_tests::platform_detail_is_absent_from_ipc_and_log ... ok
+test autostart_command_tests::set_command_returns_os_readback_instead_of_requested_value ... ok
+test accounting::accounting_replay_tests::semantic_target_flows_through_accounting_and_storage ... ok
+test c2::collector::collector_tick_tests::empty_address_skips_fetch ... ok
+test archive_scheduler_tests::archive_tick_writes_closed_hour_once_then_day ... ok
+test bench::facade::tests::unchanged_and_failed_workload_has_no_facts_or_successful_archives ... ok
+test bench::facade::tests::real_facade_replay_conserves_counters_and_exercises_archive_and_readers ... ok
+test c2::facade::c2_facade_contract_tests::confirm_delete_reboots_storage_to_first_epoch ... ok
+test c2::collector::collector_tick_tests::persisted_loopback_address_is_ready_on_next_boot ... ok
+test c2::facade::c2_facade_contract_tests::dimension_rank_layout_without_storage_stays_in_memory ... ok
+test archive_scheduler_tests::archive_tick_respects_low_space_before_persisting ... ok
+test c2::facade::c2_facade_contract_tests::cancel_in_flight_backup_does_not_overwrite_hot_db ... ok
+test c2::facade::c2_facade_contract_tests::controller_epoch_reservation_failure_updates_live_health ... ok
+test c2::facade::c2_facade_contract_tests::future_schema_enters_recovery_without_writer ... ok
+test c2::facade::c2_close_control_tests::query_returns_rows_and_sample_time_from_one_hub_snapshot ... ok
+test c2::collector::collector_tick_tests::two_ticks_change_hub_rows ... ok
+test c2::facade::c2_close_control_tests::missing_id_204_is_accepted_until_remove ... ok
+test archive_scheduler_tests::archive_tick_skips_recovery_and_shutdown ... ok
+test c2::collector::collector_tick_tests::pause_stops_requests_and_keeps_rows ... ok
+test c2::facade::c2_facade_contract_tests::persist_settings_and_save_targets_failure_logs_error_class ... ok
+test c2::facade::c2_facade_contract_tests::recovery_only_write_entry_points_return_recovery_only ... ok
+test c2::facade::c2_facade_contract_tests::live_table_layout_persists_and_sanitizes ... ok
+test c2::facade::c2_facade_contract_tests::dimension_rank_table_layout_persists_without_touching_live ... ok
+test c2::facade::c2_facade_contract_tests::disconnect_now_leaves_cancelled_health ... ok
+test c2::facade::c2_close_control_tests::pause_keeps_existing_projection_rows ... ok
+test c2::facade::c2_facade_contract_tests::normal_boot_does_not_create_report_tables ... ok
+test c2::facade::c2_facade_contract_tests::explicit_restart_reserves_durable_generation_on_next_frame ... ok
+test c2::collector::collector_tick_tests::secret_resolve_failure_does_not_schedule_unauthorized_get ... ok
+test c2::collector::collector_tick_tests::oversize_body_leaves_next_tick_schedulable ... ok
+test c2::facade::c2_facade_contract_tests::receipt_payload_mismatch_is_visible_in_live_health ... ok
+test c2::facade::c2_facade_contract_tests::persistent_secret_can_be_revealed_for_settings ... ok
+test c2::collector::collector_tick_tests::resume_after_disconnect_allows_next_tick ... ok
+test c2::collector::collector_tick_tests::disconnect_skips_fetch_reconnect_allows_next_tick ... ok
+test c2::facade::c2_facade_contract_tests::opening_window_with_non_loopback_address_does_not_reconnect ... ok
+test c2::facade::c2_facade_contract_tests::opening_window_without_persisted_address_does_not_reconnect ... ok
+test c2::facade::c2_facade_contract_tests::run_report_invalid_query_uses_ui_locale_and_logs_class ... ok
+test c2::facade::c2_facade_contract_tests::storage_open_failure_logs_class_without_secret ... ok
+test c2::facade::c2_facade_contract_tests::ui_sidebar_width_without_storage_stays_in_memory ... ok
+test c2::facade::c2_facade_contract_tests::reconnect_now_leaves_connecting_health ... ok
+test c2::facade::c2_facade_contract_tests::reopening_hidden_window_reconnects_cancelled_owner ... ok
+test c2::facade::c2_facade_contract_tests::test_notification_reason_has_no_internal_type_names ... ok
+test c2::facade::c2_facade_contract_tests::save_controller_probe_failure_deletes_pending_and_keeps_old ... ok
+test c2::facade::c2_facade_contract_tests::reboot_reserves_new_receipt_and_controller_generation_before_first_frame ... ok
+test c2::facade::c2_facade_contract_tests::unlocked_write_paths_return_recovery_only ... ok
+test c2::facade::c2_facade_contract_tests::run_report_releases_facade_lock_for_live_query ... ok
+test c2::facade::c2_facade_contract_tests::session_change_is_logged_once_per_code ... ok
+test c2::facade::c2_facade_contract_tests::transient_decode_failure_keeps_rows_and_last_sample_until_reconnect ... ok
+test c2::facade::c2_facade_contract_tests::cancel_in_flight_export_returns_cancelled_without_dest ... ok
+test c2::facade::c2_facade_contract_tests::ui_locale_persists_and_falls_back_to_zh ... ok
+test c2::facade::c2_facade_contract_tests::ui_theme_persists_and_falls_back_to_mocha ... ok
+test c2::facade::c2_facade_contract_tests::ui_font_size_and_density_persist_and_fall_back ... ok
+test c2::facade::c2_facade_contract_tests::ui_sidebar_width_persists_and_falls_back ... ok
+test c2::hub::channel_contract_tests::connection_delta_carries_the_same_current_overview ... ok
+test c2::hub::channel_contract_tests::lifecycle_publish_preserves_last_controller_sample ... ok
+test c2::hub::channel_contract_tests::observation_phase_distinguishes_baseline_current_and_failures ... ok
+test c2::hub::channel_contract_tests::resync_issues_new_subscription_identity ... ok
+test c2::hub::channel_contract_tests::subscribe_first_message_is_atomic_bootstrap ... ok
+test c2::hub::coalesce_tests::remove_wins_same_window ... ok
+test c2::query::connection_query_tests::download_descending_puts_largest_first ... ok
+test c2::query::connection_query_tests::empty_match_has_null_hotspots_instead_of_zero ... ok
+test c2::query::connection_query_tests::exact_clause_does_not_match_substring ... ok
+test c2::query::connection_query_tests::hotspot_label_uses_safe_display_fallbacks ... ok
+test c2::query::connection_query_tests::hotspots_use_complete_filtered_set_with_identity_tie_breaks ... ok
+test c2::query::connection_query_tests::numeric_eq_zero_matches_download_zero ... ok
+test c2::query::connection_query_tests::numeric_gt_does_not_use_contains ... ok
+test c2::query::connection_query_tests::numeric_mode_on_text_field_is_ignored ... ok
+test c2::query::connection_query_tests::random_order_does_not_change_identity_page ... ok
+test c2::query::connection_query_tests::residential_only_matches_target_or_name ... ok
+test c2::query::connection_query_tests::residential_only_uses_configured_shared_semantics ... ok
+test c2::query::connection_query_tests::unknown_rate_does_not_match_numeric_clause ... ok
+test c2::query::connection_query_tests::unknown_rate_sorts_after_known_in_both_directions ... ok
+test c2::query::connection_query_tests::unknown_sort_field_falls_back_to_identity ... ok
+test c2::query::connection_query_tests::zero_download_sorts_before_positive ... ok
+test c2::settings::settings_workflow_tests::autostart_enable_disable_returns_os_readback ... ok
+test c2::settings::settings_workflow_tests::autostart_write_and_readback_failures_are_distinct_steps ... ok
+test c2::settings::settings_workflow_tests::persistent_save_can_be_resolved ... ok
+test c2::settings::settings_workflow_tests::probe_failure_deletes_pending_and_keeps_old ... ok
+test c2::settings::settings_workflow_tests::rejects_non_loopback ... ok
+test c2::settings::settings_workflow_tests::unavailable_store_uses_session_only ... ok
+test c2::facade::c2_facade_contract_tests::first_commit_after_restore_is_not_rejected_by_receipt ... ok
+test c2::settings::settings_workflow_tests::validate_address_rejects_invalid_and_overlong ... ok
+test c2::settings::settings_workflow_tests::validate_address_rejects_non_loopback_hosts ... ok
+test c2::settings::settings_workflow_tests::validate_targets_rejects_empty_overlong_and_too_many ... ok
+test c2::settings::settings_workflow_tests::validate_address_accepts_loopback_forms ... ok
+test c2::settings::settings_workflow_tests::wizard_can_advance_back_cancel ... ok
+test c2::shell::shell_seam_tests::dialog_spec_covers_all_purposes_in_both_locales ... ok
+test c2::shell::shell_seam_tests::export_purposes_filter_matches_file_name ... ok
+test c2::shell::shell_seam_tests::file_dialog_returns_only_injected_path ... ok
+test c2::shell::shell_seam_tests::operation_cancellation_never_leaks_to_other_queries ... ok
+test c2::shell::shell_seam_tests::operation_finish_releases_entry_and_preserves_borrowed_flag ... ok
+test c2::shell::shell_seam_tests::operation_clone_cancels_while_facade_owner_is_locked ... ok
+test c2::shell::shell_seam_tests::operation_progress_can_cancel_fixture ... ok
+test c2::shell::shell_seam_tests::operation_repeated_lifecycle_keeps_only_in_flight_entries ... ok
+test c2::shell::shell_seam_tests::reports_and_alerts_are_available_after_c4 ... ok
+test c2::subscriptions::subscription_forward_tests::after_subscribe_publish_reaches_stored_sink ... ok
+test c2::subscriptions::subscription_forward_tests::failed_send_drops_subscription ... ok
+test c2::subscriptions::subscription_forward_tests::no_subscribers_does_not_serialize_delta ... ok
+test c3::archive::archive_service_tests::archive_descriptor_round_trip_keeps_dispatch_semantics_and_retry_state ... ok
+test c2::facade::c2_facade_contract_tests::upsert_alert_rule_bundle_failure_keeps_engine_aligned_with_db ... ok
+test c2::facade::c2_facade_contract_tests::visible_window_keeps_manual_disconnect_cancelled ... ok
+test c2::facade::ledger_delta_tests::idle_writer_tick_drains_pending_while_user_stays_paused ... ok
+test c2::facade::ledger_delta_tests::clock_rollback_closes_lifecycle_without_negative_or_invented_observation ... ok
+test c2::facade::ledger_delta_tests::identical_metadata_never_mutates_attr_or_chain_in_real_facade ... ok
+test c2::facade::c2_facade_contract_tests::user_vacuum_reboots_writer_epoch ... ok
+test c2::facade::ledger_delta_tests::policy_dirty_survives_lifecycle_until_fresh_canonical_projection ... ok
+test c2::facade::ledger_delta_tests::bounded_backpressure_records_explicit_gap_after_queue_overflow ... ok
+test c2::facade::ledger_delta_tests::queued_snapshot_precedes_newer_visible_disconnect_state ... ok
+test c2::facade::ledger_delta_tests::positive_coverage_uses_samples_splits_days_and_breaks_on_pause ... ok
+test c2::facade::ledger_delta_tests::removed_zero_traffic_id_reuse_is_detected_from_durable_session ... ok
+test c2::facade::ledger_delta_tests::unknown_commit_replays_original_receipt_before_next_metadata_version ... ok
+test c2::facade::ledger_delta_tests::retry_preserves_exact_bundle_and_short_lived_queued_connection ... ok
+test c2::shell::shell_seam_tests::recovery_status_marks_restore_unavailable ... ok
+test c2::facade::c2_facade_contract_tests::restore_fail_keeps_recovery_only_when_hot_db_cannot_open ... ok
+test c2::facade::c2_facade_contract_tests::restore_invalid_candidate_reopens_usable_hot_db ... ok
+test c2::facade::c2_facade_contract_tests::restore_backup_keeps_workflow_and_session_secret ... ok
+test c2::facade::c2_facade_contract_tests::restore_backup_keeps_data_dir_and_launch_mode ... ok
+test c3::archive::archive_service_tests::failed_row_can_be_replaced_by_ok ... ok
+test c2::facade::c2_facade_contract_tests::restore_backup_reboots_writer_epoch_across_backup_history ... ok
+test c3::archive::archive_service_tests::insert_ok_is_idempotent ... ok
+test c2::facade::c2_facade_contract_tests::restore_backup_recovers_alert_rules_from_backup_point ... ok
+test c3::archive::archive_service_tests::failed_job_is_selected_again ... ok
+test c3::archive::archive_service_tests::legacy_frozen_result_without_attribution_quality_stays_loadable ... ok
+test c3::c3_owner_tests::c3_reuses_c1_storage_and_c2_recovery ... ok
+test c3::export::export_tests::cancel_cleans_partial_and_low_space_fails ... ok
+test c3::export::export_tests::preview_rejects_authorization_header ... ok
+test c3::archive::archive_service_tests::internal_archive_query_never_creates_spool_directory ... ok
+test c3::query::coverage_union_tests::coverage_excludes_overlap_and_unknown_time ... ok
+test c3::query::coverage_union_tests::local_offset_uses_requested_timestamp ... ok
+test c3::query::gap_union_tests::disjoint_gaps_sum_and_closed_rows_are_clipped ... ok
+test c3::query::gap_union_tests::empty_slices_are_zero ... ok
+test c3::query::gap_union_tests::open_gap_extends_only_to_window_end ... ok
+test c3::query::gap_union_tests::overlapping_open_gaps_count_once ... ok
+test c3::query::query_contract_tests::auto_delete_stays_disabled ... ok
+test c3::query::query_contract_tests::category_filter_counts_and_triggers_needs_raw ... ok
+test c3::query::query_contract_tests::default_auto_report_query_fingerprint_is_stable ... ok
+test c3::query::query_contract_tests::dimension_expired_top_n_is_unsupported ... ok
+test c3::query::query_contract_tests::dst_new_york_switches_offset ... ok
+test c3::query::query_contract_tests::empty_attribution_quality_is_complete_but_legacy_traffic_is_unavailable ... ok
+test c3::query::query_contract_tests::granularity_kebab_case_keeps_hour_day_month ... ok
+test c3::query::query_contract_tests::local_day_bounds_handle_dst_spring_forward ... ok
+test c3::query::query_contract_tests::local_hour_bounds_chain_across_new_york_dst ... ok
+test c3::query::query_contract_tests::local_hour_bounds_utc_and_shanghai ... ok
+test c3::query::query_contract_tests::local_month_bounds_follow_calendar_length ... ok
+test c3::query::query_contract_tests::long_range_totals_use_daily_core ... ok
+test c3::query::query_contract_tests::minute_granularity_outside_raw_is_unsupported ... ok
+test c3::query::query_contract_tests::process_before_v2_watermark_is_unsupported ... ok
+test c3::query::query_contract_tests::process_dimension_without_v2_is_not_exact_top_n ... ok
+test c3::query::query_contract_tests::raw_expired_session_drilldown_is_unsupported ... ok
+test c3::query::query_contract_tests::raw_plan_names_fused_totals_and_keeps_comparison_query ... ok
+test c3::query::query_contract_tests::rejects_sql_shaped_cursor_and_bad_range ... ok
+test c3::query::query_contract_tests::validate_query_rejects_bounds_page_top_n_timezone_and_semicolon_cursor ... ok
+test c3::archive::archive_service_tests::list_omits_result_json_and_rejects_bad_kind ... ok
+test c3::raw_fold::tests::isolated_raw_fold_stage_proof ... ignored, 只读隔离库；分别记录会话投影和分钟扫描耗时，不改变生产 deadline
+test c3::raw_fold::tests::projection_predicate_matches_membership_sql ... ok
+test c3::archive::archive_service_tests::list_next_cursor_is_null_on_last_page ... ok
+test c3::export::export_tests::three_formats_share_totals_and_do_not_overwrite ... ok
+test c2::facade::ledger_delta_tests::owner_transition_rejects_unsettled_bundle_and_deferred_input ... ok
+test c3::archive::archive_service_tests::load_latest_residential_manual_skips_auto_and_other_manual ... ok
+test c3::archive::archive_service_tests::persist_manual_overwrites_same_window ... ok
+test c3::archive::archive_service_tests::persist_manual_does_not_block_auto_jobs ... ok
+test c3::archive::archive_service_tests::persist_survives_reopen ... ok
+test c3::archive::archive_service_tests::purge_expired_hour_and_day ... ok
+test c3::archive::archive_service_tests::purge_expired_manual_by_generated_utc ... ok
+test c3::archive::archive_service_tests::next_job_prefers_newest_hour_then_newest_day ... ok
+test c3::archive::archive_service_tests::run_one_uses_independent_reader ... ok
+test bench::corpus::tests::corpus_has_production_schema_churn_receipts_and_exact_rows ... ok
+test c3::archive::archive_service_tests::scheduler_clock_rewind_pause_and_timezone_change_rebuild_boundaries ... ok
+test c3::archive::archive_service_tests::scheduler_pending_inventory_stays_bounded_and_query_free ... ok
+test c3::backup::backup_restore_tests::low_space_and_cancel_fail_closed ... ok
+test c3::archive::archive_service_tests::scheduler_failure_advances_backlog_and_survives_restart ... ok
+test c3::archive::archive_service_tests::scheduler_dst_uses_closed_civil_periods ... ok
+test c3::retention::coverage_repair_tests::coverage_repair_merges_burst_and_keeps_single_open ... ok
+test c3::archive::archive_service_tests::automatic_purge_is_bounded_and_releases_the_writer_cancel_handler ... ok
+test c3::archive::archive_service_tests::scheduler_complete_history_needs_no_reader_for_3600_ticks ... ok
+test c3::retention::coverage_repair_tests::coverage_repair_rolls_back_on_failure ... ok
+test c3::backup::backup_restore_tests::backup_then_restore_keeps_current_on_bad_candidate ... ok
+test c3::raw_fold::tests::window_scoped_projection_matches_oracle_and_keeps_cross_window_sessions ... ok
+test c3::raw_fold::tests::fold_matches_grouped_sql_oracle ... ok
+test c3::backup::backup_restore_tests::restore_from_valid_backup_and_rejects_future_schema ... ok
+test c3::retention::day::tests::coverage_source_page_uses_range_index_without_temp_sort ... ok
+test c3::retention::day::tests::corruption_after_publication_before_confirmation_blocks_all_deletion ... ok
+test c3::retention::day::tests::cancel_during_raw_delete_preserves_rows_and_writer_transaction ... ok
+test c3::retention::day::tests::busy_low_space_and_cancel_never_commit_partial_day ... ok
+test c3::retention::day::tests::coverage_write_fault_cannot_damage_audited_core_and_advance_watermark ... ok
+test c3::retention::day::tests::changed_metadata_discards_unconfirmed_output_and_rebuilds ... ok
+test c3::retention::day::tests::dry_run_has_no_side_effects_and_late_raw_cannot_rebuild_deleted_day ... ok
+test c3::rule_name::rule_name_tests::build_rule_name_covers_required_samples ... ok
+test c3::rule_name::rule_name_tests::chain_identity_preserves_single_hop_and_uses_last_nonempty_hop ... ok
+test c3::rule_name::rule_name_tests::last_chain_hop_trims_and_requires_separator ... ok
+test c3::retention::day::tests::last_hour_corruption_rolls_back_entire_day_and_all_raw_hours ... ok
+test c3::schema::c3_schema_contract_tests::c3_tables_do_not_include_c4_alert_schema ... ok
+test c3::retention::day::tests::invalidation_before_publication_keeps_unproven_legacy_output ... ok
+test c3::retention::retention_tests::chain_identity_repair_refuses_partially_deleted_raw_hour ... ok
+test c3::retention::day::tests::ledger_deletion_invalidates_completed_dictionary_sweep_and_preserves_protected_refs ... ok
+test c3::retention::day::tests::frozen_core_mutation_mid_prune_preserves_exact_layers ... ok
+test c3::retention::day::tests::mid_statement_cancel_rolls_back_and_can_resume ... ok
+test c3::retention::retention_tests::chain_identity_repair_rolls_back_before_writing_marker ... ok
+test c3::retention::day::tests::resume_delete_honors_current_mode_and_gate ... ok
+test c3::retention::day::tests::full_day_distinct_duration_and_all_five_dimensions_survive_real_delete ... ok
+test c3::retention::retention_tests::low_space_does_not_start ... ok
+test c3::retention::retention_tests::chain_identity_repair_replaces_old_unknown_without_double_counting ... ok
+test c3::retention::retention_tests::core_second_insert_failure_rolls_back_daily_core_and_coverage ... ok
+test c3::retention::day::tests::audited_output_is_protected_while_coverage_builds ... ok
+test c2::facade::c2_peak_ui_tests::peak_10k_1800_frames_stay_bounded_and_fast_to_filter ... ok
+test c3::retention::retention_tests::materialize_is_idempotent_and_auto_delete_stays_off ... ok
+test c3::retention::retention_tests::crash_after_materialize_can_resume ... ok
+test c3::retention::retention_tests::five_dimension_kinds_and_v2_watermark ... ok
+test c3::rule_name::rule_name_tests::storage_coordinator_connection_can_execute_last_chain_hop ... ok
+test c3::retention::day::tests::restart_after_confirmation_then_expiry_preserves_long_term_core ... ok
+test c3::service::dimension_capability_tests::attribution_quality_is_exact_and_independent_of_top_n ... ok
+test c3::service::dimension_capability_tests::category_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::category_rank_differs_from_host ... ok
+test c3::retention::day::tests::cross_midnight_overlap_is_clipped_and_open_intervals_block_finalization ... ok
+test c3::service::dimension_capability_tests::chain_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::chain_grouping_does_not_fill_exits ... ok
+test c3::retention::day::tests::damaged_dimension_or_coverage_blocks_delete_and_preserves_confirmation ... ok
+test c3::service::dimension_capability_tests::chain_rank_differs_from_host ... ok
+test c3::service::dimension_capability_tests::category_rank_sum_does_not_exceed_totals ... ok
+test c3::service::dimension_capability_tests::drilldown_filter_chain_and_rule_take_subset ... ok
+test c3::service::dimension_capability_tests::empty_chain_key_is_unknown_not_direct ... ok
+test c3::service::dimension_capability_tests::host_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::first_materialization_starts_at_actual_retained_raw ... ok
+test c3::service::dimension_capability_tests::named_sql_matches_grouping ... ok
+test c3::service::dimension_capability_tests::minute_granularity_raw_series_buckets ... ok
+test c3::service::dimension_capability_tests::daily_dimension_leaves_exits_unknown ... ok
+test c3::service::dimension_capability_tests::host_rank_uses_destination_ip_and_keeps_empty_unknown ... ok
+test c3::service::dimension_capability_tests::network_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::five_kinds_materialize_and_keys_match_raw ... ok
+test c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof ... ignored, 只读隔离库；记录非空分钟窗口的生产报告阶段，不改变生产 deadline
+test c3::service::raw_stage_probe_tests::isolated_raw_stage_probe ... ignored, 仅显式只读的隔离生成库；逐阶段最多60秒，不输出明细
+test c3::service::raw_stage_probe_tests::isolated_session_first_stage_proof ... ignored, 仅显式只读的隔离生成库；比较 m-first 与 session-first 的计划、摘要和阶段耗时
+test c3::service::dimension_capability_tests::process_filter_reduces_and_series_matches_totals ... ok
+test c3::retention::day::tests::final_dimension_prune_finishes_a_fresh_multi_page_dictionary_sweep ... ok
+test c3::service::dimension_capability_tests::fused_raw_summary_matches_independent_totals_and_attribution ... ok
+test c3::service::dimension_capability_tests::raw_bucket_series_uses_minute_range_without_group_sort ... ok
+test c3::service::dimension_capability_tests::raw_host_direct_exit_is_not_mixed ... ok
+test c3::service::dimension_capability_tests::raw_process_exit_uses_attr_identity ... ok
+test c3::service::dimension_capability_tests::raw_host_mixed_exits_pick_download_then_chain_key_asc ... ok
+test c3::service::dimension_capability_tests::raw_rule_exit_uses_rule_identity ... ok
+test c3::service::dimension_capability_tests::process_rule_chain_network_category_rank_outside_raw ... ok
+test c3::service::dimension_capability_tests::residential_accounting_filter_keeps_tagged_sessions ... ok
+test c3::service::report_service_tests::progress_stride_interrupts_active_sql_on_cancel_and_deadline ... ok
+test c3::service::dimension_capability_tests::residential_host_rank_sorts_before_raw_top_n_and_conserves_filtered_traffic ... ok
+test c3::retention::day::tests::nonoverlapping_coverage_source_pages_still_advance ... ok
+test c3::service::dimension_capability_tests::rule_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::single_hop_direct_chain_keeps_raw_rule_identity ... ok
+test c3::service::dimension_capability_tests::residential_history_without_raw_or_materialized_category_is_unsupported ... ok
+test c3::service::dimension_capability_tests::rule_rank_uses_policy_group_not_raw_type ... ok
+test c3::service::dimension_capability_tests::unknown_process_filter_keeps_only_missing_process_sessions ... ok
+test c3::service::report_service_tests::cancel_stops_sqlite_work ... ok
+test c3::service::dimension_capability_tests::residential_raw_recovery_restores_null_categories_without_multiplying_traffic ... ok
+test c3::share::residential_share_tests::inverted_range_returns_invalid_query ... ok
+test c3::service::dimension_capability_tests::residential_host_rank_sorts_before_dimension_top_n ... ok
+test c3::service::report_service_tests::empty_range_is_zero_not_invented ... ok
+test c3::service::report_service_tests::eqp_named_queries_have_no_temp_or_autoindex_on_fixture ... ok
+test c3::share::residential_share_tests::range_over_max_returns_invalid_query ... ok
+test c3::service::report_service_tests::golden_totals_and_token_close_transaction ... ok
+test c3::service::dimension_capability_tests::unknown_rank_row_closes_totals ... ok
+test c3::service::report_service_tests::deleted_previous_window_is_unknown_and_raw_only_capability_stays_closed ... ok
+test c3::snapshot::snapshot_store_tests::expired_token_requires_rerun ... ok
+test c3::snapshot::snapshot_store_tests::rejects_open_transaction ... ok
+test c3::snapshot::snapshot_store_tests::ninth_insert_evicts_oldest_access ... ok
+test c3::snapshot::snapshot_store_tests::releasing_shared_fingerprint_preserves_the_other_owner ... ok
+test c3::snapshot::snapshot_store_tests::reuses_unexpired_fingerprint ... ok
+test c3::snapshot::snapshot_store_tests::same_token_refresh_balances_previous_ownership ... ok
+test c3::space::space_tests::exhausted_budget_fails_closed ... ok
+test c3::space::space_tests::unlimited_budget_allows_small_artifact ... ok
+test c3::sql::sql_corpus_tests::dimension_layer_rule_kind_is_rule_group ... ok
+test c3::sql::sql_corpus_tests::every_public_query_is_named_and_parameterized ... ok
+test c3::sql::sql_corpus_tests::every_rank_template_resolves_internal_slots ... ok
+test c3::sql::sql_corpus_tests::filter_clause_binds_user_values ... ok
+test c3::sql::sql_corpus_tests::rank_exit_templates_bind_identities ... ok
+test c3::sql::sql_corpus_tests::rank_order_is_enum_rendered_for_every_field_and_direction ... ok
+test c3::sql::sql_corpus_tests::residential_accounting_filter_uses_legacy_safe_raw_membership ... ok
+test c3::sql::sql_corpus_tests::residential_membership_plan_uses_session_key_lookup ... ok
+test c3::sql::sql_corpus_tests::share_and_filter_use_the_same_residential_membership_predicate ... ok
+test c3::sql::sql_corpus_tests::unknown_host_filter_matches_empty_host_without_binding_sentinel ... ok
+test c3::service::report_service_tests::query_deadline_is_distinct_from_user_cancellation ... ok
+test c3::sql::sql_corpus_tests::unknown_process_filter_matches_missing_process_without_binding_sentinel ... ok
+test c3::sql::sql_corpus_tests::unknown_sentinel_is_stable ... ok
+test c4::c4_owner_tests::c4_reuses_c1_writer_and_c3_report ... ok
+test c4::engine::alert_engine_tests::each_health_kind_activates_and_recovers ... ok
+test c4::engine::alert_engine_tests::gap_is_not_zero_rate ... ok
+test c4::engine::alert_engine_tests::health_dedups_same_root_cause ... ok
+test c4::engine::alert_engine_tests::hysteresis_keeps_active_inside_band ... ok
+test c4::engine::alert_engine_tests::load_rules_rejects_more_than_max_enabled ... ok
+test c4::engine::alert_engine_tests::many_rules_do_not_issue_sql_on_hot_path ... ok
+test c4::engine::alert_engine_tests::quiet_hours_outside_window_still_needs_three_hits ... ok
+test c4::engine::alert_engine_tests::quiet_hours_overnight_window_does_not_activate ... ok
+test c4::engine::alert_engine_tests::rate_needs_three_consecutive_hits ... ok
+test c4::engine::alert_engine_tests::rule_edit_resets_consecutive_hits ... ok
+test c4::notify::notify_seam_tests::capability_and_send_agree_on_every_state ... ok
+test c4::notify::notify_seam_tests::test_and_real_share_trait ... ok
+test c4::notify::notify_seam_tests::unattached_sink_is_unavailable_and_disabled ... ok
+test c3::service::report_service_tests::incomplete_day_backlog_reads_retained_raw_but_mixed_deleted_range_fails_closed ... ok
+test c3::service::report_service_tests::postdelete_daily_core_preserves_gap_duration_without_fabricated_gap_span ... ok
+test c3::service::report_service_tests::internal_usage_combines_deleted_and_raw_days_without_distinct_claims ... ok
+test c3::service::report_service_tests::postdelete_daily_totals_and_category_filter_use_core_without_double_counting ... ok
+test c3::service::report_service_tests::report_and_period_usage_read_latest_receipt_version_without_floor_rewrite ... ok
+test c4::period::period_reuse_tests::calendar_usage_windows_stop_at_observation_time ... ok
+test c3::service::report_service_tests::restart_same_query_same_totals ... ok
+test c3::share::residential_share_tests::deleted_or_partially_deleted_facts_never_become_a_covered_zero_share ... ok
+test c3::service::report_service_tests::writer_report_checkpoint_can_run_together ... ok
+test c3::share::residential_share_tests::display_share_cancellation_is_scoped_and_creates_no_spool ... ok
+test c4::schema::c4_schema_contract_tests::c4_tables_are_alert_outbox_only ... ok
+test c4::types::validate_rule_tests::validate_rule_rejects_invalid_parameters ... ok
+test c5::about::about_tests::about_is_unsigned_and_has_stable_url ... ok
+test c3::service::report_service_tests::same_token_export_matches_ui_totals ... ok
+test c3::share::residential_share_tests::full_gap_range_returns_four_nones ... ok
+test c5::baseline::baseline_tests::missing_baseline_is_not_usable ... ok
+test c3::share::residential_share_tests::covered_zero_residential_returns_some_zeros ... ok
+test c3::share::residential_share_tests::named_sql_echo_matches_executed_when_covered ... ok
+test c3::share::residential_share_tests::legacy_epoch_and_closed_intervals_do_not_prove_positive_coverage ... ok
+test c5::baseline::baseline_tests::matching_checksums_are_usable ... ok
+test c5::purge::purge_tests::confirm_deletes_files_and_reports_partial_failure ... ok
+test c5::purge::purge_tests::wrong_phrase_does_not_delete ... ok
+test c5::supply::supply_tests::inventory_reads_locks_and_stays_unsigned ... ok
+test c3::share::residential_share_tests::legacy_null_categories_recover_from_chain_without_double_counting ... ok
+test controller::controller_model_tests::controller_model_keeps_unknown_fields_and_ignores_order ... ok
+test controller::controller_model_tests::controller_model_reads_sniff_host_when_host_empty ... ok
+test controller::controller_normalizer_tests::controller_normalizer_rejects_frames_with_invalid_connection_rows ... ok
+test controller::controller_normalizer_tests::controller_normalizer_rejects_incomplete_root_frame ... ok
+test c3::share::residential_share_tests::uncovered_range_returns_four_nones ... ok
+test controller::controller_normalizer_tests::controller_normalizer_trims_metadata_and_chain_elements ... ok
+test controller::controller_normalizer_tests::metadata_coverage_reports_presence_without_values ... ok
+test controller::controller_normalizer_tests::overlong_process_path_stays_missing_instead_of_becoming_a_truncated_name ... ok
+test controller::controller_pipe_tests::controller_pipe_states_are_distinct ... ok
+test controller::controller_reconnect_tests::controller_reconnect_restart_is_new_identity ... ok
+test controller::controller_redaction_tests::controller_redaction_never_prints_secret_bytes ... ok
+test controller::controller_session_tests::controller_session_replay_preserves_input_order ... ok
+test controller::controller_tcp_tests::controller_tcp_rejects_non_loopback ... ok
+test credential::credential_port_tests::credential_port_fake_crud_and_redaction ... ok
+test credential::credential_port_tests::credential_port_process_local_clears ... ok
+test credential::credential_port_tests::process_local_store_holds_secret_and_omits_it_from_debug ... ok
+test credential::credential_windows_tests::credential_windows_generic_crud ... ignored, 会写入本机 Credential Manager，需人工授权后单独运行
+test data_dir::data_dir_tests::explicit_override_wins_without_migration ... ok
+test data_dir::data_dir_tests::failure_keeps_legacy ... ok
+test data_dir::data_dir_tests::item_wise_when_target_exists ... ok
+test data_dir::data_dir_tests::legacy_without_db_just_prepares_target ... ok
+test candidate_schema::candidate_schema_tests::workload_spec_smoke_database_matches_expected_counts ... ok
+test data_dir::data_dir_tests::missing_exe_dir_keeps_legacy ... ok
+test data_dir::data_dir_tests::rename_moves_whole_dir ... ok
+test data_dir::data_dir_tests::target_with_db_keeps_legacy ... ok
+test dbcli::patterns::tests::exact_beats_suffix ... ok
+test dbcli::patterns::tests::suffix_respects_label_boundary ... ok
+test dbcli::patterns::tests::uncompilable_regex_is_unsupported ... ok
+test dbcli::patterns::tests::vertex_regex_is_anchored_by_pattern ... ok
+test dbcli::render::tests::redact_uses_sha256_prefix_and_length ... ok
+test dbcli::resolve::tests::default_used_when_no_explicit_or_env ... ok
+test dbcli::resolve::tests::env_beats_default_when_no_explicit ... ok
+test controller::controller_normalizer_tests::controller_normalizer_rejects_oversize_frame ... ok
+test dbcli::resolve::tests::explicit_missing_does_not_fall_through ... ok
+test c4::diagnose::diagnose_tests::diagnostics_omit_secret_and_full_host ... ok
+test dbcli::resolve::tests::missing_db_does_not_create_files ... ok
+test dbcli::resolve::tests::explicit_beats_env_and_default ... ok
+test c4::outbox::outbox_worker_tests::double_claim_same_tick_is_exclusive ... ok
+test dbcli::tests::help_lists_all_subcommands ... ok
+test dbcli::tests::missing_db_returns_code_3 ... ok
+test c4::outbox::outbox_worker_tests::lease_then_sent ... ok
+test c3::snapshot::snapshot_store_tests::rejects_single_token_over_max_bytes ... ok
+test c4::outbox::outbox_worker_tests::permanent_failure_is_visible ... ok
+test dbcli::tests::redact_hides_host ... ok
+test c4::outbox::outbox_worker_tests::retry_uses_backoff_then_stale_reclaim ... ok
+test c4::period::period_reuse_tests::capability_unsupported_is_not_evaluable ... ok
+test c4::period::period_reuse_tests::empty_or_legacy_lifecycle_coverage_is_not_evaluable_zero ... ok
+test c4::period::period_reuse_tests::internal_period_queries_do_not_create_spool_and_keep_cancellation ... ok
+test dimension_rank_table_layout::dimension_rank_table_layout_tests::clamps_width ... ok
+test dimension_rank_table_layout::dimension_rank_table_layout_tests::default_fills_data_columns_only ... ok
+test dimension_rank_table_layout::dimension_rank_table_layout_tests::drops_unknown_rank_and_drill_keys ... ok
+test dimension_rank_table_layout::dimension_rank_table_layout_tests::encode_fits_setting_limit ... ok
+test dimension_rank_table_layout::dimension_rank_table_layout_tests::invalid_or_overlong_setting_falls_back ... ok
+test dimension_rank_table_layout::dimension_rank_table_layout_tests::missing_columns_get_defaults ... ok
+test c5::vacuum::vacuum_tests::exhausted_space_does_not_start_vacuum ... ok
+test evidence::evidence_tests::evidence_template_has_decision_and_machine_fields ... ok
+test i18n::i18n_tests::autostart_error_keys_resolve_in_both_locales ... ok
+test i18n::i18n_tests::catalog_differs_by_locale ... ok
+test i18n::i18n_tests::health_keys_resolve_in_both_locales ... ok
+test i18n::i18n_tests::parse_falls_back_to_zh ... ok
+test i18n::i18n_tests::residential_keys_resolve_in_both_locales ... ok
+test identity::windows_identity_tests::windows_identity_is_stable ... ok
+test live::channel_atomic_subscribe_tests::channel_atomic_subscribe_first_message_is_bootstrap ... ok
+test live::channel_resync_tests::channel_resync_returns_new_bootstrap_instead_of_old_delta ... ok
+test live::live_projection_tests::live_projection_advances_only_after_receipt ... ok
+test live_table_layout::live_table_layout_tests::clamps_width ... ok
+test live_table_layout::live_table_layout_tests::default_shows_all_data_columns ... ok
+test live_table_layout::live_table_layout_tests::drops_unknown_and_action_keys ... ok
+test live_table_layout::live_table_layout_tests::encode_fits_setting_limit ... ok
+test live_table_layout::live_table_layout_tests::invalid_or_overlong_setting_falls_back ... ok
+test live_table_layout::live_table_layout_tests::keeps_one_data_column_visible ... ok
+test redact::redact_tests::detects_forbidden_substrings ... ok
+test residential::residential_matcher_tests::custom_targets_remain_exact ... ok
+test residential::residential_matcher_tests::empty_targets_match_nothing ... ok
+test residential::residential_matcher_tests::semantic_selector_matches_containing_nodes ... ok
+test residential::residential_matcher_tests::target_order_and_duplicate_chain_hits_are_stable ... ok
+test residential::residential_matcher_tests::unrelated_and_special_character_targets_are_not_guessed ... ok
+test session::controller_pipe_tests::controller_pipe_does_not_send_secret ... ok
+test session::controller_reconnect_tests::controller_reconnect_emits_restart_on_identity_change ... ok
+test c4::period::period_reuse_tests::period_observation_matches_c3_report ... ok
+test session::controller_session_tests::controller_session_close_missing_id_is_accepted ... ok
+test session::controller_session_tests::fetch_normalized_snapshot_401_is_auth_failed ... ok
+test session::controller_session_tests::controller_session_tcp_secret_states ... ok
+test session_host::session_host_tests::looks_like_ip_accepts_v4_v6 ... ok
+test session_host::session_host_tests::prefer_upgrades_empty_and_ip_but_not_domain ... ok
+test session_host::session_host_tests::resolve_prefers_host_then_sniff_then_ip ... ok
+test c3::service::dimension_capability_tests::raw_bucket_series_matches_grouped_oracle_with_negative_minutes_and_filters ... ok
+test sqlite_probe::sqlite_fault_tests::sqlite_fault_maps_busy_and_cancel_codes ... ok
+test session::controller_session_tests::fetch_normalized_snapshot_oversize_is_protocol_incompatible ... ok
+test c4::period::period_reuse_tests::calendar_month_alert_combines_frozen_day_and_retained_raw_with_observed_coverage ... ok
+test c3::service::report_service_tests::postdelete_distinct_daily_count_survives_hour_series_and_shared_minutes ... ok
+test c5::vacuum::vacuum_tests::vacuum_keeps_current_database ... ok
+test sqlite_probe::sqlite_probe_tests::sqlite_probe_reports_required_capabilities ... ok
+test sqlite_probe::sqlite_fault_tests::sqlite_fault_busy_timeout_does_not_hang ... ok
+test dbcli::audit::tests::audit_buckets_are_exclusive_and_cover_patterns ... ok
+test c5::concurrent::concurrent_tests::overlap_on_fixture_does_not_claim_30_day_capacity ... ok
+test dbcli::tests::future_schema_fail_closed ... ok
+test dbcli::tests::capability_unsupported_returns_envelope_6 ... ok
+test dbcli::tests::cancel_flag_is_recognized ... ok
+test dbcli::tests::purge_confirm_without_phrase_is_invalid_args ... ok
+test dbcli::tests::purge_requires_offline_confirmed ... ok
+test c5::soak::soak_tests::schedule_is_frozen_and_smoke_is_not_24h ... ok
+test dbcli::tests::rank_has_no_share_field ... ok
+test dbcli::tests::retention_without_confirm_only_previews ... ok
+test dbcli::tests::share_returns_bytes ... ok
+test dbcli::tests::table_matches_json_download ... ok
+test c5::fault::fault_tests::fault_matrix_has_no_silent_zero ... ok
+test facade_lock_command_tests::poisoned_facade_command_returns_storage_failure_without_unwind ... ok
+test dbcli::tests::vacuum_requires_offline_confirmed ... ok
+test storage::c4_alert_commit_atomic_tests::kill_after_alerts_rolls_back_facts_and_outbox ... ok
+test storage::c4_alert_commit_atomic_tests::kill_after_facts_rolls_back_alert_rule ... ok
+test storage::c4_alert_commit_atomic_tests::kill_after_outbox_rolls_back_facts_and_outbox ... ok
+test storage::c4_alert_commit_atomic_tests::kill_after_facts_rolls_back_facts_and_outbox ... ok
+test storage::c4_alert_commit_atomic_tests::kill_before_persist_slice_rolls_back_receipt_and_allows_begin ... ok
+test storage::c4_alert_commit_atomic_tests::retry_same_bundle_does_not_duplicate_event ... ok
+test storage::coverage_persist_tests::gap_frames_dedupe_to_single_open_row ... ok
+test storage::coverage_persist_tests::kind_switch_closes_previous_open_row ... ok
+test storage::coverage_persist_tests::resume_closes_open_gap ... ok
+test storage::recovery_bad_backup_tests::recovery_bad_backup_fails_validation ... ok
+test storage::crash_after_commit_before_receipt_tests::crash_after_commit_before_receipt_replays_stored_receipt ... ok
+test storage::crash_commit_unknown_tests::crash_commit_unknown_retry_same_bundle_once ... ok
+test storage::crash_before_commit_tests::crash_before_commit_leaves_no_receipt ... ok
+test storage::coverage_tail_layout_tests::sampled_tail_seek_is_bounded_and_preserves_day_and_rollback_spans ... ok
+test storage::recovery_future_schema_tests::recovery_future_schema_is_visible ... ok
+test storage::lifecycle::tests::cancellation_during_session_delete_rolls_back_rows_and_scan_cursor ... ok
+test storage::lifecycle::tests::bounded_session_scan_advances_past_protected_prefix ... ok
+test storage::lifecycle::tests::cancellation_during_receipt_delete_rolls_back_expiry_digest ... ok
+test storage::lifecycle::tests::yielded_protected_session_prefix_advances_without_deleting ... ok
+test storage::storage_backpressure_tests::storage_backpressure_queue_limit_is_explicit ... ok
+test storage::lifecycle::tests::zero_fact_coverage_cannot_reopen_a_confirmed_day ... ok
+test storage::storage_bundle_retention_tests::storage_bundle_retention_window_constant_is_frozen ... ok
+test storage::lifecycle::tests::legacy_receipt_requires_owner_retirement_and_full_observation_window ... ok
+test storage::storage_fault_gate_tests::storage_fault_gate_busy_deadline_is_positive ... ok
+test storage::lifecycle::tests::receipt_gap_cannot_be_mistaken_for_contiguous_commit ... ok
+test storage::migration_backup_tests::migration_backup_copies_pages ... ok
+test storage::lifecycle::tests::invalid_legacy_duplicate_versions_fail_migration_atomically ... ok
+test storage::lifecycle::tests::receipt_yield_persists_only_the_processed_prefix_and_digest ... ok
+test storage::recovery_facade_tests::recovery_facade_reads_version_without_writer ... ok
+test storage::storage_migration_tests::storage_migration_rejects_future_schema ... ok
+test storage::storage_migration_tests::storage_migration_rejects_checksum_mismatch ... ok
+test storage::lifecycle::tests::receipt_union_protects_recent_count_pending_and_empty_epoch_replay ... ok
+test storage::save_targets_atomic_tests::save_targets_rolls_back_delete_when_insert_killed ... ok
+test storage::lifecycle::tests::session_fanout_yields_a_durable_prefix_before_hard_deadline ... ok
+test storage::storage_attribution_lifecycle_tests::empty_metadata_does_not_erase_attr_and_chain_replacement_is_atomic ... ok
+test storage::storage_attribution_lifecycle_tests::existing_null_policy_attr_is_updated_in_place ... ok
+test storage::storage_attribution_lifecycle_tests::late_metadata_enriches_existing_raw_minutes_for_the_same_session ... ok
+test storage::storage_attribution_lifecycle_tests::concurrent_epoch_reservations_are_unique ... ok
+test storage::storage_attribution_lifecycle_tests::writer_and_controller_epochs_are_durable_and_monotonic ... ok
+test storage::lifecycle::tests::session_cleanup_protects_legacy_unknown_zero_traffic_raw_and_pending ... ok
+test theme::theme_tests::font_accepts_legacy_aliases_and_safe_families ... ok
+test theme::theme_tests::font_size_and_density_fall_back_to_defaults ... ok
+test theme::theme_tests::lists_installed_families_without_vertical_faces ... ok
+test theme::theme_tests::parse_falls_back_to_mocha ... ok
+test transport::controller_profiles_tests::controller_profiles_mark_tcp_supported_and_pipe_best_effort ... ok
+test transport::named_pipe_faults_tests::named_pipe_faults_map_win32_codes ... ok
+test storage::lifecycle::tests::v4_migration_preserves_unknown_time_and_reconstructs_real_prefix ... ok
+test storage::storage_attribution_lifecycle_tests::writer_epoch_exhaustion_fails_closed ... ok
+test transport::transport_fixture_tests::fetch_oversize_body_is_protocol_incompatible ... ok
+test transport::transport_fixture_tests::transport_fixture_websocket_sends_one_frame ... ok
+test window_visibility_tests::native_hidden_minimized_and_restored_states_publish_only_transitions ... ok
+test workload::workload_spec_tests::workload_spec_hash_is_stable_for_same_seed ... ok
+test workload::workload_spec_tests::workload_spec_smoke_stays_tiny ... ok
+test transport::transport_fixture_tests::transport_fixture_tcp_secret_states ... ok
+test storage::storage_bundle_idempotency_tests::storage_bundle_idempotency_same_hash_does_not_advance ... ok
+test storage::storage_checkpoint_tests::storage_checkpoint_passive_does_not_delete_wal_file_name ... ok
+test storage::storage_host_identity_tests::persist_upgrades_empty_and_ip_host_but_not_domain ... ok
+test storage::storage_prepared_tests::storage_prepared_counts_fixed_prepares ... ok
+test storage::storage_schema_tests::storage_schema_creates_only_core_tables ... ok
+test c3::retention::day::tests::coverage_only_day_and_more_than_one_cleanup_page_are_reclaimed ... ok
+test storage::storage_wal_fallback_tests::storage_wal_fallback_detects_non_wal_journal ... ok
+test storage::storage_shutdown_tests::storage_shutdown_watermark_survives_reopen ... ok
+test storage::storage_watermark_tests::durable_version_exhaustion_does_not_wrap_or_create_a_receipt ... ok
+test storage::storage_watermark_tests::read_only_versions_share_the_business_snapshot ... ok
+test storage::storage_watermark_tests::storage_watermark_advances_once_per_new_bundle ... ok
+test test_controller_command_tests::failed_probe_leaves_stable_target_unchanged ... ok
+test storage::storage_prepared_tests::persist_slice_does_not_prepare_per_live_row ... ok
+test test_controller_command_tests::successful_probe_promotes_secret ... ok
+test storage::storage_schema_tests::v4_migration_drops_duplicate_minute_index_without_range_sort ... ok
+test storage::storage_schema_tests::storage_v3_upgrades_to_archive_v4 ... ok
+test c3::service::dimension_capability_tests::raw_bucket_series_keeps_registered_cancel_and_deadline_across_buckets ... ok
+test storage::storage_watermark_tests::durable_version_preserves_legacy_floor_unknown_commit_and_reopen ... ok
+test storage::metadata_index_write_tests::metadata_sparse_index_write_proof ... ok
+test storage::metadata_index_write_tests::metadata_index_write_proof ... ok
+test transport::transport_fixture_tests::fetch_stalling_body_is_endpoint_missing ... ok
+mbx[progress]: 15s elapsed; 0 hits, 0 misses, 0 bypassed, 0 not looked up; ~0s compiler work saved
+test c3::snapshot::snapshot_store_tests::growing_reused_token_evicts_other_lru_owners_within_spool_quota ... ok
+
+test result: ok. 542 passed; 0 failed; 6 ignored; 0 measured; 0 filtered out; finished in 14.02s
+
+     Running unittests src\bin\monitor-bench.rs (residential-monitor\src-tauri\target\debug\deps\monitor_bench-df1cc8f5459e4cbb.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\bin\monitor-db.rs (residential-monitor\src-tauri\target\debug\deps\monitor_db-726b925e15b5d01b.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\main.rs (residential-monitor\src-tauri\target\debug\deps\residential_monitor-b19949b32af578d5.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\kill_gate.rs (residential-monitor\src-tauri\target\debug\deps\kill_gate-d8d4530fdfc38390.exe)
+
+running 3 tests
+test crash_before_commit_isolated_process_leaves_no_receipt ... ok
+test crash_commit_unknown_isolated_process_retries_same_bundle ... ok
+test crash_after_commit_before_receipt_isolated_process_replays_once ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.53s
+
+   Doc-tests residential_monitor_lib
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+mbx[cache]: 0 hits, 0 misses, 1 bypassed; 0 B downloaded, 0 B uploaded, 0 B stored locally
+mbx[savings]: escorted 37.8 GiB logical of ownerless outputs off the premises.
+npm run check:secrets
+npm notice run clash-verge-ai-residential@5.11.0 check:secrets
+npm notice run node scripts/check-template-safety.js
+Template safety check passed.
+npm run ci
+npm notice run clash-verge-ai-residential@5.11.0 ci
+npm notice run npm run check && npm run test && npm run check:secrets
+npm notice run clash-verge-ai-residential@5.11.0 check
+npm notice run node --check clash-verge-ai-residential.js && node --check tests/regression.test.js && node --check tests/sync-local-config.test.js && node --check tests/check-template-safety.test.js && node --check tests/sync-monitor-version.test.js && node --check tests/nsis-silent-install.test.js && node --check tests/install-agent-skills.test.js && node --check scripts/check-template-safety.js && node --check scripts/sync-local-config.js && node --check scripts/sync-monitor-version.js && node --check scripts/nsis-silent-install.js && node --check scripts/install-agent-skills.js && node --check skills/residential-rule-tuning/scripts/build-inputs.js
+npm notice run clash-verge-ai-residential@5.11.0 test
+npm notice run node --test tests/regression.test.js tests/sync-local-config.test.js tests/check-template-safety.test.js tests/sync-monitor-version.test.js tests/nsis-silent-install.test.js tests/install-agent-skills.test.js
+✔ 安全模板和可提交文本通过扫描 (14.2562ms)
+✔ 公共模板中的真实代理字段会被拒绝 (4.3946ms)
+✔ 所有可提交文本格式都会扫描常见凭据 (11.4808ms)
+✔ 每类受保护凭据模式都会被拒绝 (7.565ms)
+✔ 扫描忽略本地凭据、生成脚本和依赖目录 (13.7917ms)
+✔ example TOML 把 password 改成非占位后扫描失败 (4.9285ms)
+✔ example TOML 的 server 与 username 非占位也会失败 (8.3613ms)
+✔ example TOML 允许空字符串占位 (4.9599ms)
+✔ 缺少 example TOML 会失败 (2.5056ms)
+✔ SECURITY.md Scope 包含 ResiWatch (1.2658ms)
+✔ 安装器写入已存在平台且幂等 (22.3404ms)
+✔ 不创建缺失的平台目录 (14.2033ms)
+✔ 同名不同内容默认拒绝且不写入任何目标 (17.3836ms)
+✔ --force 先备份再替换 (19.5875ms)
+✔ --check 在有差异时非零退出 (17.0959ms)
+✔ --platforms 只写入指定目录 (13.4745ms)
+✔ 未知 --platforms 值被拒绝 (0.3157ms)
+✔ --check 在零个平台根时成功，不证明已安装 (3.894ms)
+✔ 真实 payload 写入全部七个平台且二次安装幂等 (66.0697ms)
+✔ SKILL.md 含 YAML frontmatter 的 name 与 description (0.5722ms)
+✔ SKILL.md 含六个规定小节 (0.2445ms)
+✔ 生成器对 routing 表 26 个开关做完整性检查 (1.9873ms)
+✔ 新增核心开关仅映射各自域名，不将 IP 或进程记为域名归属 (0.6655ms)
+✔ grok_web_assets 不把 auth.x.ai 算作该开关独有流量 (0.2174ms)
+✔ defaultInstallDir 使用 LocalAppData 与产品名 (0.9673ms)
+✔ isUnderDir 识别 Temp 前缀，不把 LocalAppData 产品目录当 Temp (0.277ms)
+✔ planRelocation 从 Temp 或旧产品目录迁 data (0.215ms)
+✔ stripOuterQuotes 去掉注册表 InstallLocation 的引号 (0.0904ms)
+✔ migrateDataDir 在目标无库时整目录改名，目标已有库则跳过 (9.9081ms)
+✔ findSetupExe 按版本过滤并取最新安装包 (6.1168ms)
+✔ cleanupTempInstall 删除 Temp 旧安装并去掉空父目录 (6.2722ms)
+✔ discoverPreviousInstallDir 优先选带库的旧目录，而不是空的新安装目录 (8.0597ms)
+✔ 仓库 tauri.conf.json 的 productName 与 package.json version 可读 (0.8976ms)
+✔ startMonitorApp 以 detached 启动安装目录中的 exe (3.433ms)
+✔ startMonitorApp 在缺少 exe 时失败 (0.9554ms)
+[AI-家宽] findOutbound 需要 outbound 索引
+[AI-家宽] findOutbound 需要 outbound 索引
+[AI-家宽] findOutbound 需要 outbound 索引
+[AI-家宽] 非 AI DNS 上游名称“Proxy#fallback”不能包含 # 或 &
+[AI-家宽] 非 AI DNS 上游名称“Proxy&fallback”不能包含 # 或 &
+✔ 默认输出与固定 v5.11 投影一致 (6.1628ms)
+✔ 保留家宽组拒绝动态来源、排除条件、替代选择及未知字段，错误不改输入 (1.8623ms)
+✔ 合法家宽组只保留展示字段并恢复 UDP，普通上游组不受封闭字段约束 (2.1559ms)
+✔ ROUTE_ANTHROPIC_CORE true→false→true 清理基线托管域名和 DNS，保留其他类别及原规则 (7.9386ms)
+✔ ROUTE_GEMINI_API_CORE true→false→true 清理基线托管域名和 DNS，保留其他类别及原规则 (7.5327ms)
+✔ ROUTE_ANTIGRAVITY_CORE true→false→true 清理基线托管域名和 DNS，保留其他类别及原规则 (6.5714ms)
+✔ Anthropic IP 独立开关关闭时不影响核心域名，并清理旧 IP 兜底 (6.2752ms)
+✔ 各服务进程兜底服从 core，Cursor 同时受全局与专属开关约束且全量清理不受门控 (50.82ms)
+✔ 核心关闭不关闭独立认证、辅助、资源和全局捕获开关 (7.2986ms)
+✔ 关闭全部 Google 核心撤销原五个无开关端点，正则仍不生成宽域 DNS policy (10.1282ms)
+✔ 脚本版本与默认 dialer-proxy 正确 (0.1248ms)
+✔ 默认选择 🚀节点选择，并复用 Profile 内已有家宽节点凭据 (0.3695ms)
+✔ 奈云 Profile 在没有 🚀节点选择 时选择 Proxy (0.3522ms)
+✔ 候选均未命中时可从最终 MATCH 规则解析上游 (0.3126ms)
+✔ Profile 覆盖失效时继续尝试通用候选 (0.2519ms)
+✔ 候选名仅 emoji/空格不同仍可归一化匹配 (0.2444ms)
+✔ 没有安全上游时 fail closed，不回落 DIRECT (0.195ms)
+✔ include-all 上游排除家宽节点，避免动态递归 (0.3393ms)
+✔ 拒绝选定上游可达的代理组循环依赖 (0.1324ms)
+✔ 上游组清理脚本对象后为空时拒绝生成链路 (0.1082ms)
+✔ 移除上游组中的保留名引用时输出 warn 说明原因 (0.3126ms)
+✔ 显式禁用 UDP 的上游被拒绝 (0.1036ms)
+✔ 跨代理/代理组命名空间冲突被拒绝 (0.1481ms)
+✔ 重复保留代理组被拒绝，不静默覆盖未知配置 (0.0717ms)
+✔ 只配置 endpoint 而保留 xxx 凭据时明确报错 (0.1357ms)
+✔ 占位凭据失败时不改调用方配置，并 console.error [AI-家宽] (0.1941ms)
+✔ findOutbound 缺索引时抛错，合法索引可解析唯一节点 (0.5599ms)
+✔ 普通名两个同名节点被拒绝 (0.1005ms)
+✔ 普通名两个同名组被拒绝 (0.0831ms)
+✔ 普通名同时被组与节点占用时被拒绝 (0.1032ms)
+✔ 归一化命中唯一字符串后组与节点同名仍拒绝 (0.0711ms)
+✔ 单叶子 udp:false 汇总含名称与路径 (0.344ms)
+✔ 同名 udp:false 节点挂两个组时只计一次且保留首次路径 (0.2942ms)
+✔ 9 个不同名 udp:false 叶子只展示前 8 个样本 (0.3847ms)
+✔ 2000 叶子中 1000 个不同名 udp:false 只汇总一条警告 (2.0084ms)
+✔ 2000 叶子同一对象连续两次 main 保持规则、policy 与 dialer-proxy (2.1234ms)
+✔ Gemini 核心产品、Developer API 与 Vertex AI 端点走家宽 (0.307ms)
+✔ Antigravity language_server 的 daily cloudcode 端点走家宽 (0.1287ms)
+✔ Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走家宽 (0.2647ms)
+✔ Cursor 核心路由默认开启，仓库索引默认不走家宽 (0.5121ms)
+✔ Cursor 核心与仓库索引开关可独立组合 (18.3349ms)
+✔ Grok Build 核心域默认走家宽，共享第三方与安装域名不走 (0.5546ms)
+✔ extra 分类默认关闭，登记表仍保留 AnyRouter 清理全集 (0.3705ms)
+✔ extra 与 extra_anyrouter 同时打开时只注入 AnyRouter 规则、不写住宅 DNS (5.6283ms)
+✔ 关闭 extra 分类、关闭 extra_anyrouter 或两者都关时清理 AnyRouter 且幂等 (18.1691ms)
+✔ 补丁第二 extra 站点后可只开一部分，且默认不写住宅 DNS (4.3297ms)
+✔ Cursor 插件市场、下载、CDN、更新与 Remote-SSH 资产不走家宽 (0.2848ms)
+✔ Cursor 进程级兜底默认关闭，避免插件、GitHub、npm、MCP 与用户后端被全量代理 (0.0963ms)
+✔ 公共 DoH/DoT 与通用 STUN/TURN/Voice 端口默认不走家宽 (0.2865ms)
+✔ Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方依赖不走 (0.5277ms)
+✔ OpenAI 第一方认证与网页资源开关默认关闭且可独立组合 (22.1955ms)
+✔ OpenAI 开关分别由开启切换为关闭时清理规则与 DNS，并保留用户自写规则 (21.9928ms)
+✔ 开关关闭后清理当前托管规则，并保留退役或用户自写规则 (0.2224ms)
+✔ 脚本执行两次保持幂等，并保留用户自定义非托管规则 (0.6993ms)
+✔ 关闭仓库索引后二次运行会移除托管 repo 正则，并保留用户自有规则 (0.4794ms)
+✔ 非 AI 默认 DoH 绑定当前 Profile 上游，而不是 AI-家宽 (0.0684ms)
+✔ 非 AI DoH 拒绝会破坏 Mihomo URL 绑定语义的上游名称 (0.2591ms)
+✔ AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名 (0.1543ms)
+✔ 严格 DNS 模式移除独立旁路，并保持私有域名使用系统 DNS (0.3259ms)
+✔ 已开启 TUN 时只补齐 DNS 劫持；AI-only 写顶层查找进程 always，不注入进程路由 (0.3171ms)
+✔ profile 嵌套的 find-process-mode 仍写出顶层 always (0.214ms)
+✔ 开启进程路由时注入 PROCESS 规则，查找进程仍为顶层 always (111.5557ms)
+✔ 最终注入规则不存在重复项 (0.1871ms)
+✔ 默认注入 45 条 AI-家宽 规则 (0.1563ms)
+✔ v5.10 审计后的正向主机走家宽，退出与收窄主机不走 (1.4549ms)
+✔ grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话主机 (12.4572ms)
+✔ vertex_ai_endpoints 一次控制全部四条 Vertex 规则 (7.8333ms)
+✔ 退出激活主机不再出现 nameserver-policy 键 (0.1776ms)
+✔ 本地 anthropic_core 支持 true/false，缺失补 true 且保留显式值与注释 (73.5676ms)
+✔ 本地 anthropic_core 类型错误或重复键拒绝写入 (6.2973ms)
+✔ 本地 gemini_api_core 支持 true/false，缺失补 true 且保留显式值与注释 (66.9085ms)
+✔ 本地 gemini_api_core 类型错误或重复键拒绝写入 (4.4878ms)
+✔ 本地 antigravity_core 支持 true/false，缺失补 true 且保留显式值与注释 (62.5849ms)
+✔ 本地 antigravity_core 类型错误或重复键拒绝写入 (4.0479ms)
+✔ 本地 extra 缺失补 false，extra_anyrouter 缺失补 true，且不改写已有 extra = true (29.2126ms)
+✔ 本地 extra=true 且 extra_anyrouter=false 时不注入 AnyRouter 规则或住宅 DNS (13.7917ms)
+✔ 本地 extra 类型错误或重复键拒绝写入 (5.1779ms)
+✔ 本地 extra_anyrouter 类型错误或重复键拒绝写入 (5.6947ms)
+✔ 旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚本 (13.1288ms)
+✔ 部分 TOML 开关会注入生成脚本，并可关闭默认开启的 Cursor/Grok 核心路由 (110.0391ms)
+✔ 本地 cursor_repository_indexing 缺字段补 false，显式 true 恢复 repo 家宽 (307.469ms)
+✔ 本地 openai_core = false 让 GPT 域名不再走家宽，Claude 等核心域名不受影响 (101.6996ms)
+✔ 本地 openai_auth = true 只启用第一方认证，网页资源与共享依赖保持关闭 (105.8942ms)
+✔ 同步前会拒绝不完整或不安全的代理配置 (0.3101ms)
+✔ 解析器拒绝未知表、未知键、重复定义和非布尔开关 (12.2194ms)
+✔ 布尔常量锚点缺失或重复时失败且不写入半成品 (22.3121ms)
+✔ 生产映射覆盖全部用户布尔开关，并与示例及文档默认值一致 (9.067ms)
+✔ 缺失开关键按示例默认值补全，用户已有键值与注释逐字保留 (14.547ms)
+✔ 补全幂等：无缺失时不再改写本地 TOML (18.2263ms)
+✔ 与示例一致的完整 TOML 不被补全改写 (9.0829ms)
+✔ CRLF 本地 TOML 补全后保持 CRLF 行尾 (10.9185ms)
+✔ home_proxy 凭据缺键不自动补全，仍要求用户手填 (4.7505ms)
+✔ 示例 TOML 缺少声明的开关键时同步失败并提示补齐 (4.5622ms)
+✔ 写入模式把 package.json 版本同步到 Tauri、Cargo 与 lockfile (13.4158ms)
+✔ 检查模式发现漂移时不写文件 (10.1358ms)
+✔ 已对齐时写入模式不改内容 (8.4812ms)
+✔ 保留 Cargo.toml 的 CRLF (9.0675ms)
+✔ 非法 SemVer 失败 (8.2209ms)
+✔ CI monitor 作业包含版本对齐检查 (0.3046ms)
+✔ CI monitor 原生命令各自独立为 pwsh step (1.2536ms)
+✔ CI required-checks 聚合 test、monitor 与 docs (0.7029ms)
+✔ CI 安装后独立审计完整依赖并阻断 high (0.376ms)
+✔ CI 审计合同拒绝缺失、跳过、降级和合并步骤 (1.9622ms)
+✔ 独立 dependency-audit recipe 逐条运行 npm 与 Rust 审计 (0.6115ms)
+✔ pwsh 保留 CI monitor 审计的非零退出码 (437.2054ms)
+✔ pwsh 多命令脚本会把中间 native 失败覆盖为成功 (556.3306ms)
+✔ pwsh 单命令脚本保留非零退出码 (413.1055ms)
+✔ 缺少 tauri.conf.json 失败 (7.2886ms)
+ℹ tests 143
+ℹ suites 0
+ℹ pass 143
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2592.8734
+npm notice run clash-verge-ai-residential@5.11.0 check:secrets
+npm notice run node scripts/check-template-safety.js
+Template safety check passed.

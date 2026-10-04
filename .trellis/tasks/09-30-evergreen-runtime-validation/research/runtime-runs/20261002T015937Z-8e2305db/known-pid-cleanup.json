@@ -1,0 +1,37 @@
+{
+  "observed_utc": "2026-10-02T02:10:32.4397561Z",
+  "observations": [
+    {
+      "pid": 46420,
+      "present": false,
+      "process_name": null
+    },
+    {
+      "pid": 55588,
+      "present": true,
+      "process_name": "Tabbit Browser"
+    },
+    {
+      "pid": 45696,
+      "present": false,
+      "process_name": null
+    },
+    {
+      "pid": 26716,
+      "present": false,
+      "process_name": null
+    },
+    {
+      "pid": 56176,
+      "present": false,
+      "process_name": null
+    },
+    {
+      "pid": 50128,
+      "present": false,
+      "process_name": null
+    }
+  ],
+  "scope": "exact known PIDs only; no broad process scan",
+  "limitation": "PID absence and best effort owned Job cleanup do not prove absolute absence of orphan descendants"
+}

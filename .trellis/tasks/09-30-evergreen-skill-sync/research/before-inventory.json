@@ -1,0 +1,289 @@
+{
+  "time_utc": "2026-09-30T13:01:25.865331+00:00",
+  "platforms": [
+    ".agents",
+    ".claude",
+    ".codex",
+    ".cursor",
+    ".omp",
+    ".grok",
+    ".kimi-code"
+  ],
+  "platform_count": 7,
+  "source_files": [
+    "SKILL.md",
+    "reference.md",
+    "scripts/build-inputs.js"
+  ],
+  "files": [
+    {
+      "path": ".agents/skills/residential-rule-tuning/SKILL.md",
+      "source": "skills/residential-rule-tuning/SKILL.md",
+      "source_sha256": "94d4b2977b9bb3aa9f126a82682a63a152ee33602d181a917c46e1a3e273c19a",
+      "before_sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "status": "different"
+    },
+    {
+      "path": ".agents/skills/residential-rule-tuning/reference.md",
+      "source": "skills/residential-rule-tuning/reference.md",
+      "source_sha256": "6b9eeb99396817ff9337b8710e842b7549ccc4763eba8e0b108fe8ed97ad85af",
+      "before_sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "status": "different"
+    },
+    {
+      "path": ".agents/skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source": "skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source_sha256": "cfc32147e21b01dc766b5989a43648dabad7a22f01988c0fac6d518e72104cc1",
+      "before_sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "status": "different"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/SKILL.md",
+      "source": "skills/residential-rule-tuning/SKILL.md",
+      "source_sha256": "94d4b2977b9bb3aa9f126a82682a63a152ee33602d181a917c46e1a3e273c19a",
+      "before_sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "status": "different"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/reference.md",
+      "source": "skills/residential-rule-tuning/reference.md",
+      "source_sha256": "6b9eeb99396817ff9337b8710e842b7549ccc4763eba8e0b108fe8ed97ad85af",
+      "before_sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "status": "different"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source": "skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source_sha256": "cfc32147e21b01dc766b5989a43648dabad7a22f01988c0fac6d518e72104cc1",
+      "before_sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "status": "different"
+    },
+    {
+      "path": ".codex/skills/residential-rule-tuning/SKILL.md",
+      "source": "skills/residential-rule-tuning/SKILL.md",
+      "source_sha256": "94d4b2977b9bb3aa9f126a82682a63a152ee33602d181a917c46e1a3e273c19a",
+      "before_sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "status": "different"
+    },
+    {
+      "path": ".codex/skills/residential-rule-tuning/reference.md",
+      "source": "skills/residential-rule-tuning/reference.md",
+      "source_sha256": "6b9eeb99396817ff9337b8710e842b7549ccc4763eba8e0b108fe8ed97ad85af",
+      "before_sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "status": "different"
+    },
+    {
+      "path": ".codex/skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source": "skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source_sha256": "cfc32147e21b01dc766b5989a43648dabad7a22f01988c0fac6d518e72104cc1",
+      "before_sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "status": "different"
+    },
+    {
+      "path": ".cursor/skills/residential-rule-tuning/SKILL.md",
+      "source": "skills/residential-rule-tuning/SKILL.md",
+      "source_sha256": "94d4b2977b9bb3aa9f126a82682a63a152ee33602d181a917c46e1a3e273c19a",
+      "before_sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "status": "different"
+    },
+    {
+      "path": ".cursor/skills/residential-rule-tuning/reference.md",
+      "source": "skills/residential-rule-tuning/reference.md",
+      "source_sha256": "6b9eeb99396817ff9337b8710e842b7549ccc4763eba8e0b108fe8ed97ad85af",
+      "before_sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "status": "different"
+    },
+    {
+      "path": ".cursor/skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source": "skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source_sha256": "cfc32147e21b01dc766b5989a43648dabad7a22f01988c0fac6d518e72104cc1",
+      "before_sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "status": "different"
+    },
+    {
+      "path": ".omp/skills/residential-rule-tuning/SKILL.md",
+      "source": "skills/residential-rule-tuning/SKILL.md",
+      "source_sha256": "94d4b2977b9bb3aa9f126a82682a63a152ee33602d181a917c46e1a3e273c19a",
+      "before_sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "status": "different"
+    },
+    {
+      "path": ".omp/skills/residential-rule-tuning/reference.md",
+      "source": "skills/residential-rule-tuning/reference.md",
+      "source_sha256": "6b9eeb99396817ff9337b8710e842b7549ccc4763eba8e0b108fe8ed97ad85af",
+      "before_sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "status": "different"
+    },
+    {
+      "path": ".omp/skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source": "skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source_sha256": "cfc32147e21b01dc766b5989a43648dabad7a22f01988c0fac6d518e72104cc1",
+      "before_sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "status": "different"
+    },
+    {
+      "path": ".grok/skills/residential-rule-tuning/SKILL.md",
+      "source": "skills/residential-rule-tuning/SKILL.md",
+      "source_sha256": "94d4b2977b9bb3aa9f126a82682a63a152ee33602d181a917c46e1a3e273c19a",
+      "before_sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "status": "different"
+    },
+    {
+      "path": ".grok/skills/residential-rule-tuning/reference.md",
+      "source": "skills/residential-rule-tuning/reference.md",
+      "source_sha256": "6b9eeb99396817ff9337b8710e842b7549ccc4763eba8e0b108fe8ed97ad85af",
+      "before_sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "status": "different"
+    },
+    {
+      "path": ".grok/skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source": "skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source_sha256": "cfc32147e21b01dc766b5989a43648dabad7a22f01988c0fac6d518e72104cc1",
+      "before_sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "status": "different"
+    },
+    {
+      "path": ".kimi-code/skills/residential-rule-tuning/SKILL.md",
+      "source": "skills/residential-rule-tuning/SKILL.md",
+      "source_sha256": "94d4b2977b9bb3aa9f126a82682a63a152ee33602d181a917c46e1a3e273c19a",
+      "before_sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "status": "different"
+    },
+    {
+      "path": ".kimi-code/skills/residential-rule-tuning/reference.md",
+      "source": "skills/residential-rule-tuning/reference.md",
+      "source_sha256": "6b9eeb99396817ff9337b8710e842b7549ccc4763eba8e0b108fe8ed97ad85af",
+      "before_sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "status": "different"
+    },
+    {
+      "path": ".kimi-code/skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source": "skills/residential-rule-tuning/scripts/build-inputs.js",
+      "source_sha256": "cfc32147e21b01dc766b5989a43648dabad7a22f01988c0fac6d518e72104cc1",
+      "before_sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "status": "different"
+    }
+  ],
+  "extras": [
+    {
+      "path": ".agents/skills/residential-rule-tuning/reference.md.bak-20260907T080921Z",
+      "sha256": "a9b5c2e15c124b3ff15733c6cc67881d3e1b8e2a47d1d1c4032cb7168255d904"
+    },
+    {
+      "path": ".agents/skills/residential-rule-tuning/SKILL.md.bak-20260831T111413Z",
+      "sha256": "e02fcd5f26498ec96ba0481d270709972ce072adcb512086c5cdc9544e2eb9ce"
+    },
+    {
+      "path": ".agents/skills/residential-rule-tuning/SKILL.md.bak-20260907T080921Z",
+      "sha256": "79bf432d37f3412f1ab3dde87a9b9af6db59a0a8aeaf4955c1e1d05f49896641"
+    },
+    {
+      "path": ".agents/skills/residential-rule-tuning/SKILL.md.bak-20260907T081855Z",
+      "sha256": "881a50d79204aedccb3b54f21dc0f2e484706441c52964cc9dd806d367b6bd31"
+    },
+    {
+      "path": ".agents/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260907T080921Z",
+      "sha256": "4dcec2db9d513813027919cd6abe52bcab0d472b014ee6136b0acf2c9d40226f"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/reference.md.bak-20260907T080921Z",
+      "sha256": "a9b5c2e15c124b3ff15733c6cc67881d3e1b8e2a47d1d1c4032cb7168255d904"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/SKILL.md.bak-20260831T111413Z",
+      "sha256": "e02fcd5f26498ec96ba0481d270709972ce072adcb512086c5cdc9544e2eb9ce"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/SKILL.md.bak-20260907T080921Z",
+      "sha256": "79bf432d37f3412f1ab3dde87a9b9af6db59a0a8aeaf4955c1e1d05f49896641"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/SKILL.md.bak-20260907T081855Z",
+      "sha256": "881a50d79204aedccb3b54f21dc0f2e484706441c52964cc9dd806d367b6bd31"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260907T080921Z",
+      "sha256": "4dcec2db9d513813027919cd6abe52bcab0d472b014ee6136b0acf2c9d40226f"
+    },
+    {
+      "path": ".codex/skills/residential-rule-tuning/reference.md.bak-20260907T080921Z",
+      "sha256": "a9b5c2e15c124b3ff15733c6cc67881d3e1b8e2a47d1d1c4032cb7168255d904"
+    },
+    {
+      "path": ".codex/skills/residential-rule-tuning/SKILL.md.bak-20260907T080921Z",
+      "sha256": "79bf432d37f3412f1ab3dde87a9b9af6db59a0a8aeaf4955c1e1d05f49896641"
+    },
+    {
+      "path": ".codex/skills/residential-rule-tuning/SKILL.md.bak-20260907T081855Z",
+      "sha256": "881a50d79204aedccb3b54f21dc0f2e484706441c52964cc9dd806d367b6bd31"
+    },
+    {
+      "path": ".codex/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260907T080921Z",
+      "sha256": "4dcec2db9d513813027919cd6abe52bcab0d472b014ee6136b0acf2c9d40226f"
+    },
+    {
+      "path": ".cursor/skills/residential-rule-tuning/reference.md.bak-20260907T080921Z",
+      "sha256": "a9b5c2e15c124b3ff15733c6cc67881d3e1b8e2a47d1d1c4032cb7168255d904"
+    },
+    {
+      "path": ".cursor/skills/residential-rule-tuning/SKILL.md.bak-20260907T080921Z",
+      "sha256": "79bf432d37f3412f1ab3dde87a9b9af6db59a0a8aeaf4955c1e1d05f49896641"
+    },
+    {
+      "path": ".cursor/skills/residential-rule-tuning/SKILL.md.bak-20260907T081855Z",
+      "sha256": "881a50d79204aedccb3b54f21dc0f2e484706441c52964cc9dd806d367b6bd31"
+    },
+    {
+      "path": ".cursor/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260907T080921Z",
+      "sha256": "4dcec2db9d513813027919cd6abe52bcab0d472b014ee6136b0acf2c9d40226f"
+    },
+    {
+      "path": ".omp/skills/residential-rule-tuning/reference.md.bak-20260907T080921Z",
+      "sha256": "a9b5c2e15c124b3ff15733c6cc67881d3e1b8e2a47d1d1c4032cb7168255d904"
+    },
+    {
+      "path": ".omp/skills/residential-rule-tuning/SKILL.md.bak-20260907T080921Z",
+      "sha256": "79bf432d37f3412f1ab3dde87a9b9af6db59a0a8aeaf4955c1e1d05f49896641"
+    },
+    {
+      "path": ".omp/skills/residential-rule-tuning/SKILL.md.bak-20260907T081855Z",
+      "sha256": "881a50d79204aedccb3b54f21dc0f2e484706441c52964cc9dd806d367b6bd31"
+    },
+    {
+      "path": ".omp/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260907T080921Z",
+      "sha256": "4dcec2db9d513813027919cd6abe52bcab0d472b014ee6136b0acf2c9d40226f"
+    },
+    {
+      "path": ".grok/skills/residential-rule-tuning/reference.md.bak-20260907T080921Z",
+      "sha256": "a9b5c2e15c124b3ff15733c6cc67881d3e1b8e2a47d1d1c4032cb7168255d904"
+    },
+    {
+      "path": ".grok/skills/residential-rule-tuning/SKILL.md.bak-20260907T080921Z",
+      "sha256": "79bf432d37f3412f1ab3dde87a9b9af6db59a0a8aeaf4955c1e1d05f49896641"
+    },
+    {
+      "path": ".grok/skills/residential-rule-tuning/SKILL.md.bak-20260907T081855Z",
+      "sha256": "881a50d79204aedccb3b54f21dc0f2e484706441c52964cc9dd806d367b6bd31"
+    },
+    {
+      "path": ".grok/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260907T080921Z",
+      "sha256": "4dcec2db9d513813027919cd6abe52bcab0d472b014ee6136b0acf2c9d40226f"
+    },
+    {
+      "path": ".kimi-code/skills/residential-rule-tuning/reference.md.bak-20260907T080921Z",
+      "sha256": "a9b5c2e15c124b3ff15733c6cc67881d3e1b8e2a47d1d1c4032cb7168255d904"
+    },
+    {
+      "path": ".kimi-code/skills/residential-rule-tuning/SKILL.md.bak-20260907T080921Z",
+      "sha256": "79bf432d37f3412f1ab3dde87a9b9af6db59a0a8aeaf4955c1e1d05f49896641"
+    },
+    {
+      "path": ".kimi-code/skills/residential-rule-tuning/SKILL.md.bak-20260907T081855Z",
+      "sha256": "881a50d79204aedccb3b54f21dc0f2e484706441c52964cc9dd806d367b6bd31"
+    },
+    {
+      "path": ".kimi-code/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260907T080921Z",
+      "sha256": "4dcec2db9d513813027919cd6abe52bcab0d472b014ee6136b0acf2c9d40226f"
+    }
+  ]
+}

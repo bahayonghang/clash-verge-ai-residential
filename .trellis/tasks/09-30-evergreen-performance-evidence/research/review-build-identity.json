@@ -1,0 +1,24 @@
+{
+  "time_utc": "2026-09-30T13:51:01.126437+00:00",
+  "baseline_original_inputs": 100,
+  "baseline_instrumented_inputs": 103,
+  "candidate_inputs": 108,
+  "dist_inputs": 36,
+  "baseline_changed_paths": [
+    "residential-monitor/src-tauri/src/bench.rs",
+    "residential-monitor/src-tauri/src/bench/facade.rs",
+    "residential-monitor/src-tauri/src/bench/process.rs",
+    "residential-monitor/src-tauri/src/bench/write_vfs.rs",
+    "residential-monitor/src-tauri/src/bin/monitor-bench.rs"
+  ],
+  "tracked_excluded_from_candidate_manifest": [
+    "residential-monitor/src-tauri/gen/schemas/acl-manifests.json",
+    "residential-monitor/src-tauri/gen/schemas/capabilities.json",
+    "residential-monitor/src-tauri/gen/schemas/desktop-schema.json",
+    "residential-monitor/src-tauri/gen/schemas/windows-schema.json"
+  ],
+  "actual_rust_sources_all_manifested": true,
+  "executable_count": 4,
+  "all_three_builds_exit_zero": true,
+  "errors": []
+}

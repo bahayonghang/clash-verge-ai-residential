@@ -1,0 +1,62 @@
+{
+  "status": "VERIFIED_METADATA_ONLY_NOT_RUNTIME_PASS",
+  "scope": "T06 task-local existing Codex app entry. No model, permission, trust or account changes.",
+  "observed_utc": "2026-10-01",
+  "historical_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#codex-app-binary",
+  "historical_entry": {
+    "relative_to_userprofile": "AppData/Local/OpenAI/Codex/bin/c6fe824d725f02d7/codex.exe",
+    "recorded_version_output": "codex-cli 0.159.2",
+    "exists_at_static_preflight": false
+  },
+  "codex_app_binary": {
+    "relative_to_userprofile": "AppData/Local/OpenAI/Codex/bin/a51e250fa15c740a/codex.exe",
+    "exists_at_static_preflight": true,
+    "bytes": 324702000,
+    "last_write_utc": "2026-10-02T01:32:50.141961+00:00",
+    "pe_file_version": "UNKNOWN",
+    "pe_product_version": "UNKNOWN",
+    "version_output": "codex-cli 0.159.2",
+    "sha256": "fcd5eafefb4ff4a607f244e099e0974f66e17966b6ffda6948de2ef3a7a79530",
+    "verified_for_runtime": true,
+    "metadata_evidence": "runtime-runs/entry-refresh-20261002T015253Z-a4336a75/entries.json",
+    "verified_utc": "2026-10-02T01:55:53.541581+00:00",
+    "verification_scope": "Current version/help/hash only. Same existing parent flags. No inference, selected model, permission, trust, hook or native child PASS.",
+    "live_model": "UNKNOWN",
+    "live_multi_agent_backend": "UNKNOWN",
+    "remaining_gate": "Main preparation review, final candidate freeze, phase-specific GO and native schema events."
+  },
+  "superseded_task_local_entries": [
+    {
+      "relative_to_userprofile": "AppData/Local/OpenAI/Codex/bin/de8a38d2100ae498/codex.exe",
+      "exists_at_static_preflight": true,
+      "bytes": 324702000,
+      "last_write_utc": "2026-10-01T00:47:53.6601724Z",
+      "pe_file_version": "UNKNOWN",
+      "pe_product_version": "UNKNOWN",
+      "version_output": "codex-cli 0.159.2",
+      "sha256": "34549ded6e2aee87c911c62d025e52e26c488683d0f489cd68f756baef1a6df6",
+      "verified_for_runtime": true,
+      "metadata_evidence": "runtime-runs/preparation-identity-20261001T131731Z-d5cd2f2a/identity.json",
+      "verified_utc": "2026-10-01T13:17:32Z",
+      "verification_scope": "Current binary version/help/hash only. Existing exec read-only, config, ephemeral and json flags remain supported. No inference, model, permission, trust or native child PASS.",
+      "live_model": "UNKNOWN",
+      "live_multi_agent_backend": "UNKNOWN",
+      "remaining_gate": "Independent preparation review; final dirty candidate gates; main freeze and per-phase GO. Historical V1/V2 and source claims do not transfer from version equality.",
+      "exists_at_refresh": false,
+      "superseded_evidence": "runtime-runs/entry-refresh-20261002T015253Z-a4336a75/entries.json"
+    }
+  ],
+  "current_version_observations": {
+    "evidence": "runtime-runs/entry-refresh-20261002T015253Z-a4336a75/entries.json",
+    "versions": {
+      "claude": "2.1.286 (Claude Code)",
+      "codex": "codex-cli 0.159.2",
+      "grok": "grok 1.0.46 (2765805b9442)",
+      "kimi": "2.0.0",
+      "omp": "omp/18.4.10"
+    },
+    "scope": "Metadata probes only; historical recorded_version_output fields for four unchanged paths remain historical. Actual selected models and live tool schemas UNKNOWN."
+  },
+  "observed_local_date": "2026-10-01",
+  "refreshed_utc": "2026-10-02T01:55:53.541589+00:00"
+}

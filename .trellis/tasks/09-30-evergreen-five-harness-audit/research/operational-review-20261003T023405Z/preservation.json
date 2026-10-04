@@ -1,0 +1,6 @@
+{
+  "same": true,
+  "changed_files": [],
+  "index_head_branch_same": true,
+  "global_config_trust": "仅未执行写入命令；未读私有内容，不声明全盘hash不变"
+}

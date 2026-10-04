@@ -1,0 +1,597 @@
+{
+  "label": "baseline-build",
+  "argv": [
+    "cargo",
+    "+1.98.0",
+    "build",
+    "--locked",
+    "--release",
+    "--target",
+    "x86_64-pc-windows-msvc",
+    "--manifest-path",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\baseline\\residential-monitor\\src-tauri\\Cargo.toml",
+    "--target-dir",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline",
+    "--bin",
+    "monitor-bench",
+    "--message-format=json"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-10-04T05:38:37.552847+00:00",
+  "status": "ENDED",
+  "environment_override": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "build_environment": {
+    "VCToolsInstallDir": null,
+    "VSINSTALLDIR": null,
+    "WindowsSdkDir": null,
+    "WindowsSDKVersion": null,
+    "LIB": null,
+    "INCLUDE": null,
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": null,
+    "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER": null,
+    "CARGO_BUILD_TARGET": null,
+    "CARGO_TARGET_DIR": null
+  },
+  "executable_resolved": "C:\\Users\\lyh\\AppData\\Local\\mbx\\bin\\cargo.EXE",
+  "shell": false,
+  "native_exit": 0,
+  "pid": 43108,
+  "ended_utc": "2026-10-04T05:39:37.186084+00:00",
+  "wall_seconds": 59.63059059999978,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\baseline-build.stdout.raw",
+      "bytes": 500771,
+      "raw_sha256": "A205CE9BEB4A6833835D6C71DD0CD6A6871A222C425A366EB137048E3B794D4B",
+      "gzip": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\baseline-build.stdout.raw.gz",
+      "gzip_sha256": "332A0BF3D821CB3D7ED68B90C90783CEF3F4AB26CB660065D1EFD42C35ECAC36",
+      "readable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\baseline-build.stdout.log",
+      "readable_sha256": "08221FA7257E2A0542BBA8BD98BF2221034B7FFA2C901641DF53918C1877C468"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\baseline-build.stderr.raw",
+      "bytes": 10890,
+      "raw_sha256": "854BA6B3212AEB38A53CCD77334630E75945B6A129073BE325916AAB7C1BED00",
+      "gzip": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\baseline-build.stderr.raw.gz",
+      "gzip_sha256": "7135F81BAAF194579BF8C5D44F13955208C1F2C386DEC347119E3BA20F838CC4",
+      "readable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\baseline-build.stderr.log",
+      "readable_sha256": "97208EAE072F6975800ECF95EAFA4C4944A5F70EECB3872D012D62B8A487BF96"
+    }
+  },
+  "owned_descendants_observed": [
+    {
+      "pid": 49328,
+      "name": "mbx.exe",
+      "executable": "C:\\Users\\lyh\\.cargo\\bin\\mbx.exe"
+    },
+    {
+      "pid": 37660,
+      "name": "rustup.exe",
+      "executable": "C:\\Users\\lyh\\.cargo\\bin\\rustup.exe"
+    },
+    {
+      "pid": 39972,
+      "name": "cargo.exe",
+      "executable": "C:\\Users\\lyh\\.rustup\\toolchains\\1.98.0-x86_64-pc-windows-msvc\\bin\\cargo.exe"
+    },
+    {
+      "pid": 51572,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 51912,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 47948,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 40576,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 35732,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 6460,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 18416,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 46208,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\serde-d36093762834704d\\build-script-build.exe"
+    },
+    {
+      "pid": 14072,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 38416,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 42632,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 40688,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 43676,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 49800,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\indexmap-7858343233c9d026\\build-script-build.exe"
+    },
+    {
+      "pid": 42616,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 50068,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 51768,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 45284,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 48132,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 48320,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 11616,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\schemars-a14f89631e0ce00d\\build-script-build.exe"
+    },
+    {
+      "pid": 48552,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 49040,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 49664,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 39464,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 38620,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 43004,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 46656,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 32964,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 22000,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 49168,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 29032,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\vswhom-sys-0b16e037cc6a3baf\\build-script-build.exe"
+    },
+    {
+      "pid": 35536,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 15224,
+      "name": "build_script_build-0b16e037cc6a3baf.exe.mbx-real",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\vswhom-sys-0b16e037cc6a3baf\\build_script_build-0b16e037cc6a3baf.exe.mbx-real"
+    },
+    {
+      "pid": 33264,
+      "name": "lib.exe",
+      "executable": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\lib.exe"
+    },
+    {
+      "pid": 41336,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 14840,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 52072,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 50676,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 36264,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 40296,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 47676,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 24708,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 13420,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 48312,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 40668,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 51660,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 48532,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 47644,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 35872,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 46776,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 18388,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 16760,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\windows_x86_64_msvc-45a2459b1c26446e\\build-script-build.exe"
+    },
+    {
+      "pid": 47676,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 49120,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 15224,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 29032,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 47752,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 10648,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 51544,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 25848,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 616,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\wry-d6a767f5577f8798\\build-script-build.exe"
+    },
+    {
+      "pid": 44268,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 39992,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\windows_x86_64_msvc-3413d02297863342\\build-script-build.exe"
+    },
+    {
+      "pid": 10568,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\zerocopy-f8053362201cf6b1\\build-script-build.exe"
+    },
+    {
+      "pid": 25956,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 42424,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 49424,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 45956,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 50804,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 40972,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 30592,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 8008,
+      "name": "rustc.exe",
+      "executable": "C:\\Users\\lyh\\.rustup\\toolchains\\1.98.0-x86_64-pc-windows-msvc\\bin\\rustc.exe"
+    },
+    {
+      "pid": 43676,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 27868,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\libsqlite3-sys-a6e531e309500ae4\\build-script-build.exe"
+    },
+    {
+      "pid": 49664,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 49492,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 18264,
+      "name": "build_script_build-a6e531e309500ae4.exe.mbx-real",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\libsqlite3-sys-a6e531e309500ae4\\build_script_build-a6e531e309500ae4.exe.mbx-real"
+    },
+    {
+      "pid": 44752,
+      "name": "cl.exe",
+      "executable": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\cl.exe"
+    },
+    {
+      "pid": 49644,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 14616,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 35772,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 49244,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 50840,
+      "name": "rustc.exe",
+      "executable": "C:\\Users\\lyh\\.rustup\\toolchains\\1.98.0-x86_64-pc-windows-msvc\\bin\\rustc.exe"
+    },
+    {
+      "pid": 43408,
+      "name": "rustc.exe",
+      "executable": "C:\\Users\\lyh\\.rustup\\toolchains\\1.98.0-x86_64-pc-windows-msvc\\bin\\rustc.exe"
+    },
+    {
+      "pid": 48288,
+      "name": "link.exe",
+      "executable": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\link.exe"
+    },
+    {
+      "pid": 48308,
+      "name": "link.exe",
+      "executable": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\link.exe"
+    },
+    {
+      "pid": 26772,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\tauri-884521faff5b7d20\\build-script-build.exe"
+    },
+    {
+      "pid": 49120,
+      "name": "build_script_build-884521faff5b7d20.exe.mbx-real",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\tauri-884521faff5b7d20\\build_script_build-884521faff5b7d20.exe.mbx-real"
+    },
+    {
+      "pid": 15940,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 2648,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\tauri-plugin-fs-05070482d6ad81d2\\build-script-build.exe"
+    },
+    {
+      "pid": 49980,
+      "name": "build-script-build.exe",
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\release\\build\\tauri-plugin-notification-dfc7d91c6e22d7b3\\build-script-build.exe"
+    },
+    {
+      "pid": 50468,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 48448,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 35052,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 43612,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 39344,
+      "name": "rustc.exe",
+      "executable": "C:\\Users\\lyh\\.rustup\\toolchains\\1.98.0-x86_64-pc-windows-msvc\\bin\\rustc.exe"
+    },
+    {
+      "pid": 10928,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 37352,
+      "name": "rustc.exe",
+      "executable": "C:\\Users\\lyh\\.rustup\\toolchains\\1.98.0-x86_64-pc-windows-msvc\\bin\\rustc.exe"
+    },
+    {
+      "pid": 43528,
+      "name": "cmd.exe",
+      "executable": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+      "pid": 36028,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\cd9332315785c27d4b319d4d430cedca075ba4baeac5a4c781b6ec9e84a3a86f\\mbx-rustc.exe"
+    },
+    {
+      "pid": 50704,
+      "name": "rustc.exe",
+      "executable": "C:\\Users\\lyh\\.rustup\\toolchains\\1.98.0-x86_64-pc-windows-msvc\\bin\\rustc.exe"
+    },
+    {
+      "pid": 30484,
+      "name": "link.exe",
+      "executable": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\link.exe"
+    }
+  ],
+  "process_cleanup": "native process waited; descendant metadata observations limited to own subtree; no absolute no-orphan claim"
+}

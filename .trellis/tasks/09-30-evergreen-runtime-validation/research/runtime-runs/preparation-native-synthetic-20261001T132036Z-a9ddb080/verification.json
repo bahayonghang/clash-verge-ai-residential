@@ -1,0 +1,26 @@
+{
+  "synthetic_only": true,
+  "clients_started": 0,
+  "capture_sha256": "392b2f4c211c03f0bb9479dcbb5e6804660a8b3a82f31c618ef814d28036cf27",
+  "checks": [
+    {
+      "case": "normal",
+      "pass": true,
+      "exit_code": 0,
+      "capture_stop_reason": null
+    },
+    {
+      "case": "auth",
+      "pass": true,
+      "exit_code": 7,
+      "capture_stop_reason": "CLIENT_REPORTED_BLOCKER"
+    },
+    {
+      "case": "timeout",
+      "pass": true,
+      "exit_code": 0,
+      "capture_stop_reason": "TIMEOUT"
+    }
+  ],
+  "all_pass": true
+}

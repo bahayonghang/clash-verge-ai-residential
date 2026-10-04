@@ -1,0 +1,233 @@
+{
+  "ok": false,
+  "project": {
+    "root": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "versionPath": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\.version",
+    "expectedTrellisVersion": "0.7.0-beta.3",
+    "versionError": null,
+    "overrides": [
+      {
+        "path": ".codex/config.toml",
+        "present": true,
+        "sha256": "0696030d4c8d9b33fb1286081146207114106e26f74bd2b9a0308b56d3212035"
+      },
+      {
+        "path": ".kimi-code/skills/trellis-implement/SKILL.md",
+        "present": true,
+        "sha256": "61013b2aaef14b1da347553da645f5343f73ae17c8ec9a2cb0ad3fdc44cc444c"
+      },
+      {
+        "path": ".kimi-code/skills/trellis-check/SKILL.md",
+        "present": true,
+        "sha256": "43536cc2e41e119634e85848c67acbadc582e6fe84ab195a6a8645f8e97fd273"
+      },
+      {
+        "path": ".kimi-code/skills/trellis-research/SKILL.md",
+        "present": true,
+        "sha256": "646f070f6ed7598bccc91a0275ed1f3fa78783c043db5ff16caab587b0cbbb61"
+      }
+    ]
+  },
+  "tools": [
+    {
+      "tool": "claude",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\.local\\bin\\claude.exe",
+        "status": "available",
+        "version": "2.1.285",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "2.1.285 (Claude Code)\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    },
+    {
+      "tool": "codex",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\home\\lyh\\.npm-global\\codex.ps1",
+        "status": "failed",
+        "version": null,
+        "exitCode": 1,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "file:///C:/home/lyh/.npm-global/node_modules/@openai/codex/bin/codex.js:107\r\n  throw new Error(\r\n        ^\r\n\r\nError: Missing optional dependency @openai/codex-win32-x64. Reinstall Codex: npm install -g @openai/codex@latest\r\n    at findCodexExecutable (file:///C:/home/lyh/.npm-global/node_modules/@openai/codex/bin/codex.js:107:9)\r\n    at file:///C:/home/lyh/.npm-global/node_modules/@openai/codex/bin/codex.js:112:20\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\r\n    at async node:internal/modules/esm/loader:650:26\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\r\n\r\nNode.js v26.7.0\r\n"
+      },
+      "alternatives": [
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\codex.cmd",
+          "status": "failed",
+          "version": null,
+          "exitCode": 1,
+          "signal": null,
+          "error": null,
+          "stdout": "",
+          "stderr": "file:///C:/home/lyh/.npm-global/node_modules/@openai/codex/bin/codex.js:107\r\n  throw new Error(\r\n        ^\r\n\r\nError: Missing optional dependency @openai/codex-win32-x64. Reinstall Codex: npm install -g @openai/codex@latest\r\n    at findCodexExecutable (file:///C:/home/lyh/.npm-global/node_modules/@openai/codex/bin/codex.js:107:9)\r\n    at file:///C:/home/lyh/.npm-global/node_modules/@openai/codex/bin/codex.js:112:20\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\r\n    at async node:internal/modules/esm/loader:650:26\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\r\n\r\nNode.js v26.7.0\r\n"
+        },
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\codex",
+          "status": "missing",
+          "version": null,
+          "exitCode": null,
+          "signal": null,
+          "error": {
+            "code": "ENOENT",
+            "message": "spawnSync C:\\home\\lyh\\.npm-global\\codex ENOENT"
+          },
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "path": "C:\\Users\\lyh\\AppData\\Local\\OpenAI\\Codex\\bin\\c6fe824d725f02d7\\codex.exe",
+          "status": "available",
+          "version": "0.159.2",
+          "exitCode": 0,
+          "signal": null,
+          "error": null,
+          "stdout": "codex-cli 0.159.2\n",
+          "stderr": ""
+        },
+        {
+          "path": "C:/Users/lyh/AppData/Local/OpenAI/Codex/bin/c6fe824d725f02d7/codex.exe",
+          "status": "available",
+          "version": "0.159.2",
+          "exitCode": 0,
+          "signal": null,
+          "error": null,
+          "stdout": "codex-cli 0.159.2\n",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "tool": "grok",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\.grok\\bin\\grok.exe",
+        "status": "available",
+        "version": "1.0.45",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "grok 1.0.45 (c33bff361a6f) [alpha]\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    },
+    {
+      "tool": "kimi",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\.kimi-code\\bin\\kimi.exe",
+        "status": "available",
+        "version": "2.0.0",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "2.0.0\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    },
+    {
+      "tool": "omp",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\home\\lyh\\.npm-global\\omp.ps1",
+        "status": "available",
+        "version": "18.4.4",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "omp/18.4.4\n",
+        "stderr": ""
+      },
+      "alternatives": [
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\omp.cmd",
+          "status": "available",
+          "version": "18.4.4",
+          "exitCode": 0,
+          "signal": null,
+          "error": null,
+          "stdout": "omp/18.4.4\n",
+          "stderr": ""
+        },
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\omp",
+          "status": "missing",
+          "version": null,
+          "exitCode": null,
+          "signal": null,
+          "error": {
+            "code": "ENOENT",
+            "message": "spawnSync C:\\home\\lyh\\.npm-global\\omp ENOENT"
+          },
+          "stdout": "",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "tool": "trellis",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\home\\lyh\\.npm-global\\trellis.ps1",
+        "status": "available",
+        "version": "0.6.17",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "\n⚠️  Your CLI (0.6.17) is older than project (0.7.0-beta.3)\n   Run: trellis upgrade\n\n0.6.17\n",
+        "stderr": ""
+      },
+      "alternatives": [
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\trellis.cmd",
+          "status": "available",
+          "version": "0.6.17",
+          "exitCode": 0,
+          "signal": null,
+          "error": null,
+          "stdout": "\n⚠️  Your CLI (0.6.17) is older than project (0.7.0-beta.3)\n   Run: trellis upgrade\n\n0.6.17\n",
+          "stderr": ""
+        },
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\trellis",
+          "status": "missing",
+          "version": null,
+          "exitCode": null,
+          "signal": null,
+          "error": {
+            "code": "ENOENT",
+            "message": "spawnSync C:\\home\\lyh\\.npm-global\\trellis ENOENT"
+          },
+          "stdout": "",
+          "stderr": ""
+        }
+      ]
+    }
+  ],
+  "bootstrap": {
+    "status": "BLOCKED",
+    "blockers": [
+      "所选 Trellis 版本与项目不匹配"
+    ],
+    "executesBootstrap": false
+  },
+  "permissions": {
+    "projectTrust": "UNVERIFIED",
+    "hooks": "UNVERIFIED",
+    "note": "版本命令不证明项目或 hook 获准；本检查不修改权限、信任或 PATH。"
+  }
+}

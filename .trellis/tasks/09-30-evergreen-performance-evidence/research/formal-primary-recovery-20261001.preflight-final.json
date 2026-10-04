@@ -1,0 +1,514 @@
+{
+  "observed_utc": "2026-10-01T12:37:40.983294+00:00",
+  "status": "PASS",
+  "errors": [],
+  "source_checks": {
+    "baseline": {
+      "files": 103,
+      "manifest_sha256": "1120B9D2B5C457F856BCD5F51ED9C88E0612E978AB4C7B76B4816640E1C6678F",
+      "after_manifest_sha256": "1120B9D2B5C457F856BCD5F51ED9C88E0612E978AB4C7B76B4816640E1C6678F",
+      "before_after_equal": true,
+      "mismatches": [],
+      "matches": true
+    },
+    "candidate": {
+      "files": 108,
+      "manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462",
+      "after_manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462",
+      "before_after_equal": true,
+      "mismatches": [],
+      "matches": true
+    }
+  },
+  "executable_checks": {
+    "baseline-monitor-bench.exe": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\baseline-monitor-bench.exe",
+      "sha256": "06BAC94FD88E37DCD8971893BF79C91A05E9775CEED4A06AB7E2F10B690F3DD9",
+      "bytes": 5748224,
+      "matches": true
+    },
+    "candidate-monitor-bench.exe": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-bench.exe",
+      "sha256": "9604FBE6ED24C6DC4E40E556A6AD7F3338477582B223E15D20B795DDF73A7A5E",
+      "bytes": 6284800,
+      "matches": true
+    },
+    "candidate-monitor-db.exe": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-db.exe",
+      "sha256": "8EE782EDE8F6F61997CCADC7476B48963A33410C36EB25DF2F03E4FB18F6BA13",
+      "bytes": 5245952,
+      "matches": true
+    },
+    "candidate-library-tests.exe": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-library-tests.exe",
+      "sha256": "74ECF63AC02659AFF87AC5B6E2AE1264552E57630441E9337DB65450629BD638",
+      "bytes": 12892160,
+      "matches": true
+    }
+  },
+  "runner_sha256": "6C88ACCA5994C02266F262FBC185EBF9D09DE1AB9EC96BAA302993A0CBF381E9",
+  "live_wrapper_sha256": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C",
+  "outer_script_sha256": "557B21EA45C75A011D243177EA58E9CF7E1DA26ABBB11AA4CC797FAD76AED206",
+  "python_executable": "C:\\Program Files\\Python314\\python.exe",
+  "fresh_paths": [
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001.driver.json",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001.outer.json",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001.wrapper.stdout.log",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001.wrapper.stderr.log"
+  ],
+  "output_directory": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001",
+  "data_directory": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001",
+  "wrapper_argv": [
+    "C:\\Program Files\\Python314\\python.exe",
+    "-X",
+    "utf8",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\run-live-recorded.py",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001.driver.json",
+    "C:\\Program Files\\Python314\\python.exe",
+    "-X",
+    "utf8",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\run-formal-replay.py",
+    "--candidate-directory",
+    "candidate-retained-20260930",
+    "--output-directory",
+    "formal-primary-recovery-20261001",
+    "--set",
+    "primary"
+  ],
+  "outer_command": "& .trellis/tasks/09-30-evergreen-performance-evidence/research/run-primary-recovery-20261001.ps1",
+  "contract": {
+    "expected_native_invocations": 6,
+    "variant_order": [
+      "baseline",
+      "candidate"
+    ],
+    "primary_parameters": {
+      "active": 250,
+      "hz": 1,
+      "duration_secs": 300,
+      "warmup_secs": 30,
+      "workload": "counters",
+      "archive": "complete",
+      "metadata_change_percent": 100,
+      "query_every_frames": 0,
+      "seed": 20260919,
+      "start_utc": 1800001800,
+      "virtual_time": false,
+      "period_rule": false,
+      "pairs": 3
+    },
+    "source_revisions": {
+      "baseline": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+      "candidate": "manifest-sha256:860165f3183ac8bfaac2d74af6f29e793575a91a82b1bb23d86ee975be5c0462"
+    },
+    "invocations": [
+      {
+        "label": "primary-r1-baseline",
+        "variant": "baseline",
+        "argv": [
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\baseline-monitor-bench.exe",
+          "replay-facade",
+          "--active",
+          "250",
+          "--hz",
+          "1",
+          "--duration-secs",
+          "300",
+          "--warmup-secs",
+          "30",
+          "--workload",
+          "counters",
+          "--metadata-change-percent",
+          "100",
+          "--archive",
+          "complete",
+          "--query-every-frames",
+          "0",
+          "--seed",
+          "20260919",
+          "--start-utc",
+          "1800001800",
+          "--source-revision",
+          "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+          "--dir",
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r1-baseline"
+        ],
+        "data_directory": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r1-baseline",
+        "json_outside_data": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001\\primary-r1-baseline.json"
+      },
+      {
+        "label": "primary-r1-candidate",
+        "variant": "candidate",
+        "argv": [
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-bench.exe",
+          "replay-facade",
+          "--active",
+          "250",
+          "--hz",
+          "1",
+          "--duration-secs",
+          "300",
+          "--warmup-secs",
+          "30",
+          "--workload",
+          "counters",
+          "--metadata-change-percent",
+          "100",
+          "--archive",
+          "complete",
+          "--query-every-frames",
+          "0",
+          "--seed",
+          "20260919",
+          "--start-utc",
+          "1800001800",
+          "--source-revision",
+          "manifest-sha256:860165f3183ac8bfaac2d74af6f29e793575a91a82b1bb23d86ee975be5c0462",
+          "--dir",
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r1-candidate"
+        ],
+        "data_directory": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r1-candidate",
+        "json_outside_data": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001\\primary-r1-candidate.json"
+      },
+      {
+        "label": "primary-r2-baseline",
+        "variant": "baseline",
+        "argv": [
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\baseline-monitor-bench.exe",
+          "replay-facade",
+          "--active",
+          "250",
+          "--hz",
+          "1",
+          "--duration-secs",
+          "300",
+          "--warmup-secs",
+          "30",
+          "--workload",
+          "counters",
+          "--metadata-change-percent",
+          "100",
+          "--archive",
+          "complete",
+          "--query-every-frames",
+          "0",
+          "--seed",
+          "20260919",
+          "--start-utc",
+          "1800001800",
+          "--source-revision",
+          "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+          "--dir",
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r2-baseline"
+        ],
+        "data_directory": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r2-baseline",
+        "json_outside_data": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001\\primary-r2-baseline.json"
+      },
+      {
+        "label": "primary-r2-candidate",
+        "variant": "candidate",
+        "argv": [
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-bench.exe",
+          "replay-facade",
+          "--active",
+          "250",
+          "--hz",
+          "1",
+          "--duration-secs",
+          "300",
+          "--warmup-secs",
+          "30",
+          "--workload",
+          "counters",
+          "--metadata-change-percent",
+          "100",
+          "--archive",
+          "complete",
+          "--query-every-frames",
+          "0",
+          "--seed",
+          "20260919",
+          "--start-utc",
+          "1800001800",
+          "--source-revision",
+          "manifest-sha256:860165f3183ac8bfaac2d74af6f29e793575a91a82b1bb23d86ee975be5c0462",
+          "--dir",
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r2-candidate"
+        ],
+        "data_directory": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r2-candidate",
+        "json_outside_data": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001\\primary-r2-candidate.json"
+      },
+      {
+        "label": "primary-r3-baseline",
+        "variant": "baseline",
+        "argv": [
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\baseline-monitor-bench.exe",
+          "replay-facade",
+          "--active",
+          "250",
+          "--hz",
+          "1",
+          "--duration-secs",
+          "300",
+          "--warmup-secs",
+          "30",
+          "--workload",
+          "counters",
+          "--metadata-change-percent",
+          "100",
+          "--archive",
+          "complete",
+          "--query-every-frames",
+          "0",
+          "--seed",
+          "20260919",
+          "--start-utc",
+          "1800001800",
+          "--source-revision",
+          "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+          "--dir",
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r3-baseline"
+        ],
+        "data_directory": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r3-baseline",
+        "json_outside_data": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001\\primary-r3-baseline.json"
+      },
+      {
+        "label": "primary-r3-candidate",
+        "variant": "candidate",
+        "argv": [
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-bench.exe",
+          "replay-facade",
+          "--active",
+          "250",
+          "--hz",
+          "1",
+          "--duration-secs",
+          "300",
+          "--warmup-secs",
+          "30",
+          "--workload",
+          "counters",
+          "--metadata-change-percent",
+          "100",
+          "--archive",
+          "complete",
+          "--query-every-frames",
+          "0",
+          "--seed",
+          "20260919",
+          "--start-utc",
+          "1800001800",
+          "--source-revision",
+          "manifest-sha256:860165f3183ac8bfaac2d74af6f29e793575a91a82b1bb23d86ee975be5c0462",
+          "--dir",
+          "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r3-candidate"
+        ],
+        "data_directory": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\formal-primary-recovery-20261001\\primary-r3-candidate",
+        "json_outside_data": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001\\primary-r3-candidate.json"
+      }
+    ],
+    "driver_argv": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "-X",
+      "utf8",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\run-formal-replay.py",
+      "--candidate-directory",
+      "candidate-retained-20260930",
+      "--output-directory",
+      "formal-primary-recovery-20261001",
+      "--set",
+      "primary"
+    ],
+    "failure_policy": "retain all native receipts; continue six fixed cases; do not combine old batch",
+    "capacity": "NOT_RUN; independent primary review required"
+  },
+  "process_sample_file": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001.process-sample.json",
+  "process_classification": [
+    {
+      "name": "cmd.exe",
+      "pid": 53356,
+      "parent_pid": 49480,
+      "command_line": "\"C:\\WINDOWS\\System32\\cmd.exe\" /c npx -y exa-mcp-server@latest",
+      "creation_utc": "2026-10-01T12:29:56.7778890Z",
+      "cpu_before_seconds": 0.03125,
+      "cpu_after_seconds": 0.03125,
+      "cpu_delta_seconds": 0.0,
+      "classification": "resident MCP; no CPU increment in short sample"
+    },
+    {
+      "name": "cmd.exe",
+      "pid": 54140,
+      "parent_pid": 49480,
+      "command_line": "cmd.exe /e:ON /v:OFF /d /c \"\"C:\\home\\lyh\\.npm-global\\npx.cmd\" chrome-devtools-mcp@latest --autoConnect\"",
+      "creation_utc": "2026-10-01T12:29:56.7819110Z",
+      "cpu_before_seconds": 0.046875,
+      "cpu_after_seconds": 0.046875,
+      "cpu_delta_seconds": 0.0,
+      "classification": "resident MCP; no CPU increment in short sample"
+    },
+    {
+      "name": "node.exe",
+      "pid": 50948,
+      "parent_pid": 54140,
+      "command_line": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" chrome-devtools-mcp@latest --autoConnect",
+      "creation_utc": "2026-10-01T12:29:56.8174440Z",
+      "cpu_before_seconds": 1.15625,
+      "cpu_after_seconds": 1.15625,
+      "cpu_delta_seconds": 0.0,
+      "classification": "resident MCP; no CPU increment in short sample"
+    },
+    {
+      "name": "node.exe",
+      "pid": 47092,
+      "parent_pid": 53356,
+      "command_line": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" -y exa-mcp-server@latest",
+      "creation_utc": "2026-10-01T12:29:56.8175580Z",
+      "cpu_before_seconds": 1.46875,
+      "cpu_after_seconds": 1.46875,
+      "cpu_delta_seconds": 0.0,
+      "classification": "resident MCP; no CPU increment in short sample"
+    },
+    {
+      "name": "cmd.exe",
+      "pid": 35432,
+      "parent_pid": 50948,
+      "command_line": "C:\\WINDOWS\\system32\\cmd.exe /d /s /c chrome-devtools-mcp --autoConnect",
+      "creation_utc": "2026-10-01T12:29:58.2266250Z",
+      "cpu_before_seconds": 0.03125,
+      "cpu_after_seconds": 0.03125,
+      "cpu_delta_seconds": 0.0,
+      "classification": "resident MCP; no CPU increment in short sample"
+    },
+    {
+      "name": "node.exe",
+      "pid": 37208,
+      "parent_pid": 35432,
+      "command_line": "\"node\"   \"C:\\home\\lyh\\.npm-global\\.cache\\_npx\\15c61037b1978c83\\node_modules\\.bin\\\\..\\chrome-devtools-mcp\\build\\src\\bin\\chrome-devtools-mcp.js\" --autoConnect",
+      "creation_utc": "2026-10-01T12:29:58.2518580Z",
+      "cpu_before_seconds": 0.6875,
+      "cpu_after_seconds": 0.6875,
+      "cpu_delta_seconds": 0.0,
+      "classification": "resident MCP; no CPU increment in short sample"
+    },
+    {
+      "name": "node.exe",
+      "pid": 48024,
+      "parent_pid": 37208,
+      "command_line": "D:\\GreenSoftware\\node\\node.exe C:\\home\\lyh\\.npm-global\\.cache\\_npx\\15c61037b1978c83\\node_modules\\chrome-devtools-mcp\\build\\src\\telemetry\\watchdog\\main.js --parent-pid=37208 --app-version=1.10.1 --os-type=1",
+      "creation_utc": "2026-10-01T12:29:58.6326800Z",
+      "cpu_before_seconds": 0.0625,
+      "cpu_after_seconds": 0.0625,
+      "cpu_delta_seconds": 0.0,
+      "classification": "resident MCP; no CPU increment in short sample"
+    },
+    {
+      "name": "cmd.exe",
+      "pid": 46512,
+      "parent_pid": 47092,
+      "command_line": "C:\\WINDOWS\\system32\\cmd.exe /d /s /c exa-mcp-server",
+      "creation_utc": "2026-10-01T12:29:58.8865920Z",
+      "cpu_before_seconds": 0.03125,
+      "cpu_after_seconds": 0.03125,
+      "cpu_delta_seconds": 0.0,
+      "classification": "resident MCP; no CPU increment in short sample"
+    },
+    {
+      "name": "node.exe",
+      "pid": 29888,
+      "parent_pid": 46512,
+      "command_line": "\"node\"   \"C:\\home\\lyh\\.npm-global\\.cache\\_npx\\96788de746d735d3\\node_modules\\.bin\\\\..\\exa-mcp-server\\dist\\stdio.cjs\" ",
+      "creation_utc": "2026-10-01T12:29:58.9131910Z",
+      "cpu_before_seconds": 0.140625,
+      "cpu_after_seconds": 0.140625,
+      "cpu_delta_seconds": 0.0,
+      "classification": "resident MCP; no CPU increment in short sample"
+    },
+    {
+      "name": "pwsh.exe",
+      "pid": 7420,
+      "parent_pid": 49480,
+      "command_line": "\"C:\\Users\\lyh\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$sampleStart=[DateTime]::UtcNow; $before=@{}; Get-Process -ErrorAction SilentlyContinue | ForEach-Object { $before[$_.Id]=$_.CPU }; Start-Sleep -Seconds 3; $sampleEnd=[DateTime]::UtcNow; $after=Get-Process -ErrorAction SilentlyContinue; $byId=@{}; $after | ForEach-Object { $byId[$_.Id]=$_ }; $inventory=Get-CimInstance Win32_Process; $selected=@($inventory | Where-Object { $_.Name -match '^(cargo|rustc|clippy-driver|link|monitor-bench|baseline-monitor-bench|candidate-monitor-bench|monitor-db|candidate-monitor-db|candidate-library-tests|npx|npm)\\.exe$' -or ($_.CommandLine -match 'run-formal-replay|run-live-recorded|run-formal-capacity|npx-cli\\.js|exa-mcp-server|chrome-devtools-mcp') }); $samples=@($selected | ForEach-Object { $q=$byId[[int]$_.ProcessId]; $prior=$before[[int]$_.ProcessId]; [pscustomobject]@{name=$_.Name;pid=$_.ProcessId;parent_pid=$_.ParentProcessId;command_line=$_.CommandLine;creation_utc=$_.CreationDate.ToUniversalTime().ToString('o');cpu_before_seconds=$prior;cpu_after_seconds=$q.CPU;cpu_delta_seconds=if($null -ne $prior -and $null -ne $q.CPU){$q.CPU-$prior}else{$null}} }); $top=@($after | Where-Object { $before.ContainsKey($_.Id) -and $null -ne $_.CPU -and ($_.CPU-$before[$_.Id]) -gt 0.1 } | Sort-Object { $_.CPU-$before[$_.Id] } -Descending | Select-Object -First 10 @{n='name';e={$_.ProcessName}},@{n='pid';e={$_.Id}},@{n='cpu_delta_seconds';e={$_.CPU-$before[$_.Id]}}); $out=[ordered]@{sample_started_utc=$sampleStart.ToString('o');sample_finished_utc=$sampleEnd.ToString('o');sample_seconds=($sampleEnd-$sampleStart).TotalSeconds;relevant_processes=$samples;highest_cpu_processes=$top;old_driver_pid_5576_present=($inventory.ProcessId -contains 5576);old_native_pid_56468_present=($inventory.ProcessId -contains 56468);disk_free_bytes=@{C=(Get-PSDrive C).Free;D=(Get-PSDrive D).Free}}; $file='.trellis/tasks/09-30-evergreen-performance-evidence/research/formal-primary-recovery-20261001.process-sample.json'; if(Test-Path -LiteralPath $file){throw 'Evidence exists'}; $out | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $file -Encoding utf8; $out | ConvertTo-Json -Depth 8\"",
+      "creation_utc": "2026-10-01T12:34:11.8290420Z",
+      "cpu_before_seconds": 0.359375,
+      "cpu_after_seconds": 0.71875,
+      "cpu_delta_seconds": 0.359375,
+      "classification": "preflight sampler, ends before measurement"
+    }
+  ],
+  "ordinary_background_cpu_activity": [
+    {
+      "name": "SunBrowser",
+      "pid": 3608,
+      "cpu_delta_seconds": 0.609375
+    },
+    {
+      "name": "SunBrowser",
+      "pid": 53904,
+      "cpu_delta_seconds": 0.609375
+    },
+    {
+      "name": "quark",
+      "pid": 2948,
+      "cpu_delta_seconds": 0.515625
+    },
+    {
+      "name": "pwsh",
+      "pid": 7420,
+      "cpu_delta_seconds": 0.390625
+    },
+    {
+      "name": "floorp",
+      "pid": 35452,
+      "cpu_delta_seconds": 0.328125
+    },
+    {
+      "name": "SunBrowser",
+      "pid": 37488,
+      "cpu_delta_seconds": 0.203125
+    },
+    {
+      "name": "quark",
+      "pid": 26648,
+      "cpu_delta_seconds": 0.125
+    },
+    {
+      "name": "floorp",
+      "pid": 15492,
+      "cpu_delta_seconds": 0.109375
+    }
+  ],
+  "old_pids_absent": true,
+  "disk_free_bytes": {
+    "D": 1150804152320,
+    "C": 477876359168
+  },
+  "original_evidence_sha256": {
+    "formal-primary-20260930\\execution-contract.json": "FA1922F53FDDE49794D383147A0E42E047AD53F9C5FA23BC5EBB30A4B501D819",
+    "formal-primary-20260930\\primary-r1-baseline.json": "5455C9D91406AC5BEE9CD19AEADC516CA21893B6097C62978425368F252F8A6B",
+    "formal-primary-20260930\\primary-r1-baseline.receipt.json": "870B810316004592E22B1EAE3E58DBA71BAC92CCBD882AAC085D05F3AB0F00AA",
+    "formal-primary-20260930\\primary-r1-baseline.stderr.log": "7EB70257593DA06F682A3DDDA54A9D260D4FC514F645237F5CA74B08F8DA61A6",
+    "formal-primary-20260930\\primary-r1-baseline.stderr.raw.gz": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+    "formal-primary-20260930\\primary-r1-baseline.stdout.log": "5455C9D91406AC5BEE9CD19AEADC516CA21893B6097C62978425368F252F8A6B",
+    "formal-primary-20260930\\primary-r1-baseline.stdout.raw.gz": "28A95A8376E6EE1F12DB9BDCC3ACBB0717650C0911B73FBDDA95C817C2B8BF97",
+    "formal-primary-20260930\\primary-r1-candidate.json": "1EB4CC3C78802363EEB42DD7BA3D6F25C4BC1B156F4CA2D2F468978C9FCB1097",
+    "formal-primary-20260930\\primary-r1-candidate.receipt.json": "0D5826B74BBF3530EA6C096D33FB7B3A053CA5E73F165F662293A9B31D4B3E00",
+    "formal-primary-20260930\\primary-r1-candidate.stderr.log": "7EB70257593DA06F682A3DDDA54A9D260D4FC514F645237F5CA74B08F8DA61A6",
+    "formal-primary-20260930\\primary-r1-candidate.stderr.raw.gz": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+    "formal-primary-20260930\\primary-r1-candidate.stdout.log": "1EB4CC3C78802363EEB42DD7BA3D6F25C4BC1B156F4CA2D2F468978C9FCB1097",
+    "formal-primary-20260930\\primary-r1-candidate.stdout.raw.gz": "BFEDA6DCBDCB19C8C8CF54DEFE0685B4F892408B2F7D356BB7E88612C48E0120",
+    "formal-primary-20260930\\primary-r2-baseline.json": "71416FB04340337D3CFC0541F82FCA2CEBB85A913DDE1C4177ED6A90292989CF",
+    "formal-primary-20260930\\primary-r2-baseline.receipt.json": "7F7C66AB51639D483A9B1B7941EA3BBC486F4FA5E45788228B4D163DEFCE6D8C",
+    "formal-primary-20260930\\primary-r2-baseline.stderr.log": "7EB70257593DA06F682A3DDDA54A9D260D4FC514F645237F5CA74B08F8DA61A6",
+    "formal-primary-20260930\\primary-r2-baseline.stderr.raw.gz": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+    "formal-primary-20260930\\primary-r2-baseline.stdout.log": "71416FB04340337D3CFC0541F82FCA2CEBB85A913DDE1C4177ED6A90292989CF",
+    "formal-primary-20260930\\primary-r2-baseline.stdout.raw.gz": "878C554A3565A803408E77C761461E033539017A02DC44DED603A08C82E43DDA",
+    "formal-primary-20260930\\primary-r2-candidate.receipt.json": "27DB8437F60CF9BBCE3CAEBF6EF135EFA4FA3C8B63CDFFC699D02F3E14EEB401",
+    "formal-primary-20260930\\results.json": "D209FFE36F6711CC8EA095EAF98B8C93D5892B1B6DF121D886ACF74DA5271C9A",
+    "formal-primary-20260930.driver.json": "D56FF9D722985299BF40BC5D98F1D1F695179F00BFBAE68934073EF3A9EBF1D7",
+    "formal-primary-20260930.interruption.json": "370FF43112818B0504A0026E95282B3101E3FA453BC647345A48DE4FBF3CD007"
+  },
+  "metadata_semantics": "Counters keeps metadata unchanged; percent remains 100 to preserve fixture identity",
+  "measurement_load_boundary": "No builds/tests/client dynamic loads. Resident idle MCP retained. Ordinary user browsers remain; no machine-wide isolation claim."
+}

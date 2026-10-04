@@ -1,0 +1,379 @@
+{
+  "status": "PASS_LOCAL_DOCS_CONTRACT_CHECKS",
+  "finished_utc": "2026-10-03T02:09:40.151451+00:00",
+  "scope": "parent/T03/T04/T06 recent docs and spec writeback; 11 explicitly dispatched local checks",
+  "checks": [
+    {
+      "label": "01-docs-build",
+      "argv": [
+        "just",
+        "docs-build"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 51020,
+      "started_utc": "2026-10-03T02:05:49.496958+00:00",
+      "finished_utc": "2026-10-03T02:05:52.465255+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "b0c01d",
+      "status": "PASS",
+      "receipt": "01-docs-build.receipt.json",
+      "invocation_sha256": "ba9dd142dcef57efb25c461902dbe552962bc17c93ea354bcf3218f0c7ba67f2"
+    },
+    {
+      "label": "02-agent-contract",
+      "argv": [
+        "node",
+        "scripts/check-agent-contract.js"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 54820,
+      "started_utc": "2026-10-03T02:05:58.171330+00:00",
+      "finished_utc": "2026-10-03T02:05:58.322525+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "98de03",
+      "status": "PASS",
+      "receipt": "02-agent-contract.receipt.json",
+      "invocation_sha256": "d8cfea79c66947f0b52aca3232c907d969b7421497158eca478ffc0b219f2fd5"
+    },
+    {
+      "label": "03-installed-skills",
+      "argv": [
+        "node",
+        "scripts/install-agent-skills.js",
+        "--check"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 57060,
+      "started_utc": "2026-10-03T02:06:06.433413+00:00",
+      "finished_utc": "2026-10-03T02:06:06.589293+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "eba6da",
+      "status": "PASS",
+      "receipt": "03-installed-skills.receipt.json",
+      "invocation_sha256": "8b831d2f965939f8214658990317ce69d7c12ac88855b3efef4edc463db8b354"
+    },
+    {
+      "label": "04-diff-check",
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 44612,
+      "started_utc": "2026-10-03T02:06:13.482510+00:00",
+      "finished_utc": "2026-10-03T02:06:13.587914+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "d8408f",
+      "status": "PASS",
+      "receipt": "04-diff-check.receipt.json",
+      "invocation_sha256": "c282b95b05f802c2719fed9bbc55cd7fa5942acb5cce89e69343a7a7686e6ece"
+    },
+    {
+      "label": "05-validate-parent",
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-five-harness-audit"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 14820,
+      "started_utc": "2026-10-03T02:06:34.346457+00:00",
+      "finished_utc": "2026-10-03T02:06:34.471322+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "070bee",
+      "status": "PASS",
+      "receipt": "05-validate-parent.receipt.json",
+      "invocation_sha256": "1b435c7addd289cbac28d5aa39eb7d0da850644bc180faf6dd1810132016bd15"
+    },
+    {
+      "label": "06-validate-t01",
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-dependency-gate"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 43280,
+      "started_utc": "2026-10-03T02:06:35.604585+00:00",
+      "finished_utc": "2026-10-03T02:06:35.727867+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "2098f6",
+      "status": "PASS",
+      "receipt": "06-validate-t01.receipt.json",
+      "invocation_sha256": "bf5ba96c8018333b46ba36350079566d44a247089ee4fede12e3be355e770c9a"
+    },
+    {
+      "label": "07-validate-t02",
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-skill-sync"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 25708,
+      "started_utc": "2026-10-03T02:06:36.840337+00:00",
+      "finished_utc": "2026-10-03T02:06:36.965674+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "96f9d7",
+      "status": "PASS",
+      "receipt": "07-validate-t02.receipt.json",
+      "invocation_sha256": "945aa6b6f7d86f04d8e48c00fa754ed04fe32dd54d83c1c9ea0a0a3acd2ddfbb"
+    },
+    {
+      "label": "08-validate-t03",
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-harness-contract"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 49592,
+      "started_utc": "2026-10-03T02:06:38.077727+00:00",
+      "finished_utc": "2026-10-03T02:06:38.187390+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "8d0b05",
+      "status": "PASS",
+      "receipt": "08-validate-t03.receipt.json",
+      "invocation_sha256": "cfd43614d7dd716c22e60aeea8ee3a79dccb1dd3ce2fcf62da8c39f718e933c8"
+    },
+    {
+      "label": "09-validate-t04",
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-bootstrap-check"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 47148,
+      "started_utc": "2026-10-03T02:06:39.305420+00:00",
+      "finished_utc": "2026-10-03T02:06:39.415813+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "fe1802",
+      "status": "PASS",
+      "receipt": "09-validate-t04.receipt.json",
+      "invocation_sha256": "4163ce7a0506ac07d070c0ae8fafe45f01b02c18be5e145936aeeb5a42ee372f"
+    },
+    {
+      "label": "10-validate-t05",
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-performance-evidence"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 45592,
+      "started_utc": "2026-10-03T02:06:40.525792+00:00",
+      "finished_utc": "2026-10-03T02:06:40.643220+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "36ae33",
+      "status": "PASS",
+      "receipt": "10-validate-t05.receipt.json",
+      "invocation_sha256": "17ed1ec545362452dad31eb1a3f12656ee0f0cd49e17ab2a94da5f066a2afb8f"
+    },
+    {
+      "label": "11-validate-t06",
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-runtime-validation"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "pid": 56888,
+      "started_utc": "2026-10-03T02:06:41.733006+00:00",
+      "finished_utc": "2026-10-03T02:06:41.867538+00:00",
+      "native_exit_code": 0,
+      "driver_exit_code": 0,
+      "tool_outer_exit_code": 0,
+      "tool_chunk_id": "7d354c",
+      "status": "PASS",
+      "receipt": "11-validate-t06.receipt.json",
+      "invocation_sha256": "d107535b5cedcea85d113b143f0c69f9524b4358e25badc8ab0549deeae48f29"
+    }
+  ],
+  "check_count": 11,
+  "original_stream_hash_validation": "22/22 MATCH",
+  "source_files_after": [
+    {
+      "path": "docs/agents/harnesses.md",
+      "size": 17051,
+      "sha256": "92231b6217866da2a43724e9a910cdba6808699c6cf84fa784f330b9989ed2da",
+      "matches_before": true
+    },
+    {
+      "path": ".trellis/spec/frontend/quality-guidelines.md",
+      "size": 16636,
+      "sha256": "fd268056d25e32a2a1e7b38d4610880af12992f004e313780fe8e1d57583d577",
+      "matches_before": true
+    },
+    {
+      "path": "AGENTS.md",
+      "size": 8046,
+      "sha256": "f602d7e74cada3cd9c6d617dad36cbc1a90d90c19b92bd5ccb40d9794b557bb9",
+      "matches_before": true
+    },
+    {
+      "path": ".trellis/workflow.md",
+      "size": 44244,
+      "sha256": "2540200a69777534fdc1632c38fa8caf247278d4de654a5c5c47269cbc1dcc0f",
+      "matches_before": true
+    },
+    {
+      "path": "justfile",
+      "size": 5520,
+      "sha256": "e3307f113086045f7228a2dfb2eab8894d4f05787fde1d124e1899381a64e09a",
+      "matches_before": true
+    },
+    {
+      "path": "scripts/check-agent-contract.js",
+      "size": 9333,
+      "sha256": "67d9aec81cd20a09457ce240902056647b9dee94e1de1bb184e742b793e868de",
+      "matches_before": true
+    },
+    {
+      "path": "scripts/install-agent-skills.js",
+      "size": 5875,
+      "sha256": "557551d116b8696aa75658d3710e623c482e646a995ae8ebe98ec3a4e0767bd9",
+      "matches_before": true
+    },
+    {
+      "path": "docs/package.json",
+      "size": 304,
+      "sha256": "86aff30cf335f08baec1b9864e6a8639dc3e63d2a270339cd12b601db913d925",
+      "matches_before": true
+    },
+    {
+      "path": "docs/package-lock.json",
+      "size": 68344,
+      "sha256": "2270fe40b72a626672d60775a8586aa24e59dbbe98a11f6b89b908db8197e107",
+      "matches_before": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/review-bootstrap-runtime-closeout-20261002.md",
+      "size": 6688,
+      "sha256": "0c1d293f9a5ee8f64fb5a2d3a912c055d3573b9dbeca905cd02c156d28ef8e92",
+      "matches_before": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-five-harness-audit/task.json",
+      "size": 1763,
+      "sha256": "4733323b6d5cd4449ef2a065c29b7e041b5dc32f21a6f2e2ea5d62b5294d0aab",
+      "matches_before": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/task.json",
+      "size": 1449,
+      "sha256": "96b3bec62f1ff5fd7e441cc50ea5ffcc8edd7cf90595e25be022be005eeb924b",
+      "matches_before": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-skill-sync/task.json",
+      "size": 1733,
+      "sha256": "b54ee77afbda2023b446b0c10b1f22f405285f8443b087dfb585cd02d4089d9a",
+      "matches_before": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-harness-contract/task.json",
+      "size": 3187,
+      "sha256": "49fede83cae6f22bd3e1212f7eba7c69bd31ff2dfc5bb26b5e43c8dac3164718",
+      "matches_before": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-bootstrap-check/task.json",
+      "size": 3971,
+      "sha256": "005f883679f17bc31d61ebe9c43dd3b4ab070a811e9237c01b7365e27855f359",
+      "matches_before": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-performance-evidence/task.json",
+      "size": 1570,
+      "sha256": "07684fc291cb484410f9afef314c88fe21e86af86583f8a9002933334856e098",
+      "matches_before": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/task.json",
+      "size": 3330,
+      "sha256": "9b02fe39250bf25a8deb12f704bd665bc15dd43c7fa2e3798f1c0fdf291586d9",
+      "matches_before": true
+    }
+  ],
+  "source_files_match_count": 17,
+  "source_file_count": 17,
+  "full_ci": "NOT_RUN",
+  "lint": "NOT_RUN_THIS_ROUND; historical owner eslint/clippy PASS within frozen source boundary only",
+  "typecheck": "NOT_RUN_THIS_ROUND; historical owner tsc PASS within frozen source boundary only",
+  "tests": "NOT_RUN_THIS_ROUND; no tests added for docs changes; CLI contract/installation checks PASS",
+  "historical_full_ci": {
+    "receipt": "../../../09-30-evergreen-performance-evidence/research/rollback-cache-20261001/just-ci.receipt.json",
+    "native_exit_code": 0,
+    "source_manifest_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+    "boundary": "2026-10-01 retained rollback candidate; full CI not repeated or transferred to new P1 performance identities or latest docs writeback",
+    "review": "../final-review-20261001.md"
+  },
+  "remaining_boundaries": {
+    "T04": "INIT_PASS / CONTRACT_FAIL; post-init 7 marker failures remain; no init repeated",
+    "T06": "INCOMPLETE; actual backend/permissions/hooks/full child lifecycle remain unverified; no new clients",
+    "T05": "formal matrix/primary/capacity NOT_RUN this round; competing ferrots load prevents formal measurement; historical failure/rollback and source identities remain separate",
+    "hosted": "UNVERIFIED_THIS_ROUND",
+    "full_product": "NO_CURRENT_ROUND_PASS_CLAIM"
+  },
+  "warnings": [
+    "Existing Git LF-to-CRLF notices preserved in original stderr",
+    "Existing workflow.md 44244 bytes exceeds 32768 injection limit; task context validation still exit 0; use full explicit pull"
+  ],
+  "receipt_write_first_failure": {
+    "status": "TOOL_REJECTED_BEFORE_NATIVE_START",
+    "native_exit_code": null,
+    "driver_exit_code": null,
+    "tool_outer_exit_code": null,
+    "error": "CreateProcess: Rejected(\"Failed to create unified exec process: The filename or extension is too long. (os error 206)\")",
+    "native_started": false,
+    "artifact_written": false,
+    "correction": "store shared driver template once and reconstruct command per receipt; no check re-run"
+  },
+  "fixed_findings": [],
+  "not_fixed_findings": [],
+  "task_acceptance_changed": false,
+  "write_status": "STOP_WRITING_AFTER_FINALIZATION"
+}

@@ -1,0 +1,6 @@
+   Compiling residential-monitor v0.3.0 (D:\Documents\Code\Github\clash-verge-ai-residential\residential-monitor\src-tauri)
+mbx[progress]: 15s elapsed; 0 hits, 0 misses, 1 bypassed, 0 not looked up; ~0s compiler work saved
+    Finished `release` profile [optimized] target(s) in 15.65s
+     Running unittests src\lib.rs (C:/Users/lyh/AppData/Local/Temp/resiwatch-t05-20260930-q1lnvpml/candidate-target\x86_64-pc-windows-msvc\release\deps\residential_monitor_lib-d2e33871bfe2d12d.exe)
+mbx[cache]: 0 hits, 0 misses, 1 bypassed; 0 B downloaded, 0 B uploaded, 0 B stored locally
+mbx[savings]: disposed of 67.0 GiB logical without being asked. that is rather the point.

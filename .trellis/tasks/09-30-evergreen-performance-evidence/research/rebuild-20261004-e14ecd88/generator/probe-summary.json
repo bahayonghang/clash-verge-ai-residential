@@ -1,0 +1,53 @@
+{
+  "results": {
+    "a250-minute-production": {
+      "result": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\generator\\probes\\a250-minute-production.json",
+      "checks": {
+        "production_status_ok": true,
+        "tier_raw": true,
+        "nonempty": true,
+        "deadline_ms_le_10000": true
+      },
+      "production_first_read_ms": 5.5764
+    },
+    "a250-30d-production": {
+      "result": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\generator\\probes\\a250-30d-production.json",
+      "checks": {
+        "production_status_ok": true,
+        "tier_raw": true,
+        "nonempty": true,
+        "deadline_ms_le_10000": true,
+        "totals_match_oracle": true,
+        "series_rows_720": true
+      },
+      "production_first_read_ms": 7595.2022
+    },
+    "a250-30d-all": {
+      "result": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\generator\\probes\\a250-30d-all.json",
+      "checks": {},
+      "production_first_read_ms": null
+    },
+    "a250-30d-residential": {
+      "result": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\generator\\probes\\a250-30d-residential.json",
+      "checks": {},
+      "production_first_read_ms": null
+    }
+  },
+  "db_after": {
+    "50": {
+      "db_sha256": "036950214F645734235AC8F0CD8C767EFE1CF6299B106891A7630CFD3810F619",
+      "sidecars": {
+        "-wal": 0,
+        "-shm": 32768
+      }
+    },
+    "250": {
+      "db_sha256": "610606F60FB87CDC78655867479A5A56167B9AA46DF16B6BAA19B53893EF7141",
+      "sidecars": {
+        "-wal": 0,
+        "-shm": 32768
+      }
+    }
+  },
+  "boundary": "Diagnostic only. Pages already cached by generation, hash and oracle; not physical cold reads. Does not close F12 non-empty same-window gate or capacity gate."
+}

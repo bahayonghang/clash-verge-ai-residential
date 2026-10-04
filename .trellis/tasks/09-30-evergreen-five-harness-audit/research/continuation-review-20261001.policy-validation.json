@@ -1,0 +1,55 @@
+{
+  "observed_utc": "2026-10-01T12:54:35.8103293Z",
+  "scope": "parent-T03-T04-approved-optional-overrides",
+  "authorization": "2026-10-01 保留当前不跟踪策略，更新任务合同和规范",
+  "review_mode": "static_only",
+  "files": [
+    ".trellis/tasks/09-30-evergreen-five-harness-audit/design.md",
+    ".trellis/tasks/09-30-evergreen-five-harness-audit/implement.md",
+    ".trellis/tasks/09-30-evergreen-five-harness-audit/task.json",
+    ".trellis/spec/frontend/quality-guidelines.md",
+    ".trellis/tasks/09-30-evergreen-harness-contract/prd.md",
+    ".trellis/tasks/09-30-evergreen-harness-contract/design.md",
+    ".trellis/tasks/09-30-evergreen-harness-contract/implement.md",
+    ".trellis/tasks/09-30-evergreen-harness-contract/task.json",
+    ".trellis/tasks/09-30-evergreen-harness-contract/research/local-override-policy-20261001.md",
+    ".trellis/tasks/09-30-evergreen-bootstrap-check/prd.md",
+    ".trellis/tasks/09-30-evergreen-bootstrap-check/design.md",
+    ".trellis/tasks/09-30-evergreen-bootstrap-check/implement.md",
+    ".trellis/tasks/09-30-evergreen-bootstrap-check/task.json",
+    ".trellis/tasks/09-30-evergreen-bootstrap-check/research/local-override-policy-20261001.md"
+  ],
+  "trailing_whitespace_errors": [],
+  "json_checks": [
+    {
+      "path": ".trellis/tasks/09-30-evergreen-five-harness-audit/task.json",
+      "parse": "PASS",
+      "status": "in_progress",
+      "policy_approval_recorded": true,
+      "historical_verification_scope": null
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-harness-contract/task.json",
+      "parse": "PASS",
+      "status": "in_progress",
+      "policy_approval_recorded": true,
+      "historical_verification_scope": "implementation_status 与 review 仅对应 2026-09-30 合同；2026-10-01 本机可选覆盖合同修订待验"
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-bootstrap-check/task.json",
+      "parse": "PASS",
+      "status": "in_progress",
+      "policy_approval_recorded": true,
+      "historical_verification_scope": "implementation_status、verification_summary 与 review 仅对应 2026-09-30 合同和隔离候选；2026-10-01 本机可选覆盖合同修订待验"
+    }
+  ],
+  "contract_consistency": "PASS_STATIC",
+  "T03_AC5": "NOT_RUN",
+  "T04_AC3": "NOT_RUN",
+  "tests_run": 0,
+  "builds_run": 0,
+  "clients_started": 0,
+  "bootstrap_runs": 0,
+  "overrides_modified": false,
+  "git_index_modified": false
+}

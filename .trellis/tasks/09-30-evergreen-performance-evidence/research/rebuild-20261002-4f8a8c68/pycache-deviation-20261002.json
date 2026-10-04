@@ -1,0 +1,9 @@
+{
+  "recorded_utc": "2026-10-02T15:24:02.649685+00:00",
+  "deviation": "Main session ran `python -B -m py_compile generator.py` as a syntax check. py_compile wrote one bytecode file despite -B.",
+  "file": "__pycache__/generator.cpython-314.pyc",
+  "bytes": 27031,
+  "sha256": "3A50AAC0E6A6EFD391067B23F4D1F7742B36B5C277B0369E1B7748F23324C339",
+  "cleanup": "Deletion was denied by the session permission system; file retained unchanged.",
+  "impact": "generator.py runs with -B and sys.dont_write_bytecode; the pyc is not loaded as an input. No product, asset or old evidence change."
+}

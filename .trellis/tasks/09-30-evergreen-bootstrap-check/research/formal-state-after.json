@@ -1,0 +1,12 @@
+{
+  "captured_utc": "2026-09-30T13:31:42.646145+00:00",
+  "files": {
+    "scripts/check-harness-environment.js": "7f2291e13ed04a47d1df55f22e762f83adccab4aa17b7fe30492b879eaab05b1",
+    "tests/check-harness-environment.test.js": "4ce4c5cecfb9eafa3d60c3858df6d69d17658fc468c832bd5ca56fe51d73d850",
+    "package.json": "7943626a23bb2dfd34ce45f711e247c62b547aa76dff4062d2aa3ea31617b824",
+    "justfile": "e1b15c75d6a226230e4e8a52c0f57dd05a3e5acb76c79a99265541fa927094be",
+    "docs/agents/harnesses.md": "171afcef24d9acfb9ee53edcd81cc0881013ba40851f01795a2549d2d13cb7c6",
+    "docs/agents/residential-rule-tuning.md": "88c5e5eca6678574661504fee6a7b217f9be09a19caaca36683c6cb3e728e754"
+  },
+  "unchanged": true
+}

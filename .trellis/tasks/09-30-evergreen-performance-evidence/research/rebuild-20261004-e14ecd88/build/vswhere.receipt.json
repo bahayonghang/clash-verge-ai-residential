@@ -1,0 +1,60 @@
+{
+  "label": "vswhere",
+  "argv": [
+    "C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe",
+    "-latest",
+    "-products",
+    "*",
+    "-requires",
+    "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+    "-property",
+    "installationPath"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-10-04T05:38:34.637308+00:00",
+  "status": "ENDED",
+  "environment_override": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "build_environment": {
+    "VCToolsInstallDir": null,
+    "VSINSTALLDIR": null,
+    "WindowsSdkDir": null,
+    "WindowsSDKVersion": null,
+    "LIB": null,
+    "INCLUDE": null,
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": null,
+    "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER": null,
+    "CARGO_BUILD_TARGET": null,
+    "CARGO_TARGET_DIR": null
+  },
+  "executable_resolved": "C:/Program Files (x86)/Microsoft Visual Studio/Installer\\vswhere.exe",
+  "shell": false,
+  "native_exit": 0,
+  "pid": 45528,
+  "ended_utc": "2026-10-04T05:38:35.162085+00:00",
+  "wall_seconds": 0.5240386999994371,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\vswhere.stdout.raw",
+      "bytes": 56,
+      "raw_sha256": "964D8E70B4AA4D9AA7404BE8E37FDD78B159937B9533B22EA21393A90DA78E75",
+      "gzip": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\vswhere.stdout.raw.gz",
+      "gzip_sha256": "17D8A0DFEF1CBBD8A250375E2B2DCCB5B1B46E5BF7F034A948241371668895F8",
+      "readable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\vswhere.stdout.log",
+      "readable_sha256": "EA5FA9209324F782A58C5FC51BECB215AB3B8C7136AAC7DBD9EA451F728FC4D0"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\vswhere.stderr.raw",
+      "bytes": 0,
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\vswhere.stderr.raw.gz",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\build\\vswhere.stderr.log",
+      "readable_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  },
+  "owned_descendants_observed": [],
+  "process_cleanup": "native process waited; descendant metadata observations limited to own subtree; no absolute no-orphan claim"
+}

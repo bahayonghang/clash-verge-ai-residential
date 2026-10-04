@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "node",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-operational-review-_1wrp0je\\candidate\\scripts\\check-agent-contract.js"
+  ],
+  "shell": false,
+  "started_utc": "2026-10-03T02:37:20.139539+00:00",
+  "ended_utc": "2026-10-03T02:37:20.262610+00:00",
+  "native_exit_code": 0,
+  "stdout_sha256": "d98ed58f27e30fb037b2e95aabf2ee5cd855af4f28c4c1c0be885a793f2d0394",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

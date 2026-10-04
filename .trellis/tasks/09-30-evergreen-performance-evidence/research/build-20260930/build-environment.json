@@ -1,0 +1,23 @@
+{
+  "observed_utc": "2026-09-30T13:46:26.569183+00:00",
+  "environment": {
+    "RUSTC_WRAPPER": null,
+    "RUSTC_WORKSPACE_WRAPPER": null,
+    "CARGO_HOME": null,
+    "RUSTUP_HOME": null,
+    "CARGO_TARGET_DIR": null,
+    "CARGO_BUILD_JOBS": null,
+    "CARGO_ENCODED_RUSTFLAGS": null,
+    "RUSTFLAGS": null,
+    "CARGO_PROFILE_RELEASE_LTO": null,
+    "CARGO_PROFILE_RELEASE_CODEGEN_UNITS": null
+  },
+  "config_files": [],
+  "vswhere": {
+    "exit": 0,
+    "installationPath": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise"
+  },
+  "sdk_lib_versions": [
+    "10.0.26100.0"
+  ]
+}

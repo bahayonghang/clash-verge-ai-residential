@@ -1,0 +1,33 @@
+{
+  "label": "02-agent-contract",
+  "argv": [
+    "node",
+    "scripts/check-agent-contract.js"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "executable": "D:\\GreenSoftware\\node\\node.EXE",
+  "executable_sha256": "e921fe5307e29bf6fd00000dd594356affd3a7b044e52720c7f10decbdc305b9",
+  "started_utc": "2026-10-03T02:05:58.171330+00:00",
+  "finished_utc": "2026-10-03T02:05:58.322525+00:00",
+  "wall_seconds": 0.1512110999901779,
+  "pid": 54820,
+  "native_exit_code": 0,
+  "driver_exit_code": 0,
+  "driver_exit_observation": "sys.exit invoked below; confirmed separately by tool-outer observer",
+  "tool_outer_exit_code": null,
+  "tool_outer_exit_observation": "PENDING; recorded in separate observer after exec returns",
+  "status": "PASS",
+  "exception": null,
+  "streams": {
+    "stdout": {
+      "path": "02-agent-contract.stdout.raw",
+      "size": 85,
+      "sha256": "d98ed58f27e30fb037b2e95aabf2ee5cd855af4f28c4c1c0be885a793f2d0394"
+    },
+    "stderr": {
+      "path": "02-agent-contract.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

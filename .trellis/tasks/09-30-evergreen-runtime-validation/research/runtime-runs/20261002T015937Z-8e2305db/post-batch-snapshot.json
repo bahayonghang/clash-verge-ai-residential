@@ -1,0 +1,14 @@
+{
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "frozen_source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "diff": {
+    "same": true,
+    "changed": [],
+    "added": [],
+    "removed": [],
+    "index_changed": false,
+    "head_changed": false,
+    "branch_changed": false
+  },
+  "meaning": "protected_current_worktree_only; no_transient_or_all_filesystem_claim"
+}

@@ -1,0 +1,247 @@
+{
+  "review": "T05 P1 independent read-only identity review",
+  "reviewed_utc": "2026-10-02T15:31:47.091981+00:00",
+  "reviewer_scope": "read-only; no cargo/build/generator/bench/monitor-db/library test run; corpus-a* and smoke DBs not opened; targets/ read only for the four compiler-artifact paths",
+  "conclusion": "P1_IDENTITY_REVIEW_PASS",
+  "first_failing_item": null,
+  "items": [
+    {
+      "id": 1,
+      "name": "archive_and_original_100",
+      "status": "PASS",
+      "observed": {
+        "archive_sha256": "87684724D5E5B1B3A18C0212CD594CA05F9454EDD6C28582CD879270F9749EB7",
+        "archive_bytes": 5109760,
+        "tar_members": 393,
+        "tar_regular_files": 354,
+        "tar_links_or_devices": 0,
+        "tar_pax_comment": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+        "baseline_original_manifest_sha256": "87CC38FE4A25EB79C1452372085A9009A15A2A86ECE957FC8FF1F5CD410A5AE2",
+        "original_files": 100,
+        "tar_100_vs_original_manifest": "equal",
+        "baseline_original_source_json_vs_original_manifest": "equal",
+        "baseline_archive_full_tree_json_vs_tar": "equal (354)"
+      }
+    },
+    {
+      "id": 2,
+      "name": "baseline_instrumented_103",
+      "status": "PASS",
+      "observed": {
+        "baseline_source_before_json_sha256": "1120B9D2B5C457F856BCD5F51ED9C88E0612E978AB4C7B76B4816640E1C6678F",
+        "files": 103,
+        "current_baseline_copy_vs_manifest": "equal",
+        "five_files_current": {
+          "src/bench.rs": "499F3B905DBA9E48C1D9840F4FC57803B03B3CDB6E3B3C2ECD40006684023EA8",
+          "src/bin/monitor-bench.rs": "7BA08896AC884DD764B1AD954DC3B579CDB38ADADF272A77D8CC4422FE7A3BFC",
+          "src/bench/facade.rs": "ED069D6B822732E3E8B91E1B3ED4A0C9941C676D5415DE35A220ED443009AB4A",
+          "src/bench/process.rs": "83734ABF3F95C1BC7313EF9ACEB7BC20E6C5799D416C48CA3723BF9AA9E906EA",
+          "src/bench/write_vfs.rs": "C3B5D8849E3EA206C036515D86E9E7D77E75399D037EFEBBEC15685D6E48DA7A"
+        },
+        "original_vs_instrumented_changed_keys": 5,
+        "patch_sha256": "D72E229BC80B9EA1B2736EEF3A3A0B67E19AFAA75BF2934E7B53397DE7C0490C",
+        "patch_files": "only the five residential-monitor/src-tauri/src instrumentation files",
+        "baseline_cargo_toml": "83F934829D715A37303E6390D88BE979D8DA7F3F410BDD204D8C006558516686 (equal to original)",
+        "baseline_cargo_lock": "D84090D6A1073125A92D45F22CA90497F15629FF43528B9962F5313602385829 (equal to original)",
+        "schema_or_sql_files_changed": 0
+      }
+    },
+    {
+      "id": 3,
+      "name": "candidate_108",
+      "status": "PASS",
+      "observed": {
+        "source_manifest_after_checks_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+        "files": 108,
+        "candidate_copy_now_vs_manifest": "equal",
+        "repository_now_vs_manifest": "equal (0 mismatches)",
+        "raw_fold_manifest_repository_candidate": "4D6E8FEB88B142E09F8E62D60BAF20BAC970F11CB8D8E9108B08CFFBF717E6AA",
+        "state_source_manifest": "equal",
+        "recorded_manifests_repository_before_copy_after_before_build_after_build_after_smoke": "all equal",
+        "candidate_cargo_lock": "0291B2FF5C33E209EA6D93E6DB6C3503DF6C5BB3E7FC86E7CFF6DE37D427A2B2 (equal to manifest and repository)"
+      }
+    },
+    {
+      "id": 4,
+      "name": "dist_copies",
+      "status": "PASS",
+      "observed": {
+        "repository_dist_files": 36,
+        "repository_dist_now_vs_state_dist_manifest": "equal",
+        "baseline_dist_now": "equal",
+        "candidate_dist_now": "equal",
+        "recorded_dist_manifests": "8 of 8 equal"
+      }
+    },
+    {
+      "id": 5,
+      "name": "build_test_receipts",
+      "status": "PASS_WITH_DEVIATION",
+      "observed": {
+        "receipts_checked": [
+          "baseline-archive",
+          "baseline-object",
+          "baseline-build",
+          "candidate-build",
+          "candidate-library-test-build"
+        ],
+        "all_12_native_receipts_exit": 0,
+        "raw_logs": "24 of 24: raw sha256, bytes, gzip sha256, gzip decompress equal to raw, readable sha256 match receipt",
+        "baseline_build": {
+          "exit": 0,
+          "pid": 63204,
+          "wall_seconds": 98.24,
+          "stdout_raw_sha256": "B4680021AEB500B34BCCE631F5D13FE6D6B8B4E90FDAD9A61F323D9688326F0C",
+          "stderr_raw_sha256": "759AC3924A4F2C352138482643E07AB5002AB5B3E2B8B45DE2DF30F93E112AB8"
+        },
+        "candidate_build": {
+          "exit": 0,
+          "pid": 54956,
+          "wall_seconds": 92.742
+        },
+        "candidate_library_test_build": {
+          "exit": 0,
+          "pid": 39956,
+          "wall_seconds": 21.848
+        },
+        "argv_contract_fields": "match: cargo +1.98.0; --locked --release --target x86_64-pc-windows-msvc; manifest-path and target-dir inside the correct source/target root; bins monitor-bench and monitor-bench+monitor-db; test --lib --no-run --message-format=json",
+        "argv_extra": "--message-format=json on both build commands (D3)",
+        "environment_override": {
+          "RUSTUP_AUTO_INSTALL": "0"
+        },
+        "recorded_build_environment_keys": "all null",
+        "cargo_lock_both_sides": "unchanged",
+        "toolchain": "rustc 1.98.0 88d9e12ae; cargo 1.98.0 797e8a9bc; target x86_64-pc-windows-msvc"
+      }
+    },
+    {
+      "id": 6,
+      "name": "executable_identities",
+      "status": "PASS",
+      "observed": {
+        "baseline-monitor-bench.exe": {
+          "sha256": "D590EF1082718856F0F92F865A260FE99D530F8DC05AE2DB4501157FE110F8A4",
+          "bytes": 5748224,
+          "artifact_root": "targets/baseline"
+        },
+        "candidate-monitor-bench.exe": {
+          "sha256": "AAF4A5ED3626FFA0502948F1911027ECA888E2F09460C1D86AD94F7CFFB51B9B",
+          "bytes": 6258688,
+          "artifact_root": "targets/candidate"
+        },
+        "candidate-monitor-db.exe": {
+          "sha256": "F2AC7CF423513AA28127834003F676D5D6039479B41D4351042002DFE5F0324C",
+          "bytes": 5131264,
+          "artifact_root": "targets/candidate"
+        },
+        "candidate-library-tests.exe": {
+          "sha256": "A6AE2DDF74E77EA6FA4A5E5A79DAF00714C1FF0A24251A3B5A49A58537DAD2EF",
+          "bytes": 12883968,
+          "artifact_root": "targets/candidate",
+          "artifact": "release/deps/residential_monitor_lib-d2e33871bfe2d12d.exe",
+          "profile_test": true
+        },
+        "copy_vs_artifact_source_vs_state": "equal for all four",
+        "artifact_uniqueness": "each is the only matching compiler-artifact in its raw stdout",
+        "executable_identity_json_and_asset_manifest_vs_state": "equal"
+      }
+    },
+    {
+      "id": 7,
+      "name": "virtual_smoke",
+      "status": "PASS",
+      "observed": {
+        "baseline": {
+          "exit": 0,
+          "pid": 63164,
+          "frames": 3,
+          "commits": 3,
+          "traffic_conserved": true,
+          "download": 876,
+          "upload": 348,
+          "schema_version": 4,
+          "executable_sha256_equals_identity": true
+        },
+        "candidate": {
+          "exit": 0,
+          "pid": 54052,
+          "frames": 3,
+          "commits": 3,
+          "traffic_conserved": true,
+          "download": 876,
+          "upload": 348,
+          "schema_version": 5,
+          "executable_sha256_equals_identity": true
+        },
+        "fixture_hash_both": "557540697a8a1e8e41edf6bb7366f6bff4ddab43419442a2596761a1d1729bb8",
+        "options_both": {
+          "active": 8,
+          "hz": 1,
+          "duration_secs": 3,
+          "warmup_secs": 0,
+          "virtual_time": true,
+          "start_utc": 1800001800,
+          "seed": 20260919,
+          "workload": "counters",
+          "metadata_change_percent": 100,
+          "archive": "complete",
+          "query_every_frames": 0,
+          "period_rule": false
+        },
+        "synchronous": "FULL",
+        "initial_and_final_journal_synchronous": "wal/2 both sides",
+        "result_json_equals_raw_stdout": true,
+        "stderr_bytes": 0
+      }
+    },
+    {
+      "id": 8,
+      "name": "deviations",
+      "status": "PASS_WITH_DEVIATIONS",
+      "deviations": [
+        {
+          "id": "D1",
+          "item": "__pycache__/generator.cpython-314.pyc",
+          "observed": "27031 B, 3A50AAC0E6A6EFD391067B23F4D1F7742B36B5C277B0369E1B7748F23324C339, equal to pycache-deviation record; mtime 2026-10-02T15:23:32Z, after P1 end 15:22:55Z; no __pycache__ under sources",
+          "p1_effect": "none"
+        },
+        {
+          "id": "D2",
+          "item": "p1-competing-load.json",
+          "observed": "recorded 15:18:39Z before builder start; unrelated ferrots CUDA/python job; largest RSS 1728782336 B; cpu 12.9%",
+          "p1_effect": "none for identity; P1 has no timing gate; formal stages must not start while the load runs"
+        },
+        {
+          "id": "D3",
+          "item": "--message-format=json on the two cargo build argv",
+          "observed": "extra flag vs contract text; used to read compiler-artifact paths",
+          "p1_effect": "output format only; no change to compile inputs"
+        },
+        {
+          "id": "D4",
+          "item": "tauri-build writes gen/schemas into source trees",
+          "observed": "baseline: desktop-schema.json and windows-schema.json rewritten at 15:19:34Z during baseline-build (tar 136188 B 1F694F5D... -> 133591 B B71D7A36...); candidate: 4 gen/schemas files created at 15:21:07Z during candidate-build, bytes equal to repository tracked files; outside 100/103/108 manifests; builder stable_inputs does not cover them",
+          "p1_effect": "manifest identities unchanged; record as build-script output"
+        },
+        {
+          "id": "D5",
+          "item": "cargo resolved to mbx compilation-cache wrapper",
+          "observed": "executable_resolved C:\\Users\\lyh\\AppData\\Local\\mbx\\bin\\cargo.EXE; mbx-target points to C:\\Users\\lyh\\.cargo\\bin\\mbx.exe; PATH puts mbx before .cargo\\bin; stderr: baseline 344 hits/136 misses/59 not looked up/1 bypassed; candidate 471 hits/9 misses/56 not looked up/2 bypassed; library test 2 hits/0 misses/1 bypassed; preflight.json and state.json do not record the wrapper",
+          "p1_effect": "artifact -> copy -> smoke identity chain intact; compilation of every unit from these sources without cache reuse not proven; cache key correctness UNVERIFIED; contract P0.3/P0.5 build-environment record gap for main session"
+        },
+        {
+          "id": "D6",
+          "item": "actual linker/SDK",
+          "observed": "preflight actual_linker_and_sdk NOT_YET_OBSERVED; PATH link.exe is Git usr/bin/link.exe; no later record",
+          "p1_effect": "build exit 0; actual linker selection UNVERIFIED"
+        }
+      ]
+    }
+  ],
+  "failing_items": [],
+  "open_for_main_session": [
+    "D5 mbx cache wrapper not recorded in preflight/state",
+    "D6 actual linker/SDK not recorded",
+    "D4 gen/schemas build-script writes outside manifests"
+  ]
+}

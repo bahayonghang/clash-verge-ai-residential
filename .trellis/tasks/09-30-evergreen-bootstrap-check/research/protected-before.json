@@ -1,0 +1,11 @@
+{
+  ".trellis/.template-hashes.json": "61058f644764515363f2b7d9c5b2877eb167d474a38fc08955e7eef22c3e5f79",
+  ".trellis/.version": "0fb2a9d4b97b5ee5f3c24bd0c969d5eb2c7729ace23df3729a60fb6a30fe9bde",
+  ".codex/config.toml": "0696030d4c8d9b33fb1286081146207114106e26f74bd2b9a0308b56d3212035",
+  ".kimi-code/skills/trellis-implement/SKILL.md": "61013b2aaef14b1da347553da645f5343f73ae17c8ec9a2cb0ad3fdc44cc444c",
+  ".kimi-code/skills/trellis-check/SKILL.md": "43536cc2e41e119634e85848c67acbadc582e6fe84ab195a6a8645f8e97fd273",
+  ".kimi-code/skills/trellis-research/SKILL.md": "646f070f6ed7598bccc91a0275ed1f3fa78783c043db5ff16caab587b0cbbb61",
+  "AGENTS.md": "f602d7e74cada3cd9c6d617dad36cbc1a90d90c19b92bd5ccb40d9794b557bb9",
+  "CLAUDE.md": "c0a67ce322c8394a7e34c9ccbe03addce4cf40a900134638cd04e94fd7669236",
+  ".gitignore": "86fb25db72a9a2158628c5197f1eac306824085d258a4d163640ba06c11cba92"
+}

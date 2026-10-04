@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "D:\Documents\Code\Github\clash-verge-ai-residential\.trellis\tasks\09-30-evergreen-runtime-validation\research\operational-verification.py", line 170, in <module>
+    main()
+    ~~~~^^
+  File "D:\Documents\Code\Github\clash-verge-ai-residential\.trellis\tasks\09-30-evergreen-runtime-validation\research\operational-verification.py", line 144, in main
+    require("acp_native_fixture_stop:" + label, driver_exit == 1 and exit_row["stop_reason"] == expected and exit_row["native_exit_code"] != 0)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Documents\Code\Github\clash-verge-ai-residential\.trellis\tasks\09-30-evergreen-runtime-validation\research\operational-verification.py", line 32, in require
+    raise AssertionError(name)
+AssertionError: acp_native_fixture_stop:sensitive

@@ -1,0 +1,7 @@
+{
+  "startedAt": "2026-09-30T07:38:15.2438134-05:00",
+  "log": "review-monitor-audit.log",
+  "command": "npm --prefix residential-monitor audit --include=dev --audit-level=high",
+  "exitCode": 0,
+  "finishedAt": "2026-09-30T07:38:18.1199722-05:00"
+}

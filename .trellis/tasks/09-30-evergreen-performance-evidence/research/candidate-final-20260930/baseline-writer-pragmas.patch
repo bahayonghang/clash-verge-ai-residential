@@ -1,0 +1,48 @@
+--- before/residential-monitor/src-tauri/src/bench/facade.rs
++++ after/residential-monitor/src-tauri/src/bench/facade.rs
+@@ -255,6 +255,13 @@
+         ));
+     }
+     let final_inventory = inventory(&state, &options.dir)?;
++    let synchronous = match final_inventory["synchronous"].as_u64() {
++        Some(0) => "OFF",
++        Some(1) => "NORMAL",
++        Some(2) => "FULL",
++        Some(3) => "EXTRA",
++        _ => "UNKNOWN",
++    };
+     let tables = table_inventory(&state)?;
+     let executable = std::env::current_exe().map_err(text_error)?;
+     let executable_sha256 = hex::encode(Sha256::digest(
+@@ -281,7 +288,7 @@
+         "fixture_hash": fixture_hash, "executable_sha256": executable_sha256,
+         "process_id": std::process::id(), "platform": std::env::consts::OS,
+         "local_utc_offset_seconds": chrono::Local::now().offset().local_minus_utc(),
+-        "synchronous": "FULL", "warmup_wall_secs": warmup_wall_secs,
++        "synchronous": synchronous, "warmup_wall_secs": warmup_wall_secs,
+         "measured_wall_secs": wall_secs, "simulated_secs": options.duration_secs, "frames": frames,
+         "commits": final_sequence - initial_sequence, "writer_rows_changed": rows_changed,
+         "traffic": { "initial_upload": initial_totals.0, "initial_download": initial_totals.1,
+@@ -535,7 +542,9 @@
+         "reusable_page_bytes": freelist * page_size, "active_page_bytes": (page_count-freelist)*page_size,
+         "archive_ok": c.query_row("select count(*) from report_archive where status='ok'", [], |r| r.get::<_, i64>(0)).map_err(text_error)?,
+         "archive_failed": c.query_row("select count(*) from report_archive where status='failed'", [], |r| r.get::<_, i64>(0)).map_err(text_error)?,
+-        "schema_version": pragma("user_version")?
++        "schema_version": pragma("user_version")?,
++        "journal_mode": c.query_row("pragma journal_mode", [], |r| r.get::<_, String>(0)).map_err(text_error)?,
++        "synchronous": pragma("synchronous")?
+     }))
+ }
+ 
+@@ -620,6 +629,11 @@
+         let dir = tempfile::tempdir().unwrap();
+         // SAFETY: 此测试在独立子进程执行，只有本测试打开 SQLite。
+         let report = unsafe { replay_facade(&options(dir.path())) }.unwrap();
++        for inventory in ["initial_files_and_pages", "final_files_and_pages"] {
++            assert_eq!(report[inventory]["journal_mode"], "wal");
++            assert_eq!(report[inventory]["synchronous"], 2);
++        }
++        assert_eq!(report["synchronous"], "FULL");
+         assert_eq!(report["commits"], 3);
+         assert_eq!(report["traffic"]["conserved"], true);
+         assert!(report["sqlite_xwrite"]["wal_bytes"].as_u64().unwrap() > 0);

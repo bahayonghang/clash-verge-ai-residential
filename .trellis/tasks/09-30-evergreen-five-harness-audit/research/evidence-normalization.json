@@ -1,0 +1,16 @@
+[
+  {
+    "readable_log": "hosted-ci-32560684556-failed.log",
+    "original_capture_gzip": "hosted-ci-32560684556-failed.log.gz",
+    "original_capture_sha256": "f8c44f65dc63fbab64d72436ba505bbfefbab7f3f4bc2d1c1ca0f0df1346c4c6",
+    "normalized_sha256": "721ad4887db263d6d3917a15432e89d3753b0785402691b4351e0f567eb30b63",
+    "operation": "Remove trailing spaces/tabs and normalize line endings only; preserve original capture in gzip."
+  },
+  {
+    "readable_log": "hosted-ci-33710198328-failed.log",
+    "original_capture_gzip": "hosted-ci-33710198328-failed.log.gz",
+    "original_capture_sha256": "21c6c3ecf06a33225eecdd3d6e6bcadbc9eb968cb2dff5108658f4becf77bf0a",
+    "normalized_sha256": "b442a49aa6eef6927080292def023042c410e78a0ec6d7de711095f4ae9ec93b",
+    "operation": "Remove trailing spaces/tabs and normalize line endings only; preserve original capture in gzip."
+  }
+]

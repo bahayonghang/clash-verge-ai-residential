@@ -1,0 +1,58 @@
+{
+  "label": "probe-a250-minute-production",
+  "argv": [
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-library-tests.exe",
+    "--exact",
+    "c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof",
+    "--ignored",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "environment_override": {
+    "RESIWATCH_NONEMPTY_STAGE_START": "1787184000",
+    "RESIWATCH_NONEMPTY_STAGE_END": "1787184060",
+    "RESIWATCH_NONEMPTY_STAGE_DB": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\corpus-a250-30d\\monitor.sqlite3",
+    "RESIWATCH_NONEMPTY_STAGE_OUT": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\generator\\probes\\a250-minute-production.json"
+  },
+  "shell": false,
+  "started_utc": "2026-10-04T05:45:14.391443+00:00",
+  "status": "ENDED",
+  "native_exit": 0,
+  "pid": 27028,
+  "competing_load_at_start": [],
+  "disk_free_bytes_before": {
+    "C": 524035121152,
+    "D": 1151867940864
+  },
+  "ended_utc": "2026-10-04T05:45:17.822676+00:00",
+  "wall_seconds": 3.4130671999992046,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\generator\\probe-a250-minute-production.stdout.raw",
+      "bytes": 199,
+      "raw_sha256": "4731A93793C30CAA294F663C1D97ABD022D13942D94FFB3EC48ADECB05E38EA5",
+      "gzip_sha256": "FCB997072FC2804A45F8CAB23B5F22077D763F0263753B76AC638C3DF82ED156",
+      "readable_sha256": "80CEEEE5C84CFC35D34A3C7FDC531D41CA0120F9E22FD9775E050DFFD10D5F18"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\generator\\probe-a250-minute-production.stderr.raw",
+      "bytes": 0,
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  },
+  "peak_rss_bytes_sampled": 2265088,
+  "last_cpu_times_sampled": {
+    "user": 0.0,
+    "system": 0.0,
+    "children_user": 0.0,
+    "children_system": 0.0
+  },
+  "disk_free_bytes_after": {
+    "C": 524035121152,
+    "D": 1151867932672
+  },
+  "sampling": "0.5 s psutil polling of the direct native process; not a complete peak proof"
+}

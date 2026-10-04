@@ -1,0 +1,42 @@
+{
+  "observed_utc": "2026-10-03T02:55:22.079824+00:00",
+  "frozen_source_snapshot_id": "4be0cfb58c637129fefb99c750a5baed0fb0fb6378cdce86f6a0ee90a1877e4b",
+  "current_source_snapshot_id": "4be0cfb58c637129fefb99c750a5baed0fb0fb6378cdce86f6a0ee90a1877e4b",
+  "protected_files": 3618,
+  "snapshot_diff": {
+    "same": true,
+    "changed": [],
+    "added": [],
+    "removed": [],
+    "index_changed": false,
+    "head_changed": false,
+    "branch_changed": false
+  },
+  "all_executable_bindings_same": true,
+  "executable_bindings_comparison": {
+    "claude": {
+      "same": true
+    },
+    "codex": {
+      "same": true
+    },
+    "grok": {
+      "same": true
+    },
+    "kimi": {
+      "same": true
+    },
+    "omp": {
+      "same": true
+    },
+    "pwsh": {
+      "same": true
+    },
+    "omp_bun": {
+      "same": true
+    },
+    "omp_cli": {
+      "same": true
+    }
+  }
+}

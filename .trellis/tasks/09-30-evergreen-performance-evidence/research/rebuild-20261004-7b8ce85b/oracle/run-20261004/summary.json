@@ -1,0 +1,38 @@
+{
+  "started_utc": "2026-10-04T05:24:50.216192+00:00",
+  "status": "PASS_SQL_ORACLE_NATIVE_NOT_RUN",
+  "argv": [
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\oracle\\read-corpus-oracle.py",
+    "--a50-db",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\corpus-a50-30d\\monitor.sqlite3",
+    "--a50-db-sha256",
+    "C846A8A12C9C60EA29B170028430A8885F47E98F8AD8A5C0D89A859774781065",
+    "--a50-marker-sha256",
+    "A8EABE597B4119205E5FD3F3D9B479AA322439994CC07145F99F3C93D091B96A",
+    "--a250-db",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\corpus-a250-30d\\monitor.sqlite3",
+    "--a250-db-sha256",
+    "B6E024FCB505E1FCA41DBC8FE186C0480DCF63FC0104D6D754CB197D74CF733B",
+    "--a250-marker-sha256",
+    "03BFDA2A56CF662159AE4D2E6ABDA0A08383124CB44AA0743D9D48CB94B71C96",
+    "--output-dir",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\oracle\\run-20261004"
+  ],
+  "script_sha256": "c7d56789e71fa8b7df9d097ac0eb5bcabb8055a36ec7797a30242fd11bce6b0f",
+  "sql_contract_sha256": "db4ff3432ec983b23b60234a8a9aba23207b180645e25c48630a2c5a0879ae75",
+  "native_rank_comparison": "NOT_RUN；本脚本只准备完整独立 SQL 期望，不启动 monitor-db",
+  "corpora": [
+    {
+      "active": 50,
+      "status": "PASS_SQL_ORACLE",
+      "receipt": "a50.json"
+    },
+    {
+      "active": 250,
+      "status": "PASS_SQL_ORACLE",
+      "receipt": "a250.json"
+    }
+  ],
+  "completed_utc": "2026-10-04T05:25:43.062208+00:00",
+  "driver_intended_exit_code": 0
+}

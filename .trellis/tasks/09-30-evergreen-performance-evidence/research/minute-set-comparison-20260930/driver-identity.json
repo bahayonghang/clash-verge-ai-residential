@@ -1,0 +1,16 @@
+{
+  "argv": [
+    ".trellis/tasks/09-30-evergreen-performance-evidence/research/compare-projection-candidate.py",
+    "--before-directory",
+    "projection-cache-lazy-20260930",
+    "--candidate-directory",
+    "candidate-final-20260930",
+    "--output-directory",
+    "minute-set-comparison-20260930",
+    "--difference-description",
+    "MinuteSet last-value optimization plus regression tests; facade writer PRAGMA instrumentation does not execute in these probes",
+    "--rounds",
+    "2"
+  ],
+  "sha256": "3d14d9ed3b2225b7121046b59404107a650bd5fb797145673dc0c7a45a3a1541"
+}

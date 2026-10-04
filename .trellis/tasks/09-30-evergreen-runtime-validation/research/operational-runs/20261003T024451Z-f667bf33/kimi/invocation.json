@@ -1,0 +1,32 @@
+{
+  "invocation_id": "20261003T024451Z-f667bf33/kimi/parent",
+  "harness": "kimi",
+  "phase": "parent",
+  "argv": [
+    "C:\\Program Files\\Python314\\python.exe",
+    "-B",
+    "-X",
+    "utf8",
+    "<REPO>\\.trellis\\tasks\\09-30-evergreen-runtime-validation\\research\\operational-kimi-acp.py",
+    "--kimi",
+    "<HOME>\\.kimi-code\\bin\\kimi.exe",
+    "--manifest",
+    "<REPO>\\.trellis\\tasks\\09-30-evergreen-runtime-validation\\research\\operational-candidate.json",
+    "--go",
+    "GO:4be0cfb58c637129fefb99c750a5baed0fb0fb6378cdce86f6a0ee90a1877e4b",
+    "--timeout",
+    "165",
+    "--prompt",
+    "<PROMPT_SHA256:1b2b60a530f98dfc92caf054dd0f4b1c45e286f210279c661ac2c9da695ae9c5>"
+  ],
+  "shell": false,
+  "timeout_seconds": 180,
+  "source_snapshot_id": "4be0cfb58c637129fefb99c750a5baed0fb0fb6378cdce86f6a0ee90a1877e4b",
+  "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#kimi",
+  "recorded_version_output": "2.0.0",
+  "executable_sha256": "f630b2a1cd40c275c5d2895252dbaf0c9f1879c79014aa225362f062e86573c0",
+  "prompt_sha256": "1b2b60a530f98dfc92caf054dd0f4b1c45e286f210279c661ac2c9da695ae9c5",
+  "child_preparation_basis": "NOT_APPLICABLE",
+  "basis_is_runtime_proof": false,
+  "protocol": "basic_parent_read_only_not_full_T06_acceptance"
+}

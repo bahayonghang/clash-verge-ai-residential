@@ -1,0 +1,11 @@
+
+running 1 test
+test c3::raw_fold::tests::unreferenced_dictionary_values_do_not_enter_returned_pool ... FAILED
+
+failures:
+
+failures:
+    c3::raw_fold::tests::unreferenced_dictionary_values_do_not_enter_returned_pool
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 549 filtered out; finished in 0.17s
+

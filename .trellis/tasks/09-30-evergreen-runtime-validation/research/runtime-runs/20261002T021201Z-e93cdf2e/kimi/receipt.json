@@ -1,0 +1,56 @@
+{
+  "invocation_id": "20261002T021201Z-e93cdf2e/kimi/parent",
+  "harness": "kimi",
+  "phase": "parent",
+  "parent_only": true,
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "executable_binding": "kimi",
+  "executable_sha256": "f630b2a1cd40c275c5d2895252dbaf0c9f1879c79014aa225362f062e86573c0",
+  "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#kimi",
+  "status": "BLOCKED_OR_FAILED_REQUIRES_REVIEW",
+  "effective_model": "UNKNOWN",
+  "model_evidence": "UNVERIFIED",
+  "rules": "UNVERIFIED",
+  "planning": "UNVERIFIED",
+  "permissions": "UNVERIFIED",
+  "runtime_enforcement": "UNVERIFIED",
+  "native_child": "UNVERIFIED",
+  "role_persistence": "NOT_COVERED_PURE_OUTPUT",
+  "hook_extension_pull": "UNVERIFIED",
+  "negative_case": "UNVERIFIED",
+  "product_hash_unchanged": true,
+  "protected_snapshot_diff": {
+    "same": true,
+    "changed": [],
+    "added": [],
+    "removed": [],
+    "index_changed": false,
+    "head_changed": false,
+    "branch_changed": false
+  },
+  "started_utc": "2026-10-02T02:12:05.679020+00:00",
+  "ended_utc": "2026-10-02T02:12:06.264655+00:00",
+  "pid": 59312,
+  "exit_code": 1,
+  "capture_stop_reason": null,
+  "termination_requested": false,
+  "capture_representation": "normalized_redacted_events_not_original_bytes",
+  "stream_hash_scope": "captured_bytes_only_if_limit_hit",
+  "streams": {
+    "stdout": {
+      "bytes": 0,
+      "records": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stderr": {
+      "bytes": 44,
+      "records": 1,
+      "sha256": "d92ae63c9365a97c713bd5b0f933a320f7a46dec02423752168536063f228502"
+    }
+  },
+  "redactions": [],
+  "sensitive_output_detected": false,
+  "events": 1,
+  "cross_stream_order": "receiver_observation_only",
+  "job_cleanup": "best_effort_owned_job; post_Popen_attach_race; no_permission_sandbox; no_absolute_no_orphan_claim"
+}

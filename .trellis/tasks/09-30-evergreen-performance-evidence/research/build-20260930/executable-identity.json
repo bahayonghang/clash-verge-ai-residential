@@ -1,0 +1,26 @@
+{
+  "baseline-monitor-bench.exe": {
+    "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\baseline-target\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+    "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\baseline-monitor-bench.exe",
+    "bytes": 5762560,
+    "sha256": "E65715B59413CCF0405F00795F41AAB400125E6979EBFB340B558342C36B6F76"
+  },
+  "candidate-monitor-bench.exe": {
+    "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+    "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-monitor-bench.exe",
+    "bytes": 6256640,
+    "sha256": "83C70E33D4C94F508CF0652B9ED38332EE02005665C9343020E860FC0854D1F4"
+  },
+  "candidate-monitor-db.exe": {
+    "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+    "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-monitor-db.exe",
+    "bytes": 5142016,
+    "sha256": "F1391010333C7C3C059DAB091939C28DDEDB1595DAF8BF51DDE8E783D64594E6"
+  },
+  "candidate-library-tests.exe": {
+    "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+    "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-library-tests.exe",
+    "bytes": 12853760,
+    "sha256": "91FF44C0EB081C3E1F572F4ABA7C9574C18FECE73CB172BBBF0881FEC0ACA1DA"
+  }
+}

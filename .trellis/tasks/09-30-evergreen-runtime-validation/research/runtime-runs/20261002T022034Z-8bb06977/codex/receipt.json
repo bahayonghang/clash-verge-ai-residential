@@ -1,0 +1,56 @@
+{
+  "invocation_id": "20261002T022034Z-8bb06977/codex/child",
+  "harness": "codex",
+  "phase": "child",
+  "parent_only": false,
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "executable_binding": "codex",
+  "executable_sha256": "fcd5eafefb4ff4a607f244e099e0974f66e17966b6ffda6948de2ef3a7a79530",
+  "version_source": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-bindings-20261001.json#codex_app_binary",
+  "status": "BLOCKED_OR_FAILED_REQUIRES_REVIEW",
+  "effective_model": "UNKNOWN",
+  "model_evidence": "UNVERIFIED",
+  "rules": "UNVERIFIED",
+  "planning": "UNVERIFIED",
+  "permissions": "UNVERIFIED",
+  "runtime_enforcement": "UNVERIFIED",
+  "native_child": "UNVERIFIED",
+  "role_persistence": "NOT_COVERED_PURE_OUTPUT",
+  "hook_extension_pull": "UNVERIFIED",
+  "negative_case": "UNVERIFIED",
+  "product_hash_unchanged": true,
+  "protected_snapshot_diff": {
+    "same": true,
+    "changed": [],
+    "added": [],
+    "removed": [],
+    "index_changed": false,
+    "head_changed": false,
+    "branch_changed": false
+  },
+  "started_utc": "2026-10-02T02:20:38.652622+00:00",
+  "ended_utc": "2026-10-02T02:23:38.776673+00:00",
+  "pid": 12064,
+  "exit_code": 0,
+  "capture_stop_reason": "TIMEOUT",
+  "termination_requested": true,
+  "capture_representation": "normalized_redacted_events_not_original_bytes",
+  "stream_hash_scope": "captured_bytes_only_if_limit_hit",
+  "streams": {
+    "stdout": {
+      "bytes": 56865,
+      "records": 14,
+      "sha256": "832dbff11e60f56b531326fb6e334ffc275abbe2f38e9ff49709e307bd3f8a25"
+    },
+    "stderr": {
+      "bytes": 39,
+      "records": 1,
+      "sha256": "1aa26269eb1cc57f86b235a03cda53c004edb5b1e9fc99d4da4f00843293d721"
+    }
+  },
+  "redactions": [],
+  "sensitive_output_detected": false,
+  "events": 15,
+  "cross_stream_order": "receiver_observation_only",
+  "job_cleanup": "best_effort_owned_job; post_Popen_attach_race; no_permission_sandbox; no_absolute_no_orphan_claim"
+}

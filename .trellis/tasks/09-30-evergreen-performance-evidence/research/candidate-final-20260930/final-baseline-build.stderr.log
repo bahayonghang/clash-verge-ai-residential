@@ -1,0 +1,6 @@
+   Compiling residential-monitor v0.3.0 (C:\Users\lyh\AppData\Local\Temp\resiwatch-approved-baseline-20260930-50086853fbcc43bea6015946489e3006\source\residential-monitor\src-tauri)
+mbx[progress]: 15s elapsed; 0 hits, 0 misses, 0 bypassed, 0 not looked up; ~0s compiler work saved
+mbx[progress]: 30s elapsed; 0 hits, 1 misses, 1 bypassed, 0 not looked up; ~0s compiler work saved
+    Finished `release` profile [optimized] target(s) in 30.58s
+mbx[cache]: 0 hits, 1 misses, 1 bypassed; 0 B downloaded, 0 B uploaded, 71.5 MiB stored locally
+mbx[savings]: 35m 5s of rustc's calendar cleared across 955 builds.

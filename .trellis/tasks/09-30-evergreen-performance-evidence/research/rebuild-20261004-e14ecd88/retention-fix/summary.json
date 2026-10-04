@@ -1,0 +1,82 @@
+{
+  "cases": [
+    {
+      "case": "a50-first-day",
+      "exit_code": 0,
+      "test_passed": true,
+      "now_utc": 1789862400,
+      "complete": true,
+      "quick_check": "ok",
+      "conservation": {
+        "combined_after": {
+          "download": 101519550,
+          "upload": 30240060
+        },
+        "combined_before": {
+          "download": 101519550,
+          "upload": 30240060
+        },
+        "conserved": true,
+        "remaining_expired_raw": 0
+      },
+      "wall_secs": 166.8116763,
+      "chunks": 2511,
+      "chunk_errors": [],
+      "chunk_wall_ms_p95": 107.8059,
+      "chunk_wall_ms_max": 377.8812,
+      "retry_attempts": 0,
+      "ledger_after": {
+        "active_or_pending_fixture_references": 0,
+        "closed_sessions": 417600,
+        "eligible_receipts": 0,
+        "protected_by_raw_sessions": 417600,
+        "receipts": 100000,
+        "reclaimable_unreferenced_sessions": 0,
+        "sessions": 417600,
+        "unreferenced_sessions": 0,
+        "unreferenced_without_retirement_or_cutoff_proof": 0
+      },
+      "source_corpus_unchanged": true
+    },
+    {
+      "case": "a250-first-day",
+      "exit_code": 0,
+      "test_passed": true,
+      "now_utc": 1789862400,
+      "complete": true,
+      "quick_check": "ok",
+      "conservation": {
+        "combined_after": {
+          "download": 507599545,
+          "upload": 151200035
+        },
+        "combined_before": {
+          "download": 507599545,
+          "upload": 151200035
+        },
+        "conserved": true,
+        "remaining_expired_raw": 0
+      },
+      "wall_secs": 682.5581155,
+      "chunks": 7433,
+      "chunk_errors": [],
+      "chunk_wall_ms_p95": 151.7053,
+      "chunk_wall_ms_max": 419.604,
+      "retry_attempts": 0,
+      "ledger_after": {
+        "active_or_pending_fixture_references": 0,
+        "closed_sessions": 2088000,
+        "eligible_receipts": 0,
+        "protected_by_raw_sessions": 2088000,
+        "receipts": 100000,
+        "reclaimable_unreferenced_sessions": 0,
+        "sessions": 2088000,
+        "unreferenced_sessions": 0,
+        "unreferenced_without_retirement_or_cutoff_proof": 0
+      },
+      "source_corpus_unchanged": true
+    }
+  ],
+  "initial_competing_load": [],
+  "status": "PASS"
+}

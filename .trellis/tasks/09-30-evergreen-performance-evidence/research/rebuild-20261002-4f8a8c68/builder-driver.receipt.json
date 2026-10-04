@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "C:\\Program Files\\Python314\\python.exe",
+    "-B",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\builder.py"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68",
+  "pid": 50240,
+  "started_utc": "2026-10-02T15:18:47.686575+00:00",
+  "status": "P1_ENDED_WAITING_INDEPENDENT_REVIEW",
+  "scope": "P0/P1 only; no corpus generation or formal load",
+  "python_dont_write_bytecode": true,
+  "ended_utc": "2026-10-02T15:22:55.134651+00:00",
+  "driver_exit": 0
+}

@@ -1,0 +1,7 @@
+{
+  "log": "product.log",
+  "finishedAt": "2026-09-30T07:30:46.5028940-05:00",
+  "command": "just ci",
+  "startedAt": "2026-09-30T07:29:38.2185429-05:00",
+  "exitCode": 0
+}

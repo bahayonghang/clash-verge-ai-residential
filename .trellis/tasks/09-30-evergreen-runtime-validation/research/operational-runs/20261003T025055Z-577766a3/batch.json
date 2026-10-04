@@ -1,0 +1,11 @@
+{
+  "source_snapshot_id": "4be0cfb58c637129fefb99c750a5baed0fb0fb6378cdce86f6a0ee90a1877e4b",
+  "phase": "parent",
+  "outcomes": [
+    {
+      "harness": "claude",
+      "status": "BLOCKED_OR_FAILED_REQUIRES_REVIEW",
+      "exit_code": 1
+    }
+  ]
+}

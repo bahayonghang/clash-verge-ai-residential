@@ -1,0 +1,104 @@
+{
+  "label": "probe-a250-minute-production",
+  "argv": [
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\candidate-library-tests.exe",
+    "--exact",
+    "c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof",
+    "--ignored",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "environment_override": {
+    "RESIWATCH_NONEMPTY_STAGE_START": "1787184000",
+    "RESIWATCH_NONEMPTY_STAGE_END": "1787184060",
+    "RESIWATCH_NONEMPTY_STAGE_DB": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\corpus-a250-30d\\monitor.sqlite3",
+    "RESIWATCH_NONEMPTY_STAGE_OUT": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\generator\\probes\\a250-minute-production.json"
+  },
+  "shell": false,
+  "started_utc": "2026-10-02T15:29:51.923017+00:00",
+  "status": "ENDED",
+  "native_exit": 0,
+  "pid": 57304,
+  "competing_load_at_start": [
+    {
+      "pid": 7984,
+      "name": "pwsh.exe",
+      "cmdline_head": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -NoLogo -NoProfile -NonInteractive -File D:\\Documents\\Code\\Rust\\Exp\\ferrots\\runs\\p2-development\\p2-v4-20261002\\executor-2"
+    },
+    {
+      "pid": 41208,
+      "name": "python.exe",
+      "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe -c import argparse, json, sys, os\nfrom pathlib import Path\npath, seed = sys.argv[1:3"
+    },
+    {
+      "pid": 45168,
+      "name": "python.exe",
+      "cmdline_head": "C:\\Users\\lyh\\scoop\\persist\\uv\\python\\versions\\cpython-3.12-windows-x86_64-none\\python.exe D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\run_itransformer.py"
+    },
+    {
+      "pid": 45552,
+      "name": "python.exe",
+      "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe tools/validation/p2_acceptance.py ett-reference --suite runs/p2-acceptance/20261002-"
+    },
+    {
+      "pid": 48028,
+      "name": "pwsh.exe",
+      "cmdline_head": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -File D:\\Documents\\Code\\Rust\\Exp\\ferrots\\runs\\p2-development\\p2-v4"
+    },
+    {
+      "pid": 51228,
+      "name": "bash.exe",
+      "cmdline_head": "C:\\Program Files\\Git\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790950182404-qo53pm.sh 2>/dev/null || true && export TEMP='C:\\Us"
+    },
+    {
+      "pid": 51844,
+      "name": "python.exe",
+      "cmdline_head": "C:\\Users\\lyh\\scoop\\persist\\uv\\python\\versions\\cpython-3.12-windows-x86_64-none\\python.exe -c import argparse, json, sys, os\nfrom pathlib import Path\npath, seed "
+    },
+    {
+      "pid": 52584,
+      "name": "bash.exe",
+      "cmdline_head": "C:\\Program Files\\Git\\bin\\..\\usr\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790950182404-qo53pm.sh 2>/dev/null || true && export "
+    },
+    {
+      "pid": 61036,
+      "name": "python.exe",
+      "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\run_itransformer.py --seed 2021 -"
+    }
+  ],
+  "disk_free_bytes_before": {
+    "C": 538847903744,
+    "D": 1200256274432
+  },
+  "ended_utc": "2026-10-02T15:29:52.523822+00:00",
+  "wall_seconds": 0.556638699999894,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\generator\\probe-a250-minute-production.stdout.raw",
+      "bytes": 199,
+      "raw_sha256": "A38D3E1B14D05D7924A004215FD988A1A895FF15A5A7302ABD9524B680673931",
+      "gzip_sha256": "2EEB66D6C8931BD05A708DB28C9DE7FE8A46BBD3B60D9E3C0AAF712AAFDA8009",
+      "readable_sha256": "DEE7644989426C8C934AB3C69CC6611A05687A951CD876B7AF1C709B0B87A8F0"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\generator\\probe-a250-minute-production.stderr.raw",
+      "bytes": 0,
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  },
+  "peak_rss_bytes_sampled": 2256896,
+  "last_cpu_times_sampled": {
+    "user": 0.0,
+    "system": 0.0,
+    "children_user": 0.0,
+    "children_system": 0.0
+  },
+  "disk_free_bytes_after": {
+    "C": 538847887360,
+    "D": 1200256266240
+  },
+  "sampling": "0.5 s psutil polling of the direct native process; not a complete peak proof"
+}

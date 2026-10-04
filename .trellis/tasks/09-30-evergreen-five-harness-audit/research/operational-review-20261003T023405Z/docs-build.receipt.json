@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "just",
+    "docs-build"
+  ],
+  "shell": false,
+  "started_utc": "2026-10-03T02:39:06.795697+00:00",
+  "ended_utc": "2026-10-03T02:39:09.860909+00:00",
+  "native_exit_code": 0,
+  "stdout_sha256": "294c3d014d60c59145e9b51bc0239ee98383ce1bc20dd0a48a73381f425efcf3",
+  "stderr_sha256": "c7a080df23c6c03b36c60ba80c2d2f6d3e36e79a20189c0f079467c656a07404"
+}

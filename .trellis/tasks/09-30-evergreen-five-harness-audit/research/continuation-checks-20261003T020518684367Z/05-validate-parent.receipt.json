@@ -1,0 +1,37 @@
+{
+  "label": "05-validate-parent",
+  "argv": [
+    "python",
+    "-X",
+    "utf8",
+    ".trellis/scripts/task.py",
+    "validate",
+    ".trellis/tasks/09-30-evergreen-five-harness-audit"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "executable": "C:\\Program Files\\Python314\\python.EXE",
+  "executable_sha256": "4942b86a6597e5aee0128daa00050ed79bc21f6e709a78eb19cbfeb0c2f39ac9",
+  "started_utc": "2026-10-03T02:06:34.346457+00:00",
+  "finished_utc": "2026-10-03T02:06:34.471322+00:00",
+  "wall_seconds": 0.12486460000218358,
+  "pid": 14820,
+  "native_exit_code": 0,
+  "driver_exit_code": 0,
+  "driver_exit_observation": "sys.exit invoked below; confirmed separately by tool-outer observer",
+  "tool_outer_exit_code": null,
+  "tool_outer_exit_observation": "PENDING; recorded in separate observer after exec returns",
+  "status": "PASS",
+  "exception": null,
+  "streams": {
+    "stdout": {
+      "path": "05-validate-parent.stdout.raw",
+      "size": 601,
+      "sha256": "40fd62ce830920b28af44360e9e88f62ed4188da4751efedd40d1100dcee0998"
+    },
+    "stderr": {
+      "path": "05-validate-parent.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

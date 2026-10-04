@@ -1,0 +1,28 @@
+{
+  "started_utc": "2026-09-30T15:05:54.769987+00:00",
+  "ended_utc": "2026-09-30T15:05:55.123488+00:00",
+  "pid": 22688,
+  "exit_code": 0,
+  "capture_stop_reason": "TIMEOUT",
+  "termination_requested": true,
+  "capture_representation": "normalized_redacted_events_not_original_bytes",
+  "stream_hash_scope": "captured_bytes_only_if_limit_hit",
+  "streams": {
+    "stdout": {
+      "bytes": 16,
+      "records": 1,
+      "sha256": "b9c4a6b45baab12a5d0ef0801e35a70b9fc382cc56d8474b3f9dd99294a1fa3a"
+    },
+    "stderr": {
+      "bytes": 0,
+      "records": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "redactions": [],
+  "sensitive_output_detected": false,
+  "events": 1,
+  "cross_stream_order": "receiver_observation_only",
+  "job_cleanup": "best_effort_owned_job; post_Popen_attach_race; no_permission_sandbox; no_absolute_no_orphan_claim",
+  "synthetic_only": true
+}

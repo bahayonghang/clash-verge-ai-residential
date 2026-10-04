@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "just",
+    "ci"
+  ],
+  "shell": false,
+  "started_utc": "2026-10-03T02:37:36.347341+00:00",
+  "ended_utc": "2026-10-03T02:39:06.793591+00:00",
+  "native_exit_code": 0,
+  "stdout_sha256": "78b2b06a6bee0e3a8867801eb517fb8a901faa9a2c1409bfc7d25dc2f2592b1c",
+  "stderr_sha256": "23e4be1f800a3e305f8bfc2f7845343c4aa8af850f65227364be4a46019838d6"
+}

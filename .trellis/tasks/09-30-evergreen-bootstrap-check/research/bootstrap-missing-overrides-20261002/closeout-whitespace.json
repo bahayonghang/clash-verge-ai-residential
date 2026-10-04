@@ -1,0 +1,23 @@
+{
+  "git_no_index_check_native_exits": [
+    1,
+    1
+  ],
+  "git_no_index_chunk_id": "01018a",
+  "git_whitespace_diagnostics": [],
+  "git_warnings": [
+    "LF will be replaced by CRLF the next time Git touches it"
+  ],
+  "direct_text_check": [
+    {
+      "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\run-missing-overrides-bootstrap-20261002.py",
+      "trailing_whitespace_lines": []
+    },
+    {
+      "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\bootstrap-missing-overrides-20261002\\result.md",
+      "trailing_whitespace_lines": []
+    }
+  ],
+  "direct_text_ok": true,
+  "note": "no-index以空文件对比新增文件，返回差异退出1；不把该退出记录改成0"
+}

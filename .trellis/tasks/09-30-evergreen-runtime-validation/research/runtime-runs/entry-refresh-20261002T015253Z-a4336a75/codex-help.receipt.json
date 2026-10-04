@@ -1,0 +1,15 @@
+{
+  "metadata_only": true,
+  "inference_started": false,
+  "argv": [
+    "<HOME>\\AppData\\Local\\OpenAI\\Codex\\bin\\a51e250fa15c740a\\codex.exe",
+    "--help"
+  ],
+  "started_utc": "2026-10-02T01:52:53.917439+00:00",
+  "ended_utc": "2026-10-02T01:52:53.960576+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "4a7f0188d4d6e6d812c5cfbcf82468336b899acd5e437de7450421a403c0071e",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "redactions": [],
+  "representation": "redacted_decoded_output_not_original_bytes"
+}

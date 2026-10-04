@@ -1,0 +1,146 @@
+[
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".claude/agents/trellis-implement.md",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".claude/settings.json",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".codex/hooks.json",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".grok/agents/trellis-implement.md",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".kimi-code/skills/trellis-start/SKILL.md",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".omp/agents/trellis-implement.md",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".omp/extensions/trellis/index.ts",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".agents/skills/trellis-start/SKILL.md",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".codex/config.toml",
+    "exit_code": 1,
+    "expected_exit": 1
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".kimi-code/skills/trellis-implement/SKILL.md",
+    "exit_code": 1,
+    "expected_exit": 1
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".kimi-code/skills/trellis-check/SKILL.md",
+    "exit_code": 1,
+    "expected_exit": 1
+  },
+  {
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "path": ".kimi-code/skills/trellis-research/SKILL.md",
+    "exit_code": 1,
+    "expected_exit": 1
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".claude/agents/trellis-implement.md",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".claude/settings.json",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".codex/hooks.json",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".grok/agents/trellis-implement.md",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".kimi-code/skills/trellis-start/SKILL.md",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".omp/agents/trellis-implement.md",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".omp/extensions/trellis/index.ts",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".agents/skills/trellis-start/SKILL.md",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".codex/config.toml",
+    "exit_code": 1,
+    "expected_exit": 1
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".kimi-code/skills/trellis-implement/SKILL.md",
+    "exit_code": 1,
+    "expected_exit": 1
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".kimi-code/skills/trellis-check/SKILL.md",
+    "exit_code": 1,
+    "expected_exit": 1
+  },
+  {
+    "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+    "path": ".kimi-code/skills/trellis-research/SKILL.md",
+    "exit_code": 1,
+    "expected_exit": 1
+  }
+]

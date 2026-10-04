@@ -1,0 +1,17 @@
+{"phase": "generate-a50", "pid": 51640, "status": "STARTED", "utc": "2026-10-04T05:21:55.987276+00:00"}
+{"phase": "generate-a50", "native_exit": 0, "wall_seconds": 50.565, "status": "ENDED"}
+{"phase": "generate-a250", "pid": 49420, "status": "STARTED", "utc": "2026-10-04T05:22:46.807830+00:00"}
+{"phase": "generate-a250", "native_exit": 0, "wall_seconds": 122.628, "status": "ENDED"}
+{"phase": "sql-oracle", "pid": 43432, "status": "STARTED", "utc": "2026-10-04T05:24:50.136838+00:00"}
+{"phase": "sql-oracle", "native_exit": 0, "wall_seconds": 53.554, "status": "ENDED"}
+{"phase": "test-list", "pid": 51472, "status": "STARTED", "utc": "2026-10-04T05:25:43.744014+00:00"}
+{"phase": "test-list", "native_exit": 0, "wall_seconds": 0.601, "status": "ENDED"}
+{"phase": "probe-a250-minute-production", "pid": 23012, "status": "STARTED", "utc": "2026-10-04T05:25:44.358014+00:00"}
+{"phase": "probe-a250-minute-production", "native_exit": 0, "wall_seconds": 0.548, "status": "ENDED"}
+{"phase": "probe-a250-30d-production", "pid": 49160, "status": "STARTED", "utc": "2026-10-04T05:25:44.925308+00:00"}
+{"phase": "probe-a250-30d-production", "native_exit": 0, "wall_seconds": 15.11, "status": "ENDED"}
+{"phase": "probe-a250-30d-all", "pid": 48904, "status": "STARTED", "utc": "2026-10-04T05:26:00.058275+00:00"}
+{"phase": "probe-a250-30d-all", "native_exit": 0, "wall_seconds": 8.057, "status": "ENDED"}
+{"phase": "probe-a250-30d-residential", "pid": 44100, "status": "STARTED", "utc": "2026-10-04T05:26:08.136280+00:00"}
+{"phase": "probe-a250-30d-residential", "native_exit": 0, "wall_seconds": 6.623, "status": "ENDED"}
+exit=0

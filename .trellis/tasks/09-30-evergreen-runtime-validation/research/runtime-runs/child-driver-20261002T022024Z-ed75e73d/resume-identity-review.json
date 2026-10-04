@@ -1,0 +1,63 @@
+{
+  "observed_utc": "2026-10-02T13:58:02.563396+00:00",
+  "frozen_source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "current_source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "head_is_baseline_only": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+  "protected_snapshot_diff": {
+    "same": true,
+    "changed": [],
+    "added": [],
+    "removed": [],
+    "index_changed": false,
+    "head_changed": false,
+    "branch_changed": false
+  },
+  "executable_binding_differences": {},
+  "current_public_bindings": {
+    "claude": {
+      "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#claude",
+      "recorded_version_output": "2.1.285 (Claude Code)",
+      "status": "READY",
+      "sha256": "0b6ecec8edef1ce3069682f696c894d1553239faa6b84e56e167a3ced88fa333"
+    },
+    "codex": {
+      "version_source": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-bindings-20261001.json#codex_app_binary",
+      "recorded_version_output": "codex-cli 0.159.2",
+      "status": "READY",
+      "sha256": "fcd5eafefb4ff4a607f244e099e0974f66e17966b6ffda6948de2ef3a7a79530"
+    },
+    "grok": {
+      "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#grok",
+      "recorded_version_output": "grok 1.0.45 (c33bff361a6f) [alpha]",
+      "status": "READY",
+      "sha256": "e09c0893cee4850a569bd90e7aed956ea503b34f551637d58187ca4dfb931611"
+    },
+    "kimi": {
+      "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#kimi",
+      "recorded_version_output": "2.0.0",
+      "status": "READY",
+      "sha256": "f630b2a1cd40c275c5d2895252dbaf0c9f1879c79014aa225362f062e86573c0"
+    },
+    "omp": {
+      "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#omp",
+      "recorded_version_output": "omp/18.4.4",
+      "status": "READY",
+      "sha256": "10a00baa5afc088255e71ca8a475097ce27f1808fac6719f3a1bc2fc1756ddb7"
+    },
+    "pwsh": {
+      "status": "READY",
+      "sha256": "362a356ce7f0940ec74f73a8fc2c990a2cc24a38a11c90bbd8eca947110ad139"
+    },
+    "omp_bun": {
+      "status": "READY",
+      "sha256": "140e3801d8adeda639a21b14e62b93a4c7d26b7a758421f43c82be59753be49b"
+    },
+    "omp_cli": {
+      "status": "READY",
+      "sha256": "479729e68fe4d401eacbd4035900d2f0ded303a5610be5e2aa3484484ffeb7bd"
+    }
+  },
+  "checks": "existing approved entry hashes only; no help/version/inference/config read; no config or model change",
+  "python_dont_write_bytecode": true,
+  "bytecode_directory_exists": false
+}

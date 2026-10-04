@@ -1,0 +1,33 @@
+{
+  "label": "01-docs-build",
+  "argv": [
+    "just",
+    "docs-build"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "executable": "C:\\Users\\lyh\\scoop\\shims\\just.EXE",
+  "executable_sha256": "140e3801d8adeda639a21b14e62b93a4c7d26b7a758421f43c82be59753be49b",
+  "started_utc": "2026-10-03T02:05:49.496958+00:00",
+  "finished_utc": "2026-10-03T02:05:52.465255+00:00",
+  "wall_seconds": 2.9683030000014696,
+  "pid": 51020,
+  "native_exit_code": 0,
+  "driver_exit_code": 0,
+  "driver_exit_observation": "sys.exit invoked below; confirmed separately by tool-outer observer",
+  "tool_outer_exit_code": null,
+  "tool_outer_exit_observation": "PENDING; recorded in separate observer after exec returns",
+  "status": "PASS",
+  "exception": null,
+  "streams": {
+    "stdout": {
+      "path": "01-docs-build.stdout.raw",
+      "size": 74,
+      "sha256": "4aa5b5b1a86f98c203f62635ecebd26a3bba85e8767562716c76ccdbf822e012"
+    },
+    "stderr": {
+      "path": "01-docs-build.stderr.raw",
+      "size": 220,
+      "sha256": "c7a080df23c6c03b36c60ba80c2d2f6d3e36e79a20189c0f079467c656a07404"
+    }
+  }
+}

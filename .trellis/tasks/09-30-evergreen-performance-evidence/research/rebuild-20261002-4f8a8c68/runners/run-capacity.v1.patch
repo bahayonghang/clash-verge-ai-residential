@@ -1,0 +1,107 @@
+--- run-retained-capacity.py	2026-09-30 10:45:55.713346300 -0500
++++ rebuild-20261002-4f8a8c68/runners/run-capacity.py	2026-10-02 10:27:02.960817500 -0500
+@@ -1,4 +1,6 @@
+-"""Run the approved existing A50/A250 capacity cases without changing database contents."""
++"""Run the approved A50/A250 capacity cases without changing database contents (rebuild-20261002 binding)."""
++import sys
++sys.dont_write_bytecode = True
+ from datetime import datetime, timezone
+ from contextlib import closing
+ from pathlib import Path
+@@ -13,13 +15,34 @@
+ import time
+ import traceback
+ 
+-ROOT = Path(__file__).resolve().parent
+-OUT = ROOT / "retained-capacity-20260930"
+-CORPUS = Path("C:/Users/lyh/AppData/Local/Temp/resiwatch-resource-measure-20260924-raw-fold")
+-FROZEN = ROOT / "candidate-retained-20260930"
+-IDENTITY = json.loads((FROZEN / "executable-identity.json").read_text())["candidate-monitor-db.exe"]
+-PREVIOUS = json.loads((ROOT / "corpus-a250-verification.json").read_text())
++# 新绑定：新 state、新 candidate-monitor-db、新 A50/A250 语料与 marker/DB hash；验证与门槛语义沿用原 runner。
++EVIDENCE = Path(__file__).resolve().parents[1]
++STATE = json.loads((EVIDENCE / "state.json").read_text(encoding="utf-8"))
++assert STATE["status"].startswith("P2_GENERATION_ORACLE_PROBES_ENDED"), STATE["status"]
++OUT = EVIDENCE / "capacity"
++CORPUS = Path(STATE["asset_root"])
++IDENTITY = STATE["executable_identities"]["candidate-monitor-db.exe"]
++PREVIOUS = json.loads((EVIDENCE.parent / "corpus-a250-verification.json").read_text(encoding="utf-8-sig"))
+ QUERIES = {item["name"]: item for item in PREVIOUS["queries"]}
++BOUND = STATE["corpus_identities"]
++
++
++def competing_load():
++    # 只记录竞争负载，不停止用户程序；是否作废由主会话审查。
++    import psutil
++    found = []
++    for process in psutil.process_iter(["pid", "name", "cmdline"]):
++        try:
++            command = " ".join(process.info["cmdline"] or [])
++        except (psutil.NoSuchProcess, psutil.AccessDenied):
++            continue
++        if "ferrots" in command or process.info["name"] in ("cargo.exe", "rustc.exe", "monitor-bench.exe"):
++            found.append({"pid": process.info["pid"], "name": process.info["name"], "cmdline_head": command[:160]})
++    return found
++
++
++INITIAL_LOAD = competing_load()
++assert not INITIAL_LOAD, "competing load before capacity start: " + json.dumps(INITIAL_LOAD, ensure_ascii=False)
+ assert not OUT.exists()
+ OUT.mkdir()
+ 
+@@ -50,11 +73,8 @@
+ sys.excepthook = retain_unhandled_failure
+ 
+ assert sha(Path(IDENTITY["path"])).upper() == IDENTITY["sha256"]
+-assert sha(FROZEN / "candidate-source-before.json").upper() == IDENTITY["source_manifest_sha256"]
+-source = json.loads((FROZEN / "candidate-source-before.json").read_text())
+-state = json.loads((ROOT / "build-20260930/state.json").read_text())
+-for relative, expected in source.items():
+-    assert sha(Path(state["repo"]) / relative).upper() == expected["sha256"], relative
++for relative, expected in STATE["source_manifest"].items():
++    assert sha(Path(STATE["candidate_source"]) / relative).upper() == expected["sha256"], relative
+ save(OUT / "execution-contract.json", {"argv": sys.argv, "driver_sha256": sha(Path(__file__)), "runner_pid": os.getpid(), "identity": IDENTITY, "native_clock": "monitor-db actual Utc::now; no override", "cache": "preflight hash/integrity/oracle reads occur before native queries; first process is not a cold-page proof", "cases": "A50/A250 host 30d and 1d each 21; A250 network 30d 21; A50 network 30d one original diagnostic observation", "expected_native_invocations": 106, "A1000": "NOT_RUN: approved stage prerequisite unmet; original complete 30d/21-exit0/10000ms gate retained"})
+ preflights = []
+ for active in [50, 250]:
+@@ -62,11 +82,11 @@
+     db, marker = directory / "monitor.sqlite3", directory / "production-corpus.json"
+     failure_context = {"stage": "database_preflight", "active": active, "database": str(db)}
+     preflight = None
+-    expected_marker = "AA4A7ABD598F07C7D9BD0C29F7043C5C862DE7BABDC6DC8A59D552B1945C101B" if active == 50 else "667A21E9FBE3FCF100974411D8E714E1589907E6458902AFD50683CEE68A3D42"
++    expected_marker = BOUND[str(active)]["marker_sha256"]
+     failure_context["marker_sha256_actual"] = sha(marker).upper()
+     failure_context["marker_sha256_expected"] = expected_marker
+     assert failure_context["marker_sha256_actual"] == expected_marker, "synthetic corpus marker identity mismatch"
+-    manifest = json.loads(marker.read_text())
++    manifest = json.loads(marker.read_text(encoding="utf-8"))
+     assert manifest["kind"] == "production-corpus" and manifest["full_30_day_input"] is True
+     assert manifest["workload"]["average_active"] == active and manifest["workload"]["seed"] == 20260919 and manifest["workload"]["days"] == 30
+     assert (manifest["start_utc"], manifest["end_utc"]) == (1787184000, 1789776000)
+@@ -74,8 +94,7 @@
+     assert not wal.exists() or wal.stat().st_size == 0, "nonempty WAL before capacity"
+     digest = sha(db)
+     failure_context["database_sha256_actual"] = digest
+-    if active == 250:
+-        assert digest == PREVIOUS["database_sha256_after_probes"], "A250 identity differs from independently verified corpus"
++    assert digest.upper() == BOUND[str(active)]["db_sha256"], "corpus DB identity differs from P2 generator binding"
+     preflight = {"active": active, "database": str(db), "database_sha256_before": digest, "database_bytes": db.stat().st_size, "marker_sha256": expected_marker, "started_utc": datetime.now(timezone.utc).isoformat(), "read_only_uri": True, "sqlite_version": sqlite3.sqlite_version, "oracles": {}}
+     save(OUT / f"preflight-a{active}.json", preflight)
+     print(json.dumps({"preflight_start": active}), flush=True)
+@@ -126,7 +145,7 @@
+         for round_number in range(1, rounds + 1):
+             label = f"a{active}-{kind}-{window}-r{round_number:02d}"
+             argv = [IDENTITY["path"], "--db", str(db), "--since", str(start), "--until", str(manifest["end_utc"]), "--tz", "UTC", "rank", "--by", kind, "--top", str(top)]
+-            receipt = {"argv": argv, "started_utc": datetime.now(timezone.utc).isoformat(), "status": "running", "case": f"a{active}-{kind}-{window}", "round": round_number, "expected_rounds": rounds, "first_process_in_series": round_number == 1, "physical_cold_pages": False, "residential_filter": True}
++            receipt = {"argv": argv, "started_utc": datetime.now(timezone.utc).isoformat(), "status": "running", "case": f"a{active}-{kind}-{window}", "round": round_number, "expected_rounds": rounds, "first_process_in_series": round_number == 1, "physical_cold_pages": False, "residential_filter": True, "competing_load_at_start": competing_load()}
+             started = time.perf_counter()
+             process = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+             receipt["pid"] = process.pid
+@@ -179,7 +198,7 @@
+     samples = [item for item in results if item["case"] == name]
+     expected = samples[0]["expected_rounds"]
+     cases.append({"case": name, "required_samples": expected, "recorded_samples": len(samples), "passing_samples": sum(item["pass"] for item in samples), "max_wall_ms": max(item["wall_ms"] for item in samples), "status": "PASS" if len(samples) == expected and all(item["pass"] for item in samples) else "FAIL", "boundary": "original one-sample diagnostic; not a 21-run gate" if expected == 1 else "21-process exact-oracle capacity gate"})
+-summary = {"cases": cases, "expected_native_invocations": 106, "recorded_native_invocations": len(results), "A1000": {"status": "NOT_RUN", "reason": "stage prerequisite for generation not met; 30d/21/10000ms requirement remains"}, "cache": "all native queries follow preflight database reads; no physical cold-page proof", "AC3": "NOT_COMPLETE"}
++summary = {"cases": cases, "expected_native_invocations": 106, "recorded_native_invocations": len(results), "A1000": {"status": "NOT_RUN", "reason": "stage prerequisite for generation not met; 30d/21/10000ms requirement remains"}, "initial_competing_load": INITIAL_LOAD, "competing_load_observed": [item["case"] + "/r" + str(item["round"]) for item in results if item.get("competing_load_at_start")], "cache": "all native queries follow preflight database reads; no physical cold-page proof", "AC3": "NOT_COMPLETE"}
+ save(OUT / "summary.json", summary)
+ print(json.dumps(summary), flush=True)
+ sys.exit(2 if len(results) != 106 or any(case["status"] == "FAIL" for case in cases) else 3)

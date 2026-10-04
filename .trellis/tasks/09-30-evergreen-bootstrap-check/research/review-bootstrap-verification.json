@@ -1,0 +1,93 @@
+{
+  "captured_utc": "2026-09-30T13:28:10.175375+00:00",
+  "same_version_init_entry": true,
+  "version_matches_project": true,
+  "entry_hash_matches": true,
+  "recorded_lock_matches_actual": true,
+  "lock_package_count": 59,
+  "fixed_packages": {
+    "node_modules/@mindfoldhq/trellis": {
+      "version": "0.7.0-beta.3",
+      "resolved": "https://registry.npmjs.org/@mindfoldhq/trellis/-/trellis-0.7.0-beta.3.tgz",
+      "integrity_matches_registry_receipt": true
+    },
+    "node_modules/@mindfoldhq/trellis-core": {
+      "version": "0.7.0-beta.3",
+      "resolved": "https://registry.npmjs.org/@mindfoldhq/trellis-core/-/trellis-core-0.7.0-beta.3.tgz",
+      "integrity_matches_registry_receipt": true
+    }
+  },
+  "overrides_match_before_after_current": true,
+  "candidate_assets": {
+    ".claude/agents/trellis-implement.md": {
+      "present": true,
+      "hash_matches": true
+    },
+    ".claude/settings.json": {
+      "present": true,
+      "hash_matches": true
+    },
+    ".codex/hooks.json": {
+      "present": true,
+      "hash_matches": true
+    },
+    ".grok/agents/trellis-implement.md": {
+      "present": true,
+      "hash_matches": true
+    },
+    ".kimi-code/skills/trellis-start/SKILL.md": {
+      "present": true,
+      "hash_matches": true
+    },
+    ".omp/agents/trellis-implement.md": {
+      "present": true,
+      "hash_matches": true
+    },
+    ".omp/extensions/trellis/index.ts": {
+      "present": true,
+      "hash_matches": true
+    }
+  },
+  "current_protected_match_before": true,
+  "candidate_manifest_matches_receipt": true,
+  "actual_seven_skill_payload": {
+    ".agents": {
+      "SKILL.md": true,
+      "reference.md": true,
+      "scripts/build-inputs.js": true
+    },
+    ".claude": {
+      "SKILL.md": true,
+      "reference.md": true,
+      "scripts/build-inputs.js": true
+    },
+    ".codex": {
+      "SKILL.md": true,
+      "reference.md": true,
+      "scripts/build-inputs.js": true
+    },
+    ".cursor": {
+      "SKILL.md": true,
+      "reference.md": true,
+      "scripts/build-inputs.js": true
+    },
+    ".omp": {
+      "SKILL.md": true,
+      "reference.md": true,
+      "scripts/build-inputs.js": true
+    },
+    ".grok": {
+      "SKILL.md": true,
+      "reference.md": true,
+      "scripts/build-inputs.js": true
+    },
+    ".kimi-code": {
+      "SKILL.md": true,
+      "reference.md": true,
+      "scripts/build-inputs.js": true
+    }
+  },
+  "ignore_exit_code": 0,
+  "ignore_output": ".gitignore:33:.claude/\t.claude/agents/trellis-implement.md\n.gitignore:33:.claude/\t.claude/settings.json\n.gitignore:39:.codex/*\t.codex/hooks.json\n.gitignore:36:.grok/\t.grok/agents/trellis-implement.md\n.gitignore:45:.kimi-code/skills/*\t.kimi-code/skills/trellis-start/SKILL.md\n.gitignore:35:.omp/\t.omp/agents/trellis-implement.md\n.gitignore:35:.omp/\t.omp/extensions/trellis/index.ts\n",
+  "private_or_global_files_read": false
+}

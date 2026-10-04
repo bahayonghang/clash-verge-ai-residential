@@ -1,0 +1,34 @@
+[
+  {
+    "command": "node scripts/install-agent-skills.js --force --platforms .agents,.claude,.codex,.cursor,.omp,.grok,.kimi-code",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:03:51.190364+00:00",
+    "finished_utc": "2026-09-30T13:03:51.344288+00:00",
+    "log": "force.log",
+    "log_sha256": "b862fe9de420e561314b8265c5b3e3ac5932a622e2234267cce05782d1716462"
+  },
+  {
+    "command": "node scripts/install-agent-skills.js --check --platforms .agents,.claude,.codex,.cursor,.omp,.grok,.kimi-code",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:03:51.356455+00:00",
+    "finished_utc": "2026-09-30T13:03:51.440117+00:00",
+    "log": "after-check.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "command": "node scripts/install-agent-skills.js --platforms .agents,.claude,.codex,.cursor,.omp,.grok,.kimi-code",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:03:51.440643+00:00",
+    "finished_utc": "2026-09-30T13:03:51.530183+00:00",
+    "log": "second-install.log",
+    "log_sha256": "fc183f289172de941f68d0f93644c07ed4001b3c867dbe3363f8dea0e177c000"
+  },
+  {
+    "command": "node -e const path=require('node:path');const roots=[\".agents\", \".claude\", \".codex\", \".cursor\", \".omp\", \".grok\", \".kimi-code\"];const root=process.cwd();console.log(JSON.stringify(roots.map(p=>{const b=require(path.resolve(p,'skills/residential-rule-tuning/scripts/build-inputs.js')).buildInputs(root);return {platform:p,routing:b.routingCount,supported:Object.keys(b.switches.supported).length,unsupported:b.switches.unsupported.length,extra_anyrouter:b.switches.supported.extra_anyrouter,extra_unsupported:b.switches.unsupported.includes('extra'),extra_supported:Object.hasOwn(b.switches.supported,'extra'),extra_anyrouter_unsupported:b.switches.unsupported.includes('extra_anyrouter')}})));",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:03:51.530728+00:00",
+    "finished_utc": "2026-09-30T13:03:51.616775+00:00",
+    "log": "actual-generators.log",
+    "log_sha256": "e21c3da52d7212a2069a7db96fd7f8cf956f70c1ecbe6d0e2be38d8a9ba20b0d"
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "python",
+    "-X",
+    "utf8",
+    ".trellis/scripts/task.py",
+    "validate",
+    ".trellis/tasks/09-30-evergreen-harness-contract"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "status": "finished",
+  "started_utc": "2026-10-02T01:48:44.684553+00:00",
+  "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+  "pid": 26528,
+  "stdout_raw_sha256": "aceeffb2a0bf36a16aec0c2c3fe8821a927f81a74188c5bcebeacfa3b27f5de1",
+  "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "exit_code": 0,
+  "finished_utc": "2026-10-02T01:48:44.837289+00:00",
+  "wall_seconds": 0.15274020000015298
+}

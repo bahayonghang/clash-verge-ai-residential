@@ -1,0 +1,45 @@
+{"start": "matrix-a50-unchanged-baseline", "pid": 37892}
+{"finished": "matrix-a50-unchanged-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 47.78958200000034}
+{"start": "matrix-a50-unchanged-candidate", "pid": 37844}
+{"finished": "matrix-a50-unchanged-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 47.19703129999971}
+{"start": "matrix-a50-counters-baseline", "pid": 21016}
+{"finished": "matrix-a50-counters-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 44.94051549999995}
+{"start": "matrix-a50-counters-candidate", "pid": 39200}
+{"finished": "matrix-a50-counters-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 45.230746199999885}
+{"start": "matrix-a50-metadata-baseline", "pid": 46268}
+{"finished": "matrix-a50-metadata-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 47.55867819999958}
+{"start": "matrix-a50-metadata-candidate", "pid": 39532}
+{"finished": "matrix-a50-metadata-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 47.54734899999994}
+{"start": "matrix-a250-unchanged-baseline", "pid": 29788}
+{"finished": "matrix-a250-unchanged-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 45.696042000000034}
+{"start": "matrix-a250-unchanged-candidate", "pid": 45132}
+{"finished": "matrix-a250-unchanged-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 46.66685800000005}
+{"start": "matrix-a250-counters-baseline", "pid": 45288}
+{"finished": "matrix-a250-counters-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 46.77593909999996}
+{"start": "matrix-a250-counters-candidate", "pid": 44524}
+{"finished": "matrix-a250-counters-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 46.38778020000018}
+{"start": "matrix-a250-metadata-baseline", "pid": 44568}
+{"finished": "matrix-a250-metadata-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 46.88398139999981}
+{"start": "matrix-a250-metadata-candidate", "pid": 17428}
+{"finished": "matrix-a250-metadata-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 46.664127700000336}
+{"start": "matrix-a1000-unchanged-baseline", "pid": 44444}
+{"finished": "matrix-a1000-unchanged-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 46.97201159999986}
+{"start": "matrix-a1000-unchanged-candidate", "pid": 47096}
+{"finished": "matrix-a1000-unchanged-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 46.80263600000035}
+{"start": "matrix-a1000-counters-baseline", "pid": 44276}
+{"finished": "matrix-a1000-counters-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 47.21900349999987}
+{"start": "matrix-a1000-counters-candidate", "pid": 41296}
+{"finished": "matrix-a1000-counters-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 46.86937790000002}
+{"start": "matrix-a1000-metadata-baseline", "pid": 47068}
+{"finished": "matrix-a1000-metadata-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 46.805683000000045}
+{"start": "matrix-a1000-metadata-candidate", "pid": 7608}
+{"finished": "matrix-a1000-metadata-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 46.93562950000023}
+{"start": "matrix-a250-backlog-baseline", "pid": 34800}
+{"finished": "matrix-a250-backlog-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 35.19286710000006}
+{"start": "matrix-a250-backlog-candidate", "pid": 10900}
+{"finished": "matrix-a250-backlog-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 35.19588919999978}
+{"start": "matrix-a250-failed-baseline", "pid": 39992}
+{"finished": "matrix-a250-failed-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 35.19616700000006}
+{"start": "matrix-a250-failed-candidate", "pid": 8084}
+{"finished": "matrix-a250-failed-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 35.20103100000006}
+{"set": "matrix", "expected_invocations": 22, "recorded_invocations": 22, "execution_failures": [], "competing_load_observed": [], "gates": [{"gate": "F1", "before": 39.0584, "candidate": 43.391, "ratio": 1.1109262028142475, "limit": 1.1, "status": "FAIL"}, {"gate": "F2", "before": 17.959699999999998, "candidate": 19.9013, "ratio": 1.1081087100564042, "limit": 1.1, "status": "FAIL"}, {"gate": "F3", "before": 13.8272, "candidate": 12.498099999999999, "ratio": 0.9038778639203887, "limit": 1.1, "status": "PASS"}, {"gate": "F4", "before": 19.4666, "candidate": 21.4518, "ratio": 1.1019798013006894, "limit": 1.1, "status": "FAIL"}, {"gate": "F5", "before": 18.7829, "candidate": 19.106, "ratio": 1.0172018165459007, "limit": 1.1, "status": "PASS"}, {"gate": "F6", "before": 11530240.0, "candidate": 13275136.0, "ratio": 1.1513321492007105, "limit": 1.1, "status": "FAIL"}, {"gate": "F7", "before": 10698752.0, "candidate": 12492800.0, "ratio": 1.167687595712098, "limit": 1.1, "status": "FAIL"}, {"gate": "F8", "before": 1483200, "candidate": 2111360, "ratio": 1.4235167206040993, "limit": 1.1, "status": "FAIL"}, {"gate": "F9", "before": 3232096, "candidate": 3561216, "ratio": 1.1018286585546964, "limit": 1.1, "status": "FAIL"}, {"gate": "F10", "before": 7880872, "candidate": 9288904, "ratio": 1.1786644929647379, "limit": 1.1, "status": "FAIL"}, {"gate": "F11", "before": 0.171875, "candidate": 0.046875, "ratio": 0.2727272727272727, "limit": 1.1, "status": "PASS"}, {"gate": "F12/matrix-a50-unchanged", "before": 1.4430999999999998, "candidate": 1.6753, "ratio": 1.1609036102834178, "limit": 1.1, "status": "FAIL"}, {"gate": "F12/matrix-a50-counters", "before": 1.4649, "candidate": 1.5398, "ratio": 1.0511297699501672, "limit": 1.1, "status": "PASS"}, {"gate": "F12/matrix-a50-metadata", "before": 1.5501, "candidate": 1.4788, "ratio": 0.9540029675504805, "limit": 1.1, "status": "PASS"}, {"gate": "F12/matrix-a250-unchanged", "before": 1.5065, "candidate": 1.5176, "ratio": 1.0073680716893463, "limit": 1.1, "status": "PASS"}, {"gate": "F12/matrix-a250-counters", "before": 1.4649, "candidate": 1.7068999999999999, "ratio": 1.165198989692129, "limit": 1.1, "status": "FAIL"}, {"gate": "F12/matrix-a250-metadata", "before": 1.3239, "candidate": 1.6164, "ratio": 1.22093813732155, "limit": 1.1, "status": "FAIL"}, {"gate": "F12/matrix-a1000-unchanged", "before": 1.4999, "candidate": 1.8195, "ratio": 1.2130808720581372, "limit": 1.1, "status": "FAIL"}, {"gate": "F12/matrix-a1000-counters", "before": 1.605, "candidate": 1.5019, "ratio": 0.9357632398753895, "limit": 1.1, "status": "PASS"}, {"gate": "F12/matrix-a1000-metadata", "before": 1.532, "candidate": 1.6638, "ratio": 1.0860313315926893, "limit": 1.1, "status": "PASS"}, {"gate": "F12/matrix-a250-backlog", "before": 1.2332, "candidate": 1.7528000000000001, "ratio": 1.421342847875446, "limit": 1.1, "status": "FAIL"}, {"gate": "F12/matrix-a250-failed", "before": 1.1647999999999998, "candidate": 1.167, "ratio": 1.0018887362637365, "limit": 1.1, "status": "PASS"}, {"gate": "F12 nonempty production oracle", "status": "UNVERIFIED", "reason": "Original facade reader windows have no reported row counts or exact totals. Separate final-identity nonempty production evidence must be reviewed; parameter fixture_hash is not a result oracle."}], "completed_utc": "2026-10-04T02:07:13.981718+00:00", "limits": ["original matrix starts on a minute boundary and queries at +10..+35 seconds; default_auto_report_query retains endpoints and service div_euclid(60) makes the current Raw minute window empty; separate nonempty evidence required", "native measurements do not cover WebView or installed background workers"]}

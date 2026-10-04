@@ -1,0 +1,63 @@
+{
+  "invocation_id": "20261003T025055Z-577766a3/claude/parent",
+  "harness": "claude",
+  "phase": "parent",
+  "parent_only": true,
+  "source_snapshot_id": "4be0cfb58c637129fefb99c750a5baed0fb0fb6378cdce86f6a0ee90a1877e4b",
+  "executable_binding": "claude",
+  "executable_sha256": "84304f7d4b0cd0ebcbe8318695a260151b48991a6659c3366fdd5da290c0ab91",
+  "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#claude",
+  "status": "BLOCKED_OR_FAILED_REQUIRES_REVIEW",
+  "effective_model": "UNKNOWN",
+  "model_evidence": "UNVERIFIED",
+  "rules": "UNVERIFIED",
+  "planning": "UNVERIFIED",
+  "permissions": "UNVERIFIED",
+  "runtime_enforcement": "UNVERIFIED",
+  "native_child": "UNVERIFIED",
+  "role_persistence": "NOT_COVERED_PURE_OUTPUT",
+  "hook_extension_pull": "UNVERIFIED",
+  "negative_case": "UNVERIFIED",
+  "product_hash_unchanged": true,
+  "protected_snapshot_diff": {
+    "same": true,
+    "changed": [],
+    "added": [],
+    "removed": [],
+    "index_changed": false,
+    "head_changed": false,
+    "branch_changed": false
+  },
+  "started_utc": "2026-10-03T02:51:02.272008+00:00",
+  "ended_utc": "2026-10-03T02:51:06.345566+00:00",
+  "pid": 65804,
+  "exit_code": 1,
+  "capture_stop_reason": null,
+  "termination_requested": false,
+  "capture_representation": "normalized_redacted_events_not_original_bytes",
+  "stream_hash_scope": "captured_bytes_only_if_limit_hit",
+  "streams": {
+    "stdout": {
+      "bytes": 4695,
+      "records": 3,
+      "sha256": "13471feb3e4119b71b1aa6e4eb7e860de46a542e1f3c23d22e1747365f5382ba"
+    },
+    "stderr": {
+      "bytes": 0,
+      "records": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "redactions": [
+    {
+      "event_index": 1,
+      "field": "$.powershell_path",
+      "category": "home_path"
+    }
+  ],
+  "sensitive_output_detected": false,
+  "events": 3,
+  "cross_stream_order": "receiver_observation_only",
+  "job_cleanup": "best_effort_owned_job; post_Popen_attach_race; no_permission_sandbox; no_absolute_no_orphan_claim",
+  "protocol": "basic_parent_read_only_not_full_T06_acceptance"
+}

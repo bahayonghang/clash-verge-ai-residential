@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "native_exit_code": 0,
+  "syntax": [
+    {
+      "file": "runtime-capture-operational.py",
+      "status": "PASS"
+    },
+    {
+      "file": "operational-kimi-acp.py",
+      "status": "PASS"
+    },
+    {
+      "file": "operational-verification.py",
+      "status": "PASS"
+    }
+  ],
+  "model_clients_started": 0,
+  "real_candidate_freezes": 0,
+  "ended_utc": "2026-10-03T02:32:40.470851+00:00"
+}

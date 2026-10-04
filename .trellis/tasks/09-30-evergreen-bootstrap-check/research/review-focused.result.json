@@ -1,0 +1,11 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "tests/check-harness-environment.test.js"
+  ],
+  "started_utc": "2026-09-30T13:20:47.782103+00:00",
+  "finished_utc": "2026-09-30T13:20:49.289465+00:00",
+  "exit_code": 0,
+  "raw_sha256": "25a77d5a36655f06fb6cc6514080ab20ae139199cd21b80306b8468a148c0ddd"
+}

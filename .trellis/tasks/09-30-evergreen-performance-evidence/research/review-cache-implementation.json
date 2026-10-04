@@ -1,0 +1,71 @@
+{
+  "reviewed_utc": "2026-09-30T14:48:56.605074+00:00",
+  "scope": "Static diff review and existing receipt verification only; no tests/builds or corpus reads",
+  "source": {
+    "path": "residential-monitor/src-tauri/src/c3/raw_fold.rs",
+    "sha256": "9d5c68063d80d855e3c91c71c550c0430f1a9b92a32ab7b91a093c99ce940609",
+    "contract_restored_snapshot": ".trellis/tasks/09-30-evergreen-performance-evidence/research/projection-cache-20260930/raw_fold-contract-restored.rs",
+    "contract_restored_sha256": "e975d19f9ff52993efcc537dd36b5e1f8d7cd763770291817cf649533ae63edf",
+    "snapshot_production_diff_is_only_process_guard": true,
+    "cache_test_module_equals_contract_restored": true
+  },
+  "receipts": [
+    {
+      "name": "original-semantics",
+      "receipt_sha256": "a81b5c1de068546a8bb7fcc83a4202639ef40c246f4b56b6b62abc8126d7e62b",
+      "exit_code": 101,
+      "test_summary": [
+        "FAILED",
+        0,
+        1,
+        0
+      ],
+      "started_utc": "2026-09-30T14:35:36.771519+00:00",
+      "finished_utc": "2026-09-30T14:35:56.695164+00:00"
+    },
+    {
+      "name": "network-contract-restored",
+      "receipt_sha256": "ba042b09d13b01adc8e8120e61810d937a0c859f869f08bbdd63a7d487a18fb5",
+      "exit_code": 0,
+      "test_summary": [
+        "ok",
+        1,
+        0,
+        0
+      ],
+      "started_utc": "2026-09-30T14:42:16.823910+00:00",
+      "finished_utc": "2026-09-30T14:42:36.105789+00:00"
+    },
+    {
+      "name": "cache-raw-fold-tests",
+      "receipt_sha256": "0cc3cd085432967a5d7c308421e41b13bb59d3e0248a8bd3550affce38fcd970",
+      "exit_code": 0,
+      "test_summary": [
+        "ok",
+        4,
+        0,
+        1
+      ],
+      "started_utc": "2026-09-30T14:43:59.833697+00:00",
+      "finished_utc": "2026-09-30T14:44:19.658895+00:00"
+    }
+  ],
+  "static_checks": {
+    "dictionary_kinds_separate": true,
+    "missing_vs_empty_preserved": true,
+    "rule_empty_string_preserved": true,
+    "chain_cache_key_is_full_original_pool_id": true,
+    "cached_override_separate_from_per_session_rule_fallback": true,
+    "raw_chain_key_retained_for_exit_ties": true,
+    "fixture_exit_oracle_independent_sql": true,
+    "window_threshold_sql_scan_owner_unchanged": true,
+    "unused_dictionary_ids_do_not_create_session_matches": true
+  },
+  "remaining_evidence": [
+    "fmt/clippy/service/bench results from current implementation owner",
+    "same-window production and stage timings from newly identified executable",
+    "native private memory and formal gate matrix"
+  ],
+  "resource_boundary": "New pool retains supported-kind dictionary text even when unreferenced by projected sessions. Old Dict was released when load_sessions returned. Runtime cost has not been measured.",
+  "errors": []
+}

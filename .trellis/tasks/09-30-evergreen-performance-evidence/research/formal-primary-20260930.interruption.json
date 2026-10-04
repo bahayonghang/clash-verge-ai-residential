@@ -1,0 +1,112 @@
+{
+  "status": "INTERRUPTED_UNVERIFIED",
+  "observed_utc": "2026-10-01T00:13:38.4925034Z",
+  "original_session_id": 14594,
+  "original_session_lookup": "write_stdin failed: Unknown process id 14594",
+  "original_native_started": 4,
+  "original_native_finished": 3,
+  "original_native_finished_exit_codes": [
+    0,
+    0,
+    0
+  ],
+  "interrupted_case": "primary-r2-candidate",
+  "interrupted_native_exit": "UNRECORDED",
+  "original_driver_exit": "UNRECORDED",
+  "original_outer_exit": "UNRECORDED",
+  "cause": "原因未查明；503 是代理调用报告，未证明 native 或 driver 终止原因",
+  "live_matching_processes": [],
+  "driver_receipt_sha256": "D56FF9D722985299BF40BC5D98F1D1F695179F00BFBAE68934073EF3A9EBF1D7",
+  "driver_receipt": {
+    "argv": [
+      "python",
+      "-X",
+      "utf8",
+      ".trellis/tasks/09-30-evergreen-performance-evidence/research/run-formal-replay.py",
+      "--candidate-directory",
+      "candidate-retained-20260930",
+      "--output-directory",
+      "formal-primary-20260930",
+      "--set",
+      "primary"
+    ],
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "status": "running",
+    "started_utc": "2026-09-30T10:48:29.654181-05:00",
+    "pid": 5576
+  },
+  "receipts": [
+    {
+      "file": "primary-r1-baseline.receipt.json",
+      "sha256": "870B810316004592E22B1EAE3E58DBA71BAC92CCBD882AAC085D05F3AB0F00AA",
+      "status": "finished",
+      "name": "primary-r1",
+      "variant": "baseline",
+      "pid": 58216,
+      "exit_code": 0,
+      "validation_errors": [],
+      "wall_seconds": 342.28079499999967
+    },
+    {
+      "file": "primary-r1-candidate.receipt.json",
+      "sha256": "0D5826B74BBF3530EA6C096D33FB7B3A053CA5E73F165F662293A9B31D4B3E00",
+      "status": "finished",
+      "name": "primary-r1",
+      "variant": "candidate",
+      "pid": 43048,
+      "exit_code": 0,
+      "validation_errors": [],
+      "wall_seconds": 341.99999879999996
+    },
+    {
+      "file": "primary-r2-baseline.receipt.json",
+      "sha256": "7F7C66AB51639D483A9B1B7941EA3BBC486F4FA5E45788228B4D163DEFCE6D8C",
+      "status": "finished",
+      "name": "primary-r2",
+      "variant": "baseline",
+      "pid": 54948,
+      "exit_code": 0,
+      "validation_errors": [],
+      "wall_seconds": 342.08542940000007
+    },
+    {
+      "file": "primary-r2-candidate.receipt.json",
+      "sha256": "27DB8437F60CF9BBCE3CAEBF6EF135EFA4FA3C8B63CDFFC699D02F3E14EEB401",
+      "status": "running",
+      "name": "primary-r2",
+      "variant": "candidate",
+      "pid": 56468,
+      "exit_code": null,
+      "validation_errors": null,
+      "wall_seconds": null
+    }
+  ],
+  "remaining_cases": [
+    "primary-r3-baseline",
+    "primary-r3-candidate"
+  ],
+  "remaining_status": "NOT_STARTED",
+  "data_files": [
+    {
+      "Name": "monitor.sqlite3",
+      "Length": 2740224,
+      "LastWriteTimeUtc": "2026-09-30T16:05:46.7502705Z"
+    },
+    {
+      "Name": "monitor.sqlite3-shm",
+      "Length": 32768,
+      "LastWriteTimeUtc": "2026-09-30T16:05:36.1909826Z"
+    },
+    {
+      "Name": "monitor.sqlite3-wal",
+      "Length": 4140632,
+      "LastWriteTimeUtc": "2026-09-30T16:06:17.9397378Z"
+    }
+  ],
+  "invariants": [
+    "Original receipts and data were not changed",
+    "No rerun started",
+    "No active benchmark or driver process found",
+    "Three completed native runs do not satisfy the six-run primary gate"
+  ]
+}

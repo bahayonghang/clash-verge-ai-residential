@@ -1,0 +1,31 @@
+{
+  "harness": "omp",
+  "phase": "parent",
+  "child_authorized": false,
+  "started_utc": "2026-10-02T02:12:42.447706+00:00",
+  "steps": [
+    {
+      "label": "execute",
+      "argv": [
+        "python",
+        ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture.py",
+        "execute",
+        "--phase",
+        "parent",
+        "--harness",
+        "omp",
+        "--go",
+        "GO:9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9"
+      ],
+      "started_utc": "2026-10-02T02:12:42.462075+00:00",
+      "native_exit": 0,
+      "driver_child_pid": 57388,
+      "ended_utc": "2026-10-02T02:13:01.254885+00:00"
+    }
+  ],
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "head_is_baseline_only": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+  "status": "EXECUTOR_ENDED_REQUIRES_EVENT_REVIEW",
+  "ended_utc": "2026-10-02T02:13:01.255495+00:00",
+  "outer_exit": 0
+}

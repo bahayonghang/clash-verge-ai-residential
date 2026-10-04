@@ -1,0 +1,7 @@
+{
+  "finishedAt": "2026-09-30T07:39:06.9435829-05:00",
+  "command": "$env:NODE_ENV = 'production'; $env:npm_config_omit = 'dev'; just dependency-audit",
+  "log": "review-dependency-audit-production.log",
+  "startedAt": "2026-09-30T07:38:54.0829169-05:00",
+  "exitCode": 0
+}

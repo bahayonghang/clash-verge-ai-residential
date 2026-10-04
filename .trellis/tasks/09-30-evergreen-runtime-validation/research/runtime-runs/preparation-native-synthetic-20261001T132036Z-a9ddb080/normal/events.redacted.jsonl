@@ -1,0 +1,1 @@
+{"event_index": 1, "stream": "stdout", "stream_sequence": 1, "received_utc": "2026-10-01T13:20:36.348303+00:00", "payload": {"type": "synthetic.ready", "synthetic_only": true}}

@@ -1,0 +1,30 @@
+{
+  "identities": {
+    "before": {
+      "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-library-tests.exe",
+      "bytes": 12853760,
+      "sha256": "91FF44C0EB081C3E1F572F4ABA7C9574C18FECE73CB172BBBF0881FEC0ACA1DA"
+    },
+    "cache": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\projection-cache-v1\\candidate-library-tests.exe",
+      "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+      "bytes": 12875264,
+      "sha256": "8BCCEC95F7C26741B25FDB478AD454A30516528595E0BDB0111589ABB1D49A44"
+    }
+  },
+  "database": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+  "cache": "database already read by previous production/stage/oracle/hash checks; no cache eviction",
+  "source_difference": "network unknown contract restoration plus projection cache and regression fixture",
+  "all_query": {
+    "timezone": "local",
+    "previous_equal_window": true
+  },
+  "residential_query": {
+    "timezone": "UTC",
+    "previous_equal_window": false
+  },
+  "production_now_utc": "window end",
+  "stage_deadline_enabled": false,
+  "formal_matrix_or_capacity_gate": false
+}

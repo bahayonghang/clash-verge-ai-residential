@@ -1,0 +1,24 @@
+{"phase": "preflight-ignore", "pid": 18340, "status": "STARTED", "utc": "2026-10-04T05:38:31.910052+00:00"}
+{"phase": "preflight-ignore", "native_exit": 0, "wall_seconds": 0.5416423000006034, "status": "ENDED"}
+{"phase": "rustc-version", "pid": 43596, "status": "STARTED", "utc": "2026-10-04T05:38:32.477494+00:00"}
+{"phase": "rustc-version", "native_exit": 0, "wall_seconds": 0.5529366999999183, "status": "ENDED"}
+{"phase": "cargo-version", "pid": 51584, "status": "STARTED", "utc": "2026-10-04T05:38:33.007704+00:00"}
+{"phase": "cargo-version", "native_exit": 0, "wall_seconds": 0.5313500000011118, "status": "ENDED"}
+{"phase": "installed-targets", "pid": 47636, "status": "STARTED", "utc": "2026-10-04T05:38:33.568024+00:00"}
+{"phase": "installed-targets", "native_exit": 0, "wall_seconds": 0.5614472999986901, "status": "ENDED"}
+{"phase": "baseline-object", "pid": 48204, "status": "STARTED", "utc": "2026-10-04T05:38:34.120681+00:00"}
+{"phase": "baseline-object", "native_exit": 0, "wall_seconds": 0.5311649000013858, "status": "ENDED"}
+{"phase": "vswhere", "pid": 45528, "status": "STARTED", "utc": "2026-10-04T05:38:34.646312+00:00"}
+{"phase": "vswhere", "native_exit": 0, "wall_seconds": 0.5240386999994371, "status": "ENDED"}
+{"phase": "baseline-build", "pid": 43108, "status": "STARTED", "utc": "2026-10-04T05:38:37.568580+00:00"}
+{"phase": "baseline-build", "pid": 43108, "elapsed_seconds": 55.019, "stderr_tail": ["   Compiling tokio-tungstenite v0.30.0", "   Compiling rusqlite v0.40.2"], "status": "RUNNING"}
+{"phase": "baseline-build", "native_exit": 0, "wall_seconds": 59.63059059999978, "status": "ENDED"}
+{"phase": "candidate-build", "pid": 48720, "status": "STARTED", "utc": "2026-10-04T05:39:37.214130+00:00"}
+{"phase": "candidate-build", "pid": 48720, "elapsed_seconds": 55.512, "stderr_tail": ["   Compiling auto-launch v0.5.0", "   Compiling rusqlite v0.40.2"], "status": "RUNNING"}
+{"phase": "candidate-build", "native_exit": 0, "wall_seconds": 61.65383959999963, "status": "ENDED"}
+{"phase": "candidate-library-test-build", "pid": 17420, "status": "STARTED", "utc": "2026-10-04T05:40:38.874763+00:00"}
+{"phase": "candidate-library-test-build", "native_exit": 0, "wall_seconds": 17.474857400000474, "status": "ENDED"}
+{"phase": "baseline-smoke", "pid": 44036, "status": "STARTED", "utc": "2026-10-04T05:40:56.872548+00:00"}
+{"phase": "baseline-smoke", "native_exit": 0, "wall_seconds": 10.291099100000793, "status": "ENDED"}
+{"phase": "candidate-smoke", "pid": 47928, "status": "STARTED", "utc": "2026-10-04T05:41:07.164164+00:00"}
+{"phase": "candidate-smoke", "native_exit": 0, "wall_seconds": 9.770503899999312, "status": "ENDED"}

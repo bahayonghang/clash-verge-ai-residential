@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "C:\\Program Files\\Python314\\python.exe",
+    "-B",
+    "-X",
+    "utf8",
+    ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-verification.py"
+  ],
+  "shell": false,
+  "started_utc": "2026-10-03T02:37:35.313977+00:00",
+  "ended_utc": "2026-10-03T02:37:36.345192+00:00",
+  "native_exit_code": 0,
+  "stdout_sha256": "8aab64e638e695029fa6684c7a8178dd1d7de817b3ccbec8d354d1ebcb667008",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

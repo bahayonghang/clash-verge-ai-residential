@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "C:\\Program Files\\Python314\\python.exe",
+    "-B",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator.py"
+  ],
+  "pid": 48520,
+  "started_utc": "2026-10-04T05:21:55.869943+00:00",
+  "status": "P2_ENDED",
+  "generator_sha256": "5E5D4E2BC9A8D65EF124982F7CBC3755A0DF8C8347297D54F3AE06328268773E",
+  "scope": "P2 only; no matrix/primary/capacity",
+  "sql_contract_sha256": "DB4FF3432EC983B23B60234A8A9ABA23207B180645E25C48630A2C5A0879AE75",
+  "stage_probe_failures": {},
+  "ended_utc": "2026-10-04T05:26:15.640782+00:00",
+  "driver_exit": 0
+}

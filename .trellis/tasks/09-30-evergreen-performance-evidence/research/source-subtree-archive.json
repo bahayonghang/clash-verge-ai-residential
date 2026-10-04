@@ -1,0 +1,9 @@
+{
+  "source_revision": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+  "archive": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-approved-baseline-20260930-50086853fbcc43bea6015946489e3006\\monitor-subtree-9e378513a05c4afb9fe88a728e3f79f7.tar",
+  "scope": "residential-monitor/",
+  "sha256": "87684724D5E5B1B3A18C0212CD594CA05F9454EDD6C28582CD879270F9749EB7",
+  "historical_sha256": "87684724D5E5B1B3A18C0212CD594CA05F9454EDD6C28582CD879270F9749EB7",
+  "matches_historical": true,
+  "exit_code": 0
+}

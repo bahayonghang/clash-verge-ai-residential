@@ -1,0 +1,50 @@
+[
+  {
+    "path": "scripts/bootstrap-harnesses.js",
+    "sha256": "9f5e59444ea782a93edb5e08f12649a25c5ee1e0d3053fb1d6f2fe9368f38cd2",
+    "bytes": 12932,
+    "trailingWhitespace": false
+  },
+  {
+    "path": "scripts/harness-templates/codex-config.toml",
+    "sha256": "a4687d1d7906a2cac711238161d66071f058ec5f272297c2f0af46c8d17e9ab0",
+    "bytes": 489,
+    "trailingWhitespace": false
+  },
+  {
+    "path": "scripts/harness-templates/kimi-trellis-implement.md",
+    "sha256": "75838e48add01af6a7813b61577afff4c665bc4eec0284da896ac6ee59032a0f",
+    "bytes": 2240,
+    "trailingWhitespace": false
+  },
+  {
+    "path": "scripts/harness-templates/kimi-trellis-check.md",
+    "sha256": "e2a8b35bed9f973303e8fe109a2e78bcc9ccba5c328a108c7d3e952ae743b508",
+    "bytes": 2451,
+    "trailingWhitespace": false
+  },
+  {
+    "path": "scripts/harness-templates/kimi-trellis-research.md",
+    "sha256": "4814529c847064bdd2e8fabc792464e2c562ee89a7b6c3730cfd76a6f394200e",
+    "bytes": 2189,
+    "trailingWhitespace": false
+  },
+  {
+    "path": "tests/bootstrap-harnesses.test.js",
+    "sha256": "fbcc90ee2c40d36171269eb986f6a4754a87f9211c667cdc6bdcc0289c74e195",
+    "bytes": 12691,
+    "trailingWhitespace": false
+  },
+  {
+    "path": "package.json",
+    "sha256": "718dc669a3c59471bf0f0b1c3eb5ce3df37cfd0384866b366c83bfa5cb5b52b9",
+    "bytes": 2006,
+    "trailingWhitespace": false
+  },
+  {
+    "path": "justfile",
+    "sha256": "bfb8551b1012b6bf05f0774e3a164b77470585ddc2c190702c9ca7c322185d9c",
+    "bytes": 5946,
+    "trailingWhitespace": false
+  }
+]

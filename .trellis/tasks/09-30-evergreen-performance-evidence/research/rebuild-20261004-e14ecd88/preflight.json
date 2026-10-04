@@ -1,0 +1,51 @@
+{
+  "status": "PASSED_SOURCE_PATH_TOOL_METADATA; ACTUAL_BUILD_NOT_RUN",
+  "observed_utc": "2026-10-04T05:38:35.167890+00:00",
+  "source_files": 109,
+  "previous_baseline_files": 103,
+  "instrumented_baseline_files": 104,
+  "dist_files": 36,
+  "disk_free_bytes": {
+    "C": 524202115072,
+    "D": 1158408425472
+  },
+  "environment_override": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "environment_observed": {
+    "VCToolsInstallDir": null,
+    "VSINSTALLDIR": null,
+    "WindowsSdkDir": null,
+    "WindowsSDKVersion": null,
+    "LIB": null,
+    "INCLUDE": null,
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": null,
+    "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER": null,
+    "CARGO_BUILD_TARGET": null,
+    "CARGO_TARGET_DIR": null
+  },
+  "path_linker": "C:\\Program Files\\Git\\usr\\bin\\link.exe",
+  "path_compiler": null,
+  "linker_discovery_candidates": [
+    {
+      "version": "14.44.35207",
+      "linker": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\link.exe",
+      "linker_sha256": "A364AF801A8539E4324D9489313DBF001D959128451FC99A27B24676BBAC058F",
+      "compiler": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe",
+      "compiler_sha256": "FE251EF50A1545B1B0835EE17B1E785459712B38D79E45B5C1D3D28970A36619"
+    },
+    {
+      "version": "14.51.36231",
+      "linker": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\link.exe",
+      "linker_sha256": "A8C42E25C91CA2453E1110540AC08F0FC12D7539454A11B9AF8BAEECB469837D",
+      "compiler": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\cl.exe",
+      "compiler_sha256": "B0A1818EBAE6DA7F18230A84E76CE839212584AC4C2AB55B97A0D5268085DA57"
+    }
+  ],
+  "sdk_candidate": "C:\\Program Files (x86)\\Windows Kits\\10\\Lib\\10.0.26100.0",
+  "actual_linker_and_sdk": "NOT_YET_OBSERVED; Rust/Cargo automatic discovery kept unchanged",
+  "cargo_configuration": "No explicit global/private configuration reads or writes. Inherited environment and Cargo defaults; effects beyond observed argv/output remain unverified.",
+  "resource_boundary": "Current free bytes recorded; peak target/build resource demand unknown; no disk cleanup",
+  "builder_sha256": "CBBD231E4059BA4038D036621E7F88D274246F9B29FEF585ADE91B539D69829A"
+}

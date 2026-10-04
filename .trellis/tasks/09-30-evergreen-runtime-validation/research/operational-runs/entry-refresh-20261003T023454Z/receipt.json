@@ -1,0 +1,40 @@
+{
+  "entries": [
+    {
+      "argv": [
+        "<USERPROFILE>/AppData/Local/OpenAI/Codex/bin/23f7d7f110b19ac3/codex.exe",
+        "--version"
+      ],
+      "native_exit_code": 0,
+      "started_utc": "2026-10-03T02:34:54.402573+00:00",
+      "ended_utc": "2026-10-03T02:34:54.482518+00:00",
+      "stdout_sha256": "f6464b8cc67af75deb2589fe1dbcde152fc15ffb76a91de1cf0686b4623afb1e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "<USERPROFILE>/AppData/Local/OpenAI/Codex/bin/23f7d7f110b19ac3/codex.exe",
+        "--help"
+      ],
+      "native_exit_code": 0,
+      "started_utc": "2026-10-03T02:34:54.482584+00:00",
+      "ended_utc": "2026-10-03T02:34:54.559164+00:00",
+      "stdout_sha256": "4a7f0188d4d6e6d812c5cfbcf82468336b899acd5e437de7450421a403c0071e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "driver_exit_code": 0,
+  "binding": {
+    "codex_app_binary": {
+      "relative_to_userprofile": "AppData/Local/OpenAI/Codex/bin/23f7d7f110b19ac3/codex.exe",
+      "exists_at_static_preflight": true,
+      "bytes": 326872368,
+      "version_output": "codex-cli 0.160.0",
+      "sha256": "7d4588265a55adb1403f85d2e058b11dc971459842de84876c86ff02fb7771f2",
+      "verified_for_runtime": true,
+      "metadata_evidence": "operational-runs/entry-refresh-20261003T023454Z/receipt.json",
+      "verified_utc": "2026-10-03T02:34:54.808413+00:00",
+      "verification_scope": "version/help/hash only; actual model/backend/permissions UNKNOWN"
+    }
+  }
+}

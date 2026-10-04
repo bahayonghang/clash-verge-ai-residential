@@ -1,0 +1,382 @@
+{
+  "reviewed_utc": "2026-09-30T14:32:25.698168+00:00",
+  "scope": "read existing JSON/logs and executable hashes only; no corpus open/hash and no workload execution",
+  "receipt_count": 15,
+  "executable_count": 4,
+  "owned_commands_serial": true,
+  "outside_machine_load": "not established by these receipts",
+  "original_failure_preserved": true,
+  "review_omission": "preflight did not verify exact test full name; original command matched zero tests",
+  "first_unwarmed_production_opportunity": "lost after initial minute raw-fold diagnostic read",
+  "production": [
+    {
+      "label": "a250-minute-production",
+      "source_sha256": "D48B9E8ED03401703A8B165DF0C3E1DEC4DBB12C3BF47703AA67DAC7E800EB20",
+      "production_status": "ok",
+      "production_error": null,
+      "production_first_read_ms": 14.0227,
+      "native_process_wall_ms": 65.4672999999093,
+      "semantic_sample_pass": true,
+      "stage_summary_check": {
+        "connection_count": true,
+        "upload": true,
+        "download": true,
+        "series_rows": true
+      },
+      "first_summary_check": {
+        "connection_count": true,
+        "upload": true,
+        "download": true,
+        "series_rows": true
+      },
+      "cache": "previously read; not physical cold",
+      "independent_full_corpus_oracle": false
+    },
+    {
+      "label": "a250-30d-production",
+      "source_sha256": "8262810054BDB0F42667FD5BCB72279239BF654422227EF811EB142E3C6AE392",
+      "production_status": "error",
+      "production_error": "DeadlineExceeded(\"report query\")",
+      "production_first_read_ms": 10018.5676,
+      "native_process_wall_ms": 29393.43749999989,
+      "semantic_sample_pass": false,
+      "stage_summary_check": {
+        "connection_count": true,
+        "upload": true,
+        "download": true,
+        "series_rows": true
+      },
+      "first_summary_check": {
+        "connection_count": false,
+        "upload": false,
+        "download": false,
+        "series_rows": false
+      },
+      "cache": "previously read; not physical cold",
+      "independent_full_corpus_oracle": false
+    }
+  ],
+  "smoke": [
+    {
+      "label": "smoke-baseline",
+      "fixture_hash": "557540697a8a1e8e41edf6bb7366f6bff4ddab43419442a2596761a1d1729bb8",
+      "commits": 3,
+      "traffic": {
+        "conserved": true,
+        "expected_added_download": 876,
+        "expected_added_upload": 348,
+        "final_download": 876,
+        "final_upload": 348,
+        "initial_download": 0,
+        "initial_upload": 0
+      },
+      "synchronous": "FULL",
+      "all_application_file_write_bytes": null,
+      "formal_gate": false
+    },
+    {
+      "label": "smoke-candidate",
+      "fixture_hash": "557540697a8a1e8e41edf6bb7366f6bff4ddab43419442a2596761a1d1729bb8",
+      "commits": 3,
+      "traffic": {
+        "conserved": true,
+        "expected_added_download": 876,
+        "expected_added_upload": 348,
+        "final_download": 876,
+        "final_upload": 348,
+        "initial_download": 0,
+        "initial_upload": 0
+      },
+      "synchronous": "FULL",
+      "all_application_file_write_bytes": null,
+      "formal_gate": false
+    }
+  ],
+  "stages": [
+    {
+      "source": "stages-20260930-initial/a250-minute-all.json",
+      "sha256": "EA911069B3D73FB452C5A0368ADB65CB63D47FF85F25BEDF72E9E6889E8F885B",
+      "filter": "all",
+      "projection_start_min": 29786399,
+      "projection_end_min": 29786401,
+      "projection_ms": 4.6799,
+      "scan_ms": 0.5563,
+      "previous_scan_ms": 0.0173,
+      "connection_count": 250,
+      "upload": 3497,
+      "download": 11725,
+      "series_rows": 1,
+      "rank_rows": 20
+    },
+    {
+      "source": "stages-20260930-initial/a250-minute-residential.json",
+      "sha256": "793A662EFAAC8B5244CD1563727C70E5C6B3B33284A8E33A9851F8E040DC918C",
+      "filter": "residential",
+      "projection_start_min": 29786400,
+      "projection_end_min": 29786401,
+      "projection_ms": 1.0571000000000002,
+      "scan_ms": 0.2002,
+      "previous_scan_ms": null,
+      "connection_count": 187,
+      "upload": 2612,
+      "download": 8777,
+      "series_rows": 1,
+      "rank_rows": 20
+    },
+    {
+      "source": "stages-20260930-initial/a250-30d-all.json",
+      "sha256": "0B8AE00C8382DD5B3A4ACBA9DE85935CA69CA1AE5082A6BB99B4AAC5F517FD47",
+      "filter": "all",
+      "projection_start_min": 29743200,
+      "projection_end_min": 29829600,
+      "projection_ms": 15407.9465,
+      "scan_ms": 13069.8577,
+      "previous_scan_ms": 8.7893,
+      "connection_count": 2160000,
+      "upload": 151200035,
+      "download": 507599545,
+      "series_rows": 720,
+      "rank_rows": 20
+    },
+    {
+      "source": "stages-20260930-initial/a250-30d-residential.json",
+      "sha256": "CDBFA56496E1A169D9D1CFB6265A7FD604F2129B6823CD7978FE209DEC21B811",
+      "filter": "residential",
+      "projection_start_min": 29786400,
+      "projection_end_min": 29829600,
+      "projection_ms": 2901.9163,
+      "scan_ms": 4113.2073,
+      "previous_scan_ms": null,
+      "connection_count": 1620000,
+      "upload": 113399990,
+      "download": 380699625,
+      "series_rows": 720,
+      "rank_rows": 20
+    },
+    {
+      "source": "stages-20260930-corrected/a250-30d-all.json",
+      "sha256": "4D55E9B4B8EB647D16689622BCE86FE5D5E57648B6C63E36136F980E510E1FC1",
+      "filter": "all",
+      "projection_start_min": 29743200,
+      "projection_end_min": 29829600,
+      "projection_ms": 3894.5494,
+      "scan_ms": 5421.8366,
+      "previous_scan_ms": 8.451699999999999,
+      "connection_count": 2160000,
+      "upload": 151200035,
+      "download": 507599545,
+      "series_rows": 720,
+      "rank_rows": 20
+    },
+    {
+      "source": "stages-20260930-corrected/a250-30d-residential.json",
+      "sha256": "B0E833634E33DA7B24EB683C826D9FC7A0820DA59734D3BF62EF3A39B843ADB6",
+      "filter": "residential",
+      "projection_start_min": 29786400,
+      "projection_end_min": 29829600,
+      "projection_ms": 2754.6016,
+      "scan_ms": 4403.7208,
+      "previous_scan_ms": null,
+      "connection_count": 1620000,
+      "upload": 113399990,
+      "download": 380699625,
+      "series_rows": 720,
+      "rank_rows": 20
+    }
+  ],
+  "receipts": [
+    {
+      "path": "stages-20260930-initial/smoke-baseline.receipt.json",
+      "sha256": "5C39C54727DCFD39C36DDF8A11AF1EA121B01DFFBF16AF3A3AC9B263ACC3E32B",
+      "started_utc": "2026-09-30T13:49:26.416248+00:00",
+      "finished_utc": "2026-09-30T13:49:37.836867+00:00",
+      "exit_code": 0,
+      "wall_seconds": 11.419668100003037
+    },
+    {
+      "path": "stages-20260930-initial/smoke-candidate.receipt.json",
+      "sha256": "C0C55AC8065C31DE546CA047433A374B0F0DE72354B4B4FCC5BD8B6AD0F556E9",
+      "started_utc": "2026-09-30T13:49:37.869839+00:00",
+      "finished_utc": "2026-09-30T13:49:49.531488+00:00",
+      "exit_code": 0,
+      "wall_seconds": 11.660710099997232
+    },
+    {
+      "path": "stages-20260930-initial/a250-minute-production-first.receipt.json",
+      "sha256": "8BF97CDC03F1ADFE5DA2C1D6B20F0ECA12A1A2B68EF263CFBAC30676B2B2CB0C",
+      "started_utc": "2026-09-30T13:49:49.541754+00:00",
+      "finished_utc": "2026-09-30T13:49:49.606939+00:00",
+      "exit_code": 0,
+      "wall_seconds": 0.06446850000065751,
+      "test_result": {
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    {
+      "path": "stages-20260930-initial/a250-minute-all.receipt.json",
+      "sha256": "EBEF352D15DB11C22EAE990873E71FEC7C6129D315AC6598DB9B2AB7F839B4A5",
+      "started_utc": "2026-09-30T13:49:49.608191+00:00",
+      "finished_utc": "2026-09-30T13:49:49.680194+00:00",
+      "exit_code": 0,
+      "wall_seconds": 0.07121799999731593,
+      "test_result": {
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    {
+      "path": "stages-20260930-initial/a250-minute-residential.receipt.json",
+      "sha256": "7A29BB757F46F6C956CB1742EECD0DBFE545EAA09496D5FA21D86BE37144AB99",
+      "started_utc": "2026-09-30T13:49:49.681303+00:00",
+      "finished_utc": "2026-09-30T13:49:49.745580+00:00",
+      "exit_code": 0,
+      "wall_seconds": 0.06378260000201408,
+      "test_result": {
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    {
+      "path": "stages-20260930-initial/a250-30d-all.receipt.json",
+      "sha256": "535700FDCB3C6B3B947327C36D665FF62933653654F76B237D477BDF27256AD5",
+      "started_utc": "2026-09-30T13:49:49.746819+00:00",
+      "finished_utc": "2026-09-30T13:50:18.340622+00:00",
+      "exit_code": 0,
+      "wall_seconds": 28.593320899999526,
+      "test_result": {
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    {
+      "path": "stages-20260930-initial/a250-30d-residential.receipt.json",
+      "sha256": "AA0B48170AE626F3261BB078491F79A4190C7EB87FAC0B5359261048D97E86B7",
+      "started_utc": "2026-09-30T13:50:18.341930+00:00",
+      "finished_utc": "2026-09-30T13:50:25.446794+00:00",
+      "exit_code": 0,
+      "wall_seconds": 7.103902499999094,
+      "test_result": {
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    {
+      "path": "stages-20260930-initial/raw-fold-tests.receipt.json",
+      "sha256": "42D8DE4AA7B514E301BA90E37AF6E6287524A166EA609491AC287FE655F78EE7",
+      "started_utc": "2026-09-30T13:50:25.448243+00:00",
+      "finished_utc": "2026-09-30T13:50:25.848836+00:00",
+      "exit_code": 0,
+      "wall_seconds": 0.40002060000551865,
+      "test_result": {
+        "status": "ok",
+        "passed": 3,
+        "failed": 0,
+        "ignored": 1
+      }
+    },
+    {
+      "path": "stages-20260930-initial/report-service-tests.receipt.json",
+      "sha256": "A5AE2A2869FEC34111634570FEC79E32F1B618A628E04B375EADBFEFD4D83E2E",
+      "started_utc": "2026-09-30T13:50:25.849376+00:00",
+      "finished_utc": "2026-09-30T13:50:38.031709+00:00",
+      "exit_code": 0,
+      "wall_seconds": 12.181736500002444,
+      "test_result": {
+        "status": "ok",
+        "passed": 53,
+        "failed": 0,
+        "ignored": 3
+      }
+    },
+    {
+      "path": "stages-20260930-initial/bench-instrumentation-tests.receipt.json",
+      "sha256": "0FF041CBB5D1E8B0DBAF250B78EC52714B4E8B19D5300101E69A0008E3AD66F8",
+      "started_utc": "2026-09-30T13:50:38.032311+00:00",
+      "finished_utc": "2026-09-30T13:50:42.155687+00:00",
+      "exit_code": 0,
+      "wall_seconds": 4.122912699996959,
+      "test_result": {
+        "status": "ok",
+        "passed": 12,
+        "failed": 0,
+        "ignored": 1
+      }
+    },
+    {
+      "path": "stages-20260930-corrected/test-list.receipt.json",
+      "sha256": "7FAF9CC0749B5C408B8B2297C95EF54522BBA92D25C48396E0C1E2F8A71CBC27",
+      "started_utc": "2026-09-30T14:24:59.050245+00:00",
+      "finished_utc": "2026-09-30T14:24:59.111022+00:00",
+      "exit_code": 0,
+      "wall_seconds": 0.060000000000172804
+    },
+    {
+      "path": "stages-20260930-corrected/a250-minute-production.receipt.json",
+      "sha256": "FD37295E956FB96B19DA4A26CDAD3AB48A812E43819E88EE69423E84A1EF10CB",
+      "started_utc": "2026-09-30T14:24:59.121623+00:00",
+      "finished_utc": "2026-09-30T14:24:59.187713+00:00",
+      "exit_code": 0,
+      "wall_seconds": 0.0654672999999093,
+      "test_result": {
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    {
+      "path": "stages-20260930-corrected/a250-30d-production.receipt.json",
+      "sha256": "363A67D4AA750ED3569B7DACF5106562A31EBAD5D41EED28420EA4FF08D25B20",
+      "started_utc": "2026-09-30T14:24:59.189051+00:00",
+      "finished_utc": "2026-09-30T14:25:28.583002+00:00",
+      "exit_code": 0,
+      "wall_seconds": 29.39343749999989,
+      "test_result": {
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    {
+      "path": "stages-20260930-corrected/a250-30d-all.receipt.json",
+      "sha256": "23C23439C762C2875B52C80EF4DA99C1C16448EEAE1D22AC9DFCE02FCB2584BB",
+      "started_utc": "2026-09-30T14:25:28.584383+00:00",
+      "finished_utc": "2026-09-30T14:25:38.000868+00:00",
+      "exit_code": 0,
+      "wall_seconds": 9.415689100000009,
+      "test_result": {
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    {
+      "path": "stages-20260930-corrected/a250-30d-residential.receipt.json",
+      "sha256": "45FFA9F5F4CFCF436432892C7AC1318959753AFB47910FE399B7CA83588520D2",
+      "started_utc": "2026-09-30T14:25:38.003056+00:00",
+      "finished_utc": "2026-09-30T14:25:45.247463+00:00",
+      "exit_code": 0,
+      "wall_seconds": 7.2432159999998476,
+      "test_result": {
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    }
+  ],
+  "errors": []
+}

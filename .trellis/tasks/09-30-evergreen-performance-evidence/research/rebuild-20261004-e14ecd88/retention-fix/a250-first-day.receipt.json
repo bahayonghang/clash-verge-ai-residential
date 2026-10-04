@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-fix-library-tests.exe",
+    "--exact",
+    "bench::corpus::tests::isolated_corpus_retention_capacity_gate",
+    "--ignored",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "environment_override": {
+    "RESIWATCH_BENCH_CORPUS_DIR": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\retention-fix\\a250-first-day",
+    "RESIWATCH_BENCH_CORPUS_NOW_UTC": "1789862400",
+    "RESIWATCH_BENCH_CORPUS_CHUNKS": "100000"
+  },
+  "started_utc": "2026-10-04T08:22:45.674071+00:00",
+  "status": "finished",
+  "competing_load_at_start": [],
+  "pid": 43176,
+  "exit_code": 0,
+  "finished_utc": "2026-10-04T08:34:16.702360+00:00",
+  "wall_seconds": 690.8663502999989,
+  "competing_load_at_end": []
+}

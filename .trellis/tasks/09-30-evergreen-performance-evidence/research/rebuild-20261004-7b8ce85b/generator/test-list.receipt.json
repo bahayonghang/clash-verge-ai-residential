@@ -1,0 +1,50 @@
+{
+  "label": "test-list",
+  "argv": [
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\executables\\candidate-library-tests.exe",
+    "--list",
+    "--ignored"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "environment_override": {},
+  "shell": false,
+  "started_utc": "2026-10-04T05:25:43.686762+00:00",
+  "status": "ENDED",
+  "native_exit": 0,
+  "pid": 51472,
+  "competing_load_at_start": [],
+  "disk_free_bytes_before": {
+    "C": 526134018048,
+    "D": 1158528323584
+  },
+  "ended_utc": "2026-10-04T05:25:44.304492+00:00",
+  "wall_seconds": 0.6010342999998102,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator\\test-list.stdout.raw",
+      "bytes": 447,
+      "raw_sha256": "D88A577F329B7069D43EF2EDB81E8581BD713D622B5057C21AC9AF6D622D15CD",
+      "gzip_sha256": "6A118BA1666A8A58DCBB4F48F1C18460F9A294E82FF3BEF0C3B0B73D00D9927B",
+      "readable_sha256": "675F2F696DD8A483A5E343F8CDB241CB2E8D33F8C16EDAA4DBC8789BD18E6A63"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator\\test-list.stderr.raw",
+      "bytes": 0,
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  },
+  "peak_rss_bytes_sampled": 2215936,
+  "last_cpu_times_sampled": {
+    "user": 0.0,
+    "system": 0.0,
+    "children_user": 0.0,
+    "children_system": 0.0
+  },
+  "disk_free_bytes_after": {
+    "C": 526134009856,
+    "D": 1158528319488
+  },
+  "sampling": "0.5 s psutil polling of the direct native process; not a complete peak proof"
+}

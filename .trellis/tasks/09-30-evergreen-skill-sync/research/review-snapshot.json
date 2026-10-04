@@ -1,0 +1,11 @@
+{
+  "time_utc": "2026-09-30T13:08:08.420535+00:00",
+  "platform_count": 7,
+  "matching_live_files": 21,
+  "verified_new_backups": 21,
+  "preserved_old_extras": 30,
+  "exact_file_inventory": 72,
+  "untracked_copies": true,
+  "unchanged_installer": true,
+  "errors": []
+}

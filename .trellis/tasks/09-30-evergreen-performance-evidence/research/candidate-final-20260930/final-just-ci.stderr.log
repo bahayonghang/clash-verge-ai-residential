@@ -1,0 +1,49 @@
+node scripts/sync-monitor-version.js --check
+npm --prefix residential-monitor ci
+npm warn install-scripts .npmrc allow-scripts setting is being ignored because package.json declares its own allowScripts field
+npm --prefix residential-monitor run check
+npm notice run residential-monitor@0.3.0 check
+npm notice run npm run check:icons && npm run typecheck && npm run lint && npm test && npm run build
+npm notice run residential-monitor@0.3.0 check:icons
+npm notice run node scripts/check-icons.mjs
+npm notice run residential-monitor@0.3.0 typecheck
+npm notice run tsc --noEmit
+npm notice run residential-monitor@0.3.0 lint
+npm notice run eslint src
+npm notice run residential-monitor@0.3.0 test
+npm notice run vitest run
+npm notice run residential-monitor@0.3.0 build
+npm notice run vite build
+cargo fmt --manifest-path residential-monitor/src-tauri/Cargo.toml --check
+cargo clippy --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace --all-targets -- -D warnings
+    Checking residential-monitor v0.3.0 (D:\Documents\Code\Github\clash-verge-ai-residential\residential-monitor\src-tauri)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.05s
+mbx[cache]: 0 hits, 9 misses; 0 B downloaded, 0 B uploaded, 4.3 MiB stored locally
+mbx[savings]: 67.0 GiB logical of old files removed to date. the broom sends its regards.
+cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace
+   Compiling residential-monitor v0.3.0 (D:\Documents\Code\Github\clash-verge-ai-residential\residential-monitor\src-tauri)
+mbx[progress]: 15s elapsed; 0 hits, 1 misses, 8 bypassed, 0 not looked up; ~0s compiler work saved
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 16.55s
+     Running unittests src\lib.rs (residential-monitor\src-tauri\target\debug\deps\residential_monitor_lib-8c9211dd5db70bc1.exe)
+     Running unittests src\bin\monitor-bench.rs (residential-monitor\src-tauri\target\debug\deps\monitor_bench-df1cc8f5459e4cbb.exe)
+     Running unittests src\bin\monitor-db.rs (residential-monitor\src-tauri\target\debug\deps\monitor_db-726b925e15b5d01b.exe)
+     Running unittests src\main.rs (residential-monitor\src-tauri\target\debug\deps\residential_monitor-b19949b32af578d5.exe)
+     Running tests\kill_gate.rs (residential-monitor\src-tauri\target\debug\deps\kill_gate-d8d4530fdfc38390.exe)
+   Doc-tests residential_monitor_lib
+mbx[progress]: 30s elapsed; 0 hits, 1 misses, 9 bypassed, 0 not looked up; ~0s compiler work saved
+mbx[cache]: 0 hits, 1 misses, 9 bypassed; 0 B downloaded, 0 B uploaded, 260.4 MiB stored locally
+mbx[savings]: 2574 compilations retrieved with a straight face.
+npm run check:secrets
+npm notice run clash-verge-ai-residential@5.11.0 check:secrets
+npm notice run node scripts/check-template-safety.js
+npm run ci
+npm notice run clash-verge-ai-residential@5.11.0 ci
+npm notice run npm run check && npm run test && npm run check:secrets
+npm notice run clash-verge-ai-residential@5.11.0 check
+npm notice run node --check clash-verge-ai-residential.js && node --check tests/regression.test.js && node --check tests/sync-local-config.test.js && node --check tests/check-template-safety.test.js && node --check tests/sync-monitor-version.test.js && node --check tests/nsis-silent-install.test.js && node --check tests/install-agent-skills.test.js && node --check scripts/check-template-safety.js && node --check scripts/sync-local-config.js && node --check scripts/sync-monitor-version.js && node --check scripts/nsis-silent-install.js && node --check scripts/install-agent-skills.js && node --check skills/residential-rule-tuning/scripts/build-inputs.js && node --check scripts/check-agent-contract.js && node --check tests/check-agent-contract.test.js && node --check scripts/check-harness-environment.js && node --check tests/check-harness-environment.test.js && npm run check:agents
+npm notice run clash-verge-ai-residential@5.11.0 check:agents
+npm notice run node scripts/check-agent-contract.js
+npm notice run clash-verge-ai-residential@5.11.0 test
+npm notice run node --test tests/regression.test.js tests/sync-local-config.test.js tests/check-template-safety.test.js tests/sync-monitor-version.test.js tests/nsis-silent-install.test.js tests/install-agent-skills.test.js tests/check-agent-contract.test.js tests/check-harness-environment.test.js
+npm notice run clash-verge-ai-residential@5.11.0 check:secrets
+npm notice run node scripts/check-template-safety.js

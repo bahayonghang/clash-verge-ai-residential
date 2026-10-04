@@ -1,0 +1,150 @@
+{
+  "observed_utc": "2026-10-02T13:58:02.563396+00:00",
+  "status": "STOPPED_TIMEOUT_REQUIRES_INDEPENDENT_REVIEW",
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "native_exit": 0,
+  "capture_stop_reason": "TIMEOUT",
+  "termination_requested": true,
+  "duration_seconds": 180.124051,
+  "native_schema": "UNVERIFIED; only parent natural-language claims in event9",
+  "native_role": "UNVERIFIED; role file read does not prove loaded native role",
+  "spawn_event": "NOT_OBSERVED",
+  "child_native_uuid": "NOT_OBSERVED",
+  "child_completed": "NOT_OBSERVED",
+  "child_file_reads": "NOT_OBSERVED",
+  "child_lifecycle": "UNVERIFIED",
+  "parent_thread_id": "01a0fa69-e406-7151-9923-9e3d03a4fa51",
+  "collaboration_events": [
+    {
+      "event_index": 10,
+      "event_type": "item.started",
+      "item": {
+        "id": "item_4",
+        "type": "collab_tool_call",
+        "tool": "wait",
+        "sender_thread_id": "01a0fa69-e406-7151-9923-9e3d03a4fa51",
+        "receiver_thread_ids": [],
+        "prompt": null,
+        "agents_states": {},
+        "status": "in_progress"
+      }
+    },
+    {
+      "event_index": 11,
+      "event_type": "item.completed",
+      "item": {
+        "id": "item_4",
+        "type": "collab_tool_call",
+        "tool": "wait",
+        "sender_thread_id": "01a0fa69-e406-7151-9923-9e3d03a4fa51",
+        "receiver_thread_ids": [],
+        "prompt": null,
+        "agents_states": {},
+        "status": "completed"
+      }
+    },
+    {
+      "event_index": 12,
+      "event_type": "item.started",
+      "item": {
+        "id": "item_5",
+        "type": "collab_tool_call",
+        "tool": "wait",
+        "sender_thread_id": "01a0fa69-e406-7151-9923-9e3d03a4fa51",
+        "receiver_thread_ids": [],
+        "prompt": null,
+        "agents_states": {},
+        "status": "in_progress"
+      }
+    },
+    {
+      "event_index": 13,
+      "event_type": "item.completed",
+      "item": {
+        "id": "item_5",
+        "type": "collab_tool_call",
+        "tool": "wait",
+        "sender_thread_id": "01a0fa69-e406-7151-9923-9e3d03a4fa51",
+        "receiver_thread_ids": [],
+        "prompt": null,
+        "agents_states": {},
+        "status": "completed"
+      }
+    },
+    {
+      "event_index": 15,
+      "event_type": "item.started",
+      "item": {
+        "id": "item_7",
+        "type": "collab_tool_call",
+        "tool": "wait",
+        "sender_thread_id": "01a0fa69-e406-7151-9923-9e3d03a4fa51",
+        "receiver_thread_ids": [],
+        "prompt": null,
+        "agents_states": {},
+        "status": "in_progress"
+      }
+    }
+  ],
+  "wait_call_count": 3,
+  "all_wait_receiver_thread_ids_empty": true,
+  "self_reported_child_label": "/root/t06_synthetic_research_review",
+  "self_reported_child_label_event": 14,
+  "self_report_is_native_spawn_proof": false,
+  "role_persistence": "NOT_COVERED_PURE_OUTPUT",
+  "native_model": "UNKNOWN",
+  "native_backend_V1_V2": "UNKNOWN",
+  "effective_permissions": "UNVERIFIED",
+  "hook_extension_execution": "UNVERIFIED",
+  "negative_case": "NOT_REACHED_BY_OBSERVED_CHILD",
+  "parent_file_read_events": [
+    {
+      "event_index": 5,
+      "event_type": "item.started",
+      "command": "\"C:\\\\Users\\\\lyh\\\\.cache\\\\codex-runtimes\\\\codex-primary-runtime\\\\dependencies\\\\native\\\\powershell\\\\pwsh.exe\" -Command \"Get-Content -LiteralPath '.agents/skills/trellis-start/SKILL.md'; Get-Content -LiteralPath '.codex/agents/trellis-research.toml'\"",
+      "exit_code": null
+    },
+    {
+      "event_index": 6,
+      "event_type": "item.completed",
+      "command": "\"C:\\\\Users\\\\lyh\\\\.cache\\\\codex-runtimes\\\\codex-primary-runtime\\\\dependencies\\\\native\\\\powershell\\\\pwsh.exe\" -Command \"Get-Content -LiteralPath '.agents/skills/trellis-start/SKILL.md'; Get-Content -LiteralPath '.codex/agents/trellis-research.toml'\"",
+      "exit_code": 0
+    },
+    {
+      "event_index": 7,
+      "event_type": "item.started",
+      "command": "\"C:\\\\Users\\\\lyh\\\\.cache\\\\codex-runtimes\\\\codex-primary-runtime\\\\dependencies\\\\native\\\\powershell\\\\pwsh.exe\" -Command '$reviewPaths = @('\"'AGENTS.md','CONTEXT.md','docs/agents/harnesses.md','.trellis/tasks/09-30-evergreen-runtime-validation/prd.md','.trellis/spec/guides/index.md','.codex/agents/trellis-research.toml'); foreach (\"'$reviewPath in $reviewPaths) { Write-Output \"PATH: $reviewPath\"; if (Test-Path -LiteralPath $reviewPath -PathType Leaf) { $reviewLine = 0; Get-Content -LiteralPath $reviewPath -Encoding utf8 | ForEach-Object { $reviewLine++; '\"'{0}: {1}' -f \"'$reviewLine, $_ } } else { Write-Output '\"'MISSING' } }\"",
+      "exit_code": null
+    },
+    {
+      "event_index": 8,
+      "event_type": "item.completed",
+      "command": "\"C:\\\\Users\\\\lyh\\\\.cache\\\\codex-runtimes\\\\codex-primary-runtime\\\\dependencies\\\\native\\\\powershell\\\\pwsh.exe\" -Command '$reviewPaths = @('\"'AGENTS.md','CONTEXT.md','docs/agents/harnesses.md','.trellis/tasks/09-30-evergreen-runtime-validation/prd.md','.trellis/spec/guides/index.md','.codex/agents/trellis-research.toml'); foreach (\"'$reviewPath in $reviewPaths) { Write-Output \"PATH: $reviewPath\"; if (Test-Path -LiteralPath $reviewPath -PathType Leaf) { $reviewLine = 0; Get-Content -LiteralPath $reviewPath -Encoding utf8 | ForEach-Object { $reviewLine++; '\"'{0}: {1}' -f \"'$reviewLine, $_ } } else { Write-Output '\"'MISSING' } }\"",
+      "exit_code": 0
+    }
+  ],
+  "additional_parent_input_read": ".agents/skills/trellis-start/SKILL.md in events5/6; outside fixed input list",
+  "replacement_character_count_in_saved_event_file": 4987,
+  "capture_execute_native_exit": 0,
+  "driver_outer_exit": 0,
+  "exec_session": 17160,
+  "exec_tool_exit": 0,
+  "exec_tool_exit_evidence": "resumed same-agent write_stdin final completion, chunk5a0c93; earlier cross-agent Unknown process id was a failed query and is retained by main",
+  "protected_snapshot_diff": {
+    "same": true,
+    "changed": [],
+    "added": [],
+    "removed": [],
+    "index_changed": false,
+    "head_changed": false,
+    "branch_changed": false
+  },
+  "executable_binding_differences": {},
+  "job_cleanup": "best_effort_owned_job; post_Popen_attach_race; no_permission_sandbox; no_absolute_no_orphan_claim",
+  "grok_child": "NOT_RUN_WAITING_NEW_MAIN_GO",
+  "claude_kimi_omp_child": "BLOCKED_PRIOR_SAME_ROUTE_FAILURE; NOT_RUN",
+  "no_retry": true,
+  "no_client_started_on_resume": true,
+  "write_scope": "runtime-runs only",
+  "original_receipts_unmodified": true
+}

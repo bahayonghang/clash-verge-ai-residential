@@ -1,0 +1,69 @@
+{
+  "node": "D:\\GreenSoftware\\node\\node.EXE",
+  "cli": {
+    "name": "@mindfoldhq/trellis",
+    "version": "0.7.0-beta.3",
+    "entry": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\@mindfoldhq\\trellis\\bin\\trellis.js",
+    "packagePath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\@mindfoldhq\\trellis\\package.json"
+  },
+  "dependencies": [
+    {
+      "name": "chalk",
+      "requested": "^5.3.0",
+      "resolved": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\chalk\\source\\index.js",
+      "packagePath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\chalk\\package.json",
+      "version": "5.6.2"
+    },
+    {
+      "name": "commander",
+      "requested": "^12.1.0",
+      "resolved": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\commander\\index.js",
+      "packagePath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\commander\\package.json",
+      "version": "12.1.0"
+    },
+    {
+      "name": "figlet",
+      "requested": "^1.9.4",
+      "resolved": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\figlet\\dist\\node-figlet.cjs",
+      "packagePath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\figlet\\package.json",
+      "version": "1.12.0"
+    },
+    {
+      "name": "giget",
+      "requested": "^3.1.1",
+      "resolved": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\giget\\dist\\index.mjs",
+      "packagePath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\giget\\package.json",
+      "version": "3.3.1"
+    },
+    {
+      "name": "inquirer",
+      "requested": "^9.3.7",
+      "resolved": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\inquirer\\lib\\index.js",
+      "packagePath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\inquirer\\package.json",
+      "version": "9.3.8"
+    },
+    {
+      "name": "undici",
+      "requested": "^6.21.0",
+      "resolved": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\undici\\index.js",
+      "packagePath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\undici\\package.json",
+      "version": "6.29.0"
+    },
+    {
+      "name": "zod",
+      "requested": "^4.4.2",
+      "resolved": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\zod\\index.cjs",
+      "packagePath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\zod\\package.json",
+      "version": "4.6.5"
+    },
+    {
+      "name": "@mindfoldhq/trellis-core",
+      "requested": "0.7.0-beta.3",
+      "resolved": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\@mindfoldhq\\trellis-core\\dist\\index.js",
+      "packagePath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool\\node_modules\\@mindfoldhq\\trellis-core\\package.json",
+      "version": "0.7.0-beta.3"
+    }
+  ],
+  "package_lock_sha256": "fd71957d4e2f20706bf8499f8cbe91e188acabb86fd94ff78febd06e94c4cfa7",
+  "entry_sha256": "dba1db2ed1d34f7d1e151d69303f14ce54aeb9f9e5dab60dc125aca692ab519a"
+}

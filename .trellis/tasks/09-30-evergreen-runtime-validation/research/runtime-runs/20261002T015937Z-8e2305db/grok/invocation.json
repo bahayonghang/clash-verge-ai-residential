@@ -1,0 +1,26 @@
+{
+  "invocation_id": "20261002T015937Z-8e2305db/grok/parent",
+  "harness": "grok",
+  "phase": "parent",
+  "argv": [
+    "<HOME>\\.grok\\bin\\grok.exe",
+    "--permission-mode",
+    "plan",
+    "--disable-web-search",
+    "--output-format",
+    "streaming-messages-json",
+    "--max-turns",
+    "8",
+    "-p",
+    "<PROMPT_SHA256:6929c11cb6b906783c49256202fde9d01ce94c1cf74101591109ae4fbe4632ed>"
+  ],
+  "shell": false,
+  "timeout_seconds": 180,
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#grok",
+  "recorded_version_output": "grok 1.0.45 (c33bff361a6f) [alpha]",
+  "executable_sha256": "e09c0893cee4850a569bd90e7aed956ea503b34f551637d58187ca4dfb931611",
+  "prompt_sha256": "6929c11cb6b906783c49256202fde9d01ce94c1cf74101591109ae4fbe4632ed",
+  "child_preparation_basis": "NOT_APPLICABLE",
+  "basis_is_runtime_proof": false
+}

@@ -1,0 +1,39 @@
+{
+  "argv": [
+    "cargo",
+    "+1.98.0",
+    "test",
+    "--locked",
+    "--release",
+    "--target",
+    "x86_64-pc-windows-msvc",
+    "--manifest-path",
+    "residential-monitor/src-tauri/Cargo.toml",
+    "--target-dir",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target",
+    "--lib",
+    "--no-run",
+    "--message-format=json"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:16:13.801573+00:00",
+  "status": "finished",
+  "environment_overrides": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "exit_code": 0,
+  "finished_utc": "2026-09-30T15:16:29.379064+00:00",
+  "wall_seconds": 15.576653300000544,
+  "logs": {
+    "stdout": {
+      "raw_sha256": "da92080fdbc7f7518f612e47f7735b881ba1d7a522f3cc49e640ddd365793e39",
+      "gzip": "final-test-build.stdout.raw.gz",
+      "readable": "final-test-build.stdout.log"
+    },
+    "stderr": {
+      "raw_sha256": "be7131885f9c43c8d97d3374dde37666952969d784c03117f2294bdc797ea31b",
+      "gzip": "final-test-build.stderr.raw.gz",
+      "readable": "final-test-build.stderr.log"
+    }
+  }
+}

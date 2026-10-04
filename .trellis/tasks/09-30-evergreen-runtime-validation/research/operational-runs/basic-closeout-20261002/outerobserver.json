@@ -1,0 +1,56 @@
+{
+  "observed_utc": "2026-10-03T02:55:22.079824+00:00",
+  "process_observer_native_exit": 0,
+  "captured_process_ids": [
+    51752,
+    63308,
+    56376,
+    65804,
+    67880
+  ],
+  "currently_present_at_exact_pid": [],
+  "tool_observers": [
+    {
+      "harness": "kimi",
+      "tool_session_id": 39366,
+      "final_chunk": "8fd06c",
+      "outer_exit_code": 1,
+      "initial_tool_result": "running then final",
+      "source": "actual exec_command/write_stdin tool results"
+    },
+    {
+      "harness": "codex",
+      "tool_session_id": 88662,
+      "final_chunk": "7c6f0c",
+      "outer_exit_code": 0,
+      "initial_tool_result": "running then final",
+      "source": "actual exec_command/write_stdin tool results"
+    },
+    {
+      "harness": "grok",
+      "tool_session_id": 31587,
+      "final_chunk": "ba0d10",
+      "outer_exit_code": 0,
+      "initial_tool_result": "running then final",
+      "source": "actual exec_command/write_stdin tool results"
+    },
+    {
+      "harness": "claude",
+      "tool_session_id": 26359,
+      "final_chunk": "79cd24",
+      "outer_exit_code": 1,
+      "initial_tool_result": "running then final",
+      "source": "actual exec_command/write_stdin tool results"
+    },
+    {
+      "harness": "omp",
+      "tool_session_id": 51641,
+      "final_chunk": "7e5a99",
+      "outer_exit_code": 1,
+      "initial_tool_result": "running then final",
+      "source": "actual exec_command/write_stdin tool results"
+    }
+  ],
+  "native_child_pid_boundaries": "Kimi native child and OMP Bun PID were not emitted by original receipt. Native Kimi wait exit and owned Job cleanup are recorded; no absolute no-orphan claim.",
+  "job_cleanup_boundary": "best_effort_owned_job; post_Popen_attach_race; no_permission_sandbox"
+}

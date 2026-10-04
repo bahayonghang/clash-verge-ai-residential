@@ -1,0 +1,70 @@
+{
+  "driver_argv": [
+    ".trellis/tasks/09-30-evergreen-performance-evidence/research/run-formal-replay.py",
+    "--candidate-directory",
+    "candidate-retained-20260930",
+    "--output-directory",
+    "formal-primary-20260930",
+    "--set",
+    "primary"
+  ],
+  "driver_sha256": "6c88acca5994c02266f262fbc185ebf9d09de1ab9ec96baa302993a0cbf381e9",
+  "runner_pid": 5576,
+  "identities": {
+    "baseline": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\baseline-monitor-bench.exe",
+      "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-final-20260930\\baseline-monitor-bench.exe",
+      "bytes": 5748224,
+      "sha256": "06BAC94FD88E37DCD8971893BF79C91A05E9775CEED4A06AB7E2F10B690F3DD9",
+      "source_manifest_sha256": "1120B9D2B5C457F856BCD5F51ED9C88E0612E978AB4C7B76B4816640E1C6678F"
+    },
+    "candidate": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-bench.exe",
+      "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+      "bytes": 6284800,
+      "sha256": "9604FBE6ED24C6DC4E40E556A6AD7F3338477582B223E15D20B795DDF73A7A5E",
+      "source_manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462"
+    }
+  },
+  "source_manifest": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\candidate-retained-20260930\\candidate-source-before.json",
+  "source_manifest_sha256": "860165f3183ac8bfaac2d74af6f29e793575a91a82b1bb23d86ee975be5c0462",
+  "cases": [
+    [
+      "primary-r1",
+      250,
+      "counters",
+      "complete",
+      300,
+      30,
+      0,
+      false
+    ],
+    [
+      "primary-r2",
+      250,
+      "counters",
+      "complete",
+      300,
+      30,
+      0,
+      false
+    ],
+    [
+      "primary-r3",
+      250,
+      "counters",
+      "complete",
+      300,
+      30,
+      0,
+      false
+    ]
+  ],
+  "variant_order": [
+    "baseline",
+    "candidate"
+  ],
+  "expected_native_invocations": 6,
+  "all_application_file_attribution": "UNVERIFIED; no system trace; null is not zero",
+  "failure_policy": "retain every native exit; continue remaining fixed cases; final summary and nonzero exit report failures"
+}

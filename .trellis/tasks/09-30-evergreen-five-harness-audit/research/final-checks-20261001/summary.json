@@ -1,0 +1,211 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "argv": [
+        "just",
+        "docs-build"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:41.506443+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 54592,
+      "stdout_raw_sha256": "eca550f19a48af8e8cfa16a378081c1858f7e77b055cb09850436fe3bd05c223",
+      "stderr_raw_sha256": "c7a080df23c6c03b36c60ba80c2d2f6d3e36e79a20189c0f079467c656a07404",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:44.004249+00:00",
+      "wall_seconds": 2.497806499999797
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/check-agent-contract.js"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:44.004759+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 47352,
+      "stdout_raw_sha256": "d98ed58f27e30fb037b2e95aabf2ee5cd855af4f28c4c1c0be885a793f2d0394",
+      "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:44.081550+00:00",
+      "wall_seconds": 0.07679540000003726
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/install-agent-skills.js",
+        "--check"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:44.082093+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 19472,
+      "stdout_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:44.154481+00:00",
+      "wall_seconds": 0.07239359999994122
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:44.155305+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 42892,
+      "stdout_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_raw_sha256": "30c2fa5358d154246576d0402dc1ef012e65f69a421e825e591e00ecec07cefd",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:44.256355+00:00",
+      "wall_seconds": 0.10105290000001332
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-five-harness-audit"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:44.256815+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 49432,
+      "stdout_raw_sha256": "40fd62ce830920b28af44360e9e88f62ed4188da4751efedd40d1100dcee0998",
+      "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:44.418947+00:00",
+      "wall_seconds": 0.1621368999999504
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-dependency-gate"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:44.419548+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 48180,
+      "stdout_raw_sha256": "66817021ec8cd914693cc793b114a61ad80a2505fb522e9a1eaea3523882e068",
+      "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:44.544879+00:00",
+      "wall_seconds": 0.12533480000001873
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-skill-sync"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:44.545491+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 24048,
+      "stdout_raw_sha256": "7c45d125bea93f5b0607f5d7b8e6c1d0392244139f382aaee1759d0a2962afd5",
+      "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:44.683580+00:00",
+      "wall_seconds": 0.13809349999996812
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-harness-contract"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:44.684553+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 26528,
+      "stdout_raw_sha256": "aceeffb2a0bf36a16aec0c2c3fe8821a927f81a74188c5bcebeacfa3b27f5de1",
+      "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:44.837289+00:00",
+      "wall_seconds": 0.15274020000015298
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-bootstrap-check"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:44.838086+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 48220,
+      "stdout_raw_sha256": "7c42226b34ca5f0c479216a25952cd6a835f46272fb1f360a2bd6c9b57ccede7",
+      "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:45.008726+00:00",
+      "wall_seconds": 0.170646300000044
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-performance-evidence"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:45.009774+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 39568,
+      "stdout_raw_sha256": "68cdd1e1472af8030ed9920b2e932eb81f531a2f5a1e7a23eb05e989611b3311",
+      "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:45.158982+00:00",
+      "wall_seconds": 0.14921010000011847
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-runtime-validation"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "status": "finished",
+      "started_utc": "2026-10-02T01:48:45.159902+00:00",
+      "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+      "pid": 15892,
+      "stdout_raw_sha256": "f9ba7ff8ce2fbfbfd1dd824b4f1b89bbd2651692976e59a3e0852e31bb30e555",
+      "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "finished_utc": "2026-10-02T01:48:45.291690+00:00",
+      "wall_seconds": 0.13178799999991497
+    }
+  ]
+}

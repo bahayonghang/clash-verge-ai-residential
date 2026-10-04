@@ -1,0 +1,267 @@
+{
+  "completed_utc": "2026-10-01T13:14:41.004545+00:00",
+  "status": "UNVERIFIED",
+  "evidence_integrity_status": "PASS",
+  "evidence_integrity_errors": [],
+  "recorded_invocations": 6,
+  "execution_failures": [],
+  "native_runs": [
+    {
+      "label": "primary-r1-baseline",
+      "native_exit_code": 0,
+      "validation_errors": [],
+      "wall_seconds": 343.0183429000001,
+      "cpu_seconds": 7.078125,
+      "sqlite_write_bytes": 23531752,
+      "all_application_write_bytes": null,
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "local_utc_offset_seconds": -18000,
+      "traffic_conserved": true,
+      "writer_before": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "writer_after": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "raw_log_hashes_match": {
+        "stdout": true,
+        "stderr": true
+      }
+    },
+    {
+      "label": "primary-r1-candidate",
+      "native_exit_code": 0,
+      "validation_errors": [],
+      "wall_seconds": 342.46293300000025,
+      "cpu_seconds": 0.0,
+      "sqlite_write_bytes": 10906016,
+      "all_application_write_bytes": null,
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "local_utc_offset_seconds": -18000,
+      "traffic_conserved": true,
+      "writer_before": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "writer_after": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "raw_log_hashes_match": {
+        "stdout": true,
+        "stderr": true
+      }
+    },
+    {
+      "label": "primary-r2-baseline",
+      "native_exit_code": 0,
+      "validation_errors": [],
+      "wall_seconds": 342.5668267000001,
+      "cpu_seconds": 9.40625,
+      "sqlite_write_bytes": 23531752,
+      "all_application_write_bytes": null,
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "local_utc_offset_seconds": -18000,
+      "traffic_conserved": true,
+      "writer_before": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "writer_after": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "raw_log_hashes_match": {
+        "stdout": true,
+        "stderr": true
+      }
+    },
+    {
+      "label": "primary-r2-candidate",
+      "native_exit_code": 0,
+      "validation_errors": [],
+      "wall_seconds": 342.11186480000015,
+      "cpu_seconds": 2.515625,
+      "sqlite_write_bytes": 10906016,
+      "all_application_write_bytes": null,
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "local_utc_offset_seconds": -18000,
+      "traffic_conserved": true,
+      "writer_before": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "writer_after": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "raw_log_hashes_match": {
+        "stdout": true,
+        "stderr": true
+      }
+    },
+    {
+      "label": "primary-r3-baseline",
+      "native_exit_code": 0,
+      "validation_errors": [],
+      "wall_seconds": 343.3313495999996,
+      "cpu_seconds": 7.328125,
+      "sqlite_write_bytes": 23531752,
+      "all_application_write_bytes": null,
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "local_utc_offset_seconds": -18000,
+      "traffic_conserved": true,
+      "writer_before": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "writer_after": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "raw_log_hashes_match": {
+        "stdout": true,
+        "stderr": true
+      }
+    },
+    {
+      "label": "primary-r3-candidate",
+      "native_exit_code": 0,
+      "validation_errors": [],
+      "wall_seconds": 340.9809049999999,
+      "cpu_seconds": 0.3125,
+      "sqlite_write_bytes": 10906016,
+      "all_application_write_bytes": null,
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "local_utc_offset_seconds": -18000,
+      "traffic_conserved": true,
+      "writer_before": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "writer_after": {
+        "journal_mode": "wal",
+        "synchronous": 2
+      },
+      "raw_log_hashes_match": {
+        "stdout": true,
+        "stderr": true
+      }
+    }
+  ],
+  "pair_checks": [
+    {
+      "round": 1,
+      "matches": {
+        "fixture_hash": true,
+        "platform": true,
+        "local_utc_offset_seconds": true
+      },
+      "cpu_ratio": 0.0,
+      "sqlite_ratio": 0.46345958430974454
+    },
+    {
+      "round": 2,
+      "matches": {
+        "fixture_hash": true,
+        "platform": true,
+        "local_utc_offset_seconds": true
+      },
+      "cpu_ratio": 0.26744186046511625,
+      "sqlite_ratio": 0.46345958430974454
+    },
+    {
+      "round": 3,
+      "matches": {
+        "fixture_hash": true,
+        "platform": true,
+        "local_utc_offset_seconds": true
+      },
+      "cpu_ratio": 0.042643923240938165,
+      "sqlite_ratio": 0.46345958430974454
+    }
+  ],
+  "gates": [
+    {
+      "gate": "AC7 CPU",
+      "before": 23.8125,
+      "candidate": 2.828125,
+      "ratio": 0.11876640419947507,
+      "limit": 0.7,
+      "status": "PASS"
+    },
+    {
+      "gate": "AC7 SQLite subset only",
+      "before": 70595256,
+      "candidate": 32718048,
+      "ratio": 0.46345958430974454,
+      "limit": 0.5,
+      "status": "PASS"
+    },
+    {
+      "gate": "AC7 all application files",
+      "before": null,
+      "candidate": null,
+      "ratio": null,
+      "limit": 0.5,
+      "status": "UNVERIFIED"
+    }
+  ],
+  "driver_exit_code": 3,
+  "wrapper_exit_code": 3,
+  "intended_outer_exit_code": 3,
+  "observed_outer_exit_code": 1,
+  "outer_wall_seconds": 2054.7138146,
+  "outer_exit_cause": "原因未查明",
+  "source_checks_after": {
+    "baseline": {
+      "files": 103,
+      "mismatches": []
+    },
+    "candidate": {
+      "files": 108,
+      "mismatches": []
+    }
+  },
+  "executable_matches_after": {
+    "baseline-monitor-bench.exe": true,
+    "candidate-monitor-bench.exe": true,
+    "candidate-monitor-db.exe": true,
+    "candidate-library-tests.exe": true
+  },
+  "original_evidence_unchanged": true,
+  "original_evidence_file_count": 23,
+  "runner_matches_after": true,
+  "wrapper_matches_after": true,
+  "wrapper_stdout_file_sha256": "A1B3C7B8A4DE44122B96498A632A33E8842AD9C2C4187D9D0378A301EED998FB",
+  "wrapper_stderr_file_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+  "checks": {
+    "git_diff_check_exit_code": 0,
+    "formal_native_count": 6
+  },
+  "limits": [
+    "First candidate native_before.cpu_seconds and native_after.cpu_seconds both equal 9.765625; reported delta is 0.0 seconds. Cause is unknown. No claim of zero computation.",
+    "CPU and SQLite gates use fixed sums across three rounds; SQLite is only a subset of application files.",
+    "All application file attribution remains null and UNVERIFIED.",
+    "No installed WebView/background-worker/24h/peak or physical cold-cache evidence.",
+    "No result is transferred to later changed source or executable."
+  ],
+  "capacity_status": "NOT_RUN",
+  "next_step": "STOP; independent primary review before capacity",
+  "product_files_changed_by_recovery": [],
+  "first_candidate_cpu_observation": {
+    "source": "formal-primary-recovery-20261001/primary-r1-candidate.json",
+    "native_before_cpu_seconds": 9.765625,
+    "native_after_cpu_seconds": 9.765625,
+    "native_cpu_seconds": 0.0,
+    "cause": "原因未查明",
+    "interpretation": "不能推出零计算"
+  },
+  "interpretation_correction": {
+    "corrected_utc": "2026-10-01T13:19:06.518771+00:00",
+    "reason": "原采样分辨率解释缺少因果证据，改为实际before/after和原因未查明。",
+    "native_reports_and_raw_logs_changed": false
+  }
+}

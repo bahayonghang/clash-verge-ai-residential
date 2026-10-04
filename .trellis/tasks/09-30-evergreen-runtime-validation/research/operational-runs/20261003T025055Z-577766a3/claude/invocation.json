@@ -1,0 +1,33 @@
+{
+  "invocation_id": "20261003T025055Z-577766a3/claude/parent",
+  "harness": "claude",
+  "phase": "parent",
+  "argv": [
+    "<HOME>\\.local\\bin\\claude.exe",
+    "--restricted",
+    "--strict-mcp-config",
+    "--permission-mode",
+    "plan",
+    "--permission-prompts",
+    "none",
+    "--tools",
+    "Read,Glob,Grep",
+    "--no-session-persistence",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--include-hook-events",
+    "-p",
+    "<PROMPT_SHA256:1b2b60a530f98dfc92caf054dd0f4b1c45e286f210279c661ac2c9da695ae9c5>"
+  ],
+  "shell": false,
+  "timeout_seconds": 180,
+  "source_snapshot_id": "4be0cfb58c637129fefb99c750a5baed0fb0fb6378cdce86f6a0ee90a1877e4b",
+  "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#claude",
+  "recorded_version_output": "2.1.285 (Claude Code)",
+  "executable_sha256": "84304f7d4b0cd0ebcbe8318695a260151b48991a6659c3366fdd5da290c0ab91",
+  "prompt_sha256": "1b2b60a530f98dfc92caf054dd0f4b1c45e286f210279c661ac2c9da695ae9c5",
+  "child_preparation_basis": "NOT_APPLICABLE",
+  "basis_is_runtime_proof": false,
+  "protocol": "basic_parent_read_only_not_full_T06_acceptance"
+}

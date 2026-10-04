@@ -1,0 +1,60 @@
+[
+  {
+    "command": "node --test tests/install-agent-skills.test.js",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:02:59.675006+00:00",
+    "finished_utc": "2026-09-30T13:03:00.015101+00:00",
+    "log": "focused-tests.log",
+    "log_sha256": "7b37c06d0b4f6c05c453143eccd258eed4073619b297b42acb37b4ce34dd50e4"
+  },
+  {
+    "command": "just ci",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:04:28.531670+00:00",
+    "finished_utc": "2026-09-30T13:05:31.330547+00:00",
+    "log": "just-ci.log",
+    "raw_log": "just-ci.log.gz",
+    "raw_log_sha256": "4030280da0943b917790e5c4abe5f88a9e81b196bd2e46d4464a7b7a2b6f9a7f",
+    "normalized_log_sha256": "3a2423b2f4e95fe72585dc4feec8d257581008bf9682d724dbcf73713d1d9b07"
+  },
+  {
+    "command": "just docs-build",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:07:04.714924+00:00",
+    "finished_utc": "2026-09-30T13:07:06.817551+00:00",
+    "log": "docs-build.log",
+    "raw_log": "docs-build.log.gz",
+    "raw_log_sha256": "09cdbe5e35d4ea83e090dead62706f317544046ba334fcf082c4497606554067",
+    "normalized_log_sha256": "58bf0c0896117b21bfadfd0683f9a101c0c6033ad047df600a71a44ab6831b1a"
+  },
+  {
+    "command": "git diff --check",
+    "exit_code": 0,
+    "log": "diff-check.log",
+    "stdout_empty": true
+  },
+  {
+    "command": "git ls-files -- .agents .claude .codex .cursor .omp .grok .kimi-code",
+    "exit_code": 0,
+    "log": "untracked-delivery.log",
+    "stdout_empty": false
+  },
+  {
+    "command": "node scripts/check-template-safety.js",
+    "exit_code": 0,
+    "log": "final-secrets.log",
+    "finished_utc": "2026-09-30T13:09:31.571900+00:00"
+  },
+  {
+    "command": "git ls-files -- .agents/skills/residential-rule-tuning .claude/skills/residential-rule-tuning .codex/skills/residential-rule-tuning .cursor/skills/residential-rule-tuning .omp/skills/residential-rule-tuning .grok/skills/residential-rule-tuning .kimi-code/skills/residential-rule-tuning",
+    "exit_code": 0,
+    "log": "delivery-tracked-files.log",
+    "finished_utc": "2026-09-30T13:09:31.624243+00:00"
+  },
+  {
+    "command": "git check-ignore .agents/skills/residential-rule-tuning/SKILL.md .claude/skills/residential-rule-tuning/SKILL.md .codex/skills/residential-rule-tuning/SKILL.md .cursor/skills/residential-rule-tuning/SKILL.md .omp/skills/residential-rule-tuning/SKILL.md .grok/skills/residential-rule-tuning/SKILL.md .kimi-code/skills/residential-rule-tuning/SKILL.md",
+    "exit_code": 0,
+    "log": "delivery-ignore.log",
+    "finished_utc": "2026-09-30T13:09:31.672382+00:00"
+  }
+]

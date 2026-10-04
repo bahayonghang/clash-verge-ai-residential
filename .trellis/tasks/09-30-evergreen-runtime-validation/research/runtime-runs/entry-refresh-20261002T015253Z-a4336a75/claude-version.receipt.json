@@ -1,0 +1,15 @@
+{
+  "metadata_only": true,
+  "inference_started": false,
+  "argv": [
+    "<HOME>\\.local\\bin\\claude.exe",
+    "--version"
+  ],
+  "started_utc": "2026-10-02T01:52:53.446011+00:00",
+  "ended_utc": "2026-10-02T01:52:53.545047+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "137c91ab68b8a7a011de6f45c0bdbb962abd1fa261daafa7f7fe4dbac82ba604",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "redactions": [],
+  "representation": "redacted_decoded_output_not_original_bytes"
+}

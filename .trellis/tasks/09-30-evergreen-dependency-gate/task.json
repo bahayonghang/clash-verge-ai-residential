@@ -1,0 +1,43 @@
+{
+  "id": "evergreen-dependency-gate",
+  "name": "evergreen-dependency-gate",
+  "title": "常青审查 T01：修复依赖公告并补充安全门",
+  "description": "清除本轮发现的两项 monitor 开发依赖 high，并让后续安全审计失败可被质量门识别。",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": "harness-audit",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-30",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-30-evergreen-five-harness-audit",
+  "relatedFiles": [
+    "residential-monitor/package-lock.json",
+    "residential-monitor/package.json",
+    "justfile",
+    ".github/workflows/ci.yml",
+    "tests/sync-monitor-version.test.js",
+    "AGENTS.md",
+    "README.md",
+    ".trellis/spec/residential-monitor/frontend/index.md"
+  ],
+  "notes": "T01 实施及独立审查通过；尚未提交或归档。root frontend quality-guidelines 的同合同同步交给 T03。",
+  "meta": {
+    "audit_item": "T01",
+    "approval": "approved-project-scope",
+    "source_sha": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+    "approval_date": "2026-09-30",
+    "approval_text": "批准实施",
+    "implementation_status": "verified-local",
+    "review": "research/review.md"
+  }
+}

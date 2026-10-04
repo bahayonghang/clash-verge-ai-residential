@@ -1,0 +1,192 @@
+{
+  "created_utc": "2026-10-03T02:09:40.162784+00:00",
+  "scope": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-five-harness-audit\\research\\continuation-checks-20261003T020518684367Z",
+  "files": [
+    {
+      "path": "01-docs-build.receipt.json",
+      "size": 1157,
+      "sha256": "dc49f5b5d8bb7ffed3c2ad8890909bd5d13b1ae5470adf4542cf2f2d05e3c870"
+    },
+    {
+      "path": "01-docs-build.stderr.raw",
+      "size": 220,
+      "sha256": "c7a080df23c6c03b36c60ba80c2d2f6d3e36e79a20189c0f079467c656a07404"
+    },
+    {
+      "path": "01-docs-build.stdout.raw",
+      "size": 74,
+      "sha256": "4aa5b5b1a86f98c203f62635ecebd26a3bba85e8767562716c76ccdbf822e012"
+    },
+    {
+      "path": "02-agent-contract.receipt.json",
+      "size": 1183,
+      "sha256": "0f58c12bcba2f40355e7742679498e656c86d4d650cb6122d46f11eba02c7f49"
+    },
+    {
+      "path": "02-agent-contract.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "02-agent-contract.stdout.raw",
+      "size": 85,
+      "sha256": "d98ed58f27e30fb037b2e95aabf2ee5cd855af4f28c4c1c0be885a793f2d0394"
+    },
+    {
+      "path": "03-installed-skills.receipt.json",
+      "size": 1205,
+      "sha256": "e12de491dacedd0ebf112a4a972fb33aa59b9647c1ddf835d0329779fc7dc976"
+    },
+    {
+      "path": "03-installed-skills.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "03-installed-skills.stdout.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "04-diff-check.receipt.json",
+      "size": 1165,
+      "sha256": "df98550f631bdfd1a8349f5bdde285f0b7eeb55644457b3cae79a6c931ec7bc6"
+    },
+    {
+      "path": "04-diff-check.stderr.raw",
+      "size": 3261,
+      "sha256": "30c2fa5358d154246576d0402dc1ef012e65f69a421e825e591e00ecec07cefd"
+    },
+    {
+      "path": "04-diff-check.stdout.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "05-validate-parent.receipt.json",
+      "size": 1289,
+      "sha256": "874412b32359863b026aa23734fb240bf1d8927731f56dbf48c5f26aec19f83d"
+    },
+    {
+      "path": "05-validate-parent.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "05-validate-parent.stdout.raw",
+      "size": 601,
+      "sha256": "40fd62ce830920b28af44360e9e88f62ed4188da4751efedd40d1100dcee0998"
+    },
+    {
+      "path": "06-validate-t01.receipt.json",
+      "size": 1277,
+      "sha256": "157daa94175a76c7c9a51d5e584fa5763b054dcd8c529f38e3e60008a208e791"
+    },
+    {
+      "path": "06-validate-t01.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "06-validate-t01.stdout.raw",
+      "size": 598,
+      "sha256": "66817021ec8cd914693cc793b114a61ad80a2505fb522e9a1eaea3523882e068"
+    },
+    {
+      "path": "07-validate-t02.receipt.json",
+      "size": 1272,
+      "sha256": "b4ee1c20ade5202d21942d316eee884aef0a7464841dc09121db270d0599c651"
+    },
+    {
+      "path": "07-validate-t02.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "07-validate-t02.stdout.raw",
+      "size": 593,
+      "sha256": "7c45d125bea93f5b0607f5d7b8e6c1d0392244139f382aaee1759d0a2962afd5"
+    },
+    {
+      "path": "08-validate-t03.receipt.json",
+      "size": 1278,
+      "sha256": "a352679edf87dd42e6a4cbc658cb541af7d12ec5896e5842f96fd5c79b4a181f"
+    },
+    {
+      "path": "08-validate-t03.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "08-validate-t03.stdout.raw",
+      "size": 599,
+      "sha256": "aceeffb2a0bf36a16aec0c2c3fe8821a927f81a74188c5bcebeacfa3b27f5de1"
+    },
+    {
+      "path": "09-validate-t04.receipt.json",
+      "size": 1277,
+      "sha256": "5bfc171a3b161e271c1dc33fc4812f0f440660841b162619e790a3034b46837d"
+    },
+    {
+      "path": "09-validate-t04.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "09-validate-t04.stdout.raw",
+      "size": 598,
+      "sha256": "7c42226b34ca5f0c479216a25952cd6a835f46272fb1f360a2bd6c9b57ccede7"
+    },
+    {
+      "path": "10-validate-t05.receipt.json",
+      "size": 1282,
+      "sha256": "c304e2145ba58f812ff466748b3684d5b80b983df23737165b78d49099612dbb"
+    },
+    {
+      "path": "10-validate-t05.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "10-validate-t05.stdout.raw",
+      "size": 605,
+      "sha256": "68cdd1e1472af8030ed9920b2e932eb81f531a2f5a1e7a23eb05e989611b3311"
+    },
+    {
+      "path": "11-validate-t06.receipt.json",
+      "size": 1280,
+      "sha256": "9ed3c569075a7bf24c588cb35ac7099531bae5c3fae5c5b5e223422831e78e27"
+    },
+    {
+      "path": "11-validate-t06.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "11-validate-t06.stdout.raw",
+      "size": 601,
+      "sha256": "f9ba7ff8ce2fbfbfd1dd824b4f1b89bbd2651692976e59a3e0852e31bb30e555"
+    },
+    {
+      "path": "actual-tool-outer.observer.json",
+      "size": 7224,
+      "sha256": "1886d344144d2bac6c2c119595616f9a031abd027342bbd8b3fbabf2d4555549"
+    },
+    {
+      "path": "scope.receipt.json",
+      "size": 4172,
+      "sha256": "7498992db6aab11e6cf234e2f3a1f06d97b0a71b3996273f88366c493d8fab57"
+    },
+    {
+      "path": "summary.json",
+      "size": 14070,
+      "sha256": "d8120b5636b047963cacd58806618560791a9d45a5dbf34c328bd1def6c3c981"
+    },
+    {
+      "path": "summary.md",
+      "size": 4461,
+      "sha256": "728ca69b9fc494d7742494d00a32f5a1779b1b31bca58b65e2082c911f7b9a1a"
+    }
+  ],
+  "self_excluded": "evidence-manifest.json"
+}

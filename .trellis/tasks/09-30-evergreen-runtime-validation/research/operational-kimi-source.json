@@ -1,0 +1,184 @@
+{
+  "status": "INSTALLED_PUBLIC_BUNDLE_METADATA_NOT_RUNTIME_PASS",
+  "executable": "<HOME>/.kimi-code/bin/kimi.exe",
+  "sha256": "f630b2a1cd40c275c5d2895252dbaf0c9f1879c79014aa225362f062e86573c0",
+  "bytes": 146705184,
+  "observed_client_date": "2026-10-02",
+  "binary_help": [
+    {
+      "args": [
+        "--version"
+      ],
+      "native_exit_code": 0,
+      "stdout": "2.0.0\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "--help"
+      ],
+      "native_exit_code": 0,
+      "stdout": "Usage: kimi [options] [command]\n\nThe Starting Point for Next-Gen Agents\n\nOptions:\n  -V, --version                 output the version number\n  -S, --session [id]            Resume a session. With ID: resume that session. Without ID:\n                                interactively pick.\n  -c, --continue                Continue the previous session for the working directory. (default:\n                                false)\n  -y, --yolo                    Start in Ask When Needed mode: routine edits and commands run\n                                automatically; risky actions, questions, and plans still ask.\n                                (default: false)\n  --auto                        Start in Never Ask mode: never interrupts you; everything runs and\n                                is decided automatically. (default: false)\n  -m, --model <model>           LLM model alias to use for this invocation. Defaults to\n                                default_model in config.toml.\n  -p, --prompt <prompt>         Run one prompt non-interactively and print the response.\n  --output-format <format>      Output format for prompt mode. Defaults to text. (choices: \"text\",\n                                \"stream-json\")\n  --skills-dir <dir>            Load skills from this directory instead of auto-discovered user and\n                                project directories. Can be repeated. (default: [])\n  --agent <name>                Agent profile to start the new session with. Custom profiles are\n                                discovered from agent directories or loaded via --agent-file. Cannot\n                                be combined with --session/--continue.\n  --agent-file <path>           Load an agent definition from a Markdown file and select it for the\n                                new session. Cannot be combined with --session/--continue. (default:\n                                [])\n  --add-dir <dir>               Add an additional workspace directory for this session. Can be\n                                repeated. (default: [])\n  --plan                        Start in plan mode. (default: false)\n  -h, --help                    Show help.\n\nCommands:\n  export [options] [sessionId]  Export a session as a ZIP archive.\n  fork [options] [sessionId]    Fork a session into a new session.\n  provider                      Manage LLM providers non-interactively.\n  session                       Manage sessions non-interactively.\n  acp [options]                 Run kimi-code as an Agent Client Protocol (ACP) server over stdio.\n  web [options]                 Run the local Kimi server and open the web UI.\n  server                        Deprecated — use `kimi web` instead.\n  rc|remote [options]           Run the local Kimi server and open the web UI through Remote\n                                Control.\n  login [options]               Authenticate with Kimi Code CLI via the device-code flow.\n  doctor                        Validate Kimi Code configuration files.\n  vis [options] [sessionId]     Launch the session visualizer in your browser.\n  install-app                   Print the Kimi Code desktop app page and open it in your browser.\n  migrate [options]             Migrate data from a legacy kimi-cli installation into kimi-code.\n  upgrade|update [options]      Upgrade Kimi Code to the latest version.\n\nDocumentation:        https://moonshotai.github.io/kimi-code/\n\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "acp",
+        "--help"
+      ],
+      "native_exit_code": 0,
+      "stdout": "Usage: kimi acp [options]\n\nRun kimi-code as an Agent Client Protocol (ACP) server over stdio.\n\nOptions:\n  --login            Run the device-code login flow then exit (entry point for ACP terminal-auth).\n                     (default: false)\n  --region <region>  Login region used together with --login: \"mainland-cn\" (kimi.com) or \"global\"\n                     (kimi.ai).\n  -h, --help         Show help.\n",
+      "stderr": ""
+    }
+  ],
+  "public_embedded_js": [
+    {
+      "needle": "Cannot combine --prompt with --plan.",
+      "match_byte_offset": 110852066,
+      "excerpt_byte_offset": 110852006,
+      "excerpt_bytes": 260,
+      "excerpt": "if (promptMode && opts.plan) throw new OptionConflictError(\"Cannot combine --prompt with --plan.\");\n\tif (opts.agent !== void 0 && opts.agent.trim().length === 0) throw new OptionConflictError(\"Agent cannot be empty.\");\n\tif (opts.agentFiles.length > 1) throw ne"
+    },
+    {
+      "needle": "function acpModeToToggles",
+      "match_byte_offset": 105627970,
+      "excerpt_byte_offset": 105627910,
+      "excerpt_bytes": 650,
+      "excerpt": "r (the `never` fallthrough), not a silent runtime no-op.\n*/\nfunction acpModeToToggles(id) {\n\tswitch (id) {\n\t\tcase \"default\": return {\n\t\t\tplan: false,\n\t\t\tpermission: \"manual\"\n\t\t};\n\t\tcase \"plan\": return {\n\t\t\tplan: true,\n\t\t\tpermission: \"manual\"\n\t\t};\n\t\tcase \"auto\": return {\n\t\t\tplan: false,\n\t\t\tpermission: \"auto\"\n\t\t};\n\t\tcase \"yolo\": return {\n\t\t\tplan: false,\n\t\t\tpermission: \"yolo\"\n\t\t};\n\t\tdefault: throw new Error(`Unhandled AcpModeId: ${String(id)}`);\n\t}\n}\nvar ACP_MODES, DEFAULT_MODE_ID;\nvar init_modes = __esmMin((() => {\n\tACP_MODES = [\n\t\t{\n\t\t\tid: \"default\",\n\t\t\tname: \"Default\",\n\t\t\tdescription: \"Manual approvals; tools execute normally.\"\n\t\t},\n\t\t{\n\t\t\tid"
+    },
+    {
+      "needle": "ACP_MODES =",
+      "match_byte_offset": 105628430,
+      "excerpt_byte_offset": 105628370,
+      "excerpt_bytes": 620,
+      "excerpt": "MODES, DEFAULT_MODE_ID;\nvar init_modes = __esmMin((() => {\n\tACP_MODES = [\n\t\t{\n\t\t\tid: \"default\",\n\t\t\tname: \"Default\",\n\t\t\tdescription: \"Manual approvals; tools execute normally.\"\n\t\t},\n\t\t{\n\t\t\tid: \"plan\",\n\t\t\tname: \"Plan\",\n\t\t\tdescription: \"Read-only planning; no tool execution.\"\n\t\t},\n\t\t{\n\t\t\tid: \"auto\",\n\t\t\tname: \"Auto\",\n\t\t\tdescription: \"Auto-approve safe operations.\"\n\t\t},\n\t\t{\n\t\t\tid: \"yolo\",\n\t\t\tname: \"YOLO\",\n\t\t\tdescription: \"Auto-approve everything.\"\n\t\t}\n\t];\n\tDEFAULT_MODE_ID = \"default\";\n}));\n//#endregion\n//#region ../../packages/acp-server/src/builtin-commands.ts\nfunction isAcpBuiltinSlashCommand(name) {\n\treturn ACP_BUI"
+    },
+    {
+      "needle": "async setMode(",
+      "match_byte_offset": 105705692,
+      "excerpt_byte_offset": 105705632,
+      "excerpt_bytes": 700,
+      "excerpt": "/** Switch the ACP mode (plan mode + permission mode). */\n\t\tasync setMode(id) {\n\t\t\tconst { plan, permission } = acpModeToToggles(id);\n\t\t\tif (plan) await this.agent.enterPlan();\n\t\t\telse await this.agent.cancelPlan();\n\t\t\tawait this.agent.setPermission(permission);\n\t\t\tthis.currentModeId = id;\n\t\t\tthis.emit(currentModeUpdateNotification(this.sessionId, id));\n\t\t\tawait this.emitConfigOptionUpdate();\n\t\t}\n\t\t/** Push a fresh `config_option_update` to the client. */\n\t\tasync emitConfigOptionUpdate() {\n\t\t\ttry {\n\t\t\t\tawait this.conn.sessionUpdate(configOptionUpdateNotification(this.sessionId, await this.configOptions()));\n\t\t\t} catch (error) {\n\t\t\t\tlog.warn(\"acp: failed to push config_option_update\", {\n\t\t\t\t\t"
+    },
+    {
+      "needle": "async setSessionMode(params)",
+      "match_byte_offset": 105721173,
+      "excerpt_byte_offset": 105721113,
+      "excerpt_bytes": 530,
+      "excerpt": "of Error ? error.message : String(error)\n\t\t\t\t});\n\t\t\t}\n\t\t}\n\t\tasync setSessionMode(params) {\n\t\t\tconst acpSession = this.sessions.get(params.sessionId);\n\t\t\tif (!acpSession) throw RequestError$1.invalidParams({ sessionId: params.sessionId }, `Unknown sessionId: ${params.sessionId}`);\n\t\t\tif (!isAcpModeId(params.modeId)) throw RequestError$1.invalidParams({ modeId: params.modeId }, `Unknown modeId: ${params.modeId}`);\n\t\t\tawait acpSession.setMode(params.modeId);\n\t\t}\n\t\tasync setSessionConfigOption(params) {\n\t\t\tconst acpSession = thi"
+    },
+    {
+      "needle": "function currentModeUpdateNotification",
+      "match_byte_offset": 105646860,
+      "excerpt_byte_offset": 105646800,
+      "excerpt_bytes": 250,
+      "excerpt": "tate and clients reading `configOptions`\n* respectively.\n*/\nfunction currentModeUpdateNotification(sessionId, currentModeId) {\n\treturn {\n\t\tsessionId,\n\t\tupdate: {\n\t\t\tsessionUpdate: \"current_mode_update\",\n\t\t\tcurrentModeId\n\t\t}\n\t};\n}\n/**\n* Build a `confi"
+    },
+    {
+      "needle": "async initialize(params)",
+      "match_byte_offset": 105713224,
+      "excerpt_byte_offset": 105713164,
+      "excerpt_bytes": 1100,
+      "excerpt": "(sessionId) {\n\t\t\treturn this.sessions.get(sessionId);\n\t\t}\n\t\tasync initialize(params) {\n\t\t\tthis.clientCapabilities = params.clientCapabilities;\n\t\t\tthis.acpConnection.bindFsCapabilities(params.clientCapabilities?.fs);\n\t\t\tthis.acpConnection.bindTerminalCapability(params.clientCapabilities?.terminal === true);\n\t\t\treturn {\n\t\t\t\tprotocolVersion: negotiateVersion(params.protocolVersion).protocolVersion,\n\t\t\t\tagentCapabilities: {\n\t\t\t\t\tloadSession: true,\n\t\t\t\t\tpromptCapabilities: {\n\t\t\t\t\t\timage: true,\n\t\t\t\t\t\taudio: false,\n\t\t\t\t\t\tembeddedContext: true\n\t\t\t\t\t},\n\t\t\t\t\tsessionCapabilities: {\n\t\t\t\t\t\tlist: {},\n\t\t\t\t\t\tresume: {},\n\t\t\t\t\t\tclose: {},\n\t\t\t\t\t\tdelete: {},\n\t\t\t\t\t\tfork: {},\n\t\t\t\t\t\tadditionalDirectories: {}\n\t\t\t\t\t},\n\t\t\t\t\tmcpCapabilities: {\n\t\t\t\t\t\thttp: true,\n\t\t\t\t\t\tsse: true\n\t\t\t\t\t},\n\t\t\t\t\tauth: { logout: {} }\n\t\t\t\t},\n\t\t\t\tauthMethods: [this.terminalAuthEnv !== void 0 || this.terminalAuthLegacyCommand !== void 0 ? buildTerminalAuthMethod({\n\t\t\t\t\tenv: this.terminalAuthEnv,\n\t\t\t\t\tlegacyCommand: this.terminalAuthLegacyCommand\n\t\t\t\t}) : TERMINAL_AUTH_METHOD],\n\t\t\t\t...this.agentInfo ? { agentInfo: this.agentInfo } : {}\n\t"
+    },
+    {
+      "needle": "async newSession(params)",
+      "match_byte_offset": 105714275,
+      "excerpt_byte_offset": 105714215,
+      "excerpt_bytes": 530,
+      "excerpt": ".agentInfo ? { agentInfo: this.agentInfo } : {}\n\t\t\t};\n\t\t}\n\t\tasync newSession(params) {\n\t\t\tawait this.ensureAuthed();\n\t\t\tconst meta = await this.klient.global.sessions.create({\n\t\t\t\tworkDir: params.cwd,\n\t\t\t\tadditionalDirs: params.additionalDirectories,\n\t\t\t\tmcpServers: acpMcpServersToConfigRecord(params.mcpServers)\n\t\t\t});\n\t\t\treturn {\n\t\t\t\tsessionId: meta.id,\n\t\t\t\t...await this.activateSession(meta.id)\n\t\t\t};\n\t\t}\n\t\t/**\n\t\t* Handle ACP `session/fork` (UNSTABLE in the SDK schema). Forks the source\n\t\t* session through the engine (`sess"
+    },
+    {
+      "needle": "async closeSession(params)",
+      "match_byte_offset": 105717770,
+      "excerpt_byte_offset": 105717710,
+      "excerpt_bytes": 499,
+      "excerpt": " no-op for a session that\n\t\t* is not currently live.\n\t\t*/\n\t\tasync closeSession(params) {\n\t\t\tconst acpSession = this.sessions.get(params.sessionId);\n\t\t\tif (acpSession !== void 0) {\n\t\t\t\tacpSession.dispose();\n\t\t\t\tthis.sessions.delete(params.sessionId);\n\t\t\t}\n\t\t\tawait this.klient.session(params.sessionId).close();\n\t\t\tawait this.unbindSessionRuntime?.(params.sessionId);\n\t\t}\n\t\t/**\n\t\t* Handle ACP `session/delete`. Permanently removes the session through the\n\t\t* engine (`sessionLifecycleService.delete` "
+    },
+    {
+      "needle": "zInitializeRequest =",
+      "match_byte_offset": 105543009,
+      "excerpt_byte_offset": 105542949,
+      "excerpt_bytes": 700,
+      "excerpt": "(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzInitializeRequest = object({\n\t\tprotocolVersion: zProtocolVersion,\n\t\tclientCapabilities: defaultOnError(zClientCapabilities.optional().default({\n\t\t\tfs: {\n\t\t\t\treadTextFile: false,\n\t\t\t\twriteTextFile: false\n\t\t\t},\n\t\t\tterminal: false,\n\t\t\tauth: { terminal: false }\n\t\t}), () => ({\n\t\t\tfs: {\n\t\t\t\treadTextFile: false,\n\t\t\t\twriteTextFile: false\n\t\t\t},\n\t\t\tterminal: false,\n\t\t\tauth: { terminal: false }\n\t\t})),\n\t\tclientInfo: defaultOnError(zImplementation.nullish(), () => void 0),\n\t\t_meta: defaultOnError(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzAuthenticateRequest = object({\n\t\tmethodId: zAuthMethodId,\n\t\t_meta: defaultOnError(record(s"
+    },
+    {
+      "needle": "zNewSessionRequest =",
+      "match_byte_offset": 105545362,
+      "excerpt_byte_offset": 105545302,
+      "excerpt_bytes": 420,
+      "excerpt": "(object({ type: literal(\"acp\") })),\n\t\tzMcpServerStdio\n\t]);\n\tzNewSessionRequest = object({\n\t\tcwd: string(),\n\t\tadditionalDirectories: defaultOnError(vecSkipError(string()).optional(), () => []),\n\t\tmcpServers: requiredDefaultOnError(vecSkipError(zMcpServer), () => []),\n\t\t_meta: defaultOnError(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzLoadSessionRequest = object({\n\t\tmcpServers: requiredDefaultOnError(ve"
+    },
+    {
+      "needle": "zSetSessionModeRequest =",
+      "match_byte_offset": 105547061,
+      "excerpt_byte_offset": 105547001,
+      "excerpt_bytes": 230,
+      "excerpt": "(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzSetSessionModeRequest = object({\n\t\tsessionId: zSessionId,\n\t\tmodeId: zSessionModeId,\n\t\t_meta: defaultOnError(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzS"
+    },
+    {
+      "needle": "zPromptRequest =",
+      "match_byte_offset": 105547537,
+      "excerpt_byte_offset": 105547477,
+      "excerpt_bytes": 230,
+      "excerpt": "record(string(), unknown()).nullish(), () => void 0)\n\t}));\n\tzPromptRequest = object({\n\t\tsessionId: zSessionId,\n\t\tprompt: array(zContentBlock),\n\t\t_meta: defaultOnError(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzWor"
+    },
+    {
+      "needle": "zTextContent =",
+      "match_byte_offset": 105502963,
+      "excerpt_byte_offset": 105502903,
+      "excerpt_bytes": 250,
+      "excerpt": "(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzTextContent = object({\n\t\tannotations: defaultOnError(zAnnotations.nullish(), () => void 0),\n\t\ttext: string(),\n\t\t_meta: defaultOnError(record(string(), unknown()).nullish(), () => void 0)\n\t}"
+    },
+    {
+      "needle": "zRequestPermissionOutcome =",
+      "match_byte_offset": 105551890,
+      "excerpt_byte_offset": 105551830,
+      "excerpt_bytes": 300,
+      "excerpt": "(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzRequestPermissionOutcome = union([object({ outcome: literal(\"cancelled\") }), zSelectedPermissionOutcome.and(object({ outcome: literal(\"selected\") }))]);\n\tzRequestPermissionResponse = object({\n\t\toutcome: zRequestPermissionOutcome,\n\t\t_meta: "
+    },
+    {
+      "needle": "zReadTextFileRequest =",
+      "match_byte_offset": 105501766,
+      "excerpt_byte_offset": 105501706,
+      "excerpt_bytes": 500,
+      "excerpt": "(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzReadTextFileRequest = object({\n\t\tsessionId: zSessionId,\n\t\tpath: string(),\n\t\tline: defaultOnError(int$1().gte(0).max(4294967295, { error: \"Invalid value: Expected uint32 to be <= 4294967295\" }).nullish(), () => void 0),\n\t\tlimit: defaultOnError(int$1().gte(0).max(4294967295, { error: \"Invalid value: Expected uint32 to be <= 4294967295\" }).nullish(), () => void 0),\n\t\t_meta: defaultOnError(record(string(), unknown()).nullish(), () => void "
+    },
+    {
+      "needle": "zReadTextFileResponse =",
+      "match_byte_offset": 105551599,
+      "excerpt_byte_offset": 105551539,
+      "excerpt_bytes": 200,
+      "excerpt": "r(record(string(), unknown()).nullish(), () => void 0) });\n\tzReadTextFileResponse = object({\n\t\tcontent: string(),\n\t\t_meta: defaultOnError(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzSe"
+    },
+    {
+      "needle": "zPromptResponse =",
+      "match_byte_offset": 105530455,
+      "excerpt_byte_offset": 105530455,
+      "excerpt_bytes": 280,
+      "excerpt": "zPromptResponse = object({\n\t\tstopReason: zStopReason,\n\t\tusage: defaultOnError(zUsage.nullish(), () => void 0),\n\t\t_meta: defaultOnError(record(string(), unknown()).nullish(), () => void 0)\n\t});\n\tzStartNesResponse = object({\n\t\tsessionId: zSessionId,\n\t\t_meta: defaultOnError(record(s"
+    },
+    {
+      "needle": "zStopReason =",
+      "match_byte_offset": 105529905,
+      "excerpt_byte_offset": 105529905,
+      "excerpt_bytes": 500,
+      "excerpt": "zStopReason = union([\n\t\tliteral(\"end_turn\"),\n\t\tliteral(\"max_tokens\"),\n\t\tliteral(\"max_turn_requests\"),\n\t\tliteral(\"refusal\"),\n\t\tliteral(\"cancelled\")\n\t]);\n\tzUsage = object({\n\t\ttotalTokens: number$1(),\n\t\tinputTokens: number$1(),\n\t\toutputTokens: number$1(),\n\t\tthoughtTokens: defaultOnError(number$1().nullish(), () => void 0),\n\t\tcachedReadTokens: defaultOnError(number$1().nullish(), () => void 0),\n\t\tcachedWriteTokens: defaultOnError(number$1().nullish(), () => void 0),\n\t\t_meta: defaultOnError(record(st"
+    },
+    {
+      "needle": "function ndJsonStream$1",
+      "match_byte_offset": 105586052,
+      "excerpt_byte_offset": 105586052,
+      "excerpt_bytes": 1780,
+      "excerpt": "function ndJsonStream$1(output, input) {\n\tconst textEncoder = new TextEncoder();\n\tconst textDecoder = new TextDecoder();\n\tlet cancelled = false;\n\tlet inputReader;\n\treturn {\n\t\treadable: new ReadableStream({\n\t\t\tasync start(controller) {\n\t\t\t\tconst lines = new LineBuffer();\n\t\t\t\tconst enqueueLine = (lineBytes) => {\n\t\t\t\t\tconst trimmedLine = textDecoder.decode(lineBytes).trim();\n\t\t\t\t\tif (trimmedLine) try {\n\t\t\t\t\t\tconst message = JSON.parse(trimmedLine);\n\t\t\t\t\t\tif (isRecord$9(message) || Array.isArray(message)) controller.enqueue(message);\n\t\t\t\t\t\telse console.warn(\"Skipping JSON line that is not an object:\", trimmedLine);\n\t\t\t\t\t} catch (err) {\n\t\t\t\t\t\tconsole.error(\"Failed to parse JSON message:\", trimmedLine, err);\n\t\t\t\t\t}\n\t\t\t\t};\n\t\t\t\tconst reader = input.getReader();\n\t\t\t\tinputReader = reader;\n\t\t\t\ttry {\n\t\t\t\t\twhile (true) {\n\t\t\t\t\t\tconst { value, done } = await reader.read();\n\t\t\t\t\t\tif (cancelled) return;\n\t\t\t\t\t\tif (done) break;\n\t\t\t\t\t\tif (!value) continue;\n\t\t\t\t\t\tfor (const line of lines.push(value)) {\n\t\t\t\t\t\t\tenqueueLine(line);\n\t\t\t\t\t\t\tif (cancelled) return;\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\tif (cancelled) return;\n\t\t\t\t\tconst lastLine = lines.flush();\n\t\t\t\t\tif (lastLine) enqueueLine(lastLine);\n\t\t\t\t} catch (err) {\n\t\t\t\t\tif (cancelled) return;\n\t\t\t\t\tcontroller.error(err);\n\t\t\t\t\treturn;\n\t\t\t\t} finally {\n\t\t\t\t\tif (inputReader === reader) inputReader = void 0;\n\t\t\t\t\treader.releaseLock();\n\t\t\t\t}\n\t\t\t\tif (cancelled) return;\n\t\t\t\tcontroller.close();\n\t\t\t},\n\t\t\tcancel(reason) {\n\t\t\t\tcancelled = true;\n\t\t\t\treturn inputReader?.cancel(reason);\n\t\t\t}\n\t\t}),\n\t\twritable: new WritableStream({ async write(message) {\n\t\t\tconst content = JSON.stringify(message) + \"\\n\";\n\t\t\tconst writer = output.getWriter();\n\t\t\ttry {\n\t\t\t\tawait writer.write(textEncoder.encode(content));\n\t\t\t} finally {\n\t\t\t\twriter.releaseLock();\n\t\t\t}\n\t\t} })\n\t}"
+    },
+    {
+      "needle": "async function runAcpServer(",
+      "match_byte_offset": 105745903,
+      "excerpt_byte_offset": 105745903,
+      "excerpt_bytes": 1400,
+      "excerpt": "async function runAcpServer(opts = {}) {\n\tredirectConsoleToStderr();\n\tconst input = opts.input ?? process.stdin;\n\tconst output = opts.output ?? process.stdout;\n\tconst server = await runAcpServerWithStream(ndJsonStream(node_stream.Writable.toWeb(output), node_stream.Readable.toWeb(input)), opts);\n\tawait server.conn.closed;\n\tawait server.close();\n}\nvar init_start$2 = __esmMin((() => {\n\tinit_acp();\n\tinit_src$8();\n\tinit_memory();\n\tinit_acp_client();\n\tinit_acp_fs();\n\tinit_acp_terminal();\n\tinit_server();\n}));\n//#endregion\n//#region ../../packages/acp-server/src/index.ts\nvar src_exports = /* @__PURE__ */ __exportAll({\n\tACP_BUILTIN_SLASH_COMMANDS: () => ACP_BUILTIN_SLASH_COMMANDS,\n\tACP_BUILTIN_SLASH_COMMAND_NAMES: () => ACP_BUILTIN_SLASH_COMMAND_NAMES,\n\tACP_MODES: () => ACP_MODES,\n\tAPPROVE_ALWAYS_OPTION_ID: () => APPROVE_ALWAYS_OPTION_ID,\n\tAPPROVE_ONCE_OPTION_ID: () => APPROVE_ONCE_OPTION_ID,\n\tAcpInteractionBridge: () => AcpInteractionBridge,\n\tAcpRuntimeProviderFactory: () => AcpRuntimeProviderFactory,\n\tAcpServer: () => AcpServer,\n\tAcpSession: () => AcpSession,\n\tDEFAULT_MODE_ID: () => DEFAULT_MODE_ID,\n\tHideOutputMarker: () => HideOutputMarker,\n\tPLAN_APPROVE_OPTION_ID: () => PLAN_APPROVE_OPTION_ID,\n\tPLAN_REJECT_AND_EXIT_OPTION_ID: () => PLAN_REJECT_AND_EXIT_OPTION_ID,\n\tPLAN_REVISE_OPTION_ID: () => PLAN_REVISE_OPTION_ID,\n\tREJECT_OPTION_ID: () => REJECT_OPTION_ID,\n\tacpBlocksToContentParts"
+    }
+  ],
+  "discarded_source": "Python kimi_cli 1.33.0 under uv is a different installed package; no facts transferred to Kimi 2.0.0."
+}

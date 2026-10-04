@@ -1,0 +1,402 @@
+{
+  "residential-monitor/src-tauri/build.rs": {
+    "bytes": 1659,
+    "sha256": "9B1244B4C131FC4D4545FEED557C08DE15557074F1FF4A8F1503BABE9F314720"
+  },
+  "residential-monitor/src-tauri/capabilities/default.json": {
+    "bytes": 422,
+    "sha256": "50E78469881B183B6AAC5AE61117BB9EB08EC362B559266BEA806836D2C177E8"
+  },
+  "residential-monitor/src-tauri/Cargo.lock": {
+    "bytes": 144038,
+    "sha256": "D84090D6A1073125A92D45F22CA90497F15629FF43528B9962F5313602385829"
+  },
+  "residential-monitor/src-tauri/Cargo.toml": {
+    "bytes": 1873,
+    "sha256": "83F934829D715A37303E6390D88BE979D8DA7F3F410BDD204D8C006558516686"
+  },
+  "residential-monitor/src-tauri/icons/128x128.png": {
+    "bytes": 17538,
+    "sha256": "330250FC9AAF0D819560F72EF27EB665CB2332C4BE98687823E4E53338550231"
+  },
+  "residential-monitor/src-tauri/icons/128x128@2x.png": {
+    "bytes": 52361,
+    "sha256": "112EC4ADFA200CAD6B314B924D7D8FFFCB9E3D16C4996BBE0E25CF0F39959C44"
+  },
+  "residential-monitor/src-tauri/icons/32x32.png": {
+    "bytes": 1883,
+    "sha256": "1FD42D50C19DAD95AF340A84EABC7AEA6306DC427CFE35DD725955929F53DF71"
+  },
+  "residential-monitor/src-tauri/icons/icon-source.png": {
+    "bytes": 334405,
+    "sha256": "19896735B1FA7B663FA0B7D264DA4EB2583C44598D1C51A87C04DEAC31028064"
+  },
+  "residential-monitor/src-tauri/icons/icon-source.png.json": {
+    "bytes": 386,
+    "sha256": "903E9FDA997A262E4E0461EBE997481E68334BF2CE1EE71FB91021D8973DD0FB"
+  },
+  "residential-monitor/src-tauri/icons/icon.ico": {
+    "bytes": 66119,
+    "sha256": "610C4572B85A5EC76998F37261CB65B5785F161D67BFB2D350D3CA0B10AC3EA9"
+  },
+  "residential-monitor/src-tauri/icons/icon.png": {
+    "bytes": 153389,
+    "sha256": "9EC461D08FC6070D14535616A8C603A1368B1C16C0696C7969FAF30C905C32BC"
+  },
+  "residential-monitor/src-tauri/icons/icon.png.json": {
+    "bytes": 301,
+    "sha256": "490F41696AE88EA74149BE287E6DF91D8481867C85BB57C34FC95CDED06C1AF9"
+  },
+  "residential-monitor/src-tauri/icons/tray-collecting.png": {
+    "bytes": 144252,
+    "sha256": "0DF6F1AE9FA164AB5F93395B83D0512C518ECD3948DB4DAD4867C9CCF05AAE38"
+  },
+  "residential-monitor/src-tauri/icons/tray-collecting.png.json": {
+    "bytes": 299,
+    "sha256": "799720B42CFDD578D52ACDF23ECC12BBA209942952D21E2AE0A26F080BAD2A61"
+  },
+  "residential-monitor/src-tauri/icons/tray-connecting.png": {
+    "bytes": 145731,
+    "sha256": "C62888FD4A197BCC58942337ACB4CDF5915F8DB364A7BCE8782E9F7AC22C86D9"
+  },
+  "residential-monitor/src-tauri/icons/tray-connecting.png.json": {
+    "bytes": 298,
+    "sha256": "0CE882B952D3C872CCE1F931EBEBF4F1822CCB6659657863B43CA14A53C29191"
+  },
+  "residential-monitor/src-tauri/icons/tray-fault.png": {
+    "bytes": 145233,
+    "sha256": "7E97F003B175C3889EAB6DA4337A3113D0C32DDB3B8157555B0702CB6EAF2B70"
+  },
+  "residential-monitor/src-tauri/icons/tray-fault.png.json": {
+    "bytes": 292,
+    "sha256": "1A2F1F0B6D6C21844DAFB7AD0340087EC5F006FE97C5D6FEF2549BAEA92EC71A"
+  },
+  "residential-monitor/src-tauri/icons/tray-paused.png": {
+    "bytes": 145507,
+    "sha256": "B1DF283EDDB838B6F104E49B9D400D29C134D9192CFEBFA9DA5C7826E34E83FE"
+  },
+  "residential-monitor/src-tauri/icons/tray-paused.png.json": {
+    "bytes": 295,
+    "sha256": "4BF95B11B0BDC6D599EDADF79E12289668F006817A42E18DE6F5BDFE6B42DC04"
+  },
+  "residential-monitor/src-tauri/installer.nsh": {
+    "bytes": 1738,
+    "sha256": "000D89ADF4726DC159712E5CF69C4097C93BFBFDBB47B405EEA15C859BC7F889"
+  },
+  "residential-monitor/src-tauri/src/accounting.rs": {
+    "bytes": 35183,
+    "sha256": "102AF133A445DA11817C095430596702FD7685BEE1AB9849ADE2162C698E3593"
+  },
+  "residential-monitor/src-tauri/src/app_log.rs": {
+    "bytes": 12539,
+    "sha256": "6035C96F5B09158D859037CBE1F4CE441612071220443707C360718993E5790E"
+  },
+  "residential-monitor/src-tauri/src/bench.rs": {
+    "bytes": 16356,
+    "sha256": "2A386C905CA5D296CB93F5FBE70BCDF56C4A2291CD284E3514D6C079199062C5"
+  },
+  "residential-monitor/src-tauri/src/bin/monitor-bench.rs": {
+    "bytes": 9580,
+    "sha256": "8E8CDBA210EDB1B9413CEFC82275108A37151192E41DBE4BA196245C60E68AC8"
+  },
+  "residential-monitor/src-tauri/src/bin/monitor-db.rs": {
+    "bytes": 105,
+    "sha256": "74419146671EDFB9E60FE1C6C1CF1C3ED5BD5D08BAB2509F2E199157B34B7252"
+  },
+  "residential-monitor/src-tauri/src/c0_contract.rs": {
+    "bytes": 3398,
+    "sha256": "E4F1DEC52E8303B548FBE69E8CA39AA003928B6DE40BD6BE3D12DAB04E25B4E9"
+  },
+  "residential-monitor/src-tauri/src/c2/close.rs": {
+    "bytes": 3255,
+    "sha256": "B465A915D4958326D29A3BD2CB1681828438FB4FF692A847E22448EBB5682322"
+  },
+  "residential-monitor/src-tauri/src/c2/collector.rs": {
+    "bytes": 13496,
+    "sha256": "1F41E58EA8AE8C15F71D4C05C099AF1311225528AD13640BF1A3D6D3749C37FE"
+  },
+  "residential-monitor/src-tauri/src/c2/contract.rs": {
+    "bytes": 819,
+    "sha256": "ED618AF9F259A03924F9006F9FE8C7B0BAE021782BAC1BFB79D0104739FB0BF5"
+  },
+  "residential-monitor/src-tauri/src/c2/desktop.rs": {
+    "bytes": 14851,
+    "sha256": "F95FB010B31B21356476BA95F8E612B5247104B546D45E3837E7F9C0FC6FCA74"
+  },
+  "residential-monitor/src-tauri/src/c2/dialog.rs": {
+    "bytes": 1059,
+    "sha256": "E7373502B43FFFE6FACB96BF64540869D08FB8CCBA25DA127E54FBFA259DEFC8"
+  },
+  "residential-monitor/src-tauri/src/c2/facade.rs": {
+    "bytes": 137904,
+    "sha256": "607D3CBDFAB400447A73A83BA42CF7F2037C5A92E70F55B17F917BC6B7BA06C1"
+  },
+  "residential-monitor/src-tauri/src/c2/hub.rs": {
+    "bytes": 28959,
+    "sha256": "01E778D6800BEC14336E0B4127A9B4410F7F5EA2915D475B8AC18A6EFDA2AD38"
+  },
+  "residential-monitor/src-tauri/src/c2/mod.rs": {
+    "bytes": 271,
+    "sha256": "B46D3F40CE8DD963218B6074FE66AD440B7B73D4DCD08151C27913A1B49BA70A"
+  },
+  "residential-monitor/src-tauri/src/c2/query.rs": {
+    "bytes": 30374,
+    "sha256": "39043444884CC269877F0017E55FEB00F9F48A90BA76EEE9DAF74DB4F8A605AE"
+  },
+  "residential-monitor/src-tauri/src/c2/settings.rs": {
+    "bytes": 15525,
+    "sha256": "6C27681A10330F0DA0BD1D596012EE105F52843B437CBA1DDB1D739AE0BE60DD"
+  },
+  "residential-monitor/src-tauri/src/c2/shell.rs": {
+    "bytes": 12923,
+    "sha256": "3CB94AEB4AAF2F61FAC6F3F9015F8B34BDA90D9C1C729CF2CDB1FCC0E532C62B"
+  },
+  "residential-monitor/src-tauri/src/c2/subscriptions.rs": {
+    "bytes": 5822,
+    "sha256": "FF6D4CDACE44E356FC77ED339AC3A366C15822D8F59B8FC4F821065E21190A24"
+  },
+  "residential-monitor/src-tauri/src/c3/archive.rs": {
+    "bytes": 43696,
+    "sha256": "7AEE35A0EC76F23C16DF0CA9117F7485ADC3F7F383A5D6ED55A39478939D079A"
+  },
+  "residential-monitor/src-tauri/src/c3/backup.rs": {
+    "bytes": 11376,
+    "sha256": "D59BA207046826788A18748D6E0C13CF688B99CBD1C0A47B51AE2803D234BAD8"
+  },
+  "residential-monitor/src-tauri/src/c3/export.rs": {
+    "bytes": 20367,
+    "sha256": "3E2DF98FAE5EB09A812362C7BF4852483D0BDFC47B6EE9DA1E6413380B01078B"
+  },
+  "residential-monitor/src-tauri/src/c3/mod.rs": {
+    "bytes": 1899,
+    "sha256": "3AC49076B52B3B2CDC678D09D8AB0D0EDBF03C9EC02BA41C5A365C67742A63BE"
+  },
+  "residential-monitor/src-tauri/src/c3/query.rs": {
+    "bytes": 46256,
+    "sha256": "4DA1F6D9631D101B6CF571F519E0729EE88B703CF06790F0DBE0A67692F61515"
+  },
+  "residential-monitor/src-tauri/src/c3/retention.rs": {
+    "bytes": 56010,
+    "sha256": "D31B27541400E54915FADD9F9B35DB4D02BAA0498C199FA8AE8AD67B51996861"
+  },
+  "residential-monitor/src-tauri/src/c3/rule_name.rs": {
+    "bytes": 6044,
+    "sha256": "E96C59B2E951C7903FAE8C64AB787C1304293F0C247B4290DBE2F061B1875420"
+  },
+  "residential-monitor/src-tauri/src/c3/schema.rs": {
+    "bytes": 6110,
+    "sha256": "2C6E1BB6F965019A91A2F902736649F35D4B446F769D956009A6435C772AC299"
+  },
+  "residential-monitor/src-tauri/src/c3/service.rs": {
+    "bytes": 83218,
+    "sha256": "C6F3DC7C60EB21F76E36B8C57BF65E3169F3C40BA8857A5F50CF62E504B4BF07"
+  },
+  "residential-monitor/src-tauri/src/c3/share.rs": {
+    "bytes": 12693,
+    "sha256": "C13C52A624D27A73BC428A00DFA04B0B02F820D80E3277206383101E71BD4087"
+  },
+  "residential-monitor/src-tauri/src/c3/snapshot.rs": {
+    "bytes": 12020,
+    "sha256": "85AA225F9A0E658ECBE185628427C03473E3C657D63384062FCB0A5AFA04881D"
+  },
+  "residential-monitor/src-tauri/src/c3/space.rs": {
+    "bytes": 2016,
+    "sha256": "9AF7AD3FE3A15EFA6EFB0097101C651BE15CB93198BCEB35DDD0B7116BCC954B"
+  },
+  "residential-monitor/src-tauri/src/c3/sql.rs": {
+    "bytes": 34727,
+    "sha256": "1A3311BA025D11AEA39F10E684836D4B4BEC2BC1C3CEAA416FEEF550BE7A512E"
+  },
+  "residential-monitor/src-tauri/src/c4/diagnose.rs": {
+    "bytes": 5840,
+    "sha256": "4F8D9E7AF26DC594510B2C19FC0F88AFC04313D56D9B3B2247E3D3D378A418DB"
+  },
+  "residential-monitor/src-tauri/src/c4/engine.rs": {
+    "bytes": 41909,
+    "sha256": "4A86D3319748892716C38F67A6179054A9DBC1BB19E7F554FAAD5AAF30F6657A"
+  },
+  "residential-monitor/src-tauri/src/c4/mod.rs": {
+    "bytes": 1063,
+    "sha256": "33607486422B89824A652F011D1275E86C7B9CE1603238DBFF0A9B5B5B29998E"
+  },
+  "residential-monitor/src-tauri/src/c4/notify.rs": {
+    "bytes": 8485,
+    "sha256": "EEBBDFE4387BB013279840CC25EB169C068517DC6F4A91D31899CEBBBCD21B8F"
+  },
+  "residential-monitor/src-tauri/src/c4/outbox.rs": {
+    "bytes": 15399,
+    "sha256": "7A11DD7DBFEE7F4ADE285F5866B1AE4AD593F01F9052577387EDD25AFBD87F0C"
+  },
+  "residential-monitor/src-tauri/src/c4/period.rs": {
+    "bytes": 11703,
+    "sha256": "3A8BD11D3F5375011413AB7EFCBA7DC9E044CCFBD02994916E6282D62A3B4D95"
+  },
+  "residential-monitor/src-tauri/src/c4/schema.rs": {
+    "bytes": 4541,
+    "sha256": "31A3118C9160EF2A3C5E1A607655181189E6B8EDD8EF7C94A27D62E65F4C9CC5"
+  },
+  "residential-monitor/src-tauri/src/c4/store.rs": {
+    "bytes": 15148,
+    "sha256": "33C9656F9735E72299C97F96E12EFD14829F6332C8ACD1DC9F46D472B3875C29"
+  },
+  "residential-monitor/src-tauri/src/c4/types.rs": {
+    "bytes": 11616,
+    "sha256": "FA21E96C6CA9E92DC00ABD7FB2290A5B91670201E0446F7275958E0C33A6DF97"
+  },
+  "residential-monitor/src-tauri/src/c5/about.rs": {
+    "bytes": 1742,
+    "sha256": "4367C25B9EDFAACB167396EEC50A086FF91732DDBACA4E40292E0AEC1F1F532C"
+  },
+  "residential-monitor/src-tauri/src/c5/baseline.rs": {
+    "bytes": 4328,
+    "sha256": "BADFCD35EC7338419506AA4C84B0BAE16755CEECC47807398F3C7AB303690ADD"
+  },
+  "residential-monitor/src-tauri/src/c5/concurrent.rs": {
+    "bytes": 5242,
+    "sha256": "875D70C66B736F15645DCC8F98067B3826A45309FE30C8CFE8703A95B8498B4F"
+  },
+  "residential-monitor/src-tauri/src/c5/fault.rs": {
+    "bytes": 7084,
+    "sha256": "2A03D0969EF57BB385FE8C3ECC3384D405D87AB71CA4DD8A55DDEF8548DFB18C"
+  },
+  "residential-monitor/src-tauri/src/c5/mod.rs": {
+    "bytes": 773,
+    "sha256": "3BFC56C5872B6CB07CB502E7DE61C233351DBF17F3E0632A3D6A02E4C4A183A8"
+  },
+  "residential-monitor/src-tauri/src/c5/purge.rs": {
+    "bytes": 7977,
+    "sha256": "F3647E6672BFB148B1E1F6EDC8D6A3ACA616159B3C1A1433989890D3FB21E2D9"
+  },
+  "residential-monitor/src-tauri/src/c5/soak.rs": {
+    "bytes": 2544,
+    "sha256": "0C9D56E179B9D32D436BFE8EB2CFE7E3C4426850F79CC9DD386E9AED30BDD507"
+  },
+  "residential-monitor/src-tauri/src/c5/supply.rs": {
+    "bytes": 4015,
+    "sha256": "60866D74BA4ECC426A14E246DF0B3519D4D2176D86E7A6D333342C04EEB1762E"
+  },
+  "residential-monitor/src-tauri/src/c5/vacuum.rs": {
+    "bytes": 2380,
+    "sha256": "94E88064D9E720CCF1BBA276E9CE0C1286180515370713C439179DE1772BA604"
+  },
+  "residential-monitor/src-tauri/src/candidate_schema.rs": {
+    "bytes": 12315,
+    "sha256": "EF1DBA3754DEA67060759C8727F6E545D19D046276A7B71A0E665A2A3BF48F03"
+  },
+  "residential-monitor/src-tauri/src/controller.rs": {
+    "bytes": 18926,
+    "sha256": "64F809D128AAC3630762F9640EB04F4919913B1DCC379F255607F879016EEAA2"
+  },
+  "residential-monitor/src-tauri/src/credential.rs": {
+    "bytes": 10781,
+    "sha256": "8427DFAE43A07CBDF3BFC2E300E35B3263BD2FEC217B6000A9DD6D53BAECE754"
+  },
+  "residential-monitor/src-tauri/src/data_dir.rs": {
+    "bytes": 11177,
+    "sha256": "19E1F6E88C9029A8D6E1B8926E0E2F8168562F694F370C28C3BFA61E9F4A1563"
+  },
+  "residential-monitor/src-tauri/src/dbcli/audit.rs": {
+    "bytes": 29010,
+    "sha256": "4F34E3033BA06BE536600A73286C659E9ECDA0A5DAA9918A48F6DB1AFCA63238"
+  },
+  "residential-monitor/src-tauri/src/dbcli/envelope.rs": {
+    "bytes": 4148,
+    "sha256": "5000702179A42DF10C5F111F6EA297B001CE62EAA867A629BFC422339CBB6AA0"
+  },
+  "residential-monitor/src-tauri/src/dbcli/maint.rs": {
+    "bytes": 16385,
+    "sha256": "651394AE1B6E09F68AE2CC0B774ACD3D5688ACF9384DF7C6861DA186CF5BE622"
+  },
+  "residential-monitor/src-tauri/src/dbcli/mod.rs": {
+    "bytes": 28649,
+    "sha256": "761E83F6D93BCD17EF9A570A1E85040F391C74825BFA225998770E3D2E59CB88"
+  },
+  "residential-monitor/src-tauri/src/dbcli/patterns.rs": {
+    "bytes": 6862,
+    "sha256": "317703C86C88496B0D342F38F85A8C85B5A00C5AED372ABB3ACFDF2568BE00A8"
+  },
+  "residential-monitor/src-tauri/src/dbcli/render.rs": {
+    "bytes": 6021,
+    "sha256": "53260A4F4418F2D2DC95E13B359B3889BF6A1CAD8C6A80C62372B880D0A56FFB"
+  },
+  "residential-monitor/src-tauri/src/dbcli/resolve.rs": {
+    "bytes": 3956,
+    "sha256": "9FC4CA5D2F7E419EC6816430C2F89748E411F5009AA5ED5A5AE5BCF7E5FADE90"
+  },
+  "residential-monitor/src-tauri/src/dimension_rank_table_layout.rs": {
+    "bytes": 5053,
+    "sha256": "4072A35CEFFCB395192107C1BF450D3E87DEABA8C581C26FB15EE8DA34B906D0"
+  },
+  "residential-monitor/src-tauri/src/evidence.rs": {
+    "bytes": 3843,
+    "sha256": "EB427DB01F668FC53174D6E4BCFCDC97942412F05CE4A10E1335C3C711C70868"
+  },
+  "residential-monitor/src-tauri/src/i18n.rs": {
+    "bytes": 24150,
+    "sha256": "C1E395FE1B6847415FFDA71FB0F9ACE3BC43B1F0AAE044B3A84482246BC928E3"
+  },
+  "residential-monitor/src-tauri/src/identity.rs": {
+    "bytes": 1407,
+    "sha256": "011EC931882962D90F8057E3D8983E4C17BE57CB997056E7964E4176ED94C236"
+  },
+  "residential-monitor/src-tauri/src/lib.rs": {
+    "bytes": 60963,
+    "sha256": "A36837EA569D42F4A02E4447D278BB8EE8EEABB3E3F9BF26BC24946556DAF071"
+  },
+  "residential-monitor/src-tauri/src/live.rs": {
+    "bytes": 2614,
+    "sha256": "A34613D6B62A624BD33A5DA4B2C962393E630DECD82741A7BA31E225D23E2D62"
+  },
+  "residential-monitor/src-tauri/src/live_table_layout.rs": {
+    "bytes": 6077,
+    "sha256": "8A677F2883D5F88D031B5413B683664F7FD494BFA8A383C30FC5FD42F101F3CA"
+  },
+  "residential-monitor/src-tauri/src/main.rs": {
+    "bytes": 123,
+    "sha256": "CC36495B428B48A8370A98D51DB6D9018D9959679B3AFBF5E01C31705BFA4B06"
+  },
+  "residential-monitor/src-tauri/src/redact.rs": {
+    "bytes": 715,
+    "sha256": "62299BADBEB3E23F94E1DD7AD298DCB5826BA82CD666DD86776059AB695339EC"
+  },
+  "residential-monitor/src-tauri/src/residential.rs": {
+    "bytes": 3578,
+    "sha256": "95E213969AC48B922119C87DC2A8C148EFA1DFD1E004333149A7E86B459BB14D"
+  },
+  "residential-monitor/src-tauri/src/session.rs": {
+    "bytes": 9167,
+    "sha256": "D2455223A3FF0F7D420C8CCCDCA692850AED7DC0942CFEE4B6ED9E7E0B9A4B1B"
+  },
+  "residential-monitor/src-tauri/src/session_host.rs": {
+    "bytes": 3164,
+    "sha256": "C15B38A27429EEE61FA329DEC4EEE7F59DE4F6FE41CA9A96A1FFD8CE162F8825"
+  },
+  "residential-monitor/src-tauri/src/sqlite_probe.rs": {
+    "bytes": 8323,
+    "sha256": "C808B3710EEAD7DB568559698BFD6ED847779473573DF3A9A5CE465A60A02815"
+  },
+  "residential-monitor/src-tauri/src/storage.rs": {
+    "bytes": 80812,
+    "sha256": "C3CDA7909E6A350DC780BE2348A3AAD943FA48572A9E9918CCCA7C436EB60BA5"
+  },
+  "residential-monitor/src-tauri/src/theme.rs": {
+    "bytes": 9790,
+    "sha256": "A3C11B9DD5768B60FE59C1BE80A0793BA91860E8E84ACB6B278D74F18547C95A"
+  },
+  "residential-monitor/src-tauri/src/transport.rs": {
+    "bytes": 17163,
+    "sha256": "1F07DE82A44FA11BA6A8867613884F31EF4CFF1D91605C760A24191A90C14291"
+  },
+  "residential-monitor/src-tauri/src/workload.rs": {
+    "bytes": 5221,
+    "sha256": "63554E6F808EFA2F237648534C64E2F6DABC3893A6AAE6A9DABD6CF28CB633DF"
+  },
+  "residential-monitor/src-tauri/tauri.conf.json": {
+    "bytes": 1092,
+    "sha256": "E203957783EE929991EAC99C8239BCB6931DC0AD140D038804DA389A40B7EB97"
+  },
+  "residential-monitor/src-tauri/tests/kill_gate.rs": {
+    "bytes": 2942,
+    "sha256": "65542DDA2C00CE69C4D2CCAF06FF558F204649657DBD1B567FFF4558685EEBDF"
+  }
+}

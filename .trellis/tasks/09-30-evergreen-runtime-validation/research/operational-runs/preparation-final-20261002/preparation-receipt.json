@@ -1,0 +1,71 @@
+{
+  "status": "FAIL",
+  "verification_native_exit_code": 0,
+  "plan_native_exit_code": 0,
+  "syntax": [
+    {
+      "file": "runtime-capture-operational.py",
+      "status": "PASS"
+    },
+    {
+      "file": "operational-kimi-acp.py",
+      "status": "PASS"
+    },
+    {
+      "file": "operational-verification.py",
+      "status": "PASS"
+    }
+  ],
+  "scoped_whitespace": [
+    {
+      "file": "runtime-capture-operational.py",
+      "exit_code": 1,
+      "diagnostics": "warning: in the working copy of '.trellis\\tasks\\09-30-evergreen-runtime-validation\\research\\runtime-capture-operational.py', LF will be replaced by CRLF the next time Git touches it\n"
+    },
+    {
+      "file": "operational-kimi-acp.py",
+      "exit_code": 1,
+      "diagnostics": "warning: in the working copy of '.trellis\\tasks\\09-30-evergreen-runtime-validation\\research\\operational-kimi-acp.py', LF will be replaced by CRLF the next time Git touches it\n"
+    },
+    {
+      "file": "operational-verification.py",
+      "exit_code": 1,
+      "diagnostics": "warning: in the working copy of '.trellis\\tasks\\09-30-evergreen-runtime-validation\\research\\operational-verification.py', LF will be replaced by CRLF the next time Git touches it\n"
+    },
+    {
+      "file": "operational-parent-prompt.txt",
+      "exit_code": 1,
+      "diagnostics": "warning: in the working copy of '.trellis\\tasks\\09-30-evergreen-runtime-validation\\research\\operational-parent-prompt.txt', LF will be replaced by CRLF the next time Git touches it\n"
+    },
+    {
+      "file": "operational-kimi-source.json",
+      "exit_code": 1,
+      "diagnostics": ""
+    }
+  ],
+  "files": {
+    "runtime-capture-operational.py": {
+      "sha256": "333242eb6af1ccc9ad89f0d1e3d81aff1ba77e2de01326312b19b700d8bb236c",
+      "bytes": 7179
+    },
+    "operational-kimi-acp.py": {
+      "sha256": "bc0aad615491b106c3f26dfab66648a1da9170eb9079b2f35e2026db47544a8b",
+      "bytes": 13590
+    },
+    "operational-verification.py": {
+      "sha256": "b75cfb1f34622a363352184c304f9a94c70c231853a61b83646410b800e8561e",
+      "bytes": 11915
+    },
+    "operational-parent-prompt.txt": {
+      "sha256": "1b2b60a530f98dfc92caf054dd0f4b1c45e286f210279c661ac2c9da695ae9c5",
+      "bytes": 1426
+    },
+    "operational-kimi-source.json": {
+      "sha256": "afefbd229b42f041ff804a03c229db2077debde39fea0dcf2a33e85c79bef8f4",
+      "bytes": 21989
+    }
+  },
+  "model_clients_started": 0,
+  "real_candidate_freezes": 0,
+  "ended_utc": "2026-10-03T02:34:54.003894+00:00"
+}

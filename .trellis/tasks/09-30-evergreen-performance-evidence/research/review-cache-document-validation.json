@@ -1,0 +1,40 @@
+{
+  "checked_utc": "2026-09-30T14:50:27.276458+00:00",
+  "files": [
+    {
+      "file": "review.md",
+      "sha256": "44716a4ed1db9f3f9756a585515a47f3d37a7a8236dd440d60a00c918b83827d",
+      "lines": 171,
+      "trailing_whitespace": []
+    },
+    {
+      "file": "review-cache-implementation.json",
+      "sha256": "27ae8306ba591b97a13d7f7c4219f3e4daf57dd7f466f6fbe4437a45ae0b0b91",
+      "lines": 71,
+      "trailing_whitespace": []
+    },
+    {
+      "file": "network-unknown-review.md",
+      "sha256": "fd832ae9a358041fab683692f8bc183bd3ae0661e609629f7bed77caaa0bb53f",
+      "lines": 86,
+      "trailing_whitespace": []
+    }
+  ],
+  "json_parse": "PASS",
+  "diff_check": {
+    "argv": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      ".trellis/tasks/09-30-evergreen-performance-evidence/research/review.md",
+      ".trellis/tasks/09-30-evergreen-performance-evidence/research/review-cache-implementation.json",
+      ".trellis/tasks/09-30-evergreen-performance-evidence/research/network-unknown-review.md"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "errors": [],
+  "scope": "Review documentation only. No product tests or load executed."
+}

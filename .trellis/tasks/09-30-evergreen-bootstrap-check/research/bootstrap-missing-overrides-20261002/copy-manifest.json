@@ -1,0 +1,543 @@
+{
+  "count": 67,
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.github\\workflows\\ci.yml",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "3d959880012df4f14395df9a4aeff3b0b9cf87eaead9583b0e1df2b537ce2b31",
+      "candidate_sha256": "3d959880012df4f14395df9a4aeff3b0b9cf87eaead9583b0e1df2b537ce2b31"
+    },
+    {
+      "path": ".gitignore",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.gitignore",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "7e4d6a3bd5d28dea77e4b5219b6fff89ed34b68ad358f08cfba8f97efcf6819e",
+      "candidate_sha256": "7e4d6a3bd5d28dea77e4b5219b6fff89ed34b68ad358f08cfba8f97efcf6819e"
+    },
+    {
+      "path": ".trellis/.version",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\.version",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "0fb2a9d4b97b5ee5f3c24bd0c969d5eb2c7729ace23df3729a60fb6a30fe9bde",
+      "candidate_sha256": "0fb2a9d4b97b5ee5f3c24bd0c969d5eb2c7729ace23df3729a60fb6a30fe9bde"
+    },
+    {
+      "path": ".trellis/config.yaml",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\config.yaml",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "eaba56c36fb07483fcbc96d74c4da0ab33b9739fb9ff10ea4cc1e1cd32bf23b2",
+      "candidate_sha256": "eaba56c36fb07483fcbc96d74c4da0ab33b9739fb9ff10ea4cc1e1cd32bf23b2"
+    },
+    {
+      "path": ".trellis/scripts/__init__.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\__init__.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "1242be5b972094c2e141aecbe81a4efd478f6534e3d5e28306374e6a18fcf46c",
+      "candidate_sha256": "1242be5b972094c2e141aecbe81a4efd478f6534e3d5e28306374e6a18fcf46c"
+    },
+    {
+      "path": ".trellis/scripts/add_session.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\add_session.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "ed6dddc50d83e6724358be3ea0a111424c95bad477ea9f6cf54e3137f28049e4",
+      "candidate_sha256": "ed6dddc50d83e6724358be3ea0a111424c95bad477ea9f6cf54e3137f28049e4"
+    },
+    {
+      "path": ".trellis/scripts/common/__init__.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\__init__.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "3d5e9347141f0296319a5beb29d69ae714c5a474b9078caeb3edd7c5f6562e22",
+      "candidate_sha256": "3d5e9347141f0296319a5beb29d69ae714c5a474b9078caeb3edd7c5f6562e22"
+    },
+    {
+      "path": ".trellis/scripts/common/active_task.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\active_task.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "28a81f8828538fb70a15c88edd90eda9d685adbde8862f67f630bce5b27d9832",
+      "candidate_sha256": "28a81f8828538fb70a15c88edd90eda9d685adbde8862f67f630bce5b27d9832"
+    },
+    {
+      "path": ".trellis/scripts/common/cli_adapter.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\cli_adapter.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "5d6bd9d6f5c631e7e792db7dd343351317f9643bc87b73a9a98abd51cefb4307",
+      "candidate_sha256": "5d6bd9d6f5c631e7e792db7dd343351317f9643bc87b73a9a98abd51cefb4307"
+    },
+    {
+      "path": ".trellis/scripts/common/config.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\config.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "43a22c4e88a06d6316d1bcd4730731bdecc22ae782e9f217b25ea53aa85cd416",
+      "candidate_sha256": "43a22c4e88a06d6316d1bcd4730731bdecc22ae782e9f217b25ea53aa85cd416"
+    },
+    {
+      "path": ".trellis/scripts/common/developer.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\developer.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "b2141b0145a41f8cedb4f9a24c925796edb2f0f6fde7c86b559513ec30499368",
+      "candidate_sha256": "b2141b0145a41f8cedb4f9a24c925796edb2f0f6fde7c86b559513ec30499368"
+    },
+    {
+      "path": ".trellis/scripts/common/git.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\git.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "6fc5845d0104dd506ebd8b366a24cb4b1e3d8777e4e6acc12ea15c9d8e2662f2",
+      "candidate_sha256": "6fc5845d0104dd506ebd8b366a24cb4b1e3d8777e4e6acc12ea15c9d8e2662f2"
+    },
+    {
+      "path": ".trellis/scripts/common/git_context.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\git_context.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "be0c68d4b566319484cf95a3ca6d6dee18e00f040cecadea6a98f10dc445f967",
+      "candidate_sha256": "be0c68d4b566319484cf95a3ca6d6dee18e00f040cecadea6a98f10dc445f967"
+    },
+    {
+      "path": ".trellis/scripts/common/io.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\io.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "75648caae03d5b1107d7aeccaa785d133b25762266e54a520d90ca8c76b43bdb",
+      "candidate_sha256": "75648caae03d5b1107d7aeccaa785d133b25762266e54a520d90ca8c76b43bdb"
+    },
+    {
+      "path": ".trellis/scripts/common/log.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\log.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "471df6895cfac80f995edebbf9974f6b7440634b7a688f28b8331c868bc0f3cf",
+      "candidate_sha256": "471df6895cfac80f995edebbf9974f6b7440634b7a688f28b8331c868bc0f3cf"
+    },
+    {
+      "path": ".trellis/scripts/common/packages_context.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\packages_context.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "efe158d7c99c2268851d0216fbb08de22836e418a8dbeb73575b8cc249eed7b7",
+      "candidate_sha256": "efe158d7c99c2268851d0216fbb08de22836e418a8dbeb73575b8cc249eed7b7"
+    },
+    {
+      "path": ".trellis/scripts/common/paths.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\paths.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "5f66eb073c296a8a920048c1c53d8236783ccb998c8c25a68a540534d30abd02",
+      "candidate_sha256": "5f66eb073c296a8a920048c1c53d8236783ccb998c8c25a68a540534d30abd02"
+    },
+    {
+      "path": ".trellis/scripts/common/safe_commit.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\safe_commit.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "baa5c82324eb62154374ec63394ecdc8609bb37d93892e3bcb88f452bb7d6446",
+      "candidate_sha256": "baa5c82324eb62154374ec63394ecdc8609bb37d93892e3bcb88f452bb7d6446"
+    },
+    {
+      "path": ".trellis/scripts/common/session_context.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\session_context.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "a6550aa11cb543f7195f66a1ab1f09572d1cf94be5505cfb23edd928ff2ba836",
+      "candidate_sha256": "a6550aa11cb543f7195f66a1ab1f09572d1cf94be5505cfb23edd928ff2ba836"
+    },
+    {
+      "path": ".trellis/scripts/common/spec_inject.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\spec_inject.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "f94d33a118b2b4299467685e0adb420731ae5e7e9899f6b143b1ccbc3f4111b3",
+      "candidate_sha256": "f94d33a118b2b4299467685e0adb420731ae5e7e9899f6b143b1ccbc3f4111b3"
+    },
+    {
+      "path": ".trellis/scripts/common/spec_match.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\spec_match.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "baf3b17b15c279475f99699ac6e039bc68285d5dbfbda28f279aa8346cb0c59a",
+      "candidate_sha256": "baf3b17b15c279475f99699ac6e039bc68285d5dbfbda28f279aa8346cb0c59a"
+    },
+    {
+      "path": ".trellis/scripts/common/task_context.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\task_context.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "be5fa407f99c2400075194dbaa8b6ec996ce8aac2122d191bb9cb11e479a9476",
+      "candidate_sha256": "be5fa407f99c2400075194dbaa8b6ec996ce8aac2122d191bb9cb11e479a9476"
+    },
+    {
+      "path": ".trellis/scripts/common/task_queue.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\task_queue.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "0be61f713462b1fe4574927c82fc4704e678afe72dcb9813543aedf2f9e9e0c5",
+      "candidate_sha256": "0be61f713462b1fe4574927c82fc4704e678afe72dcb9813543aedf2f9e9e0c5"
+    },
+    {
+      "path": ".trellis/scripts/common/task_store.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\task_store.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "8df5c883c0e863006e04e7fe437fec89ece308ff2b42703ec85d20dacaa7c8bb",
+      "candidate_sha256": "8df5c883c0e863006e04e7fe437fec89ece308ff2b42703ec85d20dacaa7c8bb"
+    },
+    {
+      "path": ".trellis/scripts/common/task_utils.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\task_utils.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "90c0a6d50bad502c3f01cb24c1ccfeb0eece5e2c69efaff8d65eb827fba43871",
+      "candidate_sha256": "90c0a6d50bad502c3f01cb24c1ccfeb0eece5e2c69efaff8d65eb827fba43871"
+    },
+    {
+      "path": ".trellis/scripts/common/tasks.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\tasks.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "4436a8b0b53c270a35989e26d9dbd92669408c6562d88c02083a404562da85fe",
+      "candidate_sha256": "4436a8b0b53c270a35989e26d9dbd92669408c6562d88c02083a404562da85fe"
+    },
+    {
+      "path": ".trellis/scripts/common/trellis_config.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\trellis_config.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "e282e897183e3ec2f4e6e56349431946e5f98c1c31d3eca4de7fc44e1383a7bf",
+      "candidate_sha256": "e282e897183e3ec2f4e6e56349431946e5f98c1c31d3eca4de7fc44e1383a7bf"
+    },
+    {
+      "path": ".trellis/scripts/common/types.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\types.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "9962081cc2608fb9d1deb32c6880e336f62cdca6b338e7ae813304701e155ee9",
+      "candidate_sha256": "9962081cc2608fb9d1deb32c6880e336f62cdca6b338e7ae813304701e155ee9"
+    },
+    {
+      "path": ".trellis/scripts/common/workflow_phase.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\workflow_phase.py",
+      "tracked_in_current_index": true,
+      "selection": "checker_reference",
+      "source_sha256": "c3d00011a4d8c3d958ec57cea50b97f4170dce7c28381ad3915dae0870167d6e",
+      "candidate_sha256": "c3d00011a4d8c3d958ec57cea50b97f4170dce7c28381ad3915dae0870167d6e"
+    },
+    {
+      "path": ".trellis/scripts/common/workflow_selection.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\common\\workflow_selection.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "b136d6ae41aac95f4d5f425b641b62b7002f7cff2d26aa44b056cef9a2242753",
+      "candidate_sha256": "b136d6ae41aac95f4d5f425b641b62b7002f7cff2d26aa44b056cef9a2242753"
+    },
+    {
+      "path": ".trellis/scripts/get_context.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\get_context.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "af3ea7cd563a453227cf2cb4ab04d667390046b7febfac2217348d0892781f4b",
+      "candidate_sha256": "af3ea7cd563a453227cf2cb4ab04d667390046b7febfac2217348d0892781f4b"
+    },
+    {
+      "path": ".trellis/scripts/get_developer.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\get_developer.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "84c27076323c3e0f2c9c8ed16e8aa865e225d902a187c37e20ee1a46e7142d8f",
+      "candidate_sha256": "84c27076323c3e0f2c9c8ed16e8aa865e225d902a187c37e20ee1a46e7142d8f"
+    },
+    {
+      "path": ".trellis/scripts/hooks/linear_sync.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\hooks\\linear_sync.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "cfc270b7ff775caa5b2434823c45414a3b37f9ba2aa1e293a26daef9fd2e577a",
+      "candidate_sha256": "cfc270b7ff775caa5b2434823c45414a3b37f9ba2aa1e293a26daef9fd2e577a"
+    },
+    {
+      "path": ".trellis/scripts/init_developer.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\init_developer.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "0943f1c240993649ab89b91a2c5b379e84daa8c53b35f0490774bff05a552873",
+      "candidate_sha256": "0943f1c240993649ab89b91a2c5b379e84daa8c53b35f0490774bff05a552873"
+    },
+    {
+      "path": ".trellis/scripts/task.py",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\scripts\\task.py",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "5c96c508c318364da32abcf1b40a52a3172ea97ddaf8407b7160584ebd8c1f95",
+      "candidate_sha256": "5c96c508c318364da32abcf1b40a52a3172ea97ddaf8407b7160584ebd8c1f95"
+    },
+    {
+      "path": ".trellis/spec/frontend/component-guidelines.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\frontend\\component-guidelines.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "d373408f2847c8c463f9c9d386a58b9011a9b4408c9987c30b208d14f4009345",
+      "candidate_sha256": "d373408f2847c8c463f9c9d386a58b9011a9b4408c9987c30b208d14f4009345"
+    },
+    {
+      "path": ".trellis/spec/frontend/directory-structure.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\frontend\\directory-structure.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "07becd9afff4fac91bdb2e98d71ade19855c825caa735e9b80c5e0ac8bec0baf",
+      "candidate_sha256": "07becd9afff4fac91bdb2e98d71ade19855c825caa735e9b80c5e0ac8bec0baf"
+    },
+    {
+      "path": ".trellis/spec/frontend/hook-guidelines.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\frontend\\hook-guidelines.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "c0e7b4e6d8aef9f10175105b9adcf9591fa91ab568b052467394a0c80119df7b",
+      "candidate_sha256": "c0e7b4e6d8aef9f10175105b9adcf9591fa91ab568b052467394a0c80119df7b"
+    },
+    {
+      "path": ".trellis/spec/frontend/index.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\frontend\\index.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "77af6d9b2a8926a40900f094c7bdea82a20281ff26466ff918c7ff3527da59b6",
+      "candidate_sha256": "77af6d9b2a8926a40900f094c7bdea82a20281ff26466ff918c7ff3527da59b6"
+    },
+    {
+      "path": ".trellis/spec/frontend/quality-guidelines.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\frontend\\quality-guidelines.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "fec91806d56f243171bd2b9bee51715015f244998b4fdca3d0cff7b318c8b9aa",
+      "candidate_sha256": "fec91806d56f243171bd2b9bee51715015f244998b4fdca3d0cff7b318c8b9aa"
+    },
+    {
+      "path": ".trellis/spec/frontend/state-management.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\frontend\\state-management.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "038513ff7bafb4311c2551a543d2b465efa5cf0bb3ef0086f9f796598bd7bb70",
+      "candidate_sha256": "038513ff7bafb4311c2551a543d2b465efa5cf0bb3ef0086f9f796598bd7bb70"
+    },
+    {
+      "path": ".trellis/spec/frontend/type-safety.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\frontend\\type-safety.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "ddc697e130d44353ff5234df84cc18731e1a9ff05c23b3d14c29719e8f0eba61",
+      "candidate_sha256": "ddc697e130d44353ff5234df84cc18731e1a9ff05c23b3d14c29719e8f0eba61"
+    },
+    {
+      "path": ".trellis/spec/guides/code-reuse-thinking-guide.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\guides\\code-reuse-thinking-guide.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "86fd10dc10916c00309714aa2275234f01b0ad40d21a485d43b3422e7ca79397",
+      "candidate_sha256": "86fd10dc10916c00309714aa2275234f01b0ad40d21a485d43b3422e7ca79397"
+    },
+    {
+      "path": ".trellis/spec/guides/cross-layer-thinking-guide.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\guides\\cross-layer-thinking-guide.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "e1759cc3e925db19b727ed576c223da41263f1ae8bd2c56801cc45eeb73074e4",
+      "candidate_sha256": "e1759cc3e925db19b727ed576c223da41263f1ae8bd2c56801cc45eeb73074e4"
+    },
+    {
+      "path": ".trellis/spec/guides/index.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\guides\\index.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "9bd40da5ec360b653d4802c5ca1ac44787b9c133870f5d01dda77f0f4c81727c",
+      "candidate_sha256": "9bd40da5ec360b653d4802c5ca1ac44787b9c133870f5d01dda77f0f4c81727c"
+    },
+    {
+      "path": ".trellis/spec/residential-monitor/backend/index.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\residential-monitor\\backend\\index.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "687a1f00d4c14aa413e65161ea1d9654a9b5d320d83274bd299d804548a29317",
+      "candidate_sha256": "687a1f00d4c14aa413e65161ea1d9654a9b5d320d83274bd299d804548a29317"
+    },
+    {
+      "path": ".trellis/spec/residential-monitor/backend/modules-and-errors.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\residential-monitor\\backend\\modules-and-errors.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "1951d70accfe3b3c010e0ca42ca482ffe2fae99461fab56cf1a65ba6ed5009ff",
+      "candidate_sha256": "1951d70accfe3b3c010e0ca42ca482ffe2fae99461fab56cf1a65ba6ed5009ff"
+    },
+    {
+      "path": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\residential-monitor\\backend\\secrets-and-cancellation.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "a4062c00caecafa4e535b60451e7b28ad01238e0cf73db9a99e299c63afa549c",
+      "candidate_sha256": "a4062c00caecafa4e535b60451e7b28ad01238e0cf73db9a99e299c63afa549c"
+    },
+    {
+      "path": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\residential-monitor\\frontend\\dto-and-decoding.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "eaf271f59a77542af927d44a280c91fed906084491621559fb082e4ba18367de",
+      "candidate_sha256": "eaf271f59a77542af927d44a280c91fed906084491621559fb082e4ba18367de"
+    },
+    {
+      "path": ".trellis/spec/residential-monitor/frontend/index.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\residential-monitor\\frontend\\index.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "cb6322aac2aeed47b16262c573b4d07fdf8d32dd70e391d0c40e6f1bfbfcbd5f",
+      "candidate_sha256": "cb6322aac2aeed47b16262c573b4d07fdf8d32dd70e391d0c40e6f1bfbfcbd5f"
+    },
+    {
+      "path": ".trellis/spec/residential-monitor/frontend/view-state.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\residential-monitor\\frontend\\view-state.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "aa27a504210bfbc91e1285838f9f903f0565e526e529728053843bcf4bc600a0",
+      "candidate_sha256": "aa27a504210bfbc91e1285838f9f903f0565e526e529728053843bcf4bc600a0"
+    },
+    {
+      "path": ".trellis/spec/residential-monitor/index.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\residential-monitor\\index.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "128c2b40be17b96b2e8d1d9c705d66132b221aaee1f96ae03a219f89772405a0",
+      "candidate_sha256": "128c2b40be17b96b2e8d1d9c705d66132b221aaee1f96ae03a219f89772405a0"
+    },
+    {
+      "path": ".trellis/spec/residential-monitor/storage/index.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\residential-monitor\\storage\\index.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "3dcda38119065effc83cd37e6110952144d4237c830fd53a1e6f3c7b823ce318",
+      "candidate_sha256": "3dcda38119065effc83cd37e6110952144d4237c830fd53a1e6f3c7b823ce318"
+    },
+    {
+      "path": ".trellis/spec/residential-monitor/storage/sqlite-contract.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\spec\\residential-monitor\\storage\\sqlite-contract.md",
+      "tracked_in_current_index": true,
+      "selection": "tracked_scripts_or_spec",
+      "source_sha256": "46b2a6eabf5e685ca5894ecbcc3fb367b6ea22e03f8e5b7f28d253834260f050",
+      "candidate_sha256": "46b2a6eabf5e685ca5894ecbcc3fb367b6ea22e03f8e5b7f28d253834260f050"
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/audit.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-five-harness-audit\\research\\audit.md",
+      "tracked_in_current_index": false,
+      "selection": "checker_reference",
+      "source_sha256": "16a0db80b9c38b57d1db603767f22ec1cb1ad14cd613456923e3a7ac6e434e91",
+      "candidate_sha256": "16a0db80b9c38b57d1db603767f22ec1cb1ad14cd613456923e3a7ac6e434e91"
+    },
+    {
+      "path": ".trellis/tasks/archive/2026-09/09-07-evergreen-harness-audit/research/harness-audit.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\archive\\2026-09\\09-07-evergreen-harness-audit\\research\\harness-audit.md",
+      "tracked_in_current_index": true,
+      "selection": "checker_reference",
+      "source_sha256": "74ec16ba1d08d758064ddc26c5e7f63edac299b55c060802477d0f1891046d29",
+      "candidate_sha256": "74ec16ba1d08d758064ddc26c5e7f63edac299b55c060802477d0f1891046d29"
+    },
+    {
+      "path": ".trellis/workflow.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\workflow.md",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "2540200a69777534fdc1632c38fa8caf247278d4de654a5c5c47269cbc1dcc0f",
+      "candidate_sha256": "2540200a69777534fdc1632c38fa8caf247278d4de654a5c5c47269cbc1dcc0f"
+    },
+    {
+      "path": "AGENTS.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\AGENTS.md",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "f602d7e74cada3cd9c6d617dad36cbc1a90d90c19b92bd5ccb40d9794b557bb9",
+      "candidate_sha256": "f602d7e74cada3cd9c6d617dad36cbc1a90d90c19b92bd5ccb40d9794b557bb9"
+    },
+    {
+      "path": "CLAUDE.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\CLAUDE.md",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "c0a67ce322c8394a7e34c9ccbe03addce4cf40a900134638cd04e94fd7669236",
+      "candidate_sha256": "c0a67ce322c8394a7e34c9ccbe03addce4cf40a900134638cd04e94fd7669236"
+    },
+    {
+      "path": "CONTEXT.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\CONTEXT.md",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "af43ff92f1777d5bdef961c0af3f3e95986ed9305b41d7539c4ab04fc87d8010",
+      "candidate_sha256": "af43ff92f1777d5bdef961c0af3f3e95986ed9305b41d7539c4ab04fc87d8010"
+    },
+    {
+      "path": "docs/agents/harnesses.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\docs\\agents\\harnesses.md",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "19a6c11f6377f8dbd7774fb05f6294a423c2ef79c4c6b697f1a4ac9749842b3e",
+      "candidate_sha256": "19a6c11f6377f8dbd7774fb05f6294a423c2ef79c4c6b697f1a4ac9749842b3e"
+    },
+    {
+      "path": "docs/agents/residential-rule-tuning.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\docs\\agents\\residential-rule-tuning.md",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "88c5e5eca6678574661504fee6a7b217f9be09a19caaca36683c6cb3e728e754",
+      "candidate_sha256": "88c5e5eca6678574661504fee6a7b217f9be09a19caaca36683c6cb3e728e754"
+    },
+    {
+      "path": "justfile",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\justfile",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "e3307f113086045f7228a2dfb2eab8894d4f05787fde1d124e1899381a64e09a",
+      "candidate_sha256": "e3307f113086045f7228a2dfb2eab8894d4f05787fde1d124e1899381a64e09a"
+    },
+    {
+      "path": "package.json",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\package.json",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "7943626a23bb2dfd34ce45f711e247c62b547aa76dff4062d2aa3ea31617b824",
+      "candidate_sha256": "7943626a23bb2dfd34ce45f711e247c62b547aa76dff4062d2aa3ea31617b824"
+    },
+    {
+      "path": "scripts/check-agent-contract.js",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\scripts\\check-agent-contract.js",
+      "tracked_in_current_index": false,
+      "selection": "explicit_public",
+      "source_sha256": "67d9aec81cd20a09457ce240902056647b9dee94e1de1bb184e742b793e868de",
+      "candidate_sha256": "67d9aec81cd20a09457ce240902056647b9dee94e1de1bb184e742b793e868de"
+    },
+    {
+      "path": "scripts/check-harness-environment.js",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\scripts\\check-harness-environment.js",
+      "tracked_in_current_index": false,
+      "selection": "explicit_public",
+      "source_sha256": "be330ee29ee5d8e8e6320e57b169311982f09eef977474c8806f7d1442333065",
+      "candidate_sha256": "be330ee29ee5d8e8e6320e57b169311982f09eef977474c8806f7d1442333065"
+    },
+    {
+      "path": "skills/residential-rule-tuning/SKILL.md",
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\skills\\residential-rule-tuning\\SKILL.md",
+      "tracked_in_current_index": true,
+      "selection": "explicit_public",
+      "source_sha256": "b644d3db0a4947b4e01a7bcb341ec02d104c89cfcd43454229ca9485471dfcaa",
+      "candidate_sha256": "b644d3db0a4947b4e01a7bcb341ec02d104c89cfcd43454229ca9485471dfcaa"
+    }
+  ],
+  "scenario": "缺失四可选覆盖的最小公开合同隔离 init",
+  "fresh_checkout": false
+}

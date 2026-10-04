@@ -1,0 +1,6 @@
+   Compiling fastrand v2.5.0
+   Compiling tempfile v3.27.0
+   Compiling residential-monitor v0.3.0 (D:\Documents\Code\Github\clash-verge-ai-residential\bench-data\t05-rebuild-20261002-4f8a8c68\sources\candidate\residential-monitor\src-tauri)
+    Finished `release` profile [optimized] target(s) in 20.94s
+mbx[cache]: 2 hits, 0 misses, 1 bypassed; 0 B downloaded, 0 B uploaded, 0 B stored locally
+mbx[savings]: 3391 compilations served. the monocle stays on.

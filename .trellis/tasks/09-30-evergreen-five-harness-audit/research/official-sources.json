@@ -1,0 +1,64 @@
+[
+  {
+    "name": "codex-agents",
+    "url": "https://developers.openai.com/codex/guides/agents-md/",
+    "final_url": "https://learn.chatgpt.com/docs/agent-configuration/agents-md",
+    "status": "OK",
+    "bytes": 388084,
+    "checked_on": "2026-09-30",
+    "analysis_location": "audit.md section 5 and 7"
+  },
+  {
+    "name": "codex-subagents",
+    "url": "https://learn.chatgpt.com/docs/agent-configuration/subagents",
+    "final_url": "https://learn.chatgpt.com/docs/agent-configuration/subagents",
+    "status": "OK",
+    "bytes": 600136,
+    "checked_on": "2026-09-30",
+    "analysis_location": "audit.md section 5 and 7"
+  },
+  {
+    "name": "codex-hooks",
+    "url": "https://learn.chatgpt.com/docs/hooks",
+    "final_url": "https://learn.chatgpt.com/docs/hooks",
+    "status": "OK",
+    "bytes": 512976,
+    "checked_on": "2026-09-30",
+    "analysis_location": "audit.md section 5 and 7"
+  },
+  {
+    "name": "claude",
+    "url": "https://code.claude.com/docs/en/sub-agents.md",
+    "final_url": "https://code.claude.com/docs/en/sub-agents.md",
+    "status": "OK",
+    "bytes": 107119,
+    "checked_on": "2026-09-30",
+    "analysis_location": "audit.md section 5 and 7"
+  },
+  {
+    "name": "grok",
+    "url": "https://raw.githubusercontent.com/xai-org/grok-build/main/crates/codegen/xai-grok-shell/user-guide/16-subagents.md",
+    "status": "ERROR",
+    "error": "HTTP Error 404: Not Found",
+    "checked_on": "2026-09-30",
+    "analysis_location": "audit.md section 5 and 7"
+  },
+  {
+    "name": "kimi",
+    "url": "https://www.kimi.com/code/docs/en/kimi-code-cli/customization/agents.html",
+    "final_url": "https://www.kimi.com/code/docs/en/kimi-code-cli/customization/agents.html",
+    "status": "OK",
+    "bytes": 84566,
+    "checked_on": "2026-09-30",
+    "analysis_location": "audit.md section 5 and 7"
+  },
+  {
+    "name": "omp",
+    "url": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/docs/task-agent-discovery.md",
+    "final_url": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/docs/task-agent-discovery.md",
+    "status": "OK",
+    "bytes": 20410,
+    "checked_on": "2026-09-30",
+    "analysis_location": "audit.md section 5 and 7"
+  }
+]

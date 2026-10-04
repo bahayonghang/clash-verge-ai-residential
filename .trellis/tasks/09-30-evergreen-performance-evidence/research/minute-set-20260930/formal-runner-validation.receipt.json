@@ -1,0 +1,29 @@
+{
+  "argv": [
+    "python",
+    "-X",
+    "utf8",
+    ".trellis/tasks/09-30-evergreen-performance-evidence/research/test-formal-replay-runner.py"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:16:36.812879+00:00",
+  "status": "finished",
+  "environment_overrides": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "exit_code": 0,
+  "finished_utc": "2026-09-30T15:16:36.988159+00:00",
+  "wall_seconds": 0.1744818999995914,
+  "logs": {
+    "stdout": {
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzip": "formal-runner-validation.stdout.raw.gz",
+      "readable": "formal-runner-validation.stdout.log"
+    },
+    "stderr": {
+      "raw_sha256": "042ec7e5c8042d844a44ed72e166d30617363f0902e851f28db6cf185daf9ade",
+      "gzip": "formal-runner-validation.stderr.raw.gz",
+      "readable": "formal-runner-validation.stderr.log"
+    }
+  }
+}

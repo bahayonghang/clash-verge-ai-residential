@@ -1,0 +1,32 @@
+{
+  "prepared_utc": "2026-09-30T13:43:18.470281+00:00",
+  "repo": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "baseline_source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-approved-baseline-20260930-50086853fbcc43bea6015946489e3006\\source",
+  "baseline_revision": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+  "run_root": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml",
+  "baseline_target": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\baseline-target",
+  "candidate_target": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target",
+  "executables": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables",
+  "evidence": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\build-20260930",
+  "instrumentation_files": [
+    "residential-monitor/src-tauri/src/bench.rs",
+    "residential-monitor/src-tauri/src/bench/facade.rs",
+    "residential-monitor/src-tauri/src/bench/process.rs",
+    "residential-monitor/src-tauri/src/bench/write_vfs.rs",
+    "residential-monitor/src-tauri/src/bin/monitor-bench.rs"
+  ],
+  "candidate_head": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+  "environment": {
+    "RUSTFLAGS": null,
+    "RUSTUP_TOOLCHAIN": null,
+    "CARGO_BUILD_TARGET": null,
+    "CARGO_PROFILE_RELEASE_DEBUG": null,
+    "CARGO_PROFILE_RELEASE_LTO": null
+  },
+  "free_bytes": {
+    "C": 476773810176,
+    "D": 1155132047360
+  },
+  "corpus_database_opened": false,
+  "dist_scope": "Copied only for Tauri release embedding; no UI equivalence claim"
+}

@@ -1,0 +1,109 @@
+{
+  "metadata_only": true,
+  "inference_started": false,
+  "historical_de8a_entry_exists": false,
+  "entries": [
+    {
+      "harness": "claude",
+      "exists": true,
+      "metadata_only": true,
+      "inference_started": false,
+      "probes": [
+        {
+          "label": "version",
+          "exit_code": 0
+        },
+        {
+          "label": "help",
+          "exit_code": 0
+        }
+      ],
+      "bytes": 245092000,
+      "last_write_utc": "2026-10-01T12:45:30.439600+00:00",
+      "version_output": "2.1.286 (Claude Code)"
+    },
+    {
+      "harness": "codex",
+      "exists": true,
+      "metadata_only": true,
+      "inference_started": false,
+      "probes": [
+        {
+          "label": "version",
+          "exit_code": 0
+        },
+        {
+          "label": "help",
+          "exit_code": 0
+        },
+        {
+          "label": "exec-help",
+          "exit_code": 0
+        }
+      ],
+      "bytes": 324702000,
+      "last_write_utc": "2026-10-02T01:32:50.141961+00:00",
+      "version_output": "codex-cli 0.159.2",
+      "sha256": "fcd5eafefb4ff4a607f244e099e0974f66e17966b6ffda6948de2ef3a7a79530"
+    },
+    {
+      "harness": "grok",
+      "exists": true,
+      "metadata_only": true,
+      "inference_started": false,
+      "probes": [
+        {
+          "label": "version",
+          "exit_code": 0
+        },
+        {
+          "label": "help",
+          "exit_code": 0,
+          "receipt": "grok-help.receipt.json"
+        }
+      ],
+      "bytes": 159032648,
+      "last_write_utc": "2026-09-30T23:27:19.622566+00:00",
+      "version_output": "grok 1.0.46 (2765805b9442)"
+    },
+    {
+      "harness": "kimi",
+      "exists": true,
+      "metadata_only": true,
+      "inference_started": false,
+      "probes": [
+        {
+          "label": "version",
+          "exit_code": 0
+        },
+        {
+          "label": "help",
+          "exit_code": 0,
+          "receipt": "kimi-help.receipt.json"
+        }
+      ],
+      "bytes": 146705184,
+      "last_write_utc": "2026-09-18T02:07:29.769927+00:00",
+      "version_output": "2.0.0"
+    },
+    {
+      "harness": "omp",
+      "exists": true,
+      "metadata_only": true,
+      "inference_started": false,
+      "probes": [
+        {
+          "label": "version",
+          "exit_code": 0
+        },
+        {
+          "label": "help",
+          "exit_code": 0
+        }
+      ],
+      "bytes": 908,
+      "last_write_utc": "2026-10-02T01:47:36.316544+00:00",
+      "version_output": "omp/18.4.10"
+    }
+  ]
+}

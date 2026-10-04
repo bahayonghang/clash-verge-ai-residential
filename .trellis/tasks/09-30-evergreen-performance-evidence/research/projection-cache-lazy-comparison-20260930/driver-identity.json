@@ -1,0 +1,13 @@
+{
+  "argv": [
+    ".trellis/tasks/09-30-evergreen-performance-evidence/research/compare-projection-candidate.py",
+    "--candidate-directory",
+    "projection-cache-lazy-20260930",
+    "--output-directory",
+    "projection-cache-lazy-comparison-20260930",
+    "--rounds",
+    "2",
+    "--skip-production"
+  ],
+  "sha256": "7b8d881a8f9e88ee4649997f64ca249af827cadbdaf17bf5f61adf66b928891c"
+}

@@ -1,0 +1,34 @@
+{
+  "harness": "codex",
+  "phase": "child",
+  "child_authorized": true,
+  "started_utc": "2026-10-02T02:20:30.125727+00:00",
+  "steps": [
+    {
+      "label": "execute",
+      "argv": [
+        "python",
+        "-B",
+        ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture.py",
+        "execute",
+        "--phase",
+        "child",
+        "--harness",
+        "codex",
+        "--child-readiness",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-runtime-validation\\research\\runtime-runs\\control\\child-readiness.json",
+        "--go",
+        "GO:9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9"
+      ],
+      "started_utc": "2026-10-02T02:20:30.130464+00:00",
+      "native_exit": 0,
+      "driver_child_pid": 61404,
+      "ended_utc": "2026-10-02T02:23:42.825367+00:00"
+    }
+  ],
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "head_is_baseline_only": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+  "status": "EXECUTOR_ENDED_REQUIRES_EVENT_REVIEW",
+  "ended_utc": "2026-10-02T02:23:42.826019+00:00",
+  "outer_exit": 0
+}

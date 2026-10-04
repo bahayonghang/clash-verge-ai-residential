@@ -1,0 +1,3 @@
+{"harness": "claude", "status": "BLOCKED_OR_FAILED_REQUIRES_REVIEW", "exit_code": 1}
+{"harness": "codex", "status": "CAPTURED_REQUIRES_REVIEW", "exit_code": 0}
+{"harness": "grok", "status": "BLOCKED_OR_FAILED_REQUIRES_REVIEW", "exit_code": 0}

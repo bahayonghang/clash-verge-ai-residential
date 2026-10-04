@@ -1,0 +1,13 @@
+   Compiling residential-monitor v0.3.0 (D:\Documents\Code\Github\clash-verge-ai-residential\residential-monitor\src-tauri)
+mbx[progress]: 15s elapsed; 0 hits, 0 misses, 1 bypassed, 0 not looked up; ~0s compiler work saved
+    Finished `release` profile [optimized] target(s) in 19.06s
+     Running unittests src\lib.rs (C:/Users/lyh/AppData/Local/Temp/resiwatch-t05-20260930-q1lnvpml/candidate-target\x86_64-pc-windows-msvc\release\deps\residential_monitor_lib-d2e33871bfe2d12d.exe)
+
+thread 'c3::raw_fold::tests::repeated_projection_values_preserve_fallbacks_missingness_and_exit_keys' (58832) panicked at src\c3\raw_fold.rs:1143:9:
+assertion `left == right` failed: Host ReportFilters { category: None, host: None, process: None, rule: None, chain: None, network: Some("__unknown__") }
+  left: (10, 100, 5, 120, 0, 0, 0)
+ right: (0, 0, 0, 0, 0, 0, 0)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+error: test failed, to rerun pass `--lib`
+mbx[cache]: 0 hits, 0 misses, 1 bypassed; 0 B downloaded, 0 B uploaded, 0 B stored locally
+mbx[savings]: 2574 compilations served. the monocle stays on.

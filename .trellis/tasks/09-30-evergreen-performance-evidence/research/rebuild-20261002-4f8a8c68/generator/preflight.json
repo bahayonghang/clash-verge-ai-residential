@@ -1,0 +1,69 @@
+{
+  "status": "PASSED_GENERATOR_PREFLIGHT; GENERATION_NOT_RUN",
+  "observed_utc": "2026-10-02T15:24:21.581487+00:00",
+  "executable_sha256": {
+    "baseline-monitor-bench.exe": "D590EF1082718856F0F92F865A260FE99D530F8DC05AE2DB4501157FE110F8A4",
+    "candidate-monitor-bench.exe": "AAF4A5ED3626FFA0502948F1911027ECA888E2F09460C1D86AD94F7CFFB51B9B",
+    "candidate-monitor-db.exe": "F2AC7CF423513AA28127834003F676D5D6039479B41D4351042002DFE5F0324C",
+    "candidate-library-tests.exe": "A6AE2DDF74E77EA6FA4A5E5A79DAF00714C1FF0A24251A3B5A49A58537DAD2EF"
+  },
+  "disk_free_bytes": {
+    "C": 538856828928,
+    "D": 1202632949760
+  },
+  "competing_load": [
+    {
+      "pid": 7984,
+      "name": "pwsh.exe",
+      "cmdline_head": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -NoLogo -NoProfile -NonInteractive -File D:\\Documents\\Code\\Rust\\Exp\\ferrots\\runs\\p2-development\\p2-v4-20261002\\executor-2"
+    },
+    {
+      "pid": 8860,
+      "name": "python.exe",
+      "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe -c import argparse, json, sys, os\nfrom pathlib import Path\npath, seed = sys.argv[1:3"
+    },
+    {
+      "pid": 12500,
+      "name": "python.exe",
+      "cmdline_head": "C:\\Users\\lyh\\scoop\\persist\\uv\\python\\versions\\cpython-3.12-windows-x86_64-none\\python.exe -c import argparse, json, sys, os\nfrom pathlib import Path\npath, seed "
+    },
+    {
+      "pid": 45552,
+      "name": "python.exe",
+      "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe tools/validation/p2_acceptance.py ett-reference --suite runs/p2-acceptance/20261002-"
+    },
+    {
+      "pid": 48028,
+      "name": "pwsh.exe",
+      "cmdline_head": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -File D:\\Documents\\Code\\Rust\\Exp\\ferrots\\runs\\p2-development\\p2-v4"
+    },
+    {
+      "pid": 50272,
+      "name": "python.exe",
+      "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\run_itransformer.py --seed 2023 -"
+    },
+    {
+      "pid": 51228,
+      "name": "bash.exe",
+      "cmdline_head": "C:\\Program Files\\Git\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790950182404-qo53pm.sh 2>/dev/null || true && export TEMP='C:\\Us"
+    },
+    {
+      "pid": 52584,
+      "name": "bash.exe",
+      "cmdline_head": "C:\\Program Files\\Git\\bin\\..\\usr\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790950182404-qo53pm.sh 2>/dev/null || true && export "
+    },
+    {
+      "pid": 55720,
+      "name": "python.exe",
+      "cmdline_head": "C:\\Users\\lyh\\scoop\\persist\\uv\\python\\versions\\cpython-3.12-windows-x86_64-none\\python.exe D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\run_itransformer.py"
+    }
+  ],
+  "generator_sha256": "086E7770DEB82B7F8EBD54D0D4BA54E7ED1233238989BCB5E4EB3C64EC837822",
+  "competing_load_policy": "Recorded only; generation wall time is not a formal gate. User processes are not stopped.",
+  "fixed_arguments": {
+    "days": 30,
+    "seed": 20260919,
+    "start_utc": 1787184000,
+    "expected_end_utc": 1789776000
+  }
+}

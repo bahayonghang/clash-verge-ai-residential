@@ -1,0 +1,22 @@
+✔ 安装器写入已存在平台且幂等 (17.406ms)
+✔ 不创建缺失的平台目录 (11.3293ms)
+✔ 同名不同内容默认拒绝且不写入任何目标 (13.474ms)
+✔ --force 先备份再替换 (15.4511ms)
+✔ --check 在有差异时非零退出 (13.8703ms)
+✔ --platforms 只写入指定目录 (11.4938ms)
+✔ 未知 --platforms 值被拒绝 (0.2064ms)
+✔ --check 在零个平台根时成功，不证明已安装 (3.8852ms)
+✔ 真实 payload 写入全部七个平台且二次安装幂等 (66.1804ms)
+✔ SKILL.md 含 YAML frontmatter 的 name 与 description (0.5832ms)
+✔ SKILL.md 含六个规定小节 (0.2286ms)
+✔ 生成器对 routing 表 26 个开关做完整性检查 (0.3806ms)
+✔ 新增核心开关仅映射各自域名，不将 IP 或进程记为域名归属 (0.3587ms)
+✔ grok_web_assets 不把 auth.x.ai 算作该开关独有流量 (0.1884ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 264.5526

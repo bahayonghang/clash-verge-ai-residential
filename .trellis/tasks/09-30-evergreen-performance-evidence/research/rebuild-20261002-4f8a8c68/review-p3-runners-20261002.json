@@ -1,0 +1,125 @@
+{
+  "review": "T05 P3 new runner binding static review",
+  "date": "2026-10-02",
+  "mode": "read-only static; no runner, cargo, native, generator, test or SQLite access",
+  "conclusion": "P3_RUNNER_REVIEW_FAIL",
+  "first_failing_item": 2,
+  "items": [
+    {
+      "id": 1,
+      "name": "original runners unchanged",
+      "status": "PASS",
+      "evidence": {
+        "run-formal-replay.py": "6C88ACCA5994C02266F262FBC185EBF9D09DE1AB9EC96BAA302993A0CBF381E9",
+        "run-retained-capacity.py": "9FA8C225BEF9A9F7718676D7A5E2D00B1E174270784C99094ED5DCC2F8D9FAA4",
+        "run-live-recorded.py": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C",
+        "runners/run-live-recorded.py": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C (byte-identical copy)",
+        "runners/run-formal-replay.py": "C958752DAB05A90C8A3D9FC0ABA9B3203832CA8A92684DC2441DC8630E309F2E",
+        "runners/run-capacity.py": "EBCD45F45A6C6E5B2E369A992B057132D70B58115EDB7C865AE1AE1179654C54",
+        "patch_check": "diff -u body (from line 3) of original vs new copy equals the stored .patch body for both runners: replay body SHA256 2CF3DEE76292B99009B48B80877500AD1725AA18751CA7057F4C6A661A3D01F0, capacity body SHA256 8C0BA6CC7BFC3120FB40D2AFD7209C698DBC213C833AAF51C1193CBB5C9A41F6"
+      }
+    },
+    {
+      "id": 2,
+      "name": "patch differences limited to binding/receipt/competing-load; validation, cases, metrics, limits, exit semantics unchanged",
+      "status": "FAIL",
+      "severity": "minor",
+      "evidence": {
+        "unchanged": [
+          "validate_report and the expected options dict",
+          "matrix 11 cases: A50/A250/A1000 x unchanged/counters/metadata, then A250 metadata backlog/failed with period_rule; baseline->candidate",
+          "primary r1..r3 A250 counters complete 300/30/0; baseline->candidate",
+          "F1-F11 definitions, F12 per case, F12 nonempty UNVERIFIED record, limits 1.10/0.70/0.50, AC7 three totals",
+          "replay exit 2/3/0; capacity exit 2/3",
+          "capacity case order and rounds 21/21/1/21/21/21 = 106, argv, 10000 ms, oracle SQL, exact row/type/unknown/zeroFlow/dataVersion/window/capability/truncation checks, postflight hash and WAL"
+        ],
+        "binding_changes": [
+          "STATE from <EvidenceRoot>/state.json; identities from state.executable_identities",
+          "candidate source root is candidate_source (isolated copy) instead of repo; manifests from state.baseline_manifest/source_manifest",
+          "OUT/DATA from evidence root and asset_root",
+          "marker/DB hashes from corpus_identities; A50 DB hash is now also checked (stronger than original)",
+          "read_text encoding utf-8 / utf-8-sig",
+          "sys.dont_write_bytecode = True"
+        ],
+        "removed_checks_replaced": "Original source-before == source-after JSON comparison and identity.source_manifest_sha256 binding are removed. They are replaced by actual file size/hash checks against state manifests plus candidate-copy-after.json == state.source_manifest.",
+        "finding": "run-capacity.py:148 builds the receipt dict with started_utc first and competing_load_at_start=competing_load() last. The psutil scan runs after started_utc and before Popen. started_utc is the lower bound of the generatedUtc validation at run-capacity.py:178. The lower bound moves earlier by the scan duration. Original run-retained-capacity.py:129 had no work between started_utc and Popen. wall_ms is not affected."
+      },
+      "required_fix": "R1"
+    },
+    {
+      "id": 3,
+      "name": "no reference to old trees, Temp, old marker/DB hashes, run_root",
+      "status": "PASS",
+      "evidence": "Search of both new runners for build-20260930, candidate-retained-20260930, retained-capacity-20260930, AppData, Temp, AA4A7ABD, 667A21E9, e6fdd679, run_root, candidate-directory, output-directory, database_sha256_after_probes, FROZEN: no match. The only hit is the receipt key name source_manifest_sha256 in execution-contract.json. Capacity still reads ../corpus-a250-verification.json read-only for SQL text and A250 30d expected rows, as the original did."
+    },
+    {
+      "id": 4,
+      "name": "state keys and hash case",
+      "status": "PASS",
+      "evidence": {
+        "keys_used": [
+          "status",
+          "executable_identities[baseline-monitor-bench.exe|candidate-monitor-bench.exe|candidate-monitor-db.exe].path/sha256",
+          "baseline_source",
+          "candidate_source",
+          "baseline_manifest",
+          "source_manifest",
+          "asset_root",
+          "repo",
+          "baseline_revision",
+          "corpus_identities[\"50\"|\"250\"].marker_sha256/db_sha256"
+        ],
+        "present_now": "All keys except corpus_identities exist in state.json; current status 'P1_BUILD_AND_VIRTUAL_SMOKE_VALIDATED; WAITING_INDEPENDENT_REVIEW'.",
+        "generator_writes": "generator.py:558-582 writes corpus_identities with str(active) keys '50'/'250' and fields db, marker, db_sha256, marker_sha256, db_bytes, and status 'P2_GENERATION_ORACLE_PROBES_ENDED; WAITING_P3_RUNNER_BINDING'. This status is written only after generation, SQL oracle PASS and probes end.",
+        "case": "State exe sha256 values and all 108/103 manifest sha256 values are 64-char uppercase. generator.sha() returns uppercase. Runner comparisons apply .upper() to computed digests and compare with uppercase state values. validate_report uses executable.upper(). Capacity postflight compares a lowercase digest with a lowercase digest.",
+        "manifest_equality": "inputs/candidate-copy-after.json == state.source_manifest: True. inputs/baseline-instrumented-source.json == state.baseline_manifest: True. Baseline manifest carries the five instrumented hashes 499F3B90/7BA08896/ED069D6B/83734ABF/C3B5D884. Candidate raw_fold.rs is 4D6E8FEB.",
+        "encoding": "state.json and candidate-copy-after.json are ASCII without BOM; utf-8 read is correct.",
+        "path": "Path(__file__).resolve().parents[1] equals state.evidence_root; generator ASSET equals state.asset_root."
+      }
+    },
+    {
+      "id": 5,
+      "name": "fresh-only outputs inside evidence/asset root",
+      "status": "PASS",
+      "evidence": "Replay OUT=<EvidenceRoot>/<set>, DATA=<asset_root>/data/<set>, assert not exists before mkdir. Capacity OUT=<EvidenceRoot>/capacity, assert not exists before mkdir; corpora read from <asset_root>/corpus-a{50,250}-30d. Directories matrix, primary, capacity, data/matrix, data/primary do not exist now. No write path into old evidence."
+    },
+    {
+      "id": 6,
+      "name": "competing-load start assert only blocks start, no gate-math change; psutil",
+      "status": "FAIL",
+      "evidence": {
+        "gate_math": "Unchanged. competing_load_observed / initial_competing_load are summary/receipt fields only; failures, gates and exit codes do not read them.",
+        "psutil": "Replay imports psutil at module top (hard dependency). Capacity imports psutil inside competing_load(); the first call runs before OUT exists. C:/Program Files/Python314/python.exe imports psutil 7.2.2.",
+        "finding_a": "run-formal-replay.py:38-39 creates OUT and DATA before the INITIAL_LOAD assert at lines 57-58. A blocked start leaves empty <EvidenceRoot>/<set> and <AssetRoot>/data/<set>. The fresh-only assert then blocks every retry on the fixed paths, and deletion is not allowed. Capacity runs the assert before OUT.mkdir (correct order).",
+        "finding_b": "Name matching uses monitor-bench.exe, monitor-db.exe, cargo.exe, rustc.exe and the cmdline substring 'ferrots'. The batch binaries are copied as baseline-monitor-bench.exe, candidate-monitor-bench.exe, candidate-monitor-db.exe and candidate-library-tests.exe; their psutil names do not match. Python drivers (replay, capacity, generator, read-corpus-oracle.py) are not matched. Capacity also omits monitor-db.exe. Overlap of P4/P5/P6 with each other is not detected at start, and competing_load_observed stays empty under such overlap."
+      },
+      "required_fix": ["R2", "R3"]
+    },
+    {
+      "id": 7,
+      "name": "risks",
+      "status": "NOTED",
+      "risks": [
+        "Candidate source label is now 'manifest-sha256:' + lowercase SHA256 of inputs/candidate-copy-after.json. The label differs from historical labels. argv and expected options use the same variable, so validation stays consistent.",
+        "Candidate source is checked from the isolated copy (candidate_source), not the repository working tree. This binds to the built executable. Repository drift after P1 is not checked. dist_manifest is not checked by either runner; the original runners did not check dist either.",
+        "Both runners assert state.status prefix P2_GENERATION_ORACLE_PROBES_ENDED. If the main session rewrites state.status after P3/P4/P5, later runners stop. Keep the status until capacity ends, or rebind.",
+        "The P2 status prefix is also written when stage probes end FAIL_DIAGNOSTIC_RETAINED. Runners do not read stage_probes. This matches the contract separation of diagnostics and formal gates.",
+        "state.json is read without a pinned hash. execution-contract.json records state_status but not the state.json SHA256 or the P2 oracle summary hash.",
+        "Capacity reads corpus-a250-verification.json with utf-8-sig. The file contains UTF-8 non-ASCII SQL text. Under the cp936 locale default (observed), the original read_text() raises UnicodeDecodeError ('gbk' codec, byte 0xAE at position 3177). The new decoding keeps the SQL text identical to the file bytes; SQL semantics unchanged.",
+        "Capacity A250 30d expected rows still come from the historical A250 oracle file. A50 rows and 1d rows come only from runtime SQL. P2 oracle outputs under oracle/run-20261002 are not cross-checked by the runner.",
+        "Duplicate 'import sys' in run-capacity.py is harmless."
+      ]
+    }
+  ],
+  "required_fixes": {
+    "R1": "run-capacity.py: call competing_load() before computing receipt started_utc (for example load = competing_load(); then build the receipt with started_utc and competing_load_at_start=load), so the generatedUtc lower bound is taken immediately before Popen as in the original.",
+    "R2": "run-formal-replay.py: move INITIAL_LOAD = competing_load() and its assert before 'assert not OUT.exists() and not DATA.exists()' and the mkdir calls.",
+    "R3": "Both runners: extend competing_load() to match the batch executable basenames (baseline-monitor-bench.exe, candidate-monitor-bench.exe, candidate-monitor-db.exe, candidate-library-tests.exe) or the STATE executable_identities paths; add monitor-db.exe to capacity; match python cmdlines of run-formal-replay.py, run-capacity.py, builder.py, generator.py and read-corpus-oracle.py, excluding os.getpid()."
+  },
+  "recommended": [
+    "Record state.json SHA256 and the P2 oracle summary.json SHA256 in each execution-contract.json.",
+    "Keep state.status prefix P2_GENERATION_ORACLE_PROBES_ENDED until capacity ends, or rebind the status assert.",
+    "After fixes, regenerate both .patch files and record new runner SHA256 values before re-review."
+  ],
+  "reviewer_deviation": "Two temporary diff outputs (d1, d2) were written to C:/Users/lyh/AppData/Local/Temp during review. They are outside the repository. They were not deleted because deletion is forbidden for this role."
+}

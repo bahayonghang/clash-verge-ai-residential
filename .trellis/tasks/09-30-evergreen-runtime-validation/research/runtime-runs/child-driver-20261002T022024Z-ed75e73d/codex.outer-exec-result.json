@@ -1,0 +1,14 @@
+{
+  "recorded_utc": "2026-10-02T13:58:02.563396+00:00",
+  "exec_session": 17160,
+  "exec_tool_exit": 0,
+  "tool_chunk_id": "5a0c93",
+  "tool_wall_time_seconds": 9.3e-06,
+  "tool_final_output": "{\"harness\": \"codex\", \"status\": \"BLOCKED_OR_FAILED_REQUIRES_REVIEW\", \"exit_code\": 0}\n{\"phase\": \"execute\", \"native_exit\": 0}\n",
+  "driver_outer_exit": 0,
+  "capture_execute_native_exit": 0,
+  "native_client_exit": 0,
+  "capture_stop_reason": "TIMEOUT",
+  "independent_prior_query_boundary": "main reported Unknown process id on its query; present receipt records actual same-agent completed tool query",
+  "meaning": "Exit0 does not remove TIMEOUT or establish native child PASS"
+}

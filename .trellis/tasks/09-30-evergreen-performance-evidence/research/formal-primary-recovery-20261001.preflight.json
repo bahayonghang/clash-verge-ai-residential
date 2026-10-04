@@ -1,0 +1,130 @@
+{
+  "observed_utc": "2026-10-01T00:24:05.192986+00:00",
+  "source_checks": {
+    "baseline": {
+      "files": 103,
+      "manifest_sha256": "1120B9D2B5C457F856BCD5F51ED9C88E0612E978AB4C7B76B4816640E1C6678F",
+      "mismatches": []
+    },
+    "candidate": {
+      "files": 108,
+      "manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462",
+      "mismatches": []
+    }
+  },
+  "executable_checks": {
+    "baseline-monitor-bench.exe": {
+      "sha256": "06BAC94FD88E37DCD8971893BF79C91A05E9775CEED4A06AB7E2F10B690F3DD9",
+      "bytes": 5748224,
+      "matches": true
+    },
+    "candidate-monitor-bench.exe": {
+      "sha256": "9604FBE6ED24C6DC4E40E556A6AD7F3338477582B223E15D20B795DDF73A7A5E",
+      "bytes": 6284800,
+      "matches": true
+    },
+    "candidate-monitor-db.exe": {
+      "sha256": "8EE782EDE8F6F61997CCADC7476B48963A33410C36EB25DF2F03E4FB18F6BA13",
+      "bytes": 5245952,
+      "matches": true
+    },
+    "candidate-library-tests.exe": {
+      "sha256": "74ECF63AC02659AFF87AC5B6E2AE1264552E57630441E9337DB65450629BD638",
+      "bytes": 12892160,
+      "matches": true
+    }
+  },
+  "errors": [
+    "Concurrent-load check not clear"
+  ],
+  "process_check_exit": 0,
+  "concurrent_loads": [
+    {
+      "Name": "node.exe",
+      "ProcessId": 41184,
+      "ParentProcessId": 34676,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" -y exa-mcp-server@latest"
+    },
+    {
+      "Name": "node.exe",
+      "ProcessId": 47296,
+      "ParentProcessId": 29988,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" -y exa-mcp-server@latest"
+    },
+    {
+      "Name": "node.exe",
+      "ProcessId": 10272,
+      "ParentProcessId": 2840,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" chrome-devtools-mcp@latest --autoConnect"
+    },
+    {
+      "Name": "node.exe",
+      "ProcessId": 38784,
+      "ParentProcessId": 13396,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" -y exa-mcp-server@latest"
+    },
+    {
+      "Name": "node.exe",
+      "ProcessId": 37056,
+      "ParentProcessId": 33284,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" chrome-devtools-mcp@latest --autoConnect"
+    },
+    {
+      "Name": "node.exe",
+      "ProcessId": 43452,
+      "ParentProcessId": 47264,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" -y exa-mcp-server@latest"
+    },
+    {
+      "Name": "node.exe",
+      "ProcessId": 46248,
+      "ParentProcessId": 49352,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" chrome-devtools-mcp@latest --autoConnect"
+    },
+    {
+      "Name": "node.exe",
+      "ProcessId": 49864,
+      "ParentProcessId": 49504,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" -y exa-mcp-server@latest"
+    },
+    {
+      "Name": "node.exe",
+      "ProcessId": 45280,
+      "ParentProcessId": 7692,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" chrome-devtools-mcp@latest --autoConnect"
+    },
+    {
+      "Name": "node.exe",
+      "ProcessId": 48264,
+      "ParentProcessId": 27724,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" chrome-devtools-mcp@latest --autoConnect"
+    },
+    {
+      "Name": "node.exe",
+      "ProcessId": 43640,
+      "ParentProcessId": 37216,
+      "CommandLine": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" -y exa-mcp-server@latest"
+    }
+  ],
+  "process_check_stderr": "",
+  "runner_sha256": "6C88ACCA5994C02266F262FBC185EBF9D09DE1AB9EC96BAA302993A0CBF381E9",
+  "live_wrapper_sha256": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C",
+  "primary_parameters": {
+    "active": 250,
+    "hz": 1,
+    "duration_secs": 300,
+    "warmup_secs": 30,
+    "workload": "counters",
+    "archive": "complete",
+    "metadata_change_percent": 100,
+    "query_every_frames": 0,
+    "seed": 20260919,
+    "start_utc": 1800001800,
+    "virtual_time": false,
+    "period_rule": false,
+    "pairs": 3
+  },
+  "metadata_semantics": "FacadeWorkload::Metadata gates change; Counters keeps variant=0, so metadata fields remain unchanged.",
+  "new_output_directory_exists": false,
+  "new_data_directory_exists": false
+}

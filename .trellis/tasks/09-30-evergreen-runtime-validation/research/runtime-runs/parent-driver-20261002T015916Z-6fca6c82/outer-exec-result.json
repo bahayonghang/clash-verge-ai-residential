@@ -1,0 +1,9 @@
+{
+  "recorded_utc": "2026-10-02T02:10:32.404313+00:00",
+  "exec_session": 41319,
+  "exec_tool_exit": 0,
+  "driver_outer_exit": 0,
+  "capture_execute_native_exit": 0,
+  "source": "completed exec session tool result and driver.json; native harness exits remain separate",
+  "not_a_runtime_pass": true
+}

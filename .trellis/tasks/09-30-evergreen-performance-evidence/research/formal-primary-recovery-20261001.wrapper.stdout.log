@@ -1,0 +1,14 @@
+{"start": "primary-r1-baseline", "pid": 55096}
+{"finished": "primary-r1-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 343.0183429000001}
+{"start": "primary-r1-candidate", "pid": 11668}
+{"finished": "primary-r1-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 342.46293300000025}
+{"start": "primary-r2-baseline", "pid": 8368}
+{"finished": "primary-r2-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 342.5668267000001}
+{"start": "primary-r2-candidate", "pid": 16784}
+{"finished": "primary-r2-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 342.11186480000015}
+{"start": "primary-r3-baseline", "pid": 39924}
+{"finished": "primary-r3-baseline", "exit_code": 0, "validation_errors": [], "wall_seconds": 343.3313495999996}
+{"start": "primary-r3-candidate", "pid": 31892}
+{"finished": "primary-r3-candidate", "exit_code": 0, "validation_errors": [], "wall_seconds": 340.9809049999999}
+{"set": "primary", "expected_invocations": 6, "recorded_invocations": 6, "execution_failures": [], "gates": [{"gate": "AC7 CPU", "before": 23.8125, "candidate": 2.828125, "ratio": 0.11876640419947507, "limit": 0.7, "status": "PASS"}, {"gate": "AC7 SQLite subset only", "before": 70595256, "candidate": 32718048, "ratio": 0.46345958430974454, "limit": 0.5, "status": "PASS"}, {"gate": "AC7 all application files", "before": null, "candidate": null, "ratio": null, "limit": 0.5, "status": "UNVERIFIED"}], "completed_utc": "2026-10-01T13:12:17.985940+00:00", "limits": ["original matrix starts on a minute boundary and queries at +10..+35 seconds; default_auto_report_query retains endpoints and service div_euclid(60) makes the current Raw minute window empty; separate nonempty evidence required", "native measurements do not cover WebView or installed background workers"]}
+{"driver_exit_code": 3, "receipt": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001.driver.json"}

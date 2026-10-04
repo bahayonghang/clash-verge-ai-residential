@@ -1,0 +1,59 @@
+{
+  "label": "generate-a250",
+  "argv": [
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-monitor-bench.exe",
+    "generate-corpus",
+    "--average-active",
+    "250",
+    "--days",
+    "30",
+    "--seed",
+    "20260919",
+    "--start-utc",
+    "1787184000",
+    "--dir",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\corpus-a250-30d"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "environment_override": {},
+  "shell": false,
+  "started_utc": "2026-10-04T05:42:15.921898+00:00",
+  "status": "ENDED",
+  "native_exit": 0,
+  "pid": 44568,
+  "competing_load_at_start": [],
+  "disk_free_bytes_before": {
+    "C": 524084953088,
+    "D": 1153592569856
+  },
+  "ended_utc": "2026-10-04T05:44:17.587303+00:00",
+  "wall_seconds": 121.6469571000016,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\generator\\generate-a250.stdout.raw",
+      "bytes": 28861,
+      "raw_sha256": "FE1B1476849DE25C867569A8F55EF93C2D21FF26F7BA66B6DD823F2D44C7983D",
+      "gzip_sha256": "410B1ABC998D0DF6327A7ECB96971A36611963CB0BEF6D2C01017BD746766851",
+      "readable_sha256": "3F0FAA8CC0F8714C88CCD80DA35A74C8B1C572F2759496E7FD69FA6641B5166B"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88\\generator\\generate-a250.stderr.raw",
+      "bytes": 0,
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  },
+  "peak_rss_bytes_sampled": 94027776,
+  "last_cpu_times_sampled": {
+    "user": 30.296875,
+    "system": 53.21875,
+    "children_user": 0.0,
+    "children_system": 0.0
+  },
+  "disk_free_bytes_after": {
+    "C": 524044423168,
+    "D": 1151868162048
+  },
+  "sampling": "0.5 s psutil polling of the direct native process; not a complete peak proof"
+}

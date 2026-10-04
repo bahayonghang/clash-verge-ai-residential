@@ -1,0 +1,58 @@
+{
+  "phase": "parent",
+  "child_authorized": false,
+  "started_utc": "2026-10-02T01:59:27.510176+00:00",
+  "steps": [
+    {
+      "label": "plan",
+      "argv": [
+        "python",
+        ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture.py",
+        "plan",
+        "--phase",
+        "parent",
+        "--harness",
+        "all"
+      ],
+      "started_utc": "2026-10-02T01:59:27.510194+00:00",
+      "native_exit": 0,
+      "driver_child_pid": 56176,
+      "ended_utc": "2026-10-02T01:59:27.620523+00:00"
+    },
+    {
+      "label": "freeze",
+      "argv": [
+        "python",
+        ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture.py",
+        "freeze"
+      ],
+      "started_utc": "2026-10-02T01:59:27.621282+00:00",
+      "native_exit": 0,
+      "driver_child_pid": 50128,
+      "ended_utc": "2026-10-02T01:59:33.123888+00:00"
+    },
+    {
+      "label": "execute",
+      "argv": [
+        "python",
+        ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture.py",
+        "execute",
+        "--phase",
+        "parent",
+        "--harness",
+        "all",
+        "--go",
+        "GO:9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9"
+      ],
+      "started_utc": "2026-10-02T01:59:33.130375+00:00",
+      "native_exit": 0,
+      "driver_child_pid": 26716,
+      "ended_utc": "2026-10-02T02:05:43.339761+00:00"
+    }
+  ],
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "head_is_baseline_only": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+  "status": "EXECUTOR_ENDED_REQUIRES_EVENT_REVIEW",
+  "ended_utc": "2026-10-02T02:05:43.340528+00:00",
+  "outer_exit": 0
+}

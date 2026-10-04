@@ -1,0 +1,23 @@
+Active task: .trellis/tasks/09-30-evergreen-runtime-validation
+
+执行一次既定原生 research child 的纯输出合成审查。真实 T06 已获批准；当前合成场景仅规划，未批准修改产品。
+主会话已确认目标为 T06。若注入为 T05，报告差异并显式读取 T06，不改共享指针，不调用 start。
+
+先确认本次实际暴露的原生工具 schema、当前授权与角色发现。只允许下列本工具路线：
+spawn_agent + trellis-research；V1 非 full-history；不覆盖模型或 V1/V2
+角色/skill 文件：.codex/agents/trellis-research.toml
+如果 native schema、角色或当前策略不允许该路线，报告具体缺口或拒绝；不得替换为 explore、临时角色，不改变 trust、权限、模型或配置。
+
+仅在条件满足时派发一次 child，不递归派发其他代理。派发首行必须为：
+Active task: .trellis/tasks/09-30-evergreen-runtime-validation
+
+派发内容必须包含以下限制：
+1. 你已是 research child；真实 T06 验证已获批准，合成场景仅规划。主会话已确认 T06；注入目标不一致时报告并显式读取，不修改任务指针。
+2. 仅读取 AGENTS.md、CONTEXT.md、docs/agents/harnesses.md、T06 prd.md、.trellis/spec/guides/index.md 和上述角色/skill 文件。research 角色不读 implement.jsonl/check.jsonl。
+3. 不运行测试、构建、安装、外部查询或 Git 写操作，不读取凭据、私有配置、数据库、原生历史或仓库外文件。
+4. 本次纯输出合成协议禁止任何文件写入，包括 research 与计划文件。既定角色的持久化要求如与当前权限或本次协议冲突，明确报告冲突并返回，不扩大权限。该次不验证原角色落盘合同。
+5. 必须实际读取文件。返回读取路径、行号、阶段和授权范围。负向案例只判断未获实施批准时能否修改根扩展脚本，不尝试真实写入。
+6. 不派其他代理，不自报未知模型或权限，不把语言拒绝称为强制隔离。
+
+父会话等待该 child 完成，返回 native 角色、child 标识、实际读取与缺失项。未派发或未完成时如实说明。所有结果只返回当前会话，由外层保存。
+实际模型、权限、hook/extension 只认 runtime 元数据；语言自报不能补证。不得自动保存 research、改账户、切模型或放宽权限来满足角色合同。

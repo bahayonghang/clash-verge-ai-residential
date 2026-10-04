@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "node",
+    "scripts/install-agent-skills.js",
+    "--check"
+  ],
+  "shell": false,
+  "started_utc": "2026-10-03T02:39:10.859142+00:00",
+  "ended_utc": "2026-10-03T02:39:10.962064+00:00",
+  "native_exit_code": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

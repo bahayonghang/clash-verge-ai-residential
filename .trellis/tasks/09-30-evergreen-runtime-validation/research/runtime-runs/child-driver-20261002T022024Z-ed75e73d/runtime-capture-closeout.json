@@ -1,0 +1,45 @@
+{
+  "status": "CLOSED_NO_FURTHER_CLIENTS",
+  "writing_status": "STOP_WRITING",
+  "closed_utc": "2026-10-02T14:05:48.081940+00:00",
+  "completed_scope": "five approved parent attempts and two separately approved child attempts; failures preserved",
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "candidate_boundary": "completed local runtime evidence for the frozen dirty candidate; HEAD is baseline only; future source changes require new candidate evidence",
+  "head_is_baseline_only": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+  "full_runtime_pass": false,
+  "full_acceptance_criteria_checked": false,
+  "parent_batches": [
+    "20261002T015937Z-8e2305db",
+    "20261002T021201Z-e93cdf2e",
+    "20261002T021247Z-f0760b2b"
+  ],
+  "child_batches": [
+    "20261002T022034Z-8bb06977",
+    "20261002T135932Z-090bb8d7"
+  ],
+  "parent_assessments": {
+    "claude": "BLOCKED_API_400",
+    "codex": "PARTIAL_READ_EVENTS; CONTENT_LOSS_AND_ADDITIONAL_INPUT_READ",
+    "grok": "TIMEOUT_AND_ADDITIONAL_INPUT_READ",
+    "kimi": "BLOCKED_INCOMPATIBLE_PROMPT_PLAN_FLAGS",
+    "omp": "SENSITIVE_OUTPUT_REDACTED_STOP"
+  },
+  "child_assessments": {
+    "claude": "BLOCKED_PRIOR_SAME_ROUTE_FAILURE; NOT_RUN",
+    "codex": "TIMEOUT; SPAWN_NOT_PROVEN; CHILD_LIFECYCLE_UNVERIFIED",
+    "grok": "TIMEOUT; ONE_NATIVE_SPAWN_REQUEST; NO_RETURN_OR_CHILD_LIFECYCLE",
+    "kimi": "BLOCKED_PRIOR_SAME_ROUTE_FAILURE; NOT_RUN",
+    "omp": "BLOCKED_PRIOR_SAME_ROUTE_FAILURE; NOT_RUN"
+  },
+  "final_identity_evidence": "final-identity-snapshot.json",
+  "final_cleanup_evidence": "../20261002T135932Z-090bb8d7/known-pid-cleanup.json",
+  "scope_deviations": [
+    "additional public input reads recorded in phase reports",
+    "Codex saved events contain U+FFFD",
+    "one importlib-generated ignored pyc outside runtime-runs reported and specifically authorized cleanup completed; receipt in parent-continuation-driver"
+  ],
+  "preserved_original_receipts": true,
+  "new_tests_builds_installs_config_changes": "NONE",
+  "future_clients": "NOT_AUTHORIZED; CLOSED",
+  "next_owner": "main session final task result/meta writeback requires release GO; T04/T05 may change candidate after release"
+}

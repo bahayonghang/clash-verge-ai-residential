@@ -1,0 +1,42 @@
+{
+  "changedNodeCount": 3,
+  "delta": [
+    {
+      "path": "node_modules/brace-expansion",
+      "before": "1.1.18",
+      "after": "1.1.21",
+      "changedFields": [
+        "version",
+        "resolved",
+        "integrity"
+      ],
+      "registryMetadata": "brace-expansion-1.1.21.json"
+    },
+    {
+      "path": "node_modules/@typescript-eslint/typescript-estree/node_modules/brace-expansion",
+      "before": "5.0.9",
+      "after": "5.0.12",
+      "changedFields": [
+        "version",
+        "resolved",
+        "integrity"
+      ],
+      "registryMetadata": "brace-expansion-5.0.12.json"
+    },
+    {
+      "path": "node_modules/js-yaml",
+      "before": "4.3.1",
+      "after": "4.3.2",
+      "changedFields": [
+        "version",
+        "resolved",
+        "integrity"
+      ],
+      "registryMetadata": "js-yaml-4.3.2.json"
+    }
+  ],
+  "beforeSha256": "d20715038962ce870c60b751de0a450c11261de8d7899a0bbc1dfefbafbc5605",
+  "afterSha256": "fd0dc69d35e7d8c78d486a53fe3651df19220bbe35ee55a04a55647edc5fd723",
+  "unchangedRootPackageAndParentNodes": true,
+  "registryMetadataMatches": true
+}

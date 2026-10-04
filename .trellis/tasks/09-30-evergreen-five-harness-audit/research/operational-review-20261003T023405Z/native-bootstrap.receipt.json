@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "scripts/bootstrap-harnesses.js",
+    "--root",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-operational-review-_1wrp0je\\candidate",
+    "--entry",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\tool\\node_modules\\@mindfoldhq\\trellis\\bin\\trellis.js"
+  ],
+  "shell": false,
+  "started_utc": "2026-10-03T02:36:07.897223+00:00",
+  "ended_utc": "2026-10-03T02:36:10.399053+00:00",
+  "native_exit_code": 0,
+  "stdout_sha256": "cf62d977ef5da7e509727ee25da86ce9eeedfe5f3824b7fb632665bf8f63c38a",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

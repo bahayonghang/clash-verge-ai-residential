@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "node",
+    "--test",
+    "tests/check-agent-contract.test.js",
+    "tests/check-harness-environment.test.js"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "status": "finished",
+  "started_utc": "2026-10-01T13:22:43.845411+00:00",
+  "authorization": "main session followup: affected T03 AC5/T04 optional override fixtures after primary completion; before capacity",
+  "boundary": "local synthetic Node tests only; no full product/docs/native/fresh-session claim",
+  "pid": 52896,
+  "stdout_sha256": "604de1e5ffdd40e1c078661247a77c8dbe3f4c8d54b01516181805705a541a5e",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "exit_code": 0,
+  "wall_seconds": 1.6403110000001107,
+  "finished_utc": "2026-10-01T13:22:45.485736+00:00"
+}

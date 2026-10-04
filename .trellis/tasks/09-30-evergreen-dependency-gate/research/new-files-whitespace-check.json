@@ -1,0 +1,231 @@
+{
+  "filesChecked": 45,
+  "allPassed": true,
+  "files": [
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/check.jsonl",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/design.md",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/implement.jsonl",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/implement.md",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/prd.md",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/actionlint.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/brace-expansion-1.1.21.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/brace-expansion-5.0.12.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/cargo-audit.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/cargo-audit.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/dependency-audit.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/dependency-audit.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/dependency-chain-after.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/dependency-chain-before.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/diff-check.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/diff-check.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/docs-build.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/docs-build.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/docs-install.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/docs-install.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/evidence-normalization.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/final-secrets.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/final-secrets.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/implementation.md",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/js-yaml-4.3.2.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/lock-before-hash.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/lock-delta.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/monitor-ci.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/monitor-ci.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/new-files-whitespace-check.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/npm-audit-docs.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/npm-audit-docs.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/npm-audit-monitor-after.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/npm-audit-monitor-after.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/npm-audit-monitor-before.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/npm-audit-monitor-before.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/npm-audit-monitor-prod-after.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/npm-audit-monitor-prod-after.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/package-lock.before.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/product.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/product.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/run-check.ps1",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/sync-monitor-version-tests.log",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/research/sync-monitor-version-tests.result.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/task.json",
+      "exitCode": 1,
+      "whitespaceErrors": false
+    }
+  ]
+}

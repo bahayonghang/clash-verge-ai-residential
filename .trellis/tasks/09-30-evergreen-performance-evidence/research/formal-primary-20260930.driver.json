@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "python",
+    "-X",
+    "utf8",
+    ".trellis/tasks/09-30-evergreen-performance-evidence/research/run-formal-replay.py",
+    "--candidate-directory",
+    "candidate-retained-20260930",
+    "--output-directory",
+    "formal-primary-20260930",
+    "--set",
+    "primary"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "status": "running",
+  "started_utc": "2026-09-30T15:48:29.654181+00:00",
+  "pid": 5576
+}

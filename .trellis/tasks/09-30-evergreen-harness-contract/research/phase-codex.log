@@ -1,0 +1,22 @@
+#### 2.2 Quality check `[required · repeatable]`
+
+Apply the Review authorization section and `AGENTS.md` before every check.
+Read-only review reports findings and may write only authorized research
+artifacts. Self-fix requires approved implementation and named file scope.
+Task status alone does not authorize a fix.
+
+
+Spawn the check sub-agent:
+
+- **Agent type**: `trellis-check`
+- **Task description**: Review the task changes against specs and artifacts; fix findings only within approved implementation and file scope; run required checks
+- **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then tell the spawned agent it is already the `trellis-check` sub-agent and must review/fix directly, not spawn another `trellis-check` / `trellis-implement`.
+
+The check agent's job:
+- Review code changes against specs
+- Review code changes against `prd.md`, `design.md` if present, and `implement.md` if present
+- Self-fix only within approved implementation and file scope; report other findings
+- Run lint and typecheck to verify
+
+
+**Final pass (before Phase 3.4 commit)**: the last 2.2 of a task must run full-scope, not just on the latest implement chunk. List all affected packages with `python ./.trellis/scripts/get_context.py --mode packages`, then load each package's spec index Quality Check section. This catches cross-layer / multi-package issues a mid-iteration local 2.2 cannot.

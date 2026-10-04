@@ -1,0 +1,45 @@
+{
+  "label": "baseline-build",
+  "argv": [
+    "cargo",
+    "+1.98.0",
+    "build",
+    "--locked",
+    "--release",
+    "--target",
+    "x86_64-pc-windows-msvc",
+    "--manifest-path",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-approved-baseline-20260930-50086853fbcc43bea6015946489e3006\\source\\residential-monitor\\src-tauri\\Cargo.toml",
+    "--target-dir",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\baseline-target",
+    "--bin",
+    "monitor-bench"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T13:44:33.561655+00:00",
+  "status": "finished",
+  "environment_override": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "finished_utc": "2026-09-30T13:46:33.533948+00:00",
+  "wall_seconds": 119.97139179999795,
+  "exit_code": 0,
+  "logs": {
+    "stdout": {
+      "raw_path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\baseline-build.stdout.raw",
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip": "baseline-build.stdout.raw.gz",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable": "baseline-build.stdout.log",
+      "readable_sha256": "7EB70257593DA06F682A3DDDA54A9D260D4FC514F645237F5CA74B08F8DA61A6"
+    },
+    "stderr": {
+      "raw_path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\baseline-build.stderr.raw",
+      "raw_sha256": "CD8AF5BA67F2BB335F0DD2513F942100B3A2364C473C7DC0E7E51D12D9968764",
+      "gzip": "baseline-build.stderr.raw.gz",
+      "gzip_sha256": "9C504182CBAF6FD72ACB8276AF86D4235630BCD853C6BB18065146871D402FAB",
+      "readable": "baseline-build.stderr.log",
+      "readable_sha256": "058ED53B5B7757FC49E7303E9C9439F52330B2BE53A64C57F19282FA2A79A44C"
+    }
+  }
+}

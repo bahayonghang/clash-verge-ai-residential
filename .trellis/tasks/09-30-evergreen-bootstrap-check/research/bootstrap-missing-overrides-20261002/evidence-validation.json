@@ -1,0 +1,66 @@
+{
+  "recorded_at_utc": "2026-10-02T14:19:34.048230+00:00",
+  "checks": [
+    {
+      "name": "contract-before-init",
+      "stdout_hash_matches": true,
+      "stderr_hash_matches": true
+    },
+    {
+      "name": "npm-ci-attempt1",
+      "stdout_hash_matches": true,
+      "stderr_hash_matches": true
+    },
+    {
+      "name": "selected-cli-version",
+      "stdout_hash_matches": true,
+      "stderr_hash_matches": true
+    },
+    {
+      "name": "environment-before-init",
+      "stdout_hash_matches": true,
+      "stderr_hash_matches": true
+    },
+    {
+      "name": "isolated-init",
+      "stdout_hash_matches": true,
+      "stderr_hash_matches": true
+    },
+    {
+      "name": "contract-after-init",
+      "stdout_hash_matches": true,
+      "stderr_hash_matches": true
+    },
+    {
+      "name": "environment-after-init",
+      "stdout_hash_matches": true,
+      "stderr_hash_matches": true
+    },
+    {
+      "name": "candidate-ignore",
+      "stdout_hash_matches": true,
+      "stderr_hash_matches": true
+    },
+    {
+      "path": ".codex/config.toml",
+      "candidate_hash_matches": true,
+      "saved_content_hash_matches": true
+    },
+    {
+      "path": ".kimi-code/skills/trellis-implement/SKILL.md",
+      "candidate_hash_matches": true,
+      "saved_content_hash_matches": true
+    },
+    {
+      "path": ".kimi-code/skills/trellis-check/SKILL.md",
+      "candidate_hash_matches": true,
+      "saved_content_hash_matches": true
+    },
+    {
+      "path": ".kimi-code/skills/trellis-research/SKILL.md",
+      "candidate_hash_matches": true,
+      "saved_content_hash_matches": true
+    }
+  ],
+  "all_hash_checks_pass": true
+}

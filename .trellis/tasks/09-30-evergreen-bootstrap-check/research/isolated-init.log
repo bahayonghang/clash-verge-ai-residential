@@ -1,0 +1,28 @@
+
+ ███████████                    ████  ████   ███
+▒█▒▒▒███▒▒▒█                   ▒▒███ ▒▒███  ▒▒▒
+▒   ▒███  ▒  ████████   ██████  ▒███  ▒███  ████   █████
+    ▒███    ▒▒███▒▒███ ███▒▒███ ▒███  ▒███ ▒▒███  ███▒▒
+    ▒███     ▒███ ▒▒▒ ▒███████  ▒███  ▒███  ▒███ ▒▒█████
+    ▒███     ▒███     ▒███▒▒▒   ▒███  ▒███  ▒███  ▒▒▒▒███
+    █████    █████    ▒▒██████  █████ █████ █████ ██████
+   ▒▒▒▒▒    ▒▒▒▒▒      ▒▒▒▒▒▒  ▒▒▒▒▒ ▒▒▒▒▒ ▒▒▒▒▒ ▒▒▒▒▒▒
+
+   All-in-one AI framework & toolkit for Claude Code & Cursor
+
+Mode: Skip existing files
+
+📁 Creating workflow structure...
+📝 Configuring Claude Code...
+📝 Configuring Codex (also writes .agents/skills/ — read by Cursor, Gemini CLI, GitHub Copilot, Amp, Kimi Code)...
+  ○ Skipped: .codex\config.toml (already exists)
+⚠️  Codex hooks require `features.hooks = true` in your ~/.codex/config.toml (Codex 0.129+; older versions: `codex_hooks = true`). On Codex 0.129+ also run `/hooks` once to approve the Trellis hooks. Without these the Trellis workflow breadcrumb and native sub-agent context won't auto-inject (agents retain a pull fallback). See Trellis docs for details.
+📝 Configuring Oh My Pi...
+📝 Configuring Grok Build...
+📝 Configuring Kimi Code...
+  ○ Skipped: .kimi-code\skills\trellis-check\SKILL.md (already exists)
+  ○ Skipped: .kimi-code\skills\trellis-implement\SKILL.md (already exists)
+  ○ Skipped: .kimi-code\skills\trellis-research\SKILL.md (already exists)
+📌 Windows detected: Trellis rendered Python commands as "python" in generated hooks, settings, and help text
+  ○ Skipped: AGENTS.md (already exists)
+📋 Tracking 243 template files for updates

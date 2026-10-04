@@ -1,0 +1,70 @@
+[
+  {
+    "filter": "all",
+    "samples_per_side": 2,
+    "projection_ms": {
+      "samples": {
+        "before": [
+          3296.0671,
+          3163.3391
+        ],
+        "cache": [
+          2741.0274,
+          2723.6039
+        ]
+      },
+      "before_median": 3229.7031,
+      "cache_median": 2732.31565,
+      "ratio": 0.8459959214207646
+    },
+    "scan_ms": {
+      "samples": {
+        "before": [
+          3765.5087,
+          3866.9202
+        ],
+        "cache": [
+          3793.0148,
+          3896.8444
+        ]
+      },
+      "before_median": 3816.21445,
+      "cache_median": 3844.9296,
+      "ratio": 1.0075245116269607
+    }
+  },
+  {
+    "filter": "residential",
+    "samples_per_side": 2,
+    "projection_ms": {
+      "samples": {
+        "before": [
+          2680.8552,
+          2550.4833
+        ],
+        "cache": [
+          2331.9664,
+          2350.2684999999997
+        ]
+      },
+      "before_median": 2615.66925,
+      "cache_median": 2341.1174499999997,
+      "ratio": 0.8950357351182684
+    },
+    "scan_ms": {
+      "samples": {
+        "before": [
+          3424.8295,
+          3413.3676
+        ],
+        "cache": [
+          3411.4695,
+          3362.6433
+        ]
+      },
+      "before_median": 3419.0985499999997,
+      "cache_median": 3387.0564000000004,
+      "ratio": 0.9906284801296531
+    }
+  }
+]

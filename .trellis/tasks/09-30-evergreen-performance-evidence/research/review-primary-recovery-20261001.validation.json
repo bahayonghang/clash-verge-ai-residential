@@ -1,0 +1,156 @@
+{
+  "status": "PASS",
+  "review_kind": "independent static receipt validation; no benchmark/test/build/DB",
+  "errors": [],
+  "fixture_recomputed": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+  "native_runs": [
+    {
+      "label": "primary-r1-baseline",
+      "native_exit": 0,
+      "pid": 55096,
+      "raw_hashes": {
+        "stdout": true,
+        "stderr": true
+      },
+      "cpu_before": 10.796875,
+      "cpu_after": 17.875,
+      "cpu_seconds": 7.078125,
+      "sample_cpu_min": 10.8125,
+      "sample_cpu_max": 17.875,
+      "sample_cpu_unique_count": 291,
+      "sqlite_bytes": 23531752,
+      "all_application_bytes": null,
+      "warmup_wall_secs": 30.0003032,
+      "measured_wall_secs": 300.0001812
+    },
+    {
+      "label": "primary-r1-candidate",
+      "native_exit": 0,
+      "pid": 11668,
+      "raw_hashes": {
+        "stdout": true,
+        "stderr": true
+      },
+      "cpu_before": 9.765625,
+      "cpu_after": 9.765625,
+      "cpu_seconds": 0.0,
+      "sample_cpu_min": 9.765625,
+      "sample_cpu_max": 9.765625,
+      "sample_cpu_unique_count": 1,
+      "sqlite_bytes": 10906016,
+      "all_application_bytes": null,
+      "warmup_wall_secs": 30.0001086,
+      "measured_wall_secs": 300.0002116
+    },
+    {
+      "label": "primary-r2-baseline",
+      "native_exit": 0,
+      "pid": 8368,
+      "raw_hashes": {
+        "stdout": true,
+        "stderr": true
+      },
+      "cpu_before": 10.859375,
+      "cpu_after": 20.265625,
+      "cpu_seconds": 9.40625,
+      "sample_cpu_min": 10.890625,
+      "sample_cpu_max": 20.265625,
+      "sample_cpu_unique_count": 300,
+      "sqlite_bytes": 23531752,
+      "all_application_bytes": null,
+      "warmup_wall_secs": 30.0003225,
+      "measured_wall_secs": 300.0001565
+    },
+    {
+      "label": "primary-r2-candidate",
+      "native_exit": 0,
+      "pid": 16784,
+      "raw_hashes": {
+        "stdout": true,
+        "stderr": true
+      },
+      "cpu_before": 9.578125,
+      "cpu_after": 12.09375,
+      "cpu_seconds": 2.515625,
+      "sample_cpu_min": 9.578125,
+      "sample_cpu_max": 12.09375,
+      "sample_cpu_unique_count": 145,
+      "sqlite_bytes": 10906016,
+      "all_application_bytes": null,
+      "warmup_wall_secs": 30.0002632,
+      "measured_wall_secs": 300.0003287
+    },
+    {
+      "label": "primary-r3-baseline",
+      "native_exit": 0,
+      "pid": 39924,
+      "raw_hashes": {
+        "stdout": true,
+        "stderr": true
+      },
+      "cpu_before": 11.0,
+      "cpu_after": 18.328125,
+      "cpu_seconds": 7.328125,
+      "sample_cpu_min": 11.0,
+      "sample_cpu_max": 18.328125,
+      "sample_cpu_unique_count": 262,
+      "sqlite_bytes": 23531752,
+      "all_application_bytes": null,
+      "warmup_wall_secs": 30.0002613,
+      "measured_wall_secs": 300.000286
+    },
+    {
+      "label": "primary-r3-candidate",
+      "native_exit": 0,
+      "pid": 31892,
+      "raw_hashes": {
+        "stdout": true,
+        "stderr": true
+      },
+      "cpu_before": 8.390625,
+      "cpu_after": 8.703125,
+      "cpu_seconds": 0.3125,
+      "sample_cpu_min": 8.390625,
+      "sample_cpu_max": 8.703125,
+      "sample_cpu_unique_count": 21,
+      "sqlite_bytes": 10906016,
+      "all_application_bytes": null,
+      "warmup_wall_secs": 30.00014,
+      "measured_wall_secs": 300.0004396
+    }
+  ],
+  "gates": [
+    {
+      "gate": "AC7 CPU",
+      "before": 23.8125,
+      "candidate": 2.828125,
+      "ratio": 0.11876640419947507,
+      "limit": 0.7,
+      "status": "PASS"
+    },
+    {
+      "gate": "AC7 SQLite subset only",
+      "before": 70595256,
+      "candidate": 32718048,
+      "ratio": 0.46345958430974454,
+      "limit": 0.5,
+      "status": "PASS"
+    },
+    {
+      "gate": "AC7 all application files",
+      "before": null,
+      "candidate": null,
+      "ratio": null,
+      "limit": 0.5,
+      "status": "UNVERIFIED"
+    }
+  ],
+  "driver_exit": 3,
+  "outer_exit": 1,
+  "original_evidence_unchanged": true,
+  "original_evidence_count": 23,
+  "source_executable_after": "owner completion receipt reviewed; not rehashed by reviewer",
+  "capacity_sequence_prerequisite": "SATISFIED",
+  "cpu_anomaly_cause": "原因未查明",
+  "outer_exit_cause": "原因未查明"
+}
