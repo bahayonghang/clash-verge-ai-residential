@@ -50,7 +50,10 @@ test("Windows 发现与版本探针保留中文和单引号路径", { skip: proc
   try {
     process.env.PATH = directory + path.delimiter + originalPath;
     const entries = checker.discoverEntries("trellis", f.root);
-    assert.equal(entries[0], entry);
+    // os.tmpdir() 可能是 8.3 短路径，Get-Command 返回长路径。
+    const samePath = (target) => fs.realpathSync.native(target).replace(/^\\\\\?\\/, "").toLowerCase();
+    assert.equal(samePath(entries[0]), samePath(entry));
+    assert.match(entries[0], /中文's tool[\\/]trellis\.ps1$/);
     const result = checker.probeEntry("trellis", entries[0], f.root, checker.runVersion);
     assert.equal(result.status, "available", JSON.stringify(result));
     assert.equal(result.version, f.version);
