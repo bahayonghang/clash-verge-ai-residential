@@ -34,15 +34,18 @@ function parseVersion(tool, output) {
   return versions.size === 1 ? [...versions][0] : null;
 }
 
-function processOptions(root) {
-  return { cwd: root, encoding: "utf8", timeout: 10000, maxBuffer: 1024 * 1024, windowsHide: true };
+function processOptions(root, timeout = 10000) {
+  return { cwd: root, encoding: "utf8", timeout, maxBuffer: 1024 * 1024, windowsHide: true };
 }
+
+// GitHub Windows runner 冷启动 powershell.exe 可能超过 10 秒。
+const POWERSHELL_TIMEOUT_MS = 30000;
 
 function discoverEntries(tool, root) {
   if (process.platform === "win32") {
     const command = "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); $ErrorActionPreference='Stop'; $found=@(Get-Command -Name '" + tool +
       "' -All -ErrorAction SilentlyContinue | Where-Object { $_.CommandType -eq 'Application' -or $_.CommandType -eq 'ExternalScript' } | Select-Object -ExpandProperty Source); ConvertTo-Json -InputObject $found -Compress";
-    const result = spawnSync("powershell.exe", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], processOptions(root));
+    const result = spawnSync("powershell.exe", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], processOptions(root, POWERSHELL_TIMEOUT_MS));
     if (result.error || result.status !== 0) {
       throw new Error("入口发现失败：" + (result.error ? result.error.message : result.stderr.trim()));
     }
@@ -68,7 +71,7 @@ function runVersion(entry, root) {
   if (process.platform === "win32" && /\.(?:ps1|cmd|bat)$/i.test(entry)) {
     const command = "[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); $ErrorActionPreference='Stop'; & '" + entry.replaceAll("'", "''") +
       "' --version; if ($null -ne $LASTEXITCODE) { exit $LASTEXITCODE }";
-    return spawnSync("powershell.exe", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], processOptions(root));
+    return spawnSync("powershell.exe", ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", command], processOptions(root, POWERSHELL_TIMEOUT_MS));
   }
   return spawnSync(entry, ["--version"], processOptions(root));
 }
