@@ -74,7 +74,7 @@ impl ControllerSession {
         reject_non_loopback_ip(addr.ip())?;
         let (status, version_body) = fetch_version(addr, secret)
             .await
-            .map_err(|_| SessionStatus::EndpointMissing)?;
+            .map_err(Self::map_transport)?;
         if status.as_u16() == 401 {
             return Err(SessionStatus::AuthFailed);
         }
@@ -103,7 +103,10 @@ impl ControllerSession {
         reject_non_loopback_ip(addr.ip())?;
         let (conn_status, body) = fetch_connections(addr, secret)
             .await
-            .map_err(|_| SessionStatus::EndpointMissing)?;
+            .map_err(Self::map_transport)?;
+        if conn_status.as_u16() == 401 {
+            return Err(SessionStatus::AuthFailed);
+        }
         if !conn_status.is_success() {
             return Err(SessionStatus::ProtocolIncompatible);
         }
@@ -129,7 +132,7 @@ impl ControllerSession {
         reject_non_loopback_ip(addr.ip())?;
         let status = crate::transport::delete_connection(addr, secret, connection_id)
             .await
-            .map_err(|_| SessionStatus::EndpointMissing)?;
+            .map_err(Self::map_transport)?;
         if status.as_u16() == 204 {
             Ok(crate::c2::close::ControlResult::Accepted)
         } else if status.as_u16() == 401 {
@@ -172,6 +175,28 @@ mod controller_session_tests {
             session.connect_tcp(addr, Some("wrong")).await.unwrap_err(),
             SessionStatus::AuthFailed
         );
+        let _ = stop.send(());
+    }
+
+    #[tokio::test]
+    async fn fetch_normalized_snapshot_401_is_auth_failed() {
+        let (addr, stop) = spawn_fixture_server(Some("fixture-secret")).await;
+        let error = ControllerSession::fetch_normalized_snapshot(addr, Some("wrong"))
+            .await
+            .expect_err("401");
+        assert_eq!(error, SessionStatus::AuthFailed);
+        assert_ne!(error, SessionStatus::ProtocolIncompatible);
+        assert!(!format!("{error:?}").contains("fixture-secret"));
+        let _ = stop.send(());
+    }
+
+    #[tokio::test]
+    async fn fetch_normalized_snapshot_oversize_is_protocol_incompatible() {
+        let (addr, stop) = crate::transport::spawn_oversize_connections_server().await;
+        let error = ControllerSession::fetch_normalized_snapshot(addr, None)
+            .await
+            .expect_err("oversize");
+        assert_eq!(error, SessionStatus::ProtocolIncompatible);
         let _ = stop.send(());
     }
 

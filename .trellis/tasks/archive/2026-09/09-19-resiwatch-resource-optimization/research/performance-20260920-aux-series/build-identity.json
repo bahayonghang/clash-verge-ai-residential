@@ -1,0 +1,17 @@
+{
+  "baseline_source_commit": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+  "baseline_source_archive_sha256": "87684724D5E5B1B3A18C0212CD594CA05F9454EDD6C28582CD879270F9749EB7",
+  "baseline_exe_sha256": "11C2542BC2C9F98A4B7517E67215E76884D8C01D25D64AE7FAF478571BF7633E",
+  "candidate_source_manifest_sha256": "38C9D3B07969494FDC5EEB8EA24BEB2FB16DC0CB90CB4B40E024EDE258DBB106",
+  "build_date_utc": "2026-09-19T16:02:46.0061013Z",
+  "source_kind": "uncommitted layout3 with auxiliary completion and bounded raw series; manifest covers Rust and frontend sources",
+  "product_gate": "auxiliary-series-checks.md: just ci77.61s frontend300 Rust534+3 root139",
+  "schema_checksum": "ledger-lifecycle-v5-layout3",
+  "desktop_execution": "built/copied only, not installed or launched",
+  "release_build_seconds": 36.8837051,
+  "release_test_build_seconds": 1.4502328,
+  "monitor-bench_exe_sha256": "68F8A54C687934E9CE1E99E1CBDF8E65CBDE59DB46428D51295D7FC52B75D79A",
+  "monitor-db_exe_sha256": "B11370D6D6ECEB862405F16D0E5FE50A27E4645B3056F12325A51C4593B78127",
+  "residential-monitor_exe_sha256": "EBD087614D45CEAEAF05D0C0808755BEFEDBDA39C6B275061CEECD25EDE4318A",
+  "retention-test_exe_sha256": "B166F8F20263918B3B82DC929D242EC44B84B2D1FCD7675158D1C9E16C1A7D1B"
+}

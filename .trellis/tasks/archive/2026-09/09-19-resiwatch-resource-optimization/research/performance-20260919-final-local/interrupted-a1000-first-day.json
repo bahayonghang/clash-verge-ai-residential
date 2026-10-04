@@ -1,0 +1,7 @@
+{
+  "stopped_utc": "2026-09-19T13:40:13.4125671Z",
+  "pid": 72804,
+  "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-final-local\\retention-test.exe",
+  "cpu_seconds": 557.5,
+  "reason": "Preserve in-progress A1000 build; eliminate verified per-row uncached dictionary and aggregate SQL preparation before resuming; not a completed capacity test"
+}

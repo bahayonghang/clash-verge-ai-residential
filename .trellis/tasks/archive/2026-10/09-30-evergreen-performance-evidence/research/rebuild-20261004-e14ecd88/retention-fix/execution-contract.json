@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "runners/run-retention-fix.py"
+  ],
+  "driver_sha256": "88241C142C51F3AC94E438EFBC138FCEA4633B3646E76FCC76A8A2B39D6C5F09",
+  "runner_pid": 14764,
+  "identity": {
+    "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-fix-library-tests.exe",
+    "sha256": "0FEA361852727CA957064CD448B3C973B45688A3375C68DEF1D8E99CFDED280C",
+    "source": "working tree after auxiliary cursor fix; cargo +1.98.0 test --release --lib --no-run"
+  },
+  "test": "bench::corpus::tests::isolated_corpus_retention_capacity_gate",
+  "expiry": "first-day: now = manifest.start_utc + 31 days",
+  "chunks": 100000,
+  "copies_only": true,
+  "initial_competing_load": []
+}

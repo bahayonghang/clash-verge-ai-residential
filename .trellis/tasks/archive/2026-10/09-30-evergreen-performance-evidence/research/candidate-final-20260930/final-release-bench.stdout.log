@@ -1,0 +1,18 @@
+
+running 13 tests
+test bench::bench_smoke_tests::generate_smoke_profile_writes_candidate_db ... ok
+test bench::bench_smoke_tests::replay_c1_smoke_commits_through_writer ... ok
+test bench::bench_smoke_tests::replay_peak_smoke_completes_without_unexplained_drops ... ok
+test bench::bench_smoke_tests::verify_design_db_smoke_matches_generated_counts ... ok
+test bench::corpus::tests::completion_inventory_waits_for_both_persisted_scan_ends ... ok
+test bench::corpus::tests::completion_latches_async_scan_ends_until_other_maintenance_finishes ... ok
+test bench::corpus::tests::corpus_has_production_schema_churn_receipts_and_exact_rows ... ok
+test bench::corpus::tests::isolated_corpus_retention_capacity_gate ... ignored, 仅显式指定的隔离容量库；完整规模可能耗时数分钟
+test bench::corpus::tests::maintenance_retry_uses_production_mapping_and_never_retries_cancellation ... ok
+test bench::facade::tests::real_facade_replay_conserves_counters_and_exercises_archive_and_readers ... ok
+test bench::facade::tests::unchanged_and_failed_workload_has_no_facts_or_successful_archives ... ok
+test bench::write_vfs::tests::counts_only_isolated_files_and_preserves_wal_and_errors ... ok
+test bench::write_vfs::tests::write_forwards_buffer_offset_and_error_without_counting_failed_bytes ... ok
+
+test result: ok. 12 passed; 0 failed; 1 ignored; 0 measured; 539 filtered out; finished in 3.85s
+

@@ -7,7 +7,7 @@ use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -30,6 +30,7 @@ impl BackupRestoreService {
         cancel: &Arc<AtomicBool>,
         created_utc: i64,
     ) -> Result<BackupManifest, ReportError> {
+        crate::c3::service::poll_interrupt(cancel, "backup")?;
         if dest.exists() {
             return Err(ReportError::Failed("destination exists"));
         }
@@ -81,9 +82,7 @@ impl BackupRestoreService {
         space: &SpaceBudget,
         cancel: &Arc<AtomicBool>,
     ) -> Result<(), ReportError> {
-        if cancel.load(Ordering::SeqCst) {
-            return Err(ReportError::Cancelled("restore"));
-        }
+        crate::c3::service::poll_interrupt(cancel, "restore")?;
         let parent = live.parent().unwrap_or_else(|| Path::new("."));
         let needed = std::fs::metadata(candidate)
             .map(|item| item.len().saturating_mul(3))
@@ -94,12 +93,18 @@ impl BackupRestoreService {
         }
         let protect = parent.join("monitor.protect.sqlite3");
         if live.exists() {
-            let cancel_backup = Arc::new(AtomicBool::new(false));
-            backup_pages(live, &protect, &cancel_backup)?;
+            if let Err(error) = backup_pages(live, &protect, cancel) {
+                let _ = std::fs::remove_file(&protect);
+                return Err(error);
+            }
             if !integrity_ok(&protect) {
                 let _ = std::fs::remove_file(&protect);
                 return Err(ReportError::Failed("protect backup invalid"));
             }
+        }
+        if let Err(error) = crate::c3::service::poll_interrupt(cancel, "restore") {
+            let _ = std::fs::remove_file(&protect);
+            return Err(error);
         }
         let staged = parent.join("monitor.restore.partial");
         let _ = std::fs::remove_file(&staged);
@@ -181,6 +186,7 @@ fn sidecar(path: &Path, suffix: &str) -> PathBuf {
 fn integrity_ok(path: &Path) -> bool {
     Connection::open(path)
         .and_then(|connection| {
+            crate::c3::rule_name::register_last_chain_hop(&connection)?;
             connection.query_row("pragma integrity_check", [], |row| {
                 let text: String = row.get(0)?;
                 Ok(text == "ok")

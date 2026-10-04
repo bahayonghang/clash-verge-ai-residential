@@ -1,0 +1,155 @@
+{
+  "sample_started_utc": "2026-10-01T12:34:12.1022645Z",
+  "sample_finished_utc": "2026-10-01T12:34:15.1510245Z",
+  "sample_seconds": 3.04876,
+  "relevant_processes": [
+    {
+      "name": "cmd.exe",
+      "pid": 53356,
+      "parent_pid": 49480,
+      "command_line": "\"C:\\WINDOWS\\System32\\cmd.exe\" /c npx -y exa-mcp-server@latest",
+      "creation_utc": "2026-10-01T12:29:56.7778890Z",
+      "cpu_before_seconds": 0.03125,
+      "cpu_after_seconds": 0.03125,
+      "cpu_delta_seconds": 0.0
+    },
+    {
+      "name": "cmd.exe",
+      "pid": 54140,
+      "parent_pid": 49480,
+      "command_line": "cmd.exe /e:ON /v:OFF /d /c \"\"C:\\home\\lyh\\.npm-global\\npx.cmd\" chrome-devtools-mcp@latest --autoConnect\"",
+      "creation_utc": "2026-10-01T12:29:56.7819110Z",
+      "cpu_before_seconds": 0.046875,
+      "cpu_after_seconds": 0.046875,
+      "cpu_delta_seconds": 0.0
+    },
+    {
+      "name": "node.exe",
+      "pid": 50948,
+      "parent_pid": 54140,
+      "command_line": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" chrome-devtools-mcp@latest --autoConnect",
+      "creation_utc": "2026-10-01T12:29:56.8174440Z",
+      "cpu_before_seconds": 1.15625,
+      "cpu_after_seconds": 1.15625,
+      "cpu_delta_seconds": 0.0
+    },
+    {
+      "name": "node.exe",
+      "pid": 47092,
+      "parent_pid": 53356,
+      "command_line": "\"node\"   \"C:\\home\\lyh\\.npm-global\\\\node_modules\\npm\\bin\\npx-cli.js\" -y exa-mcp-server@latest",
+      "creation_utc": "2026-10-01T12:29:56.8175580Z",
+      "cpu_before_seconds": 1.46875,
+      "cpu_after_seconds": 1.46875,
+      "cpu_delta_seconds": 0.0
+    },
+    {
+      "name": "cmd.exe",
+      "pid": 35432,
+      "parent_pid": 50948,
+      "command_line": "C:\\WINDOWS\\system32\\cmd.exe /d /s /c chrome-devtools-mcp --autoConnect",
+      "creation_utc": "2026-10-01T12:29:58.2266250Z",
+      "cpu_before_seconds": 0.03125,
+      "cpu_after_seconds": 0.03125,
+      "cpu_delta_seconds": 0.0
+    },
+    {
+      "name": "node.exe",
+      "pid": 37208,
+      "parent_pid": 35432,
+      "command_line": "\"node\"   \"C:\\home\\lyh\\.npm-global\\.cache\\_npx\\15c61037b1978c83\\node_modules\\.bin\\\\..\\chrome-devtools-mcp\\build\\src\\bin\\chrome-devtools-mcp.js\" --autoConnect",
+      "creation_utc": "2026-10-01T12:29:58.2518580Z",
+      "cpu_before_seconds": 0.6875,
+      "cpu_after_seconds": 0.6875,
+      "cpu_delta_seconds": 0.0
+    },
+    {
+      "name": "node.exe",
+      "pid": 48024,
+      "parent_pid": 37208,
+      "command_line": "D:\\GreenSoftware\\node\\node.exe C:\\home\\lyh\\.npm-global\\.cache\\_npx\\15c61037b1978c83\\node_modules\\chrome-devtools-mcp\\build\\src\\telemetry\\watchdog\\main.js --parent-pid=37208 --app-version=1.10.1 --os-type=1",
+      "creation_utc": "2026-10-01T12:29:58.6326800Z",
+      "cpu_before_seconds": 0.0625,
+      "cpu_after_seconds": 0.0625,
+      "cpu_delta_seconds": 0.0
+    },
+    {
+      "name": "cmd.exe",
+      "pid": 46512,
+      "parent_pid": 47092,
+      "command_line": "C:\\WINDOWS\\system32\\cmd.exe /d /s /c exa-mcp-server",
+      "creation_utc": "2026-10-01T12:29:58.8865920Z",
+      "cpu_before_seconds": 0.03125,
+      "cpu_after_seconds": 0.03125,
+      "cpu_delta_seconds": 0.0
+    },
+    {
+      "name": "node.exe",
+      "pid": 29888,
+      "parent_pid": 46512,
+      "command_line": "\"node\"   \"C:\\home\\lyh\\.npm-global\\.cache\\_npx\\96788de746d735d3\\node_modules\\.bin\\\\..\\exa-mcp-server\\dist\\stdio.cjs\" ",
+      "creation_utc": "2026-10-01T12:29:58.9131910Z",
+      "cpu_before_seconds": 0.140625,
+      "cpu_after_seconds": 0.140625,
+      "cpu_delta_seconds": 0.0
+    },
+    {
+      "name": "pwsh.exe",
+      "pid": 7420,
+      "parent_pid": 49480,
+      "command_line": "\"C:\\Users\\lyh\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$sampleStart=[DateTime]::UtcNow; $before=@{}; Get-Process -ErrorAction SilentlyContinue | ForEach-Object { $before[$_.Id]=$_.CPU }; Start-Sleep -Seconds 3; $sampleEnd=[DateTime]::UtcNow; $after=Get-Process -ErrorAction SilentlyContinue; $byId=@{}; $after | ForEach-Object { $byId[$_.Id]=$_ }; $inventory=Get-CimInstance Win32_Process; $selected=@($inventory | Where-Object { $_.Name -match '^(cargo|rustc|clippy-driver|link|monitor-bench|baseline-monitor-bench|candidate-monitor-bench|monitor-db|candidate-monitor-db|candidate-library-tests|npx|npm)\\.exe$' -or ($_.CommandLine -match 'run-formal-replay|run-live-recorded|run-formal-capacity|npx-cli\\.js|exa-mcp-server|chrome-devtools-mcp') }); $samples=@($selected | ForEach-Object { $q=$byId[[int]$_.ProcessId]; $prior=$before[[int]$_.ProcessId]; [pscustomobject]@{name=$_.Name;pid=$_.ProcessId;parent_pid=$_.ParentProcessId;command_line=$_.CommandLine;creation_utc=$_.CreationDate.ToUniversalTime().ToString('o');cpu_before_seconds=$prior;cpu_after_seconds=$q.CPU;cpu_delta_seconds=if($null -ne $prior -and $null -ne $q.CPU){$q.CPU-$prior}else{$null}} }); $top=@($after | Where-Object { $before.ContainsKey($_.Id) -and $null -ne $_.CPU -and ($_.CPU-$before[$_.Id]) -gt 0.1 } | Sort-Object { $_.CPU-$before[$_.Id] } -Descending | Select-Object -First 10 @{n='name';e={$_.ProcessName}},@{n='pid';e={$_.Id}},@{n='cpu_delta_seconds';e={$_.CPU-$before[$_.Id]}}); $out=[ordered]@{sample_started_utc=$sampleStart.ToString('o');sample_finished_utc=$sampleEnd.ToString('o');sample_seconds=($sampleEnd-$sampleStart).TotalSeconds;relevant_processes=$samples;highest_cpu_processes=$top;old_driver_pid_5576_present=($inventory.ProcessId -contains 5576);old_native_pid_56468_present=($inventory.ProcessId -contains 56468);disk_free_bytes=@{C=(Get-PSDrive C).Free;D=(Get-PSDrive D).Free}}; $file='.trellis/tasks/09-30-evergreen-performance-evidence/research/formal-primary-recovery-20261001.process-sample.json'; if(Test-Path -LiteralPath $file){throw 'Evidence exists'}; $out | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $file -Encoding utf8; $out | ConvertTo-Json -Depth 8\"",
+      "creation_utc": "2026-10-01T12:34:11.8290420Z",
+      "cpu_before_seconds": 0.359375,
+      "cpu_after_seconds": 0.71875,
+      "cpu_delta_seconds": 0.359375
+    }
+  ],
+  "highest_cpu_processes": [
+    {
+      "name": "SunBrowser",
+      "pid": 3608,
+      "cpu_delta_seconds": 0.609375
+    },
+    {
+      "name": "SunBrowser",
+      "pid": 53904,
+      "cpu_delta_seconds": 0.609375
+    },
+    {
+      "name": "quark",
+      "pid": 2948,
+      "cpu_delta_seconds": 0.515625
+    },
+    {
+      "name": "pwsh",
+      "pid": 7420,
+      "cpu_delta_seconds": 0.390625
+    },
+    {
+      "name": "floorp",
+      "pid": 35452,
+      "cpu_delta_seconds": 0.328125
+    },
+    {
+      "name": "SunBrowser",
+      "pid": 37488,
+      "cpu_delta_seconds": 0.203125
+    },
+    {
+      "name": "quark",
+      "pid": 26648,
+      "cpu_delta_seconds": 0.125
+    },
+    {
+      "name": "floorp",
+      "pid": 15492,
+      "cpu_delta_seconds": 0.109375
+    }
+  ],
+  "old_driver_pid_5576_present": false,
+  "old_native_pid_56468_present": false,
+  "disk_free_bytes": {
+    "D": 1150804152320,
+    "C": 477876359168
+  }
+}

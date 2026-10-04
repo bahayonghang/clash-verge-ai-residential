@@ -1,0 +1,21 @@
+{
+  "errors": [],
+  "files": [
+    {
+      "file": "review.md",
+      "lines": 198,
+      "sha256": "53606ca7ee7b46ce529db28102fca75bc53981e22677e99dd0be3ba8bd21ddd0"
+    },
+    {
+      "file": "review-formal-runner.md",
+      "lines": 50,
+      "sha256": "fa972c5fe1fac87d828897446c2fd134721482e90809cb0e4b1f6b01b45d37bd"
+    },
+    {
+      "file": "review-cache-lazy-validation.json",
+      "lines": 637,
+      "sha256": "03ee8dda453e749f60eaf70a2ddc119453da21a05e7bc86c404b92fdb2a95201"
+    }
+  ],
+  "runner_ast": "PASS; parsed only, no import/execution"
+}

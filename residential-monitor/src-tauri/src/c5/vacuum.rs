@@ -15,6 +15,8 @@ pub fn run_user_vacuum(path: &Path, space: &SpaceBudget) -> Result<(), ReportErr
     let parent = path.parent().unwrap_or_else(|| Path::new("."));
     space.check(parent, needed)?;
     let connection = open_bundled(path).map_err(|_| ReportError::Failed("open vacuum"))?;
+    crate::c3::rule_name::register_last_chain_hop(&connection)
+        .map_err(|_| ReportError::Failed("VACUUM 表达式函数初始化失败"))?;
     connection
         .execute_batch("vacuum")
         .map_err(|_| ReportError::Failed("vacuum"))?;
@@ -29,6 +31,9 @@ fn integrity_ok(path: &Path) -> bool {
     let Ok(connection) = Connection::open(path) else {
         return false;
     };
+    if crate::c3::rule_name::register_last_chain_hop(&connection).is_err() {
+        return false;
+    }
     connection
         .query_row("pragma integrity_check", [], |row| row.get::<_, String>(0))
         .ok()
@@ -58,7 +63,9 @@ mod vacuum_tests {
     fn vacuum_keeps_current_database() {
         let dir = tempdir().expect("dir");
         let path = dir.path().join("monitor.sqlite3");
-        StorageCoordinator::open(&path).expect("open");
+        let coordinator = StorageCoordinator::open(&path).expect("open");
+        coordinator.seed_report_fixture().expect("表达式索引数据");
+        drop(coordinator);
         run_user_vacuum(&path, &SpaceBudget::unlimited()).expect("vacuum");
         assert!(path.exists());
         assert!(integrity_ok(&path));

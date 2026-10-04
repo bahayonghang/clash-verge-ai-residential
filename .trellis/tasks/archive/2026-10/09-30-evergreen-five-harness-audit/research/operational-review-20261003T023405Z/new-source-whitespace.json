@@ -1,0 +1,66 @@
+{
+  "tracked_diff_native_exit": 0,
+  "new_source_checks": [
+    {
+      "path": "scripts/bootstrap-harnesses.js",
+      "native_exit_code": 1,
+      "diagnostics": "warning: in the working copy of 'scripts/bootstrap-harnesses.js', LF will be replaced by CRLF the next time Git touches it\n",
+      "pass": false
+    },
+    {
+      "path": "tests/bootstrap-harnesses.test.js",
+      "native_exit_code": 1,
+      "diagnostics": "warning: in the working copy of 'tests/bootstrap-harnesses.test.js', LF will be replaced by CRLF the next time Git touches it\n",
+      "pass": false
+    },
+    {
+      "path": "scripts/harness-templates/codex-config.toml",
+      "native_exit_code": 1,
+      "diagnostics": "warning: in the working copy of 'scripts/harness-templates/codex-config.toml', LF will be replaced by CRLF the next time Git touches it\n",
+      "pass": false
+    },
+    {
+      "path": "scripts/harness-templates/kimi-trellis-implement.md",
+      "native_exit_code": 1,
+      "diagnostics": "warning: in the working copy of 'scripts/harness-templates/kimi-trellis-implement.md', LF will be replaced by CRLF the next time Git touches it\n",
+      "pass": false
+    },
+    {
+      "path": "scripts/harness-templates/kimi-trellis-check.md",
+      "native_exit_code": 1,
+      "diagnostics": "warning: in the working copy of 'scripts/harness-templates/kimi-trellis-check.md', LF will be replaced by CRLF the next time Git touches it\n",
+      "pass": false
+    },
+    {
+      "path": "scripts/harness-templates/kimi-trellis-research.md",
+      "native_exit_code": 1,
+      "diagnostics": "warning: in the working copy of 'scripts/harness-templates/kimi-trellis-research.md', LF will be replaced by CRLF the next time Git touches it\n",
+      "pass": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture-operational.py",
+      "native_exit_code": 1,
+      "diagnostics": "warning: in the working copy of '.trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture-operational.py', LF will be replaced by CRLF the next time Git touches it\n",
+      "pass": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-kimi-acp.py",
+      "native_exit_code": 1,
+      "diagnostics": "warning: in the working copy of '.trellis/tasks/09-30-evergreen-runtime-validation/research/operational-kimi-acp.py', LF will be replaced by CRLF the next time Git touches it\n",
+      "pass": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-parent-prompt.txt",
+      "native_exit_code": 1,
+      "diagnostics": "warning: in the working copy of '.trellis/tasks/09-30-evergreen-runtime-validation/research/operational-parent-prompt.txt', LF will be replaced by CRLF the next time Git touches it\n",
+      "pass": false
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-verification.py",
+      "native_exit_code": 1,
+      "diagnostics": "warning: in the working copy of '.trellis/tasks/09-30-evergreen-runtime-validation/research/operational-verification.py', LF will be replaced by CRLF the next time Git touches it\n",
+      "pass": false
+    }
+  ],
+  "note": "no-index exit1表示新增差异；仅零诊断通过；原始证据字节不规范换行"
+}

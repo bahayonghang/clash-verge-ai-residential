@@ -1,0 +1,13 @@
+{
+  "recorded_utc": "2026-10-02T14:04:31.664226+00:00",
+  "exec_session": 40643,
+  "exec_tool_exit": 0,
+  "tool_chunk_id": "5beb3c",
+  "tool_wall_time_seconds": 8.9e-06,
+  "tool_final_output": "{\"harness\": \"grok\", \"status\": \"BLOCKED_OR_FAILED_REQUIRES_REVIEW\", \"exit_code\": 0}\n{\"phase\": \"execute\", \"native_exit\": 0}\n",
+  "driver_outer_exit": 0,
+  "capture_execute_native_exit": 0,
+  "native_client_exit": 0,
+  "capture_stop_reason": "TIMEOUT",
+  "meaning": "Exit0 does not remove TIMEOUT or establish native child PASS"
+}

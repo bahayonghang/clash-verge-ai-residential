@@ -1,0 +1,86 @@
+{
+  "complete": true,
+  "conservation": {
+    "combined_after": {
+      "download": 12182020,
+      "upload": 3628890
+    },
+    "combined_before": {
+      "download": 12182020,
+      "upload": 3628890
+    },
+    "conserved": true,
+    "remaining_expired_raw": 0
+  },
+  "ledger_after": {
+    "active_or_pending_fixture_references": 0,
+    "closed_sessions": 0,
+    "eligible_receipts": 0,
+    "protected_by_raw_sessions": 0,
+    "receipts": 100000,
+    "reclaimable_unreferenced_sessions": 0,
+    "sessions": 0,
+    "unreferenced_sessions": 0,
+    "unreferenced_without_retirement_or_cutoff_proof": 0
+  },
+  "quick_check": "ok",
+  "before": {
+    "active_page_bytes": 39985152,
+    "db_bytes": 428007424,
+    "freelist_count": 94732,
+    "page_count": 104494,
+    "page_size": 4096,
+    "reusable_page_bytes": 388022272,
+    "wal_bytes": 0
+  },
+  "after": {
+    "active_page_bytes": 10428416,
+    "db_bytes": 428007424,
+    "freelist_count": 101948,
+    "page_count": 104494,
+    "page_size": 4096,
+    "reusable_page_bytes": 417579008,
+    "wal_bytes": 5632072
+  },
+  "query": {
+    "error": "capability_unsupported",
+    "message": "exact high-cardinality ranking expired",
+    "ok": false
+  },
+  "query_wall_ms": 0.9875999999999999,
+  "retry_attempts": 0,
+  "wall_secs": 65.196195,
+  "chunks": {
+    "count": 2574,
+    "max_ms": 142.1235
+  },
+  "independent_inventory": {
+    "dictionary_by_kind": [
+      [
+        "category",
+        1
+      ]
+    ],
+    "auxiliary_cursors": [
+      [
+        "coverage_cleanup_cursor",
+        0
+      ],
+      [
+        "dictionary_cleanup_cursor",
+        0
+      ]
+    ],
+    "counts": {
+      "connection_minute": 0,
+      "connection_session": 0,
+      "connection_session_attr": 0,
+      "connection_chain": 0,
+      "traffic_hourly_dimension": 0,
+      "traffic_daily_dimension": 0,
+      "traffic_daily_core": 90,
+      "coverage_interval": 0,
+      "coverage_daily": 45
+    }
+  }
+}

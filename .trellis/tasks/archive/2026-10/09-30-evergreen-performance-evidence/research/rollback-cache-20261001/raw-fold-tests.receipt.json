@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "cargo",
+    "test",
+    "--locked",
+    "--manifest-path",
+    "residential-monitor/src-tauri/Cargo.toml",
+    "--lib",
+    "c3::raw_fold::"
+  ],
+  "resolved_executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\bin\\cargo.EXE",
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "source_manifest_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+  "started_utc": "2026-10-02T01:42:33.274201+00:00",
+  "status": "finished",
+  "pid": 50556,
+  "stdout_raw_sha256": "823062f39f02a18802b20c968e8dff2e9a22f907a186ffe8984615f5dde8719a",
+  "stderr_raw_sha256": "73dfe83711a198fb29c95cdb7f05cdd05569cf11b85fd1cf91184646e34daeaf",
+  "finished_utc": "2026-10-02T01:43:20.984636+00:00",
+  "wall_seconds": 47.71043050000003,
+  "exit_code": 0
+}

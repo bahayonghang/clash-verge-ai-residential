@@ -1,0 +1,6 @@
+{"file":".trellis/spec/residential-monitor/backend/index.md","reason":"Rust quality and lifecycle regressions"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"Cancellation and installed operation evidence"}
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"Check conservation, pruning, atomicity and spool"}
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"Frontend quality gate"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"Unknown versus zero and capability boundaries"}
+{"file":".trellis/tasks/09-19-resiwatch-resource-optimization/research/diagnosis.md","reason":"Distinguish source, installed, smoke and field evidence"}

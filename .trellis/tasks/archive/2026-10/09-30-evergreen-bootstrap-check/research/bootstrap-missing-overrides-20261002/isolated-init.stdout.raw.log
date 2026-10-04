@@ -1,0 +1,33 @@
+
+ ███████████                    ████  ████   ███         
+▒█▒▒▒███▒▒▒█                   ▒▒███ ▒▒███  ▒▒▒          
+▒   ▒███  ▒  ████████   ██████  ▒███  ▒███  ████   █████ 
+    ▒███    ▒▒███▒▒███ ███▒▒███ ▒███  ▒███ ▒▒███  ███▒▒  
+    ▒███     ▒███ ▒▒▒ ▒███████  ▒███  ▒███  ▒███ ▒▒█████ 
+    ▒███     ▒███     ▒███▒▒▒   ▒███  ▒███  ▒███  ▒▒▒▒███
+    █████    █████    ▒▒██████  █████ █████ █████ ██████ 
+   ▒▒▒▒▒    ▒▒▒▒▒      ▒▒▒▒▒▒  ▒▒▒▒▒ ▒▒▒▒▒ ▒▒▒▒▒ ▒▒▒▒▒▒
+
+   All-in-one AI framework & toolkit for Claude Code & Cursor
+
+Mode: Skip existing files
+
+📁 Creating workflow structure...
+  ○ Skipped: .trellis\workflow.md (already exists)
+  ○ Skipped: .trellis\spec\guides\index.md (already exists)
+  ○ Skipped: .trellis\spec\guides\cross-layer-thinking-guide.md (already exists)
+  ○ Skipped: .trellis\spec\frontend\index.md (already exists)
+  ○ Skipped: .trellis\spec\frontend\directory-structure.md (already exists)
+  ○ Skipped: .trellis\spec\frontend\type-safety.md (already exists)
+  ○ Skipped: .trellis\spec\frontend\hook-guidelines.md (already exists)
+  ○ Skipped: .trellis\spec\frontend\component-guidelines.md (already exists)
+  ○ Skipped: .trellis\spec\frontend\quality-guidelines.md (already exists)
+  ○ Skipped: .trellis\spec\frontend\state-management.md (already exists)
+📝 Configuring Claude Code...
+📝 Configuring Codex (also writes .agents/skills/ — read by Cursor, Gemini CLI, GitHub Copilot, Amp, Kimi Code)...
+📝 Configuring Oh My Pi...
+📝 Configuring Grok Build...
+📝 Configuring Kimi Code...
+📌 Windows detected: Trellis rendered Python commands as "python" in generated hooks, settings, and help text
+  ○ Skipped: AGENTS.md (already exists)
+📋 Tracking 247 template files for updates

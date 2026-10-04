@@ -1,0 +1,7 @@
+{
+  "log": "dependency-audit.log",
+  "startedAt": "2026-09-30T07:30:20.7072039-05:00",
+  "finishedAt": "2026-09-30T07:30:32.4988053-05:00",
+  "command": "just dependency-audit",
+  "exitCode": 0
+}

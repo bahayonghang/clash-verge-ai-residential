@@ -1,0 +1,24 @@
+{
+  "active": 50,
+  "db": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\corpus-a50-30d\\monitor.sqlite3",
+  "marker": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\corpus-a50-30d\\production-corpus.json",
+  "db_bytes": 544940032,
+  "db_sha256": "E93A7807D2FD9157A95504AD3CCE29954B68317F8D6E0D77C8EB249459FF28E3",
+  "marker_sha256": "00C934B4E355E6A212AE13DE334EEEE418F8B57E45B54F1AD8C835BBFFE95765",
+  "sidecars": {
+    "-wal": null,
+    "-shm": null
+  },
+  "checks": {
+    "kind": true,
+    "window": true,
+    "full_30_day_input": true,
+    "counts": true,
+    "schema": true,
+    "seed_and_active": true,
+    "generation_cache_kib": true,
+    "zero_wal": true
+  },
+  "generation_wall_secs_reported": 80.6046015,
+  "observed_utc": "2026-10-02T15:25:45.620661+00:00"
+}

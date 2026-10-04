@@ -82,9 +82,17 @@ The default AI-only policy does not capture generic STUN/TURN or all realtime UD
 
 The rebuilt DNS policy includes `geosite:cn` and `geosite:private`, both of which need `geosite.dat`. Mihomo downloads that file on first use. If the device is offline and has no copy, configuration parsing fails and Clash Verge Rev reports a validation error. On first launch the app falls back to a minimal default config. Connect once so Mihomo can fetch the geo database (most subscriptions trigger the same download), or place a valid `geosite.dat` in the Mihomo working directory and refresh the Profile.
 
-## Script TUN DNS hijack and IPv6 settings do not apply
+## Script log asks you to change TUN DNS hijack or IPv6 in settings
 
-Current Clash Verge Rev restores control-plane fields (`tun`, `ipv6`, mode, ports) from app settings after the global script runs. Script-completed TUN DNS hijack and `ipv6: false` therefore do not take effect on these hosts; that logic exists only for older hosts. Configure the IPv6 switch and TUN DNS hijack on the Clash Verge Rev settings page. DNS servers, `nameserver-policy`, and fake-ip rebuilt by the script are unaffected; if Clash Verge Rev DNS override is enabled, `dns.ipv6` is also restored from app settings.
+After the global script runs, Clash Verge Rev restores the fields that its settings page manages (`tun`, top-level `ipv6`, mode, ports, and similar) from app settings. From v2.5.5, when an extension changes one of these fields, the app shows the notice "Extensions wrote …, which Settings manages, so those values were discarded".
+
+The script therefore does not write `tun` or the top-level `ipv6`. It logs a `warn` only in these cases:
+
+- TUN is on and `dns-hijack` does not contain `any:53` or `tcp://any:53`: add the missing entries in Verge Settings → TUN settings → DNS hijack.
+- `runtime.enable_tun_strict_route` is on, TUN is on, and `strict-route` is off: turn on strict route in TUN settings.
+- The top-level `ipv6` is `true`: turn IPv6 off in the Verge settings page.
+
+When the values are correct, these `warn` lines stop. When DNS override is off, the DNS servers, `nameserver-policy`, and fake-ip fields that the script rebuilds are unaffected. When DNS override is on, the settings page owns all non-empty `dns.*` fields in `dns_config.yaml`. The host discards script changes to those fields and can show a `dns.*` notice.
 
 ## Warning that references were removed from an upstream group
 

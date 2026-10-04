@@ -1,0 +1,37 @@
+{
+  "label": "11-validate-t06",
+  "argv": [
+    "python",
+    "-X",
+    "utf8",
+    ".trellis/scripts/task.py",
+    "validate",
+    ".trellis/tasks/09-30-evergreen-runtime-validation"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "executable": "C:\\Program Files\\Python314\\python.EXE",
+  "executable_sha256": "4942b86a6597e5aee0128daa00050ed79bc21f6e709a78eb19cbfeb0c2f39ac9",
+  "started_utc": "2026-10-03T02:06:41.733006+00:00",
+  "finished_utc": "2026-10-03T02:06:41.867538+00:00",
+  "wall_seconds": 0.13453319999098312,
+  "pid": 56888,
+  "native_exit_code": 0,
+  "driver_exit_code": 0,
+  "driver_exit_observation": "sys.exit invoked below; confirmed separately by tool-outer observer",
+  "tool_outer_exit_code": null,
+  "tool_outer_exit_observation": "PENDING; recorded in separate observer after exec returns",
+  "status": "PASS",
+  "exception": null,
+  "streams": {
+    "stdout": {
+      "path": "11-validate-t06.stdout.raw",
+      "size": 601,
+      "sha256": "f9ba7ff8ce2fbfbfd1dd824b4f1b89bbd2651692976e59a3e0852e31bb30e555"
+    },
+    "stderr": {
+      "path": "11-validate-t06.stderr.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  }
+}

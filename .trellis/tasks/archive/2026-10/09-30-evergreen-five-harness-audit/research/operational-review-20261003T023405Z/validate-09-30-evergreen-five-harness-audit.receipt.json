@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "C:\\Program Files\\Python314\\python.exe",
+    "-B",
+    "-X",
+    "utf8",
+    ".trellis/scripts/task.py",
+    "validate",
+    "09-30-evergreen-five-harness-audit"
+  ],
+  "shell": false,
+  "started_utc": "2026-10-03T02:39:10.963919+00:00",
+  "ended_utc": "2026-10-03T02:39:11.160219+00:00",
+  "native_exit_code": 0,
+  "stdout_sha256": "40fd62ce830920b28af44360e9e88f62ed4188da4751efedd40d1100dcee0998",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

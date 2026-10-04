@@ -1,0 +1,122 @@
+[
+  {
+    "argv": [
+      "powershell.exe",
+      "-NoLogo",
+      "-NoProfile",
+      "-Command",
+      "node scripts/sync-monitor-version.js --check"
+    ],
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "started_utc": "2026-09-30T15:23:14.331039+00:00",
+    "status": "finished",
+    "exit_code": 0,
+    "wall_seconds": 0.2408728999998857,
+    "finished_utc": "2026-09-30T15:23:14.572477+00:00"
+  },
+  {
+    "argv": [
+      "powershell.exe",
+      "-NoLogo",
+      "-NoProfile",
+      "-Command",
+      "npm --prefix residential-monitor ci"
+    ],
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "started_utc": "2026-09-30T15:23:14.621145+00:00",
+    "status": "finished",
+    "exit_code": 0,
+    "wall_seconds": 11.97410950000085,
+    "finished_utc": "2026-09-30T15:23:26.596041+00:00"
+  },
+  {
+    "argv": [
+      "powershell.exe",
+      "-NoLogo",
+      "-NoProfile",
+      "-Command",
+      "npm --prefix residential-monitor run check"
+    ],
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "started_utc": "2026-09-30T15:23:26.655010+00:00",
+    "status": "finished",
+    "exit_code": 0,
+    "wall_seconds": 14.62846300000001,
+    "finished_utc": "2026-09-30T15:23:41.284262+00:00"
+  },
+  {
+    "argv": [
+      "powershell.exe",
+      "-NoLogo",
+      "-NoProfile",
+      "-Command",
+      "cargo fmt --manifest-path residential-monitor/src-tauri/Cargo.toml --check"
+    ],
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "started_utc": "2026-09-30T15:23:41.338215+00:00",
+    "status": "finished",
+    "exit_code": 0,
+    "wall_seconds": 0.7968376999997417,
+    "finished_utc": "2026-09-30T15:23:42.135790+00:00"
+  },
+  {
+    "argv": [
+      "powershell.exe",
+      "-NoLogo",
+      "-NoProfile",
+      "-Command",
+      "cargo clippy --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace --all-targets -- -D warnings"
+    ],
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "started_utc": "2026-09-30T15:23:42.188900+00:00",
+    "status": "finished",
+    "exit_code": 0,
+    "wall_seconds": 8.456545399999413,
+    "finished_utc": "2026-09-30T15:23:50.646171+00:00"
+  },
+  {
+    "argv": [
+      "powershell.exe",
+      "-NoLogo",
+      "-NoProfile",
+      "-Command",
+      "cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace"
+    ],
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "started_utc": "2026-09-30T15:23:50.702129+00:00",
+    "status": "finished",
+    "exit_code": 0,
+    "wall_seconds": 38.13742269999966,
+    "finished_utc": "2026-09-30T15:24:28.840307+00:00"
+  },
+  {
+    "argv": [
+      "powershell.exe",
+      "-NoLogo",
+      "-NoProfile",
+      "-Command",
+      "npm run check:secrets"
+    ],
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "started_utc": "2026-09-30T15:24:28.898935+00:00",
+    "status": "finished",
+    "exit_code": 0,
+    "wall_seconds": 0.8200375999995231,
+    "finished_utc": "2026-09-30T15:24:29.719881+00:00"
+  },
+  {
+    "argv": [
+      "powershell.exe",
+      "-NoLogo",
+      "-NoProfile",
+      "-Command",
+      "npm run ci"
+    ],
+    "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+    "started_utc": "2026-09-30T15:24:29.770270+00:00",
+    "status": "finished",
+    "exit_code": 0,
+    "wall_seconds": 4.88643890000003,
+    "finished_utc": "2026-09-30T15:24:34.657679+00:00"
+  }
+]

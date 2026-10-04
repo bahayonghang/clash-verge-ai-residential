@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "Backend quality gate and Recovery Shell contracts for command gating tests."}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "Loopback TCP, Recovery write ban, C2/C3/C4 ownership, error codes."}
+{"file": ".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md", "reason": "CLI --offline-confirmed, purge phrase, no secret in tests."}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "Single-writer transaction for facts/alerts/outbox; fail closed."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Root node:test pattern if a fail-closed script hole appears; just ci gate."}
+{"file": ".trellis/tasks/09-03-test-coverage-gaps/research/coverage-audit.md", "reason": "Ranked coverage gaps and explicit non-goals."}

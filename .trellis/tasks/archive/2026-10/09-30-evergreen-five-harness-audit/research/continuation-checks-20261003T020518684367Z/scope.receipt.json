@@ -1,0 +1,106 @@
+{
+  "status": "PREPARED",
+  "started_utc": "2026-10-03T02:05:18.701010+00:00",
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "active_dispatch_task": ".trellis/tasks/09-30-evergreen-performance-evidence",
+  "parent_task": ".trellis/tasks/09-30-evergreen-five-harness-audit",
+  "write_scope": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-five-harness-audit\\research\\continuation-checks-20261003T020518684367Z",
+  "review_mode": "checks and new receipts only; self-fix not authorized",
+  "full_ci": "NOT_RUN",
+  "full_ci_reason": "no new product changes; historical full gate is retained within its source boundary",
+  "performance": "NOT_RUN; no matrix admission; competing ferrots load",
+  "python": "C:\\Program Files\\Python314\\python.exe",
+  "tools": {
+    "just": "C:\\Users\\lyh\\scoop\\shims\\just.EXE",
+    "node": "D:\\GreenSoftware\\node\\node.EXE",
+    "git": "C:\\Program Files\\Git\\cmd\\git.EXE",
+    "python": "C:\\Program Files\\Python314\\python.EXE"
+  },
+  "source_files_before": [
+    {
+      "path": "docs/agents/harnesses.md",
+      "size": 17051,
+      "sha256": "92231b6217866da2a43724e9a910cdba6808699c6cf84fa784f330b9989ed2da"
+    },
+    {
+      "path": ".trellis/spec/frontend/quality-guidelines.md",
+      "size": 16636,
+      "sha256": "fd268056d25e32a2a1e7b38d4610880af12992f004e313780fe8e1d57583d577"
+    },
+    {
+      "path": "AGENTS.md",
+      "size": 8046,
+      "sha256": "f602d7e74cada3cd9c6d617dad36cbc1a90d90c19b92bd5ccb40d9794b557bb9"
+    },
+    {
+      "path": ".trellis/workflow.md",
+      "size": 44244,
+      "sha256": "2540200a69777534fdc1632c38fa8caf247278d4de654a5c5c47269cbc1dcc0f"
+    },
+    {
+      "path": "justfile",
+      "size": 5520,
+      "sha256": "e3307f113086045f7228a2dfb2eab8894d4f05787fde1d124e1899381a64e09a"
+    },
+    {
+      "path": "scripts/check-agent-contract.js",
+      "size": 9333,
+      "sha256": "67d9aec81cd20a09457ce240902056647b9dee94e1de1bb184e742b793e868de"
+    },
+    {
+      "path": "scripts/install-agent-skills.js",
+      "size": 5875,
+      "sha256": "557551d116b8696aa75658d3710e623c482e646a995ae8ebe98ec3a4e0767bd9"
+    },
+    {
+      "path": "docs/package.json",
+      "size": 304,
+      "sha256": "86aff30cf335f08baec1b9864e6a8639dc3e63d2a270339cd12b601db913d925"
+    },
+    {
+      "path": "docs/package-lock.json",
+      "size": 68344,
+      "sha256": "2270fe40b72a626672d60775a8586aa24e59dbbe98a11f6b89b908db8197e107"
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/review-bootstrap-runtime-closeout-20261002.md",
+      "size": 6688,
+      "sha256": "0c1d293f9a5ee8f64fb5a2d3a912c055d3573b9dbeca905cd02c156d28ef8e92"
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-five-harness-audit/task.json",
+      "size": 1763,
+      "sha256": "4733323b6d5cd4449ef2a065c29b7e041b5dc32f21a6f2e2ea5d62b5294d0aab"
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-dependency-gate/task.json",
+      "size": 1449,
+      "sha256": "96b3bec62f1ff5fd7e441cc50ea5ffcc8edd7cf90595e25be022be005eeb924b"
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-skill-sync/task.json",
+      "size": 1733,
+      "sha256": "b54ee77afbda2023b446b0c10b1f22f405285f8443b087dfb585cd02d4089d9a"
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-harness-contract/task.json",
+      "size": 3187,
+      "sha256": "49fede83cae6f22bd3e1212f7eba7c69bd31ff2dfc5bb26b5e43c8dac3164718"
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-bootstrap-check/task.json",
+      "size": 3971,
+      "sha256": "005f883679f17bc31d61ebe9c43dd3b4ab070a811e9237c01b7365e27855f359"
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-performance-evidence/task.json",
+      "size": 1570,
+      "sha256": "07684fc291cb484410f9afef314c88fe21e86af86583f8a9002933334856e098"
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/task.json",
+      "size": 3330,
+      "sha256": "9b02fe39250bf25a8deb12f704bd665bc15dd43c7fa2e3798f1c0fdf291586d9"
+    }
+  ]
+}

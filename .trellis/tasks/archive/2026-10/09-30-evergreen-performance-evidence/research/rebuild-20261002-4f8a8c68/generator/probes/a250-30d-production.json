@@ -1,0 +1,36 @@
+{
+  "data_version": 2592000,
+  "db": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\corpus-a250-30d\\monitor.sqlite3",
+  "deleted_days": 0,
+  "durable_version_ms": 0.0571,
+  "finalized_days_ms": 0.059,
+  "kind": "nonempty-minute-report-stages",
+  "limits": [
+    "不驱逐 OS page cache，不能称物理冷读。",
+    "plan snapshot 内部会再查一次 finalized days，不能把两次耗时相加当生产路径。",
+    "生产 deadline 未放宽；本探针不写安装库。"
+  ],
+  "minute_span": 43200,
+  "now_utc": 1789776000,
+  "os_cache": "not dropped; first run_uncached is the in-process first read",
+  "plan_snapshot_includes_finalized_days": true,
+  "plan_snapshot_ms": 0.019899999999999998,
+  "plan_tier": "Raw",
+  "production_first_read": {
+    "error": "DeadlineExceeded(\"report query\")",
+    "status": "error"
+  },
+  "production_first_read_ms": 10035.869999999999,
+  "query": "default_auto_report_query",
+  "range_end_utc": 1789776000,
+  "range_start_utc": 1787184000,
+  "raw_query_ms": 13016.4438,
+  "raw_retain_days": 30,
+  "reader_close_ms": 1.996,
+  "stage_connection_count": 2160000,
+  "stage_download": 507599545,
+  "stage_series_rows": 720,
+  "stage_split_cache": "second connection after the production read",
+  "stage_upload": 151200035,
+  "verified_days": 0
+}

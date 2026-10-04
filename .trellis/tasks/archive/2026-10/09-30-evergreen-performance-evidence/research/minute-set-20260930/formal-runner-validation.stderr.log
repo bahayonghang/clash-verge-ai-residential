@@ -1,0 +1,10 @@
+test_complete_matrix_report_and_primary_counts (__main__.ValidationTests.test_complete_matrix_report_and_primary_counts) ... ok
+test_invalid_native_values_do_not_enter_sums (__main__.ValidationTests.test_invalid_native_values_do_not_enter_sums) ... ok
+test_invalid_report_shapes_and_required_fields (__main__.ValidationTests.test_invalid_report_shapes_and_required_fields) ... ok
+test_ratios_reject_invalid_denominators_and_candidates (__main__.ValidationTests.test_ratios_reject_invalid_denominators_and_candidates) ... ok
+test_zero_samples_and_wrong_identity_fail (__main__.ValidationTests.test_zero_samples_and_wrong_identity_fail) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.003s
+
+OK

@@ -1,0 +1,150 @@
+{
+  "comparisons": [
+    {
+      "name": "primary-r1",
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "virtual_time": false,
+      "cpu_seconds": [
+        7.015625,
+        0.1875
+      ],
+      "cpu_reduction_percent": 97.32739420935413,
+      "sqlite_xwrite_bytes": [
+        23531752,
+        14901296
+      ],
+      "sqlite_xwrite_reduction_percent": 36.67579022590414,
+      "native_private_p95_bytes": [
+        9691136.0,
+        9306112.0
+      ],
+      "ingest_p95_ms": [
+        14.417599999999998,
+        11.386099999999999
+      ],
+      "ingest_max_ms": [
+        43.6108,
+        12.796
+      ],
+      "report_first_reader_p95_ms": [
+        0.0,
+        0.0
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "primary-r2",
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "virtual_time": false,
+      "cpu_seconds": [
+        6.953125,
+        0.421875
+      ],
+      "cpu_reduction_percent": 93.93258426966293,
+      "sqlite_xwrite_bytes": [
+        23531752,
+        14901296
+      ],
+      "sqlite_xwrite_reduction_percent": 36.67579022590414,
+      "native_private_p95_bytes": [
+        9306112.0,
+        9330688.0
+      ],
+      "ingest_p95_ms": [
+        14.8016,
+        9.1403
+      ],
+      "ingest_max_ms": [
+        714.5694,
+        12.7513
+      ],
+      "report_first_reader_p95_ms": [
+        0.0,
+        0.0
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "primary-r3",
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "virtual_time": false,
+      "cpu_seconds": [
+        9.3125,
+        0.296875
+      ],
+      "cpu_reduction_percent": 96.81208053691275,
+      "sqlite_xwrite_bytes": [
+        23531752,
+        14901296
+      ],
+      "sqlite_xwrite_reduction_percent": 36.67579022590414,
+      "native_private_p95_bytes": [
+        9584640.0,
+        9400320.0
+      ],
+      "ingest_p95_ms": [
+        13.8384,
+        11.7149
+      ],
+      "ingest_max_ms": [
+        585.4277,
+        16.438399999999998
+      ],
+      "report_first_reader_p95_ms": [
+        0.0,
+        0.0
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "smoke",
+      "fixture_hash": "557540697a8a1e8e41edf6bb7366f6bff4ddab43419442a2596761a1d1729bb8",
+      "virtual_time": true,
+      "cpu_seconds": [
+        0.0625,
+        0.0
+      ],
+      "cpu_reduction_percent": 100.0,
+      "sqlite_xwrite_bytes": [
+        131840,
+        140080
+      ],
+      "sqlite_xwrite_reduction_percent": -6.25,
+      "native_private_p95_bytes": [
+        5283840.0,
+        5693440.0
+      ],
+      "ingest_p95_ms": [
+        3.2583,
+        2.7746
+      ],
+      "ingest_max_ms": [
+        3.6916,
+        3.1087
+      ],
+      "report_first_reader_p95_ms": [
+        0.0,
+        0.0
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    }
+  ],
+  "primary_three_rounds_complete": true,
+  "primary_cpu_reduction_percent": 96.10738255033557,
+  "primary_sqlite_xwrite_reduction_percent": 36.67579022590414,
+  "all_application_file_writes_gate": "UNVERIFIED: SQLite xWrite is only a subset",
+  "native_plus_webview_memory_gate": "UNVERIFIED: this harness has no WebView",
+  "collector_background_worker_gate": "UNVERIFIED: synchronous facade/archive driver"
+}

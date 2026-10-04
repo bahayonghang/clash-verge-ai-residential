@@ -1,0 +1,78 @@
+[
+  {
+    "url": "https://developers.openai.com/codex/config-schema.json",
+    "status": "OK",
+    "keys": [
+      {
+        "path": ".definitions.AgentsToml.properties.default_subagent_model",
+        "definition": {
+          "description": "Default model for spawned subagents when the spawn call does not select one.",
+          "type": "string"
+        }
+      },
+      {
+        "path": ".definitions.AgentsToml.properties.max_concurrent_threads_per_session",
+        "definition": {
+          "description": "Maximum number of spawned agent threads that can be open concurrently per session. When unset, the selected multi-agent backend uses its default.",
+          "format": "uint",
+          "minimum": 1.0,
+          "type": "integer"
+        }
+      },
+      {
+        "path": ".definitions.AgentsToml.properties.max_depth",
+        "definition": {
+          "description": "Maximum nesting depth for V1 agent threads. Ignored by V2.",
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      {
+        "path": ".definitions.MultiAgentV2ConfigToml.properties.max_concurrent_threads_per_session",
+        "definition": {
+          "format": "uint",
+          "minimum": 1.0,
+          "type": "integer"
+        }
+      }
+    ]
+  },
+  {
+    "url": "https://raw.githubusercontent.com/openai/codex/rust-v0.159.2/codex-rs/core/config.schema.json",
+    "status": "OK",
+    "keys": [
+      {
+        "path": ".definitions.AgentsToml.properties.default_subagent_model",
+        "definition": {
+          "description": "Default model for spawned subagents when the spawn call does not select one.",
+          "type": "string"
+        }
+      },
+      {
+        "path": ".definitions.AgentsToml.properties.max_concurrent_threads_per_session",
+        "definition": {
+          "description": "Maximum number of spawned agent threads that can be open concurrently per session. When unset, the selected multi-agent backend uses its default.",
+          "format": "uint",
+          "minimum": 1.0,
+          "type": "integer"
+        }
+      },
+      {
+        "path": ".definitions.AgentsToml.properties.max_depth",
+        "definition": {
+          "description": "Maximum nesting depth for V1 agent threads. Ignored by V2.",
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      {
+        "path": ".definitions.MultiAgentV2ConfigToml.properties.max_concurrent_threads_per_session",
+        "definition": {
+          "format": "uint",
+          "minimum": 1.0,
+          "type": "integer"
+        }
+      }
+    ]
+  }
+]

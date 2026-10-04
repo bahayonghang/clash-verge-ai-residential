@@ -1,0 +1,66 @@
+{
+  "scope": "仅本次git进程不转换换行；不改变Git配置/源码/空白检查规则",
+  "first_observation": "10项均只产生LF->CRLF提示；保留原收据，未作为产品缺陷",
+  "checks": [
+    {
+      "path": "scripts/bootstrap-harnesses.js",
+      "native_exit_code": 1,
+      "diagnostics": "",
+      "pass": true
+    },
+    {
+      "path": "tests/bootstrap-harnesses.test.js",
+      "native_exit_code": 1,
+      "diagnostics": "",
+      "pass": true
+    },
+    {
+      "path": "scripts/harness-templates/codex-config.toml",
+      "native_exit_code": 1,
+      "diagnostics": "",
+      "pass": true
+    },
+    {
+      "path": "scripts/harness-templates/kimi-trellis-implement.md",
+      "native_exit_code": 1,
+      "diagnostics": "",
+      "pass": true
+    },
+    {
+      "path": "scripts/harness-templates/kimi-trellis-check.md",
+      "native_exit_code": 1,
+      "diagnostics": "",
+      "pass": true
+    },
+    {
+      "path": "scripts/harness-templates/kimi-trellis-research.md",
+      "native_exit_code": 1,
+      "diagnostics": "",
+      "pass": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture-operational.py",
+      "native_exit_code": 1,
+      "diagnostics": "",
+      "pass": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-kimi-acp.py",
+      "native_exit_code": 1,
+      "diagnostics": "",
+      "pass": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-parent-prompt.txt",
+      "native_exit_code": 1,
+      "diagnostics": "",
+      "pass": true
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-verification.py",
+      "native_exit_code": 1,
+      "diagnostics": "",
+      "pass": true
+    }
+  ]
+}

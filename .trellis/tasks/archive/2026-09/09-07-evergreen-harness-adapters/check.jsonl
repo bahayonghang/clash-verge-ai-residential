@@ -1,0 +1,4 @@
+{"file":".trellis/tasks/09-07-evergreen-harness-audit/research/project-map.md","reason":"验收：当前项目工具边界"}
+{"file":".trellis/tasks/09-07-evergreen-harness-audit/research/harness-audit.md","reason":"五套工具第一方来源、实际配置、恢复步骤及动态证据边界"}
+{"file":".trellis/tasks/09-07-evergreen-harness-audit/research/local-baseline.md","reason":"验收：本地副本与运行证据限制"}
+{"file":".trellis/spec/guides/index.md","reason":"验收：跨层及独立审查规则"}

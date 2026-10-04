@@ -1,0 +1,7 @@
+{
+  "command": "actionlint .github/workflows/ci.yml",
+  "exitCode": 0,
+  "finishedAt": "2026-09-30T07:29:39.7072740-05:00",
+  "startedAt": "2026-09-30T07:29:39.1918218-05:00",
+  "log": "actionlint.log"
+}

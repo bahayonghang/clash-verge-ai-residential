@@ -3,7 +3,7 @@
 use crate::sqlite_probe::{apply_required_pragmas, open_bundled};
 use crate::workload::{ExpectedCounts, WorkloadSpec};
 use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use rand::{RngExt, SeedableRng};
 use rusqlite::{Connection, OptionalExtension};
 use serde::Serialize;
 use std::path::Path;

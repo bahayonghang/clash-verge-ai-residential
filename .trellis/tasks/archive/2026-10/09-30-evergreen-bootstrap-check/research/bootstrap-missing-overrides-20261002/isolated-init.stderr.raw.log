@@ -1,0 +1,1 @@
+⚠️  Codex hooks require `features.hooks = true` in your ~/.codex/config.toml (Codex 0.129+; older versions: `codex_hooks = true`). On Codex 0.129+ also run `/hooks` once to approve the Trellis hooks. Without these the Trellis workflow breadcrumb and native sub-agent context won't auto-inject (agents retain a pull fallback). See Trellis docs for details.

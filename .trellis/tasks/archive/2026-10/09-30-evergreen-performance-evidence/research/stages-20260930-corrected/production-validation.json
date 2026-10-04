@@ -1,0 +1,60 @@
+[
+  {
+    "label": "a250-minute-production",
+    "checks": {
+      "native_exit_zero": true,
+      "ran_exactly_one_test": true,
+      "json_exists": true,
+      "query_identity": true,
+      "production_ok_raw": true,
+      "production_under_10s": true,
+      "nonempty_series": true,
+      "connection_count_oracle": true,
+      "upload_oracle": true,
+      "download_oracle": true,
+      "improvement_from_7690_685_ms": true
+    },
+    "pass": true,
+    "production_first_read": {
+      "connection_count": 250,
+      "data_version": 2592000,
+      "download": 11725,
+      "series_rows": 1,
+      "status": "ok",
+      "tier": "Raw",
+      "upload": 3497
+    },
+    "production_first_read_ms": 14.0227,
+    "query_timezone": "local",
+    "previous_equal_window": true,
+    "now_utc": 1787184060,
+    "cache": "already read by preceding probes",
+    "oracle_source": "fixed 09-24 minute values"
+  },
+  {
+    "label": "a250-30d-production",
+    "checks": {
+      "native_exit_zero": true,
+      "ran_exactly_one_test": true,
+      "json_exists": true,
+      "query_identity": true,
+      "production_ok_raw": false,
+      "production_under_10s": false,
+      "nonempty_series": false,
+      "connection_count_oracle": false,
+      "upload_oracle": false,
+      "download_oracle": false
+    },
+    "pass": false,
+    "production_first_read": {
+      "error": "DeadlineExceeded(\"report query\")",
+      "status": "error"
+    },
+    "production_first_read_ms": 10018.5676,
+    "query_timezone": "local",
+    "previous_equal_window": true,
+    "now_utc": 1789776000,
+    "cache": "already read by preceding probes",
+    "oracle_source": "initial 30d diagnostic; independent SQL oracle still required"
+  }
+]

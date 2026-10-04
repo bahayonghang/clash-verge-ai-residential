@@ -1,0 +1,102 @@
+{
+  "label": "candidate-library-test-build",
+  "argv": [
+    "cargo",
+    "+1.98.0",
+    "test",
+    "--locked",
+    "--release",
+    "--target",
+    "x86_64-pc-windows-msvc",
+    "--manifest-path",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\sources\\candidate\\residential-monitor\\src-tauri\\Cargo.toml",
+    "--target-dir",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\targets\\candidate",
+    "--lib",
+    "--no-run",
+    "--message-format=json"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-10-02T15:22:05.733030+00:00",
+  "status": "ENDED",
+  "environment_override": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "build_environment": {
+    "VCToolsInstallDir": null,
+    "VSINSTALLDIR": null,
+    "WindowsSdkDir": null,
+    "WindowsSDKVersion": null,
+    "LIB": null,
+    "INCLUDE": null,
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": null,
+    "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER": null,
+    "CARGO_BUILD_TARGET": null,
+    "CARGO_TARGET_DIR": null
+  },
+  "executable_resolved": "C:\\Users\\lyh\\AppData\\Local\\mbx\\bin\\cargo.EXE",
+  "shell": false,
+  "native_exit": 0,
+  "pid": 39956,
+  "ended_utc": "2026-10-02T15:22:27.593130+00:00",
+  "wall_seconds": 21.847973299998557,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\candidate-library-test-build.stdout.raw",
+      "bytes": 502127,
+      "raw_sha256": "54D31E7FDFE4B12AA579B1F7437E39FC8138563C31A52EA89265D02FA91DFCD1",
+      "gzip": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\candidate-library-test-build.stdout.raw.gz",
+      "gzip_sha256": "FA2EFD6B42AE1E057AC0247B6D729B35B25D9E2D74D2DC5CB7B918A2D39CF716",
+      "readable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\candidate-library-test-build.stdout.log",
+      "readable_sha256": "3CA6EDF3DE2D39524FF2E2D0CE93097B271D682D416A97A22AE57BC13CADA1D1"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\candidate-library-test-build.stderr.raw",
+      "bytes": 458,
+      "raw_sha256": "E2B1690F1D4B1D78BBCD35D2447514DEF39217639A9CC8AB5FF3E24398B2A6B3",
+      "gzip": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\candidate-library-test-build.stderr.raw.gz",
+      "gzip_sha256": "4AA9D4025453E41E1EFA3E48D333AA374EDD573CD44E80B019AF90DE92E64E5C",
+      "readable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\candidate-library-test-build.stderr.log",
+      "readable_sha256": "3F6FB081BA75B93CBE0FB8F7A5BFF8FE57F8DF18D05EA42F15C0427CF832CE3F"
+    }
+  },
+  "owned_descendants_observed": [
+    {
+      "pid": 36696,
+      "name": "mbx.exe",
+      "executable": "C:\\Users\\lyh\\.cargo\\bin\\mbx.exe"
+    },
+    {
+      "pid": 40572,
+      "name": "rustup.exe",
+      "executable": "C:\\Users\\lyh\\.cargo\\bin\\rustup.exe"
+    },
+    {
+      "pid": 57528,
+      "name": "cargo.exe",
+      "executable": "C:\\Users\\lyh\\.rustup\\toolchains\\1.98.0-x86_64-pc-windows-msvc\\bin\\cargo.exe"
+    },
+    {
+      "pid": 58188,
+      "name": "mbx-rustc.exe",
+      "executable": "C:\\Users\\lyh\\AppData\\Local\\mbx\\shims\\rust\\b0d7b940ab05d469fddec501504eaef09a79530bfdd225a5f29ea65506dc73f5\\mbx-rustc.exe"
+    },
+    {
+      "pid": 50116,
+      "name": "rustc.exe",
+      "executable": "C:\\Users\\lyh\\.rustup\\toolchains\\1.98.0-x86_64-pc-windows-msvc\\bin\\rustc.exe"
+    },
+    {
+      "pid": 13524,
+      "name": "cmd.exe",
+      "executable": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+      "pid": 50496,
+      "name": "link.exe",
+      "executable": "C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\link.exe"
+    }
+  ],
+  "process_cleanup": "native process waited; descendant metadata observations limited to own subtree; no absolute no-orphan claim"
+}

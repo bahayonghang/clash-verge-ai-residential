@@ -1,0 +1,1 @@
+{"observed_utc": "2026-09-19T15:32:23.580977+00:00", "job": {"day_utc": 1787184000, "phase": "audit", "cursor_minute": 29787839, "cursor_session": 18432, "raw_rows": 5760}, "cleanup_cursors": {"receipt_cleanup_cursor": "3752000", "session_cleanup_cursor": "15000"}, "page_count": 104494, "freelist_count": 90629, "db_bytes": 428007424, "wal_bytes": 7539632}

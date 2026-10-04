@@ -1,0 +1,66 @@
+{
+  "checked_utc": "2026-09-30T14:36:36.553787+00:00",
+  "scope": "review-owned documentation and receipts only",
+  "powershell_examples": {
+    "blocks": 2,
+    "syntax_errors": 0,
+    "executed": false,
+    "evidence": "System.Management.Automation.Language.Parser::ParseInput on both fenced blocks, 2026-09-30T14:33 UTC"
+  },
+  "files": [
+    {
+      "path": ".trellis/tasks/09-30-evergreen-performance-evidence/research/preflight-review.md",
+      "bytes": 17609,
+      "lines": 145,
+      "sha256": "4230A38192C8E5440B72A0BC8C139F86BD48B4E9B93373D0CBB112D55FFA7651",
+      "trailing_whitespace_lines": []
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-performance-evidence/research/review.md",
+      "bytes": 14584,
+      "lines": 129,
+      "sha256": "285AC4135F3BFC4CC6137A97251557EBD039662A9F20FF1EF58342A92CADE199",
+      "trailing_whitespace_lines": []
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-performance-evidence/research/review-build-identity.json",
+      "bytes": 970,
+      "lines": 24,
+      "sha256": "F7DD0F07410CE037D45DDCF2B9A11EA079DA7A46D9BBF90932DED22EDF7C0F11",
+      "trailing_whitespace_lines": []
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-performance-evidence/research/review-manifest-boundary.json",
+      "bytes": 3705,
+      "lines": 72,
+      "sha256": "2F6D06841196B1ED4299B7CFCBC3EE61152E22859B828229964A316E7E67D101",
+      "trailing_whitespace_lines": []
+    },
+    {
+      "path": ".trellis/tasks/09-30-evergreen-performance-evidence/research/review-stage-evidence.json",
+      "bytes": 13240,
+      "lines": 382,
+      "sha256": "A3B88B77F051661E5C301508EAC97F7F8435F985471DA2F0A600937DB3782211",
+      "trailing_whitespace_lines": []
+    }
+  ],
+  "json_parse": "PASS",
+  "git_diff_check": {
+    "argv": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      ".trellis/tasks/09-30-evergreen-performance-evidence/research/preflight-review.md",
+      ".trellis/tasks/09-30-evergreen-performance-evidence/research/review.md",
+      ".trellis/tasks/09-30-evergreen-performance-evidence/research/review-build-identity.json",
+      ".trellis/tasks/09-30-evergreen-performance-evidence/research/review-manifest-boundary.json",
+      ".trellis/tasks/09-30-evergreen-performance-evidence/research/review-stage-evidence.json"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "errors": [],
+  "limitations": "git diff --check alone excludes untracked files; explicit trailing-whitespace and JSON checks include them. No product checks or DB reads were run."
+}

@@ -1,0 +1,9 @@
+[0;34m=== Validating Context Files ===[0m
+Target dir: D:\Documents\Code\Github\clash-verge-ai-residential\.trellis\tasks\09-30-evergreen-dependency-gate
+
+  [1;33mimplement.jsonl:2: Warning: .trellis/workflow.md is 44244 bytes, exceeds context_injection.max_file_bytes (32768); injection will truncate it[0m
+  [0;32mimplement.jsonl: ✓ (5 entries)[0m
+  [1;33mcheck.jsonl:2: Warning: .trellis/workflow.md is 44244 bytes, exceeds context_injection.max_file_bytes (32768); injection will truncate it[0m
+  [0;32mcheck.jsonl: ✓ (5 entries)[0m
+
+[0;32m✓ All validations passed[0m

@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "C2/C3 lock and Recovery contracts"}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "single writer transactions"}
+{"file": ".trellis/spec/residential-monitor/frontend/dto-and-decoding.md", "reason": "frontend decode rules"}
+{"file": ".trellis/tasks/09-03-engineering-review-remediation/research/audit-findings.md", "reason": "audit evidence"}

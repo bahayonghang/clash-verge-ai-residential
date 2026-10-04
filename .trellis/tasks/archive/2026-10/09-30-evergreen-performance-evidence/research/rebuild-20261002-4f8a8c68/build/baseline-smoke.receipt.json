@@ -1,0 +1,79 @@
+{
+  "label": "baseline-smoke",
+  "argv": [
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\baseline-monitor-bench.exe",
+    "replay-facade",
+    "--active",
+    "8",
+    "--hz",
+    "1",
+    "--duration-secs",
+    "3",
+    "--warmup-secs",
+    "0",
+    "--virtual-time",
+    "--start-utc",
+    "1800001800",
+    "--seed",
+    "20260919",
+    "--workload",
+    "counters",
+    "--metadata-change-percent",
+    "100",
+    "--archive",
+    "complete",
+    "--query-every-frames",
+    "0",
+    "--source-revision",
+    "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+    "--dir",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\data\\smoke\\baseline"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-10-02T15:22:28.361586+00:00",
+  "status": "ENDED",
+  "environment_override": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "build_environment": {
+    "VCToolsInstallDir": null,
+    "VSINSTALLDIR": null,
+    "WindowsSdkDir": null,
+    "WindowsSDKVersion": null,
+    "LIB": null,
+    "INCLUDE": null,
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": null,
+    "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER": null,
+    "CARGO_BUILD_TARGET": null,
+    "CARGO_TARGET_DIR": null
+  },
+  "executable_resolved": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\baseline-monitor-bench.exe",
+  "shell": false,
+  "native_exit": 0,
+  "pid": 63164,
+  "ended_utc": "2026-10-02T15:22:41.899612+00:00",
+  "wall_seconds": 13.53701379999984,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\baseline-smoke.stdout.raw",
+      "bytes": 19035,
+      "raw_sha256": "C2F31576119AE542080F5FC362AE618C15125105378CA6E7AA2BBB1AD337DDA5",
+      "gzip": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\baseline-smoke.stdout.raw.gz",
+      "gzip_sha256": "FCE3FE68451EE3FC616C4B62151F91E181B5D47E84D1D6CDFDE31A21A7528FE3",
+      "readable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\baseline-smoke.stdout.log",
+      "readable_sha256": "DAF161A16ADD8987AC9C51F6E70146DAA793F30E3A4C3BE4F01D4A801F2BA5E7"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\baseline-smoke.stderr.raw",
+      "bytes": 0,
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\baseline-smoke.stderr.raw.gz",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\build\\baseline-smoke.stderr.log",
+      "readable_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  },
+  "owned_descendants_observed": [],
+  "process_cleanup": "native process waited; descendant metadata observations limited to own subtree; no absolute no-orphan claim"
+}

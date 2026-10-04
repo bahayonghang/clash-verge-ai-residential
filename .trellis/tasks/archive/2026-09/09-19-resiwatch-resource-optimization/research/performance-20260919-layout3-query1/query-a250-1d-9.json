@@ -1,0 +1,206 @@
+{
+  "attributionQuality": {
+    "knownBytes": 16469630,
+    "missingBytes": 0,
+    "status": "complete"
+  },
+  "capability": {
+    "layer": "raw",
+    "reason": null,
+    "supported": true
+  },
+  "command": "rank",
+  "coverage": {
+    "gapSec": 0,
+    "observedSec": 86400,
+    "status": "covered"
+  },
+  "dataVersion": 2592000,
+  "generatedUtc": 1789820617,
+  "namedSql": [
+    "totals_raw",
+    "series_raw",
+    "rank_raw",
+    "coverage_raw",
+    "rank_raw_exits"
+  ],
+  "notes": [
+    "rank 是 Top N 诊断视图，不返回份额，不承诺全窗口守恒。"
+  ],
+  "result": {
+    "rankings": [
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+        "unknown": false,
+        "upload": 6285,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-800.example.test",
+        "unknown": false,
+        "upload": 6305,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-211.example.test",
+        "unknown": false,
+        "upload": 6325,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-242.example.test",
+        "unknown": false,
+        "upload": 6300,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-304.example.test",
+        "unknown": false,
+        "upload": 6315,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-31.example.test",
+        "unknown": false,
+        "upload": 6280,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-335.example.test",
+        "unknown": false,
+        "upload": 6290,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-366.example.test",
+        "unknown": false,
+        "upload": 6330,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-428.example.test",
+        "unknown": false,
+        "upload": 6280,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-459.example.test",
+        "unknown": false,
+        "upload": 6320,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-490.example.test",
+        "unknown": false,
+        "upload": 6295,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-552.example.test",
+        "unknown": false,
+        "upload": 6310,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-583.example.test",
+        "unknown": false,
+        "upload": 6285,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-614.example.test",
+        "unknown": false,
+        "upload": 6325,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-62.example.test",
+        "unknown": false,
+        "upload": 6320,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-676.example.test",
+        "unknown": false,
+        "upload": 6275,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-707.example.test",
+        "unknown": false,
+        "upload": 6315,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21285,
+        "identity": "host-738.example.test",
+        "unknown": false,
+        "upload": 6290,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21270,
+        "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-460.example.test",
+        "unknown": false,
+        "upload": 6315,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 90,
+        "download": 21270,
+        "identity": "host-150.example.test",
+        "unknown": false,
+        "upload": 6305,
+        "zeroFlow": false
+      }
+    ]
+  },
+  "schemaVersion": 1,
+  "truncation": {
+    "rowCap": 20,
+    "rows": 20,
+    "status": "complete"
+  },
+  "window": {
+    "endUtc": 1789776000,
+    "granularity": "hour",
+    "startUtc": 1789689600,
+    "timezone": "UTC"
+  }
+}

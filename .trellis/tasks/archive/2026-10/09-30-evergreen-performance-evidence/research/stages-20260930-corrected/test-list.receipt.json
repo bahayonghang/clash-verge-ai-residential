@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-library-tests.exe",
+    "--list"
+  ],
+  "started_utc": "2026-09-30T14:24:59.050245+00:00",
+  "environment_overrides": {},
+  "status": "finished",
+  "finished_utc": "2026-09-30T14:24:59.111022+00:00",
+  "wall_seconds": 0.060000000000172804,
+  "exit_code": 0,
+  "logs": {
+    "stdout": {
+      "gzip": "test-list.stdout.raw.gz",
+      "raw_sha256": "e289bfdee2231807b317a8573b173a180644ab0ea20e82b8eb5e8bde5df32764",
+      "readable": "test-list.stdout.log"
+    },
+    "stderr": {
+      "gzip": "test-list.stderr.raw.gz",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "readable": "test-list.stderr.log"
+    }
+  }
+}

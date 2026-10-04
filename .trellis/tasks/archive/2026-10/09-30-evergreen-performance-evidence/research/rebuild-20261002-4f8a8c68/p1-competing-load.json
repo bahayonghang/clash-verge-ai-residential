@@ -1,0 +1,92 @@
+{
+  "recorded_utc": "2026-10-02T15:18:39.845039+00:00",
+  "stage": "before P1 builder start",
+  "competing_load": [
+    {
+      "pid": 7984,
+      "name": "pwsh.exe",
+      "created_utc": "2026-10-02T14:26:44.829324+00:00",
+      "rss_bytes": 95367168,
+      "cmdline_head": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -NoLogo -NoProfile -NonInteractive -File D:\\Documents\\Code\\Rust\\Exp\\ferrots\\runs\\p2-development\\p2-v4-20261002\\executor-20261002-092601-3466298\\ett-reference.ps1"
+    },
+    {
+      "pid": 36768,
+      "name": "bash.exe",
+      "created_utc": "2026-10-02T15:18:37.544333+00:00",
+      "rss_bytes": 11792384,
+      "cmdline_head": "C:\\Program Files\\Git\\bin\\..\\usr\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790954237543-g9ahav.sh 2>/dev/null || true && export TEMP='C:\\Users\\lyh\\AppData\\Local\\Temp' T"
+    },
+    {
+      "pid": 45552,
+      "name": "python.exe",
+      "created_utc": "2026-10-02T14:26:46.999351+00:00",
+      "rss_bytes": 5713920,
+      "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe tools/validation/p2_acceptance.py ett-reference --suite runs/p2-acceptance/20261002-cuda-v4"
+    },
+    {
+      "pid": 48028,
+      "name": "pwsh.exe",
+      "created_utc": "2026-10-02T14:26:00.566294+00:00",
+      "rss_bytes": 117673984,
+      "cmdline_head": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -File D:\\Documents\\Code\\Rust\\Exp\\ferrots\\runs\\p2-development\\p2-v4-20261002\\execute-v4.ps1"
+    },
+    {
+      "pid": 50560,
+      "name": "python.exe",
+      "created_utc": "2026-10-02T15:17:45.720883+00:00",
+      "rss_bytes": 5611520,
+      "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\run_itransformer.py --seed 2022 --output D:\\Documents\\Code\\Rust\\Exp\\ferro"
+    },
+    {
+      "pid": 51228,
+      "name": "bash.exe",
+      "created_utc": "2026-10-02T14:27:51.485206+00:00",
+      "rss_bytes": 7192576,
+      "cmdline_head": "C:\\Program Files\\Git\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790950182404-qo53pm.sh 2>/dev/null || true && export TEMP='C:\\Users\\lyh\\AppData\\Local\\Temp' TMP='C:\\User"
+    },
+    {
+      "pid": 52584,
+      "name": "bash.exe",
+      "created_utc": "2026-10-02T14:27:51.496589+00:00",
+      "rss_bytes": 12025856,
+      "cmdline_head": "C:\\Program Files\\Git\\bin\\..\\usr\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790950182404-qo53pm.sh 2>/dev/null || true && export TEMP='C:\\Users\\lyh\\AppData\\Local\\Temp' T"
+    },
+    {
+      "pid": 53192,
+      "name": "bash.exe",
+      "created_utc": "2026-10-02T15:18:37.758496+00:00",
+      "rss_bytes": 9580544,
+      "cmdline_head": "C:\\Program Files\\Git\\bin\\..\\usr\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790954237543-g9ahav.sh 2>/dev/null || true && export TEMP='C:\\Users\\lyh\\AppData\\Local\\Temp' T"
+    },
+    {
+      "pid": 55400,
+      "name": "python.exe",
+      "created_utc": "2026-10-02T15:17:45.910907+00:00",
+      "rss_bytes": 5636096,
+      "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe -c import argparse, json, sys, os\nfrom pathlib import Path\npath, seed = sys.argv[1:3]\nsys.path.insert(0, str(Path(path).pare"
+    },
+    {
+      "pid": 58596,
+      "name": "bash.exe",
+      "created_utc": "2026-10-02T15:18:37.532792+00:00",
+      "rss_bytes": 7147520,
+      "cmdline_head": "C:\\Program Files\\Git\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790954237543-g9ahav.sh 2>/dev/null || true && export TEMP='C:\\Users\\lyh\\AppData\\Local\\Temp' TMP='C:\\User"
+    },
+    {
+      "pid": 59388,
+      "name": "python.exe",
+      "created_utc": "2026-10-02T15:17:45.919443+00:00",
+      "rss_bytes": 1728782336,
+      "cmdline_head": "C:\\Users\\lyh\\scoop\\persist\\uv\\python\\versions\\cpython-3.12-windows-x86_64-none\\python.exe -c import argparse, json, sys, os\nfrom pathlib import Path\npath, seed = sys.argv[1:3]\nsys.path.insert(0, str(P"
+    },
+    {
+      "pid": 63804,
+      "name": "python.exe",
+      "created_utc": "2026-10-02T15:17:45.732840+00:00",
+      "rss_bytes": 20078592,
+      "cmdline_head": "C:\\Users\\lyh\\scoop\\persist\\uv\\python\\versions\\cpython-3.12-windows-x86_64-none\\python.exe D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\run_itransformer.py --seed 2022 --output D:\\Documents\\Code\\"
+    }
+  ],
+  "cpu_percent_1s": 12.9,
+  "policy": "Recorded only; user processes not stopped. P1 build/virtual smoke records no timing gate. Formal matrix/primary/capacity must not start while this load runs."
+}

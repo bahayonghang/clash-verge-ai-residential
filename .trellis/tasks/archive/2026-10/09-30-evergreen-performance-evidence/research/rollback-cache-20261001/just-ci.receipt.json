@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "just",
+    "ci"
+  ],
+  "resolved_executable": "C:\\Users\\lyh\\scoop\\shims\\just.EXE",
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "source_manifest_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+  "started_utc": "2026-10-02T01:43:33.056579+00:00",
+  "status": "finished",
+  "pid": 53044,
+  "stdout_raw_sha256": "26cbc3dbe7e6a9e4c29c85c520ef3d18c6793c41e13bd792d1f74d6f5ab9bafa",
+  "stderr_raw_sha256": "5cea9ba49881e8fb834eeb9832744ac16ed258ef111fcdad19b1b61d41264d06",
+  "finished_utc": "2026-10-02T01:44:45.426729+00:00",
+  "wall_seconds": 72.37015020000001,
+  "exit_code": 0
+}

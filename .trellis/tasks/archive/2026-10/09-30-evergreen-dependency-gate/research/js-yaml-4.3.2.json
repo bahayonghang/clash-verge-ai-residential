@@ -1,0 +1,28 @@
+[
+  {
+    "version": "4.3.2",
+    "dist": {
+      "shasum": "8e44fb14a2643c59726bb15787b5f1512cb3d3fb",
+      "tarball": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.3.2.tgz",
+      "fileCount": 36,
+      "integrity": "sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==",
+      "signatures": [
+        {
+          "sig": "MEQCIHX1fhXx2YLljlMVkO3TOGmUvdJwvGlSNbQ9JmgKmvnwAiBVGFiwLAM71Y7XkvHNNa3T0jiHvADOu5gHOSphe7Qreg==",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEYCIQDQAOE9N7qMq0rqJ6J+D1LhKV6XD4f8/lF1RLPkvx6XqwIhAKc27B6CGAsT69+lN4wJvaJJz8b77DeYZMl76Ru/hsPO",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 960180
+    },
+    "dependencies": {
+      "argparse": "^2.0.1"
+    },
+    "bin": {
+      "js-yaml": "bin/js-yaml.js"
+    }
+  }
+]

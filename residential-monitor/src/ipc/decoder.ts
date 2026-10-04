@@ -1,6 +1,7 @@
 import {
   SCHEMA_VERSION,
-  type AlertSummary,
+  decodeAlertSummary,
+  decodeLiveRow,
   type HealthView,
   type LiveOverview,
   type MetadataCoverage,
@@ -215,34 +216,11 @@ export function decodeMonitorMessage(value: unknown): MonitorStreamMessage {
       seq: requiredNumber(value.seq, "seq"),
       snapshot: decodeOverview(value.snapshot),
       upserts: value.upserts.map((item) => {
-        if (!isRecord(item)) {
+        try {
+          return decodeLiveRow(item);
+        } catch {
           throw new Error("connectionDelta upsert 无效");
         }
-        return {
-          identity: requiredString(item.identity, "identity"),
-          connectionId: requiredString(item.connectionId, "connectionId"),
-          epoch: requiredNumber(item.epoch, "epoch"),
-          upload: requiredNumber(item.upload, "upload"),
-          download: requiredNumber(item.download, "download"),
-          rateUpload: optionalNumber(item.rateUpload),
-          rateDownload: optionalNumber(item.rateDownload),
-          durationMs: optionalNumber(item.durationMs),
-          primary: item.primary == null ? null : requiredString(item.primary, "primary"),
-          tags: Array.isArray(item.tags) ? item.tags.map((tag) => String(tag)) : [],
-          host: item.host == null ? null : String(item.host),
-          sourceIp: item.sourceIp == null ? null : String(item.sourceIp),
-          destinationIp: item.destinationIp == null ? null : String(item.destinationIp),
-          processName: item.processName == null ? null : String(item.processName),
-          processPath: item.processPath == null ? null : String(item.processPath),
-          network: item.network == null ? null : String(item.network),
-          inbound: item.inbound == null ? null : String(item.inbound),
-          sourcePort: item.sourcePort == null ? null : String(item.sourcePort),
-          destinationPort: item.destinationPort == null ? null : String(item.destinationPort),
-          start: item.start == null ? null : String(item.start),
-          rule: item.rule == null ? null : String(item.rule),
-          rulePayload: item.rulePayload == null ? null : String(item.rulePayload),
-          chains: Array.isArray(item.chains) ? item.chains.map((node) => String(node)) : []
-        };
       }),
       removes: value.removes.map((item) => requiredString(item, "remove")),
       backendTime: requiredNumber(value.backendTime, "backendTime")
@@ -269,16 +247,12 @@ export function decodeMonitorMessage(value: unknown): MonitorStreamMessage {
     };
   }
   if (kind === "alertChanged") {
-    if (!isRecord(value.summary)) {
-      throw new Error("alertChanged.summary 缺失");
-    }
-    const summary = value.summary as unknown as AlertSummary;
     return {
       kind,
       schemaVersion: SCHEMA_VERSION,
       subscriptionId,
       seq: requiredNumber(value.seq, "seq"),
-      summary,
+      summary: decodeAlertSummary(value.summary),
       backendTime: requiredNumber(value.backendTime, "backendTime")
     };
   }

@@ -1,0 +1,27 @@
+{
+  "observed_utc": "2026-10-02T02:14:19.5184732Z",
+  "observations": [
+    {
+      "pid": 59312,
+      "present": false,
+      "process_name": null
+    },
+    {
+      "pid": 40924,
+      "present": false,
+      "process_name": null
+    },
+    {
+      "pid": 25312,
+      "present": false,
+      "process_name": null
+    },
+    {
+      "pid": 57388,
+      "present": false,
+      "process_name": null
+    }
+  ],
+  "scope": "exact known PIDs only; no broad process scan",
+  "limitation": "PID absence and best effort owned Job cleanup do not prove absolute absence of orphan descendants"
+}

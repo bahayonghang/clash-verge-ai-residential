@@ -1,0 +1,7 @@
+{
+  "exitCode": 0,
+  "log": "review-root-ci.log",
+  "command": "npm run ci",
+  "startedAt": "2026-09-30T07:38:15.2276053-05:00",
+  "finishedAt": "2026-09-30T07:38:21.2698761-05:00"
+}

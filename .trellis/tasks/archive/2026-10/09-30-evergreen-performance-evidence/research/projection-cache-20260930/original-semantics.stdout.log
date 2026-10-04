@@ -1,0 +1,11 @@
+
+running 1 test
+test c3::raw_fold::tests::repeated_projection_values_preserve_fallbacks_missingness_and_exit_keys ... FAILED
+
+failures:
+
+failures:
+    c3::raw_fold::tests::repeated_projection_values_preserve_fallbacks_missingness_and_exit_keys
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 548 filtered out; finished in 0.27s
+

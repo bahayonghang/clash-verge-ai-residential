@@ -1,0 +1,21 @@
+{
+  "baseline_source_commit": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+  "baseline_source_archive_sha256": "87684724D5E5B1B3A18C0212CD594CA05F9454EDD6C28582CD879270F9749EB7",
+  "baseline_exe_sha256": "11C2542BC2C9F98A4B7517E67215E76884D8C01D25D64AE7FAF478571BF7633E",
+  "candidate_source_manifest_sha256": "D1EB4E20EB9272426966CEDEEA07719974DD765E1CDFF2BB96FA2D860DA406FE",
+  "candidate_bench_exe_sha256": "FA6196514A63FF1689FE3F07370D66409B8DF1C31E30A1AD5E87F56DBC57CF8C",
+  "candidate_db_cli_sha256": "0726A68CAE35B69E2365323DE999BBB3676255F5BD4BE0A4DD038D2D851E5677",
+  "candidate_retention_test_exe_sha256": "CEFC748FE2ED946FBD1C02A7EE9E292844CF47E4A4F436C1D291BCDFEF6BCF3C",
+  "candidate_desktop_exe_sha256": "3A446795B11DF2C230CA1860FA977C22B8C83AE968CDD43783A36E3D74818865",
+  "candidate_source_kind": "uncommitted layout3 + fused raw report + bounded cleanup prefixes + diagnostic and test evidence fixes",
+  "scope": "isolated facade and synchronous archive; no HTTP/WebView/background worker/installed app",
+  "schema_checksum": "ledger-lifecycle-v5-layout3",
+  "product_gate": "cleanup1-checks.md: full just ci passed; Rust527+3, frontend300, root139",
+  "corpus_evidence": "../performance-20260919-layout3/",
+  "corpus_reuse_reason": "schema and generator unchanged; original failed A50 state copied with matching hashes",
+  "release_build_seconds": 44.04,
+  "release_tests_build_seconds": 19.85,
+  "desktop_build_seconds": 1.65,
+  "desktop_execution": "built/copied only; not launched or installed",
+  "build_date_utc": "2026-09-19T12:48:05.2519210Z"
+}

@@ -1,0 +1,22 @@
+{
+  "synthetic_only": true,
+  "clients_started": 0,
+  "candidate_manifest_exists": false,
+  "checks": [
+    {
+      "case": "ordinary_language",
+      "pass": true
+    },
+    {
+      "case": "synthetic_auth_header",
+      "pass": true
+    },
+    {
+      "case": "synthetic_auth_header",
+      "pass": true
+    }
+  ],
+  "runner_sha256": "6ab03f26d8e1c0bc401ab7f371205609f9d8c3f6143d89b76fd647f50584f81a",
+  "syntax": "pass",
+  "trailing_whitespace": 0
+}

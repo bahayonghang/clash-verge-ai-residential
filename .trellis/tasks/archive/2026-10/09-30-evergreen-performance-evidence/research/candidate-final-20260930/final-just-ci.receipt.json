@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "just",
+    "--shell",
+    "C:\\Program Files\\Python314\\python.exe",
+    "--clear-shell-args",
+    "--shell-arg",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\record-just-shell.py",
+    "ci"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:13:58.653272+00:00",
+  "status": "finished",
+  "environment_overrides": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "exit_code": 0,
+  "finished_utc": "2026-09-30T15:15:12.102902+00:00",
+  "wall_seconds": 73.44853139999941,
+  "logs": {
+    "stdout": {
+      "raw_sha256": "862a52f7e4b9326492537d143ff08051b3f6d81c71dc8f088090d7727f2fb157",
+      "gzip": "final-just-ci.stdout.raw.gz",
+      "readable": "final-just-ci.stdout.log"
+    },
+    "stderr": {
+      "raw_sha256": "a87c39c8d54fcacf915b5244e3c7a446353b42aecdfd36edaf2c7bd13c0f9e4a",
+      "gzip": "final-just-ci.stderr.raw.gz",
+      "readable": "final-just-ci.stderr.log"
+    }
+  }
+}

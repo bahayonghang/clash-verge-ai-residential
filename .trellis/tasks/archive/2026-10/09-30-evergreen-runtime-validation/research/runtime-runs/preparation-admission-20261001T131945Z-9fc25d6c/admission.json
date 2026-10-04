@@ -1,0 +1,22 @@
+{
+  "synthetic_only": true,
+  "clients_started": 0,
+  "real_worktree_snapshots": 0,
+  "candidate_manifest_exists": false,
+  "files": [
+    {
+      "file": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture.py",
+      "sha256": "392b2f4c211c03f0bb9479dcbb5e6804660a8b3a82f31c618ef814d28036cf27",
+      "syntax": "pass"
+    },
+    {
+      "file": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture-verification.py",
+      "sha256": "1e33d36a0f017dfe71c412c4ddb7b08376975440307b201b6f77b089b8b25a2c",
+      "syntax": "pass"
+    }
+  ],
+  "plan_rows": 10,
+  "plan_process_launch_guard": "pass",
+  "binding_version_source": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-bindings-20261001.json",
+  "binding_sha256": "f207ec1da389173b38726338b222f93ed917efdc7dfa13a54c4dce0ccc93bed9"
+}

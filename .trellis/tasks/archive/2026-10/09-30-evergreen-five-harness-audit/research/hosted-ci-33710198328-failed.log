@@ -1,0 +1,834 @@
+Windows / Node.js 22	UNKNOWN STEP	﻿2026-09-03T03:07:29.1529878Z Current runner version: '2.337.0'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1547729Z ##[group]Runner Image Provisioner
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1548263Z Hosted Compute Agent
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1548580Z Version: 20260819.586
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1548927Z Commit: 3cc4a88dfa507ef76119ad1bb3eccc6378bb2b76
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1549360Z Build Date: 2026-08-18T23:20:18Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1549721Z Worker ID: {70f5d472-c7ad-4a52-bc78-23dd31213412}
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1550113Z Azure Region: westus2
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1550437Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1551178Z ##[group]Operating System
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1551511Z Microsoft Windows Server 2025
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1551830Z 10.0.26100
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1552118Z Datacenter
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1552397Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1552678Z ##[group]Runner Image
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1553003Z Image: windows-2025-vs2026
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1553336Z Version: 20260824.214.3
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1554234Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20260824.214/images/windows/Windows2025-VS2026-Readme.md
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1555136Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20260824.214
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1555704Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1556273Z ##[group]GITHUB_TOKEN Permissions
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1557404Z Contents: read
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1557694Z Metadata: read
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1557992Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1559251Z Secret source: Actions
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.1559816Z Prepare workflow directory
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.2055713Z Prepare all required actions
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.2101078Z Getting action download info
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.5109340Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:29.6856710Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:30.1475703Z Complete job name: Windows / Node.js 22
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1346530Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1351642Z ##[group]Run actions/checkout@v4
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1351876Z with:
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1352021Z   persist-credentials: false
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1352220Z   repository: bahayonghang/clash-verge-ai-residential
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1353749Z   token: ***
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1353880Z   ssh-strict: true
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1354011Z   ssh-user: git
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1354139Z   clean: true
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1354282Z   sparse-checkout-cone-mode: true
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1354444Z   fetch-depth: 1
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1354578Z   fetch-tags: false
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1354717Z   show-progress: true
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1354880Z   lfs: false
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1355013Z   submodules: false
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1355157Z   set-safe-directory: true
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1355320Z   allow-unsafe-pr-checkout: false
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:32.1355541Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:34.1289615Z Syncing repository: bahayonghang/clash-verge-ai-residential
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:34.1290548Z ##[group]Getting Git version info
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:34.1290796Z Working directory is 'D:\a\clash-verge-ai-residential\clash-verge-ai-residential'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:34.1577941Z [command]"C:\Program Files\Git\bin\git.exe" version
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.6972263Z git version 2.55.0.windows.5
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7005744Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7020201Z Temporarily overriding HOME='D:\a\_temp\a9e9ba6f-b9a9-48fd-8516-14d8cb7f957b' before making global git config changes
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7020669Z Adding repository directory to the temporary git global config as a safe directory
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7027919Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\clash-verge-ai-residential\clash-verge-ai-residential
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7230650Z Deleting the contents of 'D:\a\clash-verge-ai-residential\clash-verge-ai-residential'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7234806Z ##[group]Initializing the repository
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7240113Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\clash-verge-ai-residential\clash-verge-ai-residential
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7628348Z Initialized empty Git repository in D:/a/clash-verge-ai-residential/clash-verge-ai-residential/.git/
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7661100Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/bahayonghang/clash-verge-ai-residential
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7865567Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7865877Z ##[group]Disabling automatic garbage collection
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.7872156Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.8087563Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.8087833Z ##[group]Setting up auth
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.8097821Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:39.8417856Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:41.9393170Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:41.9612504Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:42.3586691Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:42.3788379Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:42.7565467Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:42.7762312Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:42.7762588Z ##[group]Fetching the repository
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:42.7771342Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +82fe58abc7f915fa4aab18b81c19f0e7e602dc9f:refs/remotes/pull/7/merge
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.7512981Z From https://github.com/bahayonghang/clash-verge-ai-residential
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.7513546Z  * [new ref]         82fe58abc7f915fa4aab18b81c19f0e7e602dc9f -> pull/7/merge
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.7543612Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.7543924Z ##[group]Determining the checkout info
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.7545251Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.7553511Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.7784319Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.7988235Z ##[group]Checking out the ref
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.7996034Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force refs/remotes/pull/7/merge
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9787607Z Note: switching to 'refs/remotes/pull/7/merge'.
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9787910Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9788087Z You are in 'detached HEAD' state. You can look around, make experimental
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9788529Z changes and commit them, and you can discard any commits you make in this
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9788972Z state without impacting any branches by switching back to a branch.
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9789219Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9789387Z If you want to create a new branch to retain commits you create, you may
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9789817Z do so (now or later) by using -c with the switch command. Example:
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9790036Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9790226Z   git switch -c <new-branch-name>
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9791343Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9791439Z Or undo this operation with:
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9791613Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9791685Z   git switch -
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9791794Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9791985Z Turn off this advice by setting config variable advice.detachedHead to false
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9792263Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9792630Z HEAD is now at 82fe58a Merge d3cfb3840b17fe1b286945b070e1d759bd48bde0 into ee6618d9caab8980f7d6de686ebf9941a9ef6831
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:44.9850249Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.0082336Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.0261402Z 82fe58abc7f915fa4aab18b81c19f0e7e602dc9f
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.0291423Z ##[group]Removing auth
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.0300645Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.0505036Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.4350195Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.4526035Z http.https://github.com/.extraheader
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.4555579Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all http.https://github.com/.extraheader
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.4760083Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.8602949Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:45.8820540Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.2954384Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.3547383Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.3549031Z ##[group]Run actions/setup-node@v4
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.3549181Z with:
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.3549300Z   node-version: 22
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.3549416Z   always-auth: false
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.3549534Z   check-latest: false
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.3551079Z   token: ***
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.3551193Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.4715144Z Found in cache @ C:\hostedtoolcache\windows\node\22.23.2\x64
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.4720805Z (node:1556) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.4722883Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:07:46.4723241Z ##[group]Environment details
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:12.9629804Z node: v22.23.2
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:12.9629995Z npm: 10.9.8
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:12.9630095Z yarn: 1.22.22
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:12.9630496Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:12.9845080Z ##[group]Run npm run ci
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:12.9845306Z ^[[36;1mnpm run ci^[[0m
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:13.5447782Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:13.5448010Z ##[endgroup]
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:15.4738088Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:15.4743667Z > clash-verge-ai-residential@5.11.0 ci
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:15.4743999Z > npm run check && npm run test && npm run check:secrets
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:15.4744140Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:15.8100731Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:15.8101600Z > clash-verge-ai-residential@5.11.0 check
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:15.8104127Z > node --check clash-verge-ai-residential.js && node --check tests/regression.test.js && node --check tests/sync-local-config.test.js && node --check tests/check-template-safety.test.js && node --check tests/sync-monitor-version.test.js && node --check tests/nsis-silent-install.test.js && node --check tests/install-agent-skills.test.js && node --check scripts/check-template-safety.js && node --check scripts/sync-local-config.js && node --check scripts/sync-monitor-version.js && node --check scripts/nsis-silent-install.js && node --check scripts/install-agent-skills.js && node --check skills/residential-rule-tuning/scripts/build-inputs.js
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:15.8106380Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:17.7787339Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:17.7788249Z > clash-verge-ai-residential@5.11.0 test
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:17.7789411Z > node --test tests/regression.test.js tests/sync-local-config.test.js tests/check-template-safety.test.js tests/sync-monitor-version.test.js tests/nsis-silent-install.test.js tests/install-agent-skills.test.js
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:17.7790144Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:18.7034488Z TAP version 13
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0551058Z # Subtest: 安全模板和可提交文本通过扫描
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0553775Z ok 1 - 安全模板和可提交文本通过扫描
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0554737Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0555074Z   duration_ms: 167.5929
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0555377Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0556607Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0557242Z # Subtest: 公共模板中的真实代理字段会被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0558086Z ok 2 - 公共模板中的真实代理字段会被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0558576Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0558855Z   duration_ms: 2.017
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0559132Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0559373Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0559793Z # Subtest: 所有可提交文本格式都会扫描常见凭据
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0560377Z ok 3 - 所有可提交文本格式都会扫描常见凭据
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0560669Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0560921Z   duration_ms: 15.1502
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0561195Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0561444Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0561775Z # Subtest: 每类受保护凭据模式都会被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0562123Z ok 4 - 每类受保护凭据模式都会被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0562393Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0562635Z   duration_ms: 35.3362
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0562925Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0563190Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0563583Z # Subtest: 扫描忽略本地凭据、生成脚本和依赖目录
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0563931Z ok 5 - 扫描忽略本地凭据、生成脚本和依赖目录
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0569355Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0569600Z   duration_ms: 118.2232
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0569922Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.0570273Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4631758Z # Subtest: 安装器写入已存在平台且幂等
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4640521Z ok 6 - 安装器写入已存在平台且幂等
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4641019Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4641334Z   duration_ms: 14.7295
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4641637Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4641897Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4642233Z # Subtest: 不创建缺失的平台目录
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4642565Z ok 7 - 不创建缺失的平台目录
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4642829Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4643089Z   duration_ms: 6.5082
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4643370Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4643628Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4643980Z # Subtest: 同名不同内容默认拒绝且不写入任何目标
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4644354Z ok 8 - 同名不同内容默认拒绝且不写入任何目标
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4644634Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4645422Z   duration_ms: 99.9808
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4679620Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4681828Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4682989Z # Subtest: --force 先备份再替换
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4737635Z ok 9 - --force 先备份再替换
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4753722Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4759994Z   duration_ms: 55.2079
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4760359Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4761168Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4761563Z # Subtest: --check 在有差异时非零退出
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4761897Z ok 10 - --check 在有差异时非零退出
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4762144Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4762298Z   duration_ms: 6.0855
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4762474Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4762954Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4763306Z # Subtest: --platforms 只写入指定目录
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4763620Z ok 11 - --platforms 只写入指定目录
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4763863Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4764259Z   duration_ms: 119.0233
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4790274Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4790514Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4790988Z # Subtest: 未知 --platforms 值被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4792328Z ok 12 - 未知 --platforms 值被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4792569Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4792735Z   duration_ms: 0.4111
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4792927Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4793082Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4793437Z # Subtest: SKILL.md 含 YAML frontmatter 的 name 与 description
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4793885Z not ok 13 - SKILL.md 含 YAML frontmatter 的 name 与 description
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4794153Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4794307Z   duration_ms: 422.0578
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4794488Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4794976Z   location: 'D:\\a\\clash-verge-ai-residential\\clash-verge-ai-residential\\tests\\install-agent-skills.test.js:115:1'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4795500Z   failureType: 'testCodeFailure'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4795710Z   error: |-
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4795918Z     The expression evaluated to a falsy value:
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4796154Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4796336Z       assert.ok(skill.startsWith("---\n"))
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4796563Z
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4796707Z   code: 'ERR_ASSERTION'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4796889Z   name: 'AssertionError'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4797069Z   expected: true
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4797233Z   actual: false
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4797393Z   operator: '=='
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4797560Z   stack: |-
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4798094Z     TestContext.<anonymous> (D:\a\clash-verge-ai-residential\clash-verge-ai-residential\tests\install-agent-skills.test.js:120:10)
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4798687Z     Test.runInAsyncScope (node:async_hooks:214:14)
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4799022Z     Test.run (node:internal/test_runner/test:1047:25)
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4799418Z     Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4799829Z     Test.postRun (node:internal/test_runner/test:1173:19)
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4800163Z     Test.run (node:internal/test_runner/test:1101:12)
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4800566Z     async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4800893Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4801106Z # Subtest: SKILL.md 含六个规定小节
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4801342Z ok 14 - SKILL.md 含六个规定小节
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4801517Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4801664Z   duration_ms: 0.603
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4801829Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4801980Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4802249Z # Subtest: 生成器对 routing 表 21 个开关做完整性检查
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4802535Z ok 15 - 生成器对 routing 表 21 个开关做完整性检查
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4802733Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4802887Z   duration_ms: 3.8247
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4803059Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.4803218Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5531955Z # Subtest: defaultInstallDir 使用 LocalAppData 与产品名
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5532548Z ok 16 - defaultInstallDir 使用 LocalAppData 与产品名
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5538467Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5539169Z   duration_ms: 0.678
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5540987Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5545220Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5546930Z # Subtest: isUnderDir 识别 Temp 前缀，不把 LocalAppData 产品目录当 Temp
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5547976Z ok 17 - isUnderDir 识别 Temp 前缀，不把 LocalAppData 产品目录当 Temp
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5548432Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5548903Z   duration_ms: 0.1868
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5549153Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5549364Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5552173Z # Subtest: planRelocation 从 Temp 或旧产品目录迁 data
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5557655Z ok 18 - planRelocation 从 Temp 或旧产品目录迁 data
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5559028Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5560763Z   duration_ms: 0.7365
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5561151Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5561364Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5561794Z # Subtest: stripOuterQuotes 去掉注册表 InstallLocation 的引号
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5563162Z ok 19 - stripOuterQuotes 去掉注册表 InstallLocation 的引号
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5623875Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5624151Z   duration_ms: 0.1173
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5632745Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5633205Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5635274Z # Subtest: migrateDataDir 在目标无库时整目录改名，目标已有库则跳过
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5636157Z ok 20 - migrateDataDir 在目标无库时整目录改名，目标已有库则跳过
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5637644Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5638327Z   duration_ms: 4.8431
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5638978Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5639259Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5639745Z # Subtest: findSetupExe 按版本过滤并取最新安装包
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5640135Z ok 21 - findSetupExe 按版本过滤并取最新安装包
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5640374Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5640562Z   duration_ms: 2.5533
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5640746Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5641418Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5641845Z # Subtest: cleanupTempInstall 删除 Temp 旧安装并去掉空父目录
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5642237Z ok 22 - cleanupTempInstall 删除 Temp 旧安装并去掉空父目录
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5642491Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5642652Z   duration_ms: 2.5678
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5642833Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5642993Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5643328Z # Subtest: discoverPreviousInstallDir 优先选带库的旧目录，而不是空的新安装目录
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5643754Z ok 23 - discoverPreviousInstallDir 优先选带库的旧目录，而不是空的新安装目录
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5644047Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5644199Z   duration_ms: 3.5182
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5644374Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5644522Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5644897Z # Subtest: 仓库 tauri.conf.json 的 productName 与 package.json version 可读
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5645419Z ok 24 - 仓库 tauri.conf.json 的 productName 与 package.json version 可读
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5645724Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5646193Z   duration_ms: 88.4784
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5646380Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5646538Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5646830Z # Subtest: startMonitorApp 以 detached 启动安装目录中的 exe
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5647217Z ok 25 - startMonitorApp 以 detached 启动安装目录中的 exe
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5647466Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5647634Z   duration_ms: 6.5383
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5647823Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5647984Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5648235Z # Subtest: startMonitorApp 在缺少 exe 时失败
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5648540Z ok 26 - startMonitorApp 在缺少 exe 时失败
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5648748Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5648919Z   duration_ms: 7.6958
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5649095Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5649288Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5649540Z # Subtest: 脚本版本与默认 dialer-proxy 正确
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5649821Z ok 27 - 脚本版本与默认 dialer-proxy 正确
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5650025Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5650387Z   duration_ms: 1.6571
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5650579Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5650731Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5651021Z # Subtest: 默认选择 🚀节点选择，并复用 Profile 内已有家宽节点凭据
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5651333Z ok 28 - 默认选择 🚀节点选择，并复用 Profile 内已有家宽节点凭据
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5651535Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5651676Z   duration_ms: 2.8285
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5651849Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5651996Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5652240Z # Subtest: 奈云 Profile 在没有 🚀节点选择 时选择 Proxy
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5652544Z ok 29 - 奈云 Profile 在没有 🚀节点选择 时选择 Proxy
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5652757Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5652909Z   duration_ms: 0.7632
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5653078Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5653369Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5653624Z # Subtest: 候选均未命中时可从最终 MATCH 规则解析上游
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5653904Z ok 30 - 候选均未命中时可从最终 MATCH 规则解析上游
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5654148Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5654296Z   duration_ms: 0.9639
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5654464Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5654629Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5654851Z # Subtest: Profile 覆盖失效时继续尝试通用候选
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5655120Z ok 31 - Profile 覆盖失效时继续尝试通用候选
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5655315Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5655470Z   duration_ms: 0.4062
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5655639Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5655793Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5656018Z # Subtest: 候选名仅 emoji/空格不同仍可归一化匹配
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5656285Z ok 32 - 候选名仅 emoji/空格不同仍可归一化匹配
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5656475Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5656634Z   duration_ms: 0.3838
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5656811Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5656960Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5669155Z # Subtest: 没有安全上游时 fail closed，不回落 DIRECT
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5670007Z ok 33 - 没有安全上游时 fail closed，不回落 DIRECT
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5670290Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5670459Z   duration_ms: 0.475
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5670654Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5670813Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5671065Z # Subtest: include-all 上游排除家宽节点，避免动态递归
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5671375Z ok 34 - include-all 上游排除家宽节点，避免动态递归
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5671575Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5671723Z   duration_ms: 0.5142
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5671909Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5672058Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5672272Z # Subtest: 拒绝选定上游可达的代理组循环依赖
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5672501Z ok 35 - 拒绝选定上游可达的代理组循环依赖
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5672672Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5672814Z   duration_ms: 0.3584
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5672987Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5673141Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5673373Z # Subtest: 上游组清理脚本对象后为空时拒绝生成链路
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5673616Z ok 36 - 上游组清理脚本对象后为空时拒绝生成链路
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5673789Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5673935Z   duration_ms: 0.4527
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5674103Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5674276Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5674517Z # Subtest: 移除上游组中的保留名引用时输出 warn 说明原因
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5674803Z ok 37 - 移除上游组中的保留名引用时输出 warn 说明原因
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5675007Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5675159Z   duration_ms: 0.8903
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5675343Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5675489Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5675701Z # Subtest: 显式禁用 UDP 的上游被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5675972Z ok 38 - 显式禁用 UDP 的上游被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5676137Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5676289Z   duration_ms: 0.144
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5676462Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5676613Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5676816Z # Subtest: 跨代理/代理组命名空间冲突被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5677042Z ok 39 - 跨代理/代理组命名空间冲突被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5677215Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5677367Z   duration_ms: 0.1178
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5677542Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5677696Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5677933Z # Subtest: 重复保留代理组被拒绝，不静默覆盖未知配置
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5678194Z ok 40 - 重复保留代理组被拒绝，不静默覆盖未知配置
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5678390Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5678545Z   duration_ms: 0.0767
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5678730Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5678887Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5679133Z # Subtest: 只配置 endpoint 而保留 xxx 凭据时明确报错
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5679651Z ok 41 - 只配置 endpoint 而保留 xxx 凭据时明确报错
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5679862Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5680010Z   duration_ms: 0.1445
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5680190Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5680343Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5680597Z # Subtest: findOutbound 缺索引时抛错，合法索引可解析唯一节点
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5680916Z ok 42 - findOutbound 缺索引时抛错，合法索引可解析唯一节点
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5681131Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5681279Z   duration_ms: 0.1541
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5681450Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5681612Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5681809Z # Subtest: 普通名两个同名节点被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5682028Z ok 43 - 普通名两个同名节点被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5682197Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5682350Z   duration_ms: 0.0928
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5682525Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5682817Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5683007Z # Subtest: 普通名两个同名组被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5683225Z ok 44 - 普通名两个同名组被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5683391Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5683544Z   duration_ms: 0.0699
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5683727Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5683906Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5684133Z # Subtest: 普通名同时被组与节点占用时被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5684360Z ok 45 - 普通名同时被组与节点占用时被拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5684529Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5684681Z   duration_ms: 0.1496
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5684855Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5685007Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5685238Z # Subtest: 归一化命中唯一字符串后组与节点同名仍拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5685490Z ok 46 - 归一化命中唯一字符串后组与节点同名仍拒绝
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5685674Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5685818Z   duration_ms: 0.0864
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5685982Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5690058Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5690419Z # Subtest: 单叶子 udp:false 汇总含名称与路径
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5690722Z ok 47 - 单叶子 udp:false 汇总含名称与路径
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5690934Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5691086Z   duration_ms: 0.4253
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5691258Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5691403Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5691649Z # Subtest: 同名 udp:false 节点挂两个组时只计一次且保留首次路径
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5691970Z ok 48 - 同名 udp:false 节点挂两个组时只计一次且保留首次路径
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5692192Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5692336Z   duration_ms: 0.4001
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5692506Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5692655Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5692887Z # Subtest: 9 个不同名 udp:false 叶子只展示前 8 个样本
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5693186Z ok 49 - 9 个不同名 udp:false 叶子只展示前 8 个样本
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5693387Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5693532Z   duration_ms: 0.6927
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5693697Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5693851Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5694101Z # Subtest: 2000 叶子中 1000 个不同名 udp:false 只汇总一条警告
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5694432Z ok 50 - 2000 叶子中 1000 个不同名 udp:false 只汇总一条警告
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5694647Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5694789Z   duration_ms: 2.2842
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5694974Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5695129Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5695914Z # Subtest: 2000 叶子同一对象连续两次 main 保持规则、policy 与 dialer-proxy
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5696344Z ok 51 - 2000 叶子同一对象连续两次 main 保持规则、policy 与 dialer-proxy
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5696582Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5698184Z   duration_ms: 117.9898
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5698410Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5698558Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5698869Z # Subtest: Gemini 核心产品、Developer API 与 Vertex AI 端点走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5699163Z ok 52 - Gemini 核心产品、Developer API 与 Vertex AI 端点走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5699314Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5699407Z   duration_ms: 0.5907
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5699517Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5699611Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5699813Z # Subtest: Antigravity language_server 的 daily cloudcode 端点走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5700082Z ok 53 - Antigravity language_server 的 daily cloudcode 端点走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5700246Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5700343Z   duration_ms: 0.1943
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5700591Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5700685Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5700880Z # Subtest: Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5701129Z ok 54 - Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5701280Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5701388Z   duration_ms: 0.3347
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5701498Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5701595Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5701772Z # Subtest: Cursor 核心路由默认开启，仓库索引默认不走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5702047Z ok 55 - Cursor 核心路由默认开启，仓库索引默认不走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5702192Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5702290Z   duration_ms: 0.4737
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5702397Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5702489Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5702629Z # Subtest: Cursor 核心与仓库索引开关可独立组合
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5702796Z ok 56 - Cursor 核心与仓库索引开关可独立组合
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5702916Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5703009Z   duration_ms: 28.0584
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5703118Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5703214Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5703378Z # Subtest: Grok Build 核心域默认走家宽，共享第三方与安装域名不走
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5703576Z ok 57 - Grok Build 核心域默认走家宽，共享第三方与安装域名不走
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5703709Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5703801Z   duration_ms: 0.3808
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5703908Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5704012Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5704184Z # Subtest: Cursor 插件市场、下载、CDN、更新与 Remote-SSH 资产不走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5704406Z ok 58 - Cursor 插件市场、下载、CDN、更新与 Remote-SSH 资产不走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5704555Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5704650Z   duration_ms: 0.28
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5704758Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5704857Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5705051Z # Subtest: Cursor 进程级兜底默认关闭，避免插件、GitHub、npm、MCP 与用户后端被全量代理
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5705298Z ok 59 - Cursor 进程级兜底默认关闭，避免插件、GitHub、npm、MCP 与用户后端被全量代理
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5705452Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5705544Z   duration_ms: 0.1913
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5705651Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5705747Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5705904Z # Subtest: 公共 DoH/DoT 与通用 STUN/TURN/Voice 端口默认不走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5706128Z ok 60 - 公共 DoH/DoT 与通用 STUN/TURN/Voice 端口默认不走家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5706469Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5706594Z   duration_ms: 0.3395
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5706702Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5706799Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5707061Z # Subtest: Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方依赖不走
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5707300Z ok 61 - Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方依赖不走
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5707451Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5707548Z   duration_ms: 0.5527
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5707655Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5707749Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5707895Z # Subtest: OpenAI 第一方认证与网页资源开关默认关闭且可独立组合
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5708077Z ok 62 - OpenAI 第一方认证与网页资源开关默认关闭且可独立组合
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5708203Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5708300Z   duration_ms: 14.5014
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5708406Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5708499Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5708668Z # Subtest: OpenAI 开关分别由开启切换为关闭时清理规则与 DNS，并保留用户自写规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5709304Z ok 63 - OpenAI 开关分别由开启切换为关闭时清理规则与 DNS，并保留用户自写规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5709443Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5709544Z   duration_ms: 15.1386
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5709654Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5709747Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5709900Z # Subtest: 开关关闭后清理当前托管规则，并保留退役或用户自写规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5710072Z ok 64 - 开关关闭后清理当前托管规则，并保留退役或用户自写规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5710197Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5710287Z   duration_ms: 0.2069
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5710399Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5710495Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5710644Z # Subtest: 脚本执行两次保持幂等，并保留用户自定义非托管规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5710817Z ok 65 - 脚本执行两次保持幂等，并保留用户自定义非托管规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5710936Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5711028Z   duration_ms: 1.1444
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5711136Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5711231Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5711385Z # Subtest: 关闭仓库索引后二次运行会移除托管 repo 正则，并保留用户自有规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5711585Z ok 66 - 关闭仓库索引后二次运行会移除托管 repo 正则，并保留用户自有规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5711716Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5711817Z   duration_ms: 0.5003
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5711923Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5712022Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5712190Z # Subtest: 非 AI 默认 DoH 绑定当前 Profile 上游，而不是 AI-家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5712399Z ok 67 - 非 AI 默认 DoH 绑定当前 Profile 上游，而不是 AI-家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5712546Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5712638Z   duration_ms: 0.0794
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5712743Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5712855Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5713015Z # Subtest: 非 AI DoH 拒绝会破坏 Mihomo URL 绑定语义的上游名称
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5713220Z ok 68 - 非 AI DoH 拒绝会破坏 Mihomo URL 绑定语义的上游名称
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5713354Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5713445Z   duration_ms: 0.1444
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5713554Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5713654Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5713817Z # Subtest: AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5714016Z ok 69 - AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5714147Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5714237Z   duration_ms: 0.1461
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5714354Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5714449Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5714604Z # Subtest: 严格 DNS 模式移除独立旁路，并保持私有域名使用系统 DNS
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5714789Z ok 70 - 严格 DNS 模式移除独立旁路，并保持私有域名使用系统 DNS
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5714920Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5715011Z   duration_ms: 0.3667
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5715178Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5735537Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5735892Z # Subtest: 已开启 TUN 时只补齐 DNS 劫持；AI-only 写顶层查找进程 always，不注入进程路由
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5736293Z ok 71 - 已开启 TUN 时只补齐 DNS 劫持；AI-only 写顶层查找进程 always，不注入进程路由
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5736451Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5736552Z   duration_ms: 0.3263
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5736670Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5736770Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5736955Z # Subtest: profile 嵌套的 find-process-mode 仍写出顶层 always
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5737194Z ok 72 - profile 嵌套的 find-process-mode 仍写出顶层 always
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5737346Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5737441Z   duration_ms: 0.2381
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5737551Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5737764Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5737924Z # Subtest: 开启进程路由时注入 PROCESS 规则，查找进程仍为顶层 always
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5738135Z ok 73 - 开启进程路由时注入 PROCESS 规则，查找进程仍为顶层 always
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5738276Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5738367Z   duration_ms: 97.6466
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5738486Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5738589Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5738709Z # Subtest: 最终注入规则不存在重复项
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5738853Z ok 74 - 最终注入规则不存在重复项
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5738967Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5739068Z   duration_ms: 0.2139
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5739185Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5739284Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5739429Z # Subtest: 默认注入 45 条 AI-家宽 规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5739588Z ok 75 - 默认注入 45 条 AI-家宽 规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5739706Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5739802Z   duration_ms: 0.1511
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5739914Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5740013Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5740171Z # Subtest: v5.10 审计后的正向主机走家宽，退出与收窄主机不走
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5740357Z ok 76 - v5.10 审计后的正向主机走家宽，退出与收窄主机不走
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5740496Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5740589Z   duration_ms: 0.5857
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5740698Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5740791Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5740995Z # Subtest: grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话主机
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5741270Z ok 77 - grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话主机
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5741432Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5741529Z   duration_ms: 6.0854
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5741638Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5741739Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5741904Z # Subtest: vertex_ai_endpoints 一次控制全部四条 Vertex 规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5742127Z ok 78 - vertex_ai_endpoints 一次控制全部四条 Vertex 规则
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5742273Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5742369Z   duration_ms: 6.3827
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5742484Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5742580Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5742733Z # Subtest: 退出激活主机不再出现 nameserver-policy 键
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5742927Z ok 79 - 退出激活主机不再出现 nameserver-policy 键
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5743065Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5743158Z   duration_ms: 0.1633
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5743264Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:19.5743359Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0846970Z # Subtest: 旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚本
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0848189Z ok 80 - 旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚本
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0848455Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0848637Z   duration_ms: 11.8421
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0848824Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0848989Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0849330Z # Subtest: 部分 TOML 开关会注入生成脚本，并可关闭默认开启的 Cursor/Grok 核心路由
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0849730Z ok 81 - 部分 TOML 开关会注入生成脚本，并可关闭默认开启的 Cursor/Grok 核心路由
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0849974Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0850132Z   duration_ms: 267.929
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0850297Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0850443Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0851401Z # Subtest: 本地 cursor_repository_indexing 缺字段补 false，显式 true 恢复 repo 家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0851965Z ok 82 - 本地 cursor_repository_indexing 缺字段补 false，显式 true 恢复 repo 家宽
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0852295Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0852466Z   duration_ms: 266.5014
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0852658Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0852819Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0853182Z # Subtest: 本地 openai_core = false 让 GPT 域名不再走家宽，Claude 等核心域名不受影响
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0853914Z ok 83 - 本地 openai_core = false 让 GPT 域名不再走家宽，Claude 等核心域名不受影响
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0854347Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0854793Z   duration_ms: 114.4669
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0855026Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0855235Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0856847Z # Subtest: 本地 openai_auth = true 只启用第一方认证，网页资源与共享依赖保持关闭
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0857267Z ok 84 - 本地 openai_auth = true 只启用第一方认证，网页资源与共享依赖保持关闭
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0857539Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0857751Z   duration_ms: 172.1888
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0858359Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0858684Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0858992Z # Subtest: 同步前会拒绝不完整或不安全的代理配置
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0859368Z ok 85 - 同步前会拒绝不完整或不安全的代理配置
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0859607Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0860096Z   duration_ms: 0.4992
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0860319Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0860607Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0863434Z # Subtest: 解析器拒绝未知表、未知键、重复定义和非布尔开关
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0863818Z ok 86 - 解析器拒绝未知表、未知键、重复定义和非布尔开关
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0864079Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0864314Z   duration_ms: 11.8246
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0864539Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0864738Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0865036Z # Subtest: 布尔常量锚点缺失或重复时失败且不写入半成品
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0865353Z ok 87 - 布尔常量锚点缺失或重复时失败且不写入半成品
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0865594Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0865793Z   duration_ms: 23.2514
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0866015Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0866205Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0866526Z # Subtest: 生产映射覆盖全部用户布尔开关，并与示例及文档默认值一致
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0866846Z ok 88 - 生产映射覆盖全部用户布尔开关，并与示例及文档默认值一致
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0867079Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0867277Z   duration_ms: 3.4955
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0867496Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0867695Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0868239Z # Subtest: 缺失开关键按示例默认值补全，用户已有键值与注释逐字保留
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0868590Z ok 89 - 缺失开关键按示例默认值补全，用户已有键值与注释逐字保留
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0868851Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0890070Z   duration_ms: 6.6555
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0890332Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0890581Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0890960Z # Subtest: 补全幂等：无缺失时不再改写本地 TOML
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0891211Z ok 90 - 补全幂等：无缺失时不再改写本地 TOML
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0891389Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0891537Z   duration_ms: 17.3671
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0891724Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0891852Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0892015Z # Subtest: 与示例一致的完整 TOML 不被补全改写
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0892182Z ok 91 - 与示例一致的完整 TOML 不被补全改写
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0892307Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0892406Z   duration_ms: 5.0954
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0892528Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0892628Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0892782Z # Subtest: CRLF 本地 TOML 补全后保持 CRLF 行尾
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0892974Z ok 92 - CRLF 本地 TOML 补全后保持 CRLF 行尾
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0893112Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0893206Z   duration_ms: 6.2703
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0893316Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0893418Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0893583Z # Subtest: home_proxy 凭据缺键不自动补全，仍要求用户手填
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0894948Z ok 93 - home_proxy 凭据缺键不自动补全，仍要求用户手填
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0895123Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0895230Z   duration_ms: 2.0689
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0895342Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0895455Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0895638Z # Subtest: 示例 TOML 缺少声明的开关键时同步失败并提示补齐
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0895845Z ok 94 - 示例 TOML 缺少声明的开关键时同步失败并提示补齐
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0895983Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0896078Z   duration_ms: 1.5721
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0896201Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.0896299Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1013440Z # Subtest: 写入模式把 package.json 版本同步到 Tauri、Cargo 与 lockfile
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1014604Z ok 95 - 写入模式把 package.json 版本同步到 Tauri、Cargo 与 lockfile
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1014895Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1015072Z   duration_ms: 18.8394
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1015594Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1015767Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1016008Z # Subtest: 检查模式发现漂移时不写文件
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1016248Z ok 96 - 检查模式发现漂移时不写文件
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1016421Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1016572Z   duration_ms: 24.5205
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1016775Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1016930Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1022160Z # Subtest: 已对齐时写入模式不改内容
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1022570Z ok 97 - 已对齐时写入模式不改内容
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1022819Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1023051Z   duration_ms: 15.6723
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1023293Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1023516Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1023846Z # Subtest: 保留 Cargo.toml 的 CRLF
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1024191Z ok 98 - 保留 Cargo.toml 的 CRLF
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1024448Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1024666Z   duration_ms: 25.8925
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1024900Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1037210Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1037507Z # Subtest: 非法 SemVer 失败
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1037732Z ok 99 - 非法 SemVer 失败
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1037922Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1038068Z   duration_ms: 119.3612
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1038239Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1038387Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1038601Z # Subtest: 缺少 tauri.conf.json 失败
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1038888Z ok 100 - 缺少 tauri.conf.json 失败
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1039078Z   ---
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1039215Z   duration_ms: 164.0594
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1039378Z   type: 'test'
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1039528Z   ...
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1039666Z 1..100
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1039800Z # tests 100
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1039945Z # suites 0
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1040092Z # pass 99
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1040230Z # fail 1
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1040369Z # cancelled 0
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1040520Z # skipped 0
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1040649Z # todo 0
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.1040808Z # duration_ms 1649.9657
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.7610135Z ##[error]Process completed with exit code 1.
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.7762076Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.7762776Z Post job cleanup.
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.8771542Z [command]"C:\Program Files\Git\bin\git.exe" version
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.8964291Z git version 2.55.0.windows.5
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.9010455Z Temporarily overriding HOME='D:\a\_temp\f6f4fbb6-b7d7-4c02-9a26-d1a83ae85739' before making global git config changes
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.9011214Z Adding repository directory to the temporary git global config as a safe directory
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.9017178Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\clash-verge-ai-residential\clash-verge-ai-residential
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.9223186Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:20.9421716Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:21.3128776Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:21.3313763Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:21.7910135Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:21.8114807Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:22.2203356Z Cleaning up orphan processes
+Windows / Node.js 22	UNKNOWN STEP	2026-09-03T03:08:22.2228367Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Required checks	UNKNOWN STEP	﻿2026-09-03T03:17:04.9321071Z Current runner version: '2.337.0'
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9360279Z ##[group]Runner Image Provisioner
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9361626Z Hosted Compute Agent
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9362851Z Version: 20260819.586
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9363830Z Commit: 3cc4a88dfa507ef76119ad1bb3eccc6378bb2b76
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9364918Z Build Date: 2026-08-18T23:20:18Z
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9366059Z Worker ID: {aae39335-f6f1-4806-9149-1cb5c9a48775}
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9367252Z Azure Region: eastus
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9368253Z ##[endgroup]
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9370809Z ##[group]Operating System
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9371827Z Ubuntu
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9372890Z 24.04.4
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9373726Z LTS
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9374582Z ##[endgroup]
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9375536Z ##[group]Runner Image
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9376488Z Image: ubuntu-24.04
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9377369Z Version: 20260823.283.1
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9379474Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260823.283/images/ubuntu/Ubuntu2404-Readme.md
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9381922Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260823.283
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9383811Z ##[endgroup]
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9385595Z ##[group]GITHUB_TOKEN Permissions
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9388564Z Contents: read
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9389453Z Metadata: read
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9390348Z ##[endgroup]
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9393696Z Secret source: Actions
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9395445Z Prepare workflow directory
+Required checks	UNKNOWN STEP	2026-09-03T03:17:04.9865798Z Prepare all required actions
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.0010694Z Complete job name: Required checks
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.1125883Z ##[group]Run if [ "failure" != "success" ] || [ "success" != "success" ]; then
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.1127109Z ^[[36;1mif [ "failure" != "success" ] || [ "success" != "success" ]; then^[[0m
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.1128038Z ^[[36;1m  echo "One or more required jobs did not pass."^[[0m
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.1128896Z ^[[36;1m  exit 1^[[0m
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.1129454Z ^[[36;1mfi^[[0m
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.1649746Z shell: /usr/bin/bash -e {0}
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.1650629Z ##[endgroup]
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.1863241Z One or more required jobs did not pass.
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.1880158Z ##[error]Process completed with exit code 1.
+Required checks	UNKNOWN STEP	2026-09-03T03:17:05.2043349Z Cleaning up orphan processes

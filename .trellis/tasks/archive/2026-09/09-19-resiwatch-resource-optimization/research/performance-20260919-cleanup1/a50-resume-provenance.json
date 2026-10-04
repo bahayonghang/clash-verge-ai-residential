@@ -1,0 +1,12 @@
+{
+  "source_fixture": "C:/Users/lyh/AppData/Local/Temp/resiwatch-resource-measure-20260919-layout3/corpus-a50-30d",
+  "resume_fixture": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-cleanup1\\corpus-a50-resume",
+  "source_and_copy_sha256": "736ED958718A1FF79B9B57210EF42CF4613011BA5C43F271B2123F32FF6854D1",
+  "copied_utc": "2026-09-19T12:47:14.5202865Z",
+  "source_state": "after preserved A50 first-day cleanup interruption; no remaining WAL",
+  "copied_files": [
+    "monitor.sqlite3",
+    "production-corpus.json"
+  ],
+  "old_failure_evidence": "../performance-20260919-layout3-query1/retention-a50-first-day.json"
+}

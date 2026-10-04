@@ -1,0 +1,7 @@
+{
+  "stopped_utc": "2026-09-19T13:19:59.6532960Z",
+  "pid": 92348,
+  "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-retention-retry\\retention-test.exe",
+  "cpu_seconds": 629.609375,
+  "reason": "Harness completion observer missed asynchronous cleanup cursor wraps; preserve interrupted fixture, not a passing retention run"
+}

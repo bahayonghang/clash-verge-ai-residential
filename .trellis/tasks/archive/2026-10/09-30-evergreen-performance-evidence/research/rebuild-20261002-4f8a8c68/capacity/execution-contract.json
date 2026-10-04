@@ -1,0 +1,51 @@
+{
+  "argv": [
+    "runners/run-capacity.py"
+  ],
+  "driver_sha256": "aa33f884e0a464ceebdf4338c55500b067b47301747039f04bbdae79e1609fd1",
+  "runner_pid": 47408,
+  "identity": {
+    "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+    "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\candidate-monitor-db.exe",
+    "bytes": 5131264,
+    "sha256": "F2AC7CF423513AA28127834003F676D5D6039479B41D4351042002DFE5F0324C",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///D:/Documents/Code/Github/clash-verge-ai-residential/bench-data/t05-rebuild-20261002-4f8a8c68/sources/candidate/residential-monitor/src-tauri#residential-monitor@0.3.0",
+      "manifest_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\sources\\candidate\\residential-monitor\\src-tauri\\Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "monitor-db",
+        "src_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\sources\\candidate\\residential-monitor\\src-tauri\\src\\bin\\monitor-db.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [],
+      "filenames": [
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor_db.pdb"
+      ],
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+      "fresh": false
+    }
+  },
+  "native_clock": "monitor-db actual Utc::now; no override",
+  "cache": "preflight hash/integrity/oracle reads occur before native queries; first process is not a cold-page proof",
+  "cases": "A50/A250 host 30d and 1d each 21; A250 network 30d 21; A50 network 30d one original diagnostic observation",
+  "expected_native_invocations": 106,
+  "A1000": "NOT_RUN: approved stage prerequisite unmet; original complete 30d/21-exit0/10000ms gate retained"
+}

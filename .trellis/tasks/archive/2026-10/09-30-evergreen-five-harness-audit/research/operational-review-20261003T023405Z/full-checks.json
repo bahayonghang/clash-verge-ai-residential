@@ -1,0 +1,10 @@
+{
+  "t06-synthetic": 0,
+  "just-ci": 0,
+  "docs-build": 0,
+  "secret-scan": 0,
+  "skills-check": 0,
+  "validate-09-30-evergreen-five-harness-audit": 0,
+  "validate-09-30-evergreen-bootstrap-check": 0,
+  "validate-09-30-evergreen-runtime-validation": 0
+}

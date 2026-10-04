@@ -1,0 +1,10 @@
+# 项目合同以 AGENTS.md 为准。项目配置是否加载由客户端现有信任状态决定。
+# 本模板不设置用户级 feature、模型、权限或 hook 批准。
+project_doc_fallback_filenames = ["AGENTS.md"]
+
+# V1 agent threads only; V2 ignores this field
+# prompt guards are not a hard sandbox
+# 主会话按批准范围委派；implement/check 不递归派发这些角色。
+# 一个会话的后端与配置观察不能证明其他会话的后端。
+[agents]
+max_depth = 1

@@ -32,6 +32,10 @@ impl Secret {
         &self.0
     }
 
+    pub fn as_utf8(&self) -> Option<&str> {
+        std::str::from_utf8(&self.0).ok()
+    }
+
     pub fn redacted(&self) -> &'static str {
         "<redacted>"
     }
@@ -106,7 +110,7 @@ impl CredentialStore for FakeCredentialStore {
 }
 
 pub struct ProcessLocalStore {
-    inner: Mutex<Option<(String, String)>>,
+    inner: Mutex<Option<(String, Secret)>>,
 }
 
 impl ProcessLocalStore {
@@ -132,16 +136,13 @@ impl CredentialStore for ProcessLocalStore {
         if target.is_empty() {
             return Err(CredentialError::InvalidTarget);
         }
-        *self.inner.lock().expect("credential mutex") = Some((
-            target.to_string(),
-            String::from_utf8_lossy(secret.as_header_bytes()).into_owned(),
-        ));
+        *self.inner.lock().expect("credential mutex") = Some((target.to_string(), secret.clone()));
         Ok(())
     }
 
     fn get(&self, target: &str) -> Result<Secret, CredentialError> {
         match self.inner.lock().expect("credential mutex").as_ref() {
-            Some((stored, secret)) if stored == target => Ok(Secret::from_plain(secret.clone())),
+            Some((stored, secret)) if stored == target => Ok(secret.clone()),
             _ => Err(CredentialError::NotFound),
         }
     }
@@ -201,6 +202,7 @@ pub mod windows_cm {
                 UserName: ptr::null_mut(),
             };
             let ok = unsafe { CredWriteW(&cred, 0) };
+            blob.fill(0);
             if ok == 0 {
                 Err(CredentialError::Unavailable)
             } else {
@@ -283,6 +285,24 @@ mod credential_port_tests {
             .put("temp", &Secret::from_plain("session-only"))
             .expect("put");
         store.clear();
+        assert_eq!(store.get("temp").unwrap_err(), CredentialError::NotFound);
+    }
+
+    #[test]
+    fn process_local_store_holds_secret_and_omits_it_from_debug() {
+        let store = ProcessLocalStore::new();
+        const SECRET: &str = "process-local-secret-value";
+        store.put("temp", &Secret::from_plain(SECRET)).expect("put");
+        let loaded = store.get("temp").expect("get");
+        let debug = format!("{loaded:?}");
+        assert_eq!(debug, "Secret(<redacted>)");
+        assert!(!debug.contains(SECRET));
+        assert_eq!(loaded.as_utf8(), Some(SECRET));
+        assert_eq!(
+            store.delete("other").unwrap_err(),
+            CredentialError::NotFound
+        );
+        store.delete("temp").expect("delete");
         assert_eq!(store.get("temp").unwrap_err(), CredentialError::NotFound);
     }
 }

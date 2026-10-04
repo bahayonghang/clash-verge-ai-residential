@@ -1,0 +1,4 @@
+{
+  "command": "node scripts/install-agent-skills.js --check",
+  "exit_code": 1
+}

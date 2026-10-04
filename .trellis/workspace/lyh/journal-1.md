@@ -1265,3 +1265,111 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 43: 依赖扫描与分批升级
+
+**Date**: 2026-09-03
+**Task**: 依赖扫描与分批升级
+**Branch**: `dev`
+
+### Summary
+
+扫描根脚本、docs、ResiWatch npm/Cargo 与 GitHub Actions。8 批按风险升级并每批 just ci：lockfile、Actions v7、lucide 1、sha2/rand/tungstenite、hooks 7、TypeScript 6.0.3、Vitest 4、Vite 8。ESLint 10 / TS 7 / plugin-react 6 因 peer 阻断未做。npm audit 0。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5ddbf04` | (see git log) |
+| `038f0b0` | (see git log) |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 44: 按业务风险补齐核心测试覆盖
+
+**Date**: 2026-09-03
+**Task**: 按业务风险补齐核心测试覆盖
+**Branch**: `dev`
+
+### Summary
+
+补齐 ResiWatch 地址/目标、报告查询、家宽份额、告警规则与静默窗口、Recovery 写禁、commit kill 回滚、CLI purge 门闩测试。测试打穿后收紧缺冒号地址错误码、静默窗口挡住 Activated、Recovery 下 create_backup 不再复制损坏热库。just ci 通过。规划与 spec 已落盘。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d6019ea` | (see git log) |
+| `75c7ff8` | (see git log) |
+| `f459282` | (see git log) |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 45: 新增 extra 小站路由
+
+**Date**: 2026-09-16
+**Task**: 新增 extra 小站路由
+**Branch**: `dev`
+
+### Summary
+
+新增 routing.extra 与 AnyRouter 家宽规则，补齐本地配置、审计映射、文档和回归测试；精简脚本头并将更新日志统一为中文。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `018f4c46c0035f6a2252cbac4f567093df76abf7` | (see git log) |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 46: 解耦 AnyRouter DNS 并将 extra 改为分类
+
+**Date**: 2026-09-16
+**Task**: 解耦 AnyRouter DNS 并将 extra 改为分类
+**Branch**: `dev`
+
+### Summary
+
+extra 改为默关分类，新增 extra_anyrouter；AnyRouter 开启时只走 AI-家宽、不写住宅 DNS。just ci 与 docs-build 已通过；AC8 真机 Connections 未补。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `44b9e32` | (see git log) |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 47: 收窄短窗口会话投影
+
+**Date**: 2026-09-24
+**Task**: 收窄短窗口会话投影
+**Branch**: `dev`
+
+### Summary
+
+短窗口报告不再读全表会话。1 分钟生产首读 7.271 ms。A1000、矩阵同窗口和主场景按用户决定保持未通过并归档。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e5d19b15e7e7cca78cca4c4adabd2d755560c724` | (see git log) |
+
+### Status
+
+[OK] **Completed**

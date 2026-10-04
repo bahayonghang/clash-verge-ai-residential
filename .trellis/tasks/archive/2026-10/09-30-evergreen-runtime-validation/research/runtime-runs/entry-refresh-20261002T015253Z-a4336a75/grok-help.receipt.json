@@ -1,0 +1,15 @@
+{
+  "metadata_only": true,
+  "inference_started": false,
+  "argv": [
+    "<HOME>\\.grok\\bin\\grok.exe",
+    "--help"
+  ],
+  "started_utc": "2026-10-02T01:55:00.570583+00:00",
+  "ended_utc": "2026-10-02T01:55:00.619731+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "cda6873e2f90a7d77de94c2e3026794671fac04b2e40ac74e4d91f429f829403",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "redactions": [],
+  "representation": "redacted_decoded_output_not_original_bytes"
+}

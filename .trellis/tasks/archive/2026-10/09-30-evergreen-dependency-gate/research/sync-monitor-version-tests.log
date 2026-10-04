@@ -1,0 +1,23 @@
+✔ 写入模式把 package.json 版本同步到 Tauri、Cargo 与 lockfile (12.1591ms)
+✔ 检查模式发现漂移时不写文件 (8.1509ms)
+✔ 已对齐时写入模式不改内容 (6.8934ms)
+✔ 保留 Cargo.toml 的 CRLF (9.8034ms)
+✔ 非法 SemVer 失败 (6.8263ms)
+✔ CI monitor 作业包含版本对齐检查 (0.2805ms)
+✔ CI monitor 原生命令各自独立为 pwsh step (1.0525ms)
+✔ CI required-checks 聚合 test、monitor 与 docs (0.6977ms)
+✔ CI 安装后独立审计完整依赖并阻断 high (0.4758ms)
+✔ CI 审计合同拒绝缺失、跳过、降级和合并步骤 (1.9866ms)
+✔ 独立 dependency-audit recipe 逐条运行 npm 与 Rust 审计 (0.4414ms)
+✔ pwsh 保留 CI monitor 审计的非零退出码 (460.3623ms)
+✔ pwsh 多命令脚本会把中间 native 失败覆盖为成功 (503.0421ms)
+✔ pwsh 单命令脚本保留非零退出码 (407.1758ms)
+✔ 缺少 tauri.conf.json 失败 (5.638ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2404.3956

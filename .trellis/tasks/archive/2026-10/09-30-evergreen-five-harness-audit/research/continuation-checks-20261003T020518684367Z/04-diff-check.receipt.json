@@ -1,0 +1,34 @@
+{
+  "label": "04-diff-check",
+  "argv": [
+    "git",
+    "diff",
+    "--check"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "executable": "C:\\Program Files\\Git\\cmd\\git.EXE",
+  "executable_sha256": "78211c7ed73988da93a6d8a33d47ec6187f464d7ea2a9a00c182bbd7a1ecf30f",
+  "started_utc": "2026-10-03T02:06:13.482510+00:00",
+  "finished_utc": "2026-10-03T02:06:13.587914+00:00",
+  "wall_seconds": 0.10540840000612661,
+  "pid": 44612,
+  "native_exit_code": 0,
+  "driver_exit_code": 0,
+  "driver_exit_observation": "sys.exit invoked below; confirmed separately by tool-outer observer",
+  "tool_outer_exit_code": null,
+  "tool_outer_exit_observation": "PENDING; recorded in separate observer after exec returns",
+  "status": "PASS",
+  "exception": null,
+  "streams": {
+    "stdout": {
+      "path": "04-diff-check.stdout.raw",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stderr": {
+      "path": "04-diff-check.stderr.raw",
+      "size": 3261,
+      "sha256": "30c2fa5358d154246576d0402dc1ef012e65f69a421e825e591e00ecec07cefd"
+    }
+  }
+}

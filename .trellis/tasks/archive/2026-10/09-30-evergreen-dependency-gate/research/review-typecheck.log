@@ -1,0 +1,2 @@
+npm notice run residential-monitor@0.3.0 typecheck
+npm notice run tsc --noEmit

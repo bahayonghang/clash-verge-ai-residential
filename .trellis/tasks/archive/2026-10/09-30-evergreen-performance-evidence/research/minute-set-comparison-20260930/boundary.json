@@ -1,0 +1,31 @@
+{
+  "identities": {
+    "before": {
+      "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\projection-cache-lazy\\candidate-library-tests.exe",
+      "sha256": "EFBD43FFB61FC8D0CB290F116AC6F0FB6A5888C000332FC4C4E093429D3E37DC",
+      "bytes": 12871680
+    },
+    "cache": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-final-20260930\\candidate-library-tests.exe",
+      "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+      "bytes": 12889088,
+      "sha256": "03A36CF38C8FB8F0651C82F07FCE1BA606350E684CBAE3CE3A2630CE54E80FBF",
+      "source_manifest_sha256": "9345A300A79474456C630369D5D22CD29C23AFEEC02C2F965E162AD131789AFD"
+    }
+  },
+  "database": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+  "cache": "database already read by previous production/stage/oracle/hash checks; no cache eviction",
+  "source_difference": "MinuteSet last-value optimization plus regression tests; facade writer PRAGMA instrumentation does not execute in these probes",
+  "all_query": {
+    "timezone": "local",
+    "previous_equal_window": true
+  },
+  "residential_query": {
+    "timezone": "UTC",
+    "previous_equal_window": false
+  },
+  "production_now_utc": "window end",
+  "stage_deadline_enabled": false,
+  "formal_matrix_or_capacity_gate": false
+}

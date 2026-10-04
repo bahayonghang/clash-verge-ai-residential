@@ -1,0 +1,29 @@
+{
+  "started_utc": "2026-10-01T13:20:36.353980+00:00",
+  "ended_utc": "2026-10-01T13:20:36.387941+00:00",
+  "pid": 31996,
+  "exit_code": 7,
+  "capture_stop_reason": "CLIENT_REPORTED_BLOCKER",
+  "termination_requested": false,
+  "capture_representation": "normalized_redacted_events_not_original_bytes",
+  "stream_hash_scope": "captured_bytes_only_if_limit_hit",
+  "streams": {
+    "stdout": {
+      "bytes": 0,
+      "records": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stderr": {
+      "bytes": 50,
+      "records": 1,
+      "sha256": "96460fd76b9bc66e939f723ba6e5b0100c491aea77e453da81277b4f3e152033"
+    }
+  },
+  "redactions": [],
+  "sensitive_output_detected": false,
+  "events": 1,
+  "cross_stream_order": "receiver_observation_only",
+  "job_cleanup": "best_effort_owned_job; post_Popen_attach_race; no_permission_sandbox; no_absolute_no_orphan_claim",
+  "synthetic_only": true,
+  "clients_started": 0
+}

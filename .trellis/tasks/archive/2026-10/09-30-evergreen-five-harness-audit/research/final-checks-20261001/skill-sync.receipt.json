@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "node",
+    "scripts/install-agent-skills.js",
+    "--check"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "status": "finished",
+  "started_utc": "2026-10-02T01:48:44.082093+00:00",
+  "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+  "pid": 19472,
+  "stdout_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "exit_code": 0,
+  "finished_utc": "2026-10-02T01:48:44.154481+00:00",
+  "wall_seconds": 0.07239359999994122
+}

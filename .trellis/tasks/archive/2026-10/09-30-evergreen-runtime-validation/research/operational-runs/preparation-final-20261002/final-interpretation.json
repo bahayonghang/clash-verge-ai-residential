@@ -1,0 +1,14 @@
+{
+  "status": "PREPARED_NOT_RUN",
+  "plan_native_exit_code": 0,
+  "harness_states": {
+    "claude": "PREPARED_NOT_RUN",
+    "codex": "PREPARED_NOT_RUN",
+    "grok": "PREPARED_NOT_RUN",
+    "kimi": "PREPARED_NOT_RUN",
+    "omp": "PREPARED_NOT_RUN"
+  },
+  "whitespace_interpretation": "git diff --no-index --check NUL returns 1 for added-file differences; all five diagnostics empty. Syntax and 51 synthetic controls PASS. No whitespace error observed. Original preliminary aggregate retained.",
+  "model_clients_started": 0,
+  "real_candidate_freezes": 0
+}

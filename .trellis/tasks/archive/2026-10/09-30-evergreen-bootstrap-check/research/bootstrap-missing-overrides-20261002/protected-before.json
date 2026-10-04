@@ -1,0 +1,47 @@
+{
+  "files": {
+    ".trellis/.template-hashes.json": {
+      "present": true,
+      "sha256": "61058f644764515363f2b7d9c5b2877eb167d474a38fc08955e7eef22c3e5f79"
+    },
+    ".trellis/.version": {
+      "present": true,
+      "sha256": "0fb2a9d4b97b5ee5f3c24bd0c969d5eb2c7729ace23df3729a60fb6a30fe9bde"
+    },
+    ".codex/config.toml": {
+      "present": true,
+      "sha256": "0696030d4c8d9b33fb1286081146207114106e26f74bd2b9a0308b56d3212035"
+    },
+    ".kimi-code/skills/trellis-implement/SKILL.md": {
+      "present": true,
+      "sha256": "61013b2aaef14b1da347553da645f5343f73ae17c8ec9a2cb0ad3fdc44cc444c"
+    },
+    ".kimi-code/skills/trellis-check/SKILL.md": {
+      "present": true,
+      "sha256": "43536cc2e41e119634e85848c67acbadc582e6fe84ab195a6a8645f8e97fd273"
+    },
+    ".kimi-code/skills/trellis-research/SKILL.md": {
+      "present": true,
+      "sha256": "646f070f6ed7598bccc91a0275ed1f3fa78783c043db5ff16caab587b0cbbb61"
+    },
+    "AGENTS.md": {
+      "present": true,
+      "sha256": "f602d7e74cada3cd9c6d617dad36cbc1a90d90c19b92bd5ccb40d9794b557bb9"
+    },
+    "CLAUDE.md": {
+      "present": true,
+      "sha256": "c0a67ce322c8394a7e34c9ccbe03addce4cf40a900134638cd04e94fd7669236"
+    },
+    ".gitignore": {
+      "present": true,
+      "sha256": "7e4d6a3bd5d28dea77e4b5219b6fff89ed34b68ad358f08cfba8f97efcf6819e"
+    }
+  },
+  "HEAD": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+  "branch": "dev",
+  "index": {
+    "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.git\\index",
+    "sha256": "5f6a6581d9d2f126140d57eba15b084e3ea790f2c31d12c7f3a38a0fa844e938"
+  },
+  "global_config_private_and_trust": "未读取内容；无修改这些对象的命令"
+}

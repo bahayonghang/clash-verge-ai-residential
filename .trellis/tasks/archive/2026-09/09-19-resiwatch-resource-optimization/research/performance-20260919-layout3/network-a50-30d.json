@@ -1,0 +1,69 @@
+{
+  "attributionQuality": {
+    "knownBytes": 98819725,
+    "missingBytes": 0,
+    "status": "complete"
+  },
+  "capability": {
+    "layer": "raw",
+    "reason": null,
+    "supported": true
+  },
+  "command": "rank",
+  "coverage": {
+    "gapSec": 0,
+    "observedSec": 2592000,
+    "status": "covered"
+  },
+  "dataVersion": 2592000,
+  "generatedUtc": 1789819912,
+  "namedSql": [
+    "totals_raw",
+    "series_raw",
+    "rank_raw_attr",
+    "coverage_raw"
+  ],
+  "notes": [
+    "rank 是 Top N 诊断视图，不返回份额，不承诺全窗口守恒。"
+  ],
+  "result": {
+    "rankings": [
+      {
+        "connectionCount": 108000,
+        "download": 25379955,
+        "identity": "network-3",
+        "unknown": false,
+        "upload": 7560005,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 108000,
+        "download": 25379935,
+        "identity": "network-4",
+        "unknown": false,
+        "upload": 7559985,
+        "zeroFlow": false
+      },
+      {
+        "connectionCount": 108000,
+        "download": 25379820,
+        "identity": "network-2",
+        "unknown": false,
+        "upload": 7560025,
+        "zeroFlow": false
+      }
+    ]
+  },
+  "schemaVersion": 1,
+  "truncation": {
+    "rowCap": 100,
+    "rows": 3,
+    "status": "complete"
+  },
+  "window": {
+    "endUtc": 1789776000,
+    "granularity": "hour",
+    "startUtc": 1787184000,
+    "timezone": "UTC"
+  }
+}

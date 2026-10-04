@@ -1,0 +1,22 @@
+{
+  "recorded_utc": "2026-10-02T14:28:00.475063+00:00",
+  "roots_existed_before_creation": false,
+  "asset_root": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68",
+  "evidence_root": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68",
+  "ancestor_reparse_points": [],
+  "ignore_argv": [
+    "git",
+    "check-ignore",
+    "-v",
+    "--no-index",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68"
+  ],
+  "ignore_native_exit": 0,
+  "ignore_stdout": ".gitignore:45:bench-data/\t\"D:\\\\Documents\\\\Code\\\\Github\\\\clash-verge-ai-residential\\\\bench-data\\\\t05-rebuild-20261002-4f8a8c68\"\n",
+  "disk_free_bytes": {
+    "C": 537689120768,
+    "D": 1208810459136
+  },
+  "creation_authorization": "Main P0/P1 GO; unique roots checked again before creating evidence root only",
+  "product_and_old_evidence_writes": false
+}

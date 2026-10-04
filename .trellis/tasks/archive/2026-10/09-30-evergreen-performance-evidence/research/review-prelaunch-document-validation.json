@@ -1,0 +1,43 @@
+{
+  "reviewed_utc": "2026-09-30T15:33:30.031419+00:00",
+  "scope": "review-owned documents only; no builds/tests/benchmarks/database reads",
+  "errors": [],
+  "files": [
+    {
+      "file": "review.md",
+      "lines": 249,
+      "sha256": "d88ba871f32f02614384882baed45fe12acfe0530264e8acc48902000ef51e7d"
+    },
+    {
+      "file": "review-formal-runner.md",
+      "lines": 73,
+      "sha256": "2d55efec7c4fb9c1c401313b87dce431ae6bf90c0896a19ffc8ee3ee50b1ecc2"
+    },
+    {
+      "file": "review-minute-candidate.md",
+      "lines": 78,
+      "sha256": "7e8580d47392aff37250e3f36ac3e8300e199efd67cf69904fc662cd1f477e1b"
+    },
+    {
+      "file": "review-cache-lazy-validation.json",
+      "lines": 637,
+      "sha256": "03ee8dda453e749f60eaf70a2ddc119453da21a05e7bc86c404b92fdb2a95201"
+    },
+    {
+      "file": "review-minute-experiment-validation.json",
+      "lines": 489,
+      "sha256": "0d5c0e684221b08b42bd5118745c3b82b6b2471b8ac5ce3ff5a5776a92a654d8"
+    },
+    {
+      "file": "review-retained-candidate-validation.json",
+      "lines": 411,
+      "sha256": "6eb6e8118c9fb0f961b2873278a7c04856d96bfe77c5b992e3c5c4cd0601fa0e"
+    }
+  ],
+  "scoped_git_diff_check": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "internal_links": "checked review.md anchors"
+}

@@ -203,6 +203,9 @@ export const ZH: Record<string, string> = {
   "live.columns.reset": "恢复默认",
   "live.columns.panel": "显示列",
   "live.table": "实时连接表",
+  "live.page.prev": "上一页",
+  "live.page.next": "下一页",
+  "live.page.status": "第 {page} 页 / {matched} 条匹配",
   "live.resize": "调整列宽：{column}",
   "live.layout_save_fail": "无法保存列布局。当前窗口仍使用新宽度；下一步：再拖一次或检查磁盘。",
   "live.filter.title": "筛选工作区",
@@ -508,6 +511,8 @@ export const ZH: Record<string, string> = {
   "secret.show": "显示密钥",
   "secret.hide": "隐藏密钥",
   "secret.hint": "保存后回填此框，默认显示圆点。不会写入日志或 Channel。",
+  "secret.load_fail": "无法读取 TCP secret。密码框未更新。请重试。",
+  "secret.retry": "重试读取密钥",
   "recovery.missing": "恢复信息不可用。",
   "recovery.title": "Recovery Shell",
   "recovery.meta": "应用版本 {app}，数据库版本 {db}，支持上限 {max}。",
@@ -705,5 +710,6 @@ export const ZH: Record<string, string> = {
   "residential.report.current_off": "当前策略重算只在 raw 期内可用。",
   "residential.state.gap": "存在采集缺口。缺口不是零。",
   "residential.state.paused": "采集已暂停。",
-  "residential.state.disconnected": "控制器未连接。"
+  "residential.state.disconnected": "控制器未连接。",
+  "window.visibility_fail": "无法读取窗口状态，展示刷新已暂停。请重新打开窗口。"
 };

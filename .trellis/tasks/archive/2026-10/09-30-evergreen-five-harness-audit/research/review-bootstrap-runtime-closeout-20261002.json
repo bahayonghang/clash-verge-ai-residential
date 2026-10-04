@@ -1,0 +1,87 @@
+{
+  "status": "PASS_STATIC_EVIDENCE_WRITEBACK",
+  "observed_utc": "2026-10-02T14:28:36.1376232Z",
+  "dispatch": "09-30-evergreen-performance-evidence; explicit T04/T06/T03 closeout pull",
+  "findings_fixed": [],
+  "material_writeback_inconsistencies": [],
+  "evidence_manifest": {
+    "path": ".trellis/tasks/09-30-evergreen-bootstrap-check/research/bootstrap-missing-overrides-20261002/evidence-manifest.json",
+    "sha256": "642A31D907B68DC7C163C6F5B2B640FF056673019497D5959B986E7F68D19EE1",
+    "declared_count": 52,
+    "actual_count": 52,
+    "hash_size_mismatches": [],
+    "json_parsed": 31,
+    "json_parse_errors": [],
+    "parse_mode": "AsHashtable preserves npm lock empty package-root key"
+  },
+  "T03": {
+    "task_status": "in_progress",
+    "historical_scope": "2026-09-30",
+    "AC5": "2026-10-01 PASS_LOCAL_CONTRACT; 55/55 and original gates; not new runtime/default-init acceptance"
+  },
+  "T04": {
+    "task_status": "in_progress",
+    "AC3": "PARTIAL_UNCHECKED",
+    "result": "INIT_PASS_CONTRACT_FAIL",
+    "version": "0.7.0-beta.3",
+    "init_exit": 0,
+    "post_checker_exit": 1,
+    "first_errors": {
+      "kimi_auth_dispatch": 5,
+      "codex_depth": 2,
+      "total": 7
+    },
+    "driver_exit": 1,
+    "actual_outer_exit": 1,
+    "copied_files": 67,
+    "generated_files": 218,
+    "protected_files": 9,
+    "old_PASS_migrated": false
+  },
+  "T06": {
+    "task_status": "in_progress",
+    "runtime_status": "CLOSED_NO_FURTHER_CLIENTS",
+    "parent_attempts": 5,
+    "child_attempts": 2,
+    "not_run_child_routes": 3,
+    "receipt_field_mismatches": [],
+    "missing_attempt_refs": [],
+    "all_AC_unchecked": true,
+    "no_runtime_PASS": true,
+    "snapshot_retired": true,
+    "old_source_sha_is_background_HEAD_only": true
+  },
+  "post_init_spec_matrix": "Consistent: optional absence permitted; present invalid generated markers fail; init0 does not cover post-check failure",
+  "scoped_diff_check_exit": 0,
+  "trailing_whitespace_errors": [],
+  "warnings": [
+    "Existing Git LF-to-CRLF notices on docs/spec"
+  ],
+  "input_sha256": {
+    ".trellis/tasks/09-30-evergreen-bootstrap-check/task.json": "005F883679F17BC31D61EBE9C43DD3B4AB070A811E9237C01B7365E27855F359",
+    ".trellis/tasks/09-30-evergreen-bootstrap-check/prd.md": "42B41CEC1033AAACA81D1E65C3470C072F193625E97F0B95301162EA9E8EE3FD",
+    ".trellis/tasks/09-30-evergreen-bootstrap-check/research/implementation.md": "FC3C78FF1D5E1D0DD950296FBB9B17ECD54A2C0FA56D1D15B69B05D269481093",
+    "docs/agents/harnesses.md": "92231B6217866DA2A43724E9A910CDBA6808699C6CF84FA784F330B9989ED2DA",
+    ".trellis/spec/frontend/quality-guidelines.md": "FD268056D25E32A2A1E7B38D4610880AF12992F004E313780FE8E1D57583D577",
+    ".trellis/tasks/09-30-evergreen-runtime-validation/task.json": "9B02FE39250BF25A8DEB12F704BD665BC15DD43C7FA2E3798F1C0FDF291586D9",
+    ".trellis/tasks/09-30-evergreen-runtime-validation/research/result-20261002.md": "4DCA54029C26B3DEF906C0B4861E3DF139C92AC62E4036C951FB44F15F13A749",
+    ".trellis/tasks/09-30-evergreen-runtime-validation/research/evidence-index-20261002.json": "6685705B9C87DAD530642866244FE5DDC6B017A69449CA7A9A542D5347815C07",
+    ".trellis/tasks/09-30-evergreen-harness-contract/task.json": "49FEDE83CAE6F22BD3E1212F7EBA7C69BD31FF2DFC5BB26B5E43C8DAC3164718",
+    ".trellis/tasks/09-30-evergreen-harness-contract/prd.md": "D92A3B3AAA14166F7F8946FCE051C4432CACD69679011B25CE0115F5BD796E15"
+  },
+  "verification_not_run": [
+    "native init",
+    "clients",
+    "tests",
+    "lint",
+    "typecheck",
+    "just ci",
+    "docs-build"
+  ],
+  "execution_boundary": "T05 P1 preparing/compiling; no heavy checks; docs gate deferred until P1 stops",
+  "writes": [
+    "research/review-bootstrap-runtime-closeout-20261002.md",
+    "research/review-bootstrap-runtime-closeout-20261002.json"
+  ],
+  "writing_status": "STOP_WRITING"
+}

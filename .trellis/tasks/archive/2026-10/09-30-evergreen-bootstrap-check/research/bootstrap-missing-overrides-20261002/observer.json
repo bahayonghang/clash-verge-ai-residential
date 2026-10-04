@@ -1,0 +1,32 @@
+{
+  "observed_at_utc": "2026-10-02T14:17:57.805005+00:00",
+  "exec_session_id": 29005,
+  "completion_chunk_id": "108e7c",
+  "exec_observed_exit_code": 1,
+  "driver_exit_observed": 1,
+  "powershell_intended_exit": 1,
+  "native_exit_codes": {
+    "contract-before-init": 0,
+    "npm-ci-attempt1": 0,
+    "selected-cli-version": 0,
+    "environment-before-init": 0,
+    "isolated-init": 0,
+    "contract-after-init": 1,
+    "environment-after-init": 0,
+    "candidate-ignore": 0
+  },
+  "outer_receipt": {
+    "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\missing-overrides-bootstrap-20261002.outer.json",
+    "sha256": "75f1ca59d46351e50945c6f694a170498563dea45b77d2d51b304ea47f855a7c"
+  },
+  "raw_outer_logs": [
+    {
+      "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\missing-overrides-bootstrap-20261002.outer.stdout.raw.log",
+      "sha256": "46c7c66a708935b11cdb39f2f06a4da05897218a3fdaa67582bf45777e5698fb"
+    },
+    {
+      "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\missing-overrides-bootstrap-20261002.outer.stderr.raw.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

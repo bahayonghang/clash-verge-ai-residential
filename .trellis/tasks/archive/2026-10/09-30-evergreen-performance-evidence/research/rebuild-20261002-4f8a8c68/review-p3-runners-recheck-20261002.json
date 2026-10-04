@@ -1,0 +1,95 @@
+{
+  "review": "T05 P3 runner binding recheck after R1-R3",
+  "date": "2026-10-02",
+  "mode": "read-only static; no runner, cargo, native, generator, p2-completion, test or SQLite access",
+  "conclusion": "P3_RUNNER_RECHECK_PASS",
+  "first_failing_item": null,
+  "hashes": {
+    "original run-formal-replay.py": "6C88ACCA5994C02266F262FBC185EBF9D09DE1AB9EC96BAA302993A0CBF381E9",
+    "original run-retained-capacity.py": "9FA8C225BEF9A9F7718676D7A5E2D00B1E174270784C99094ED5DCC2F8D9FAA4",
+    "original run-live-recorded.py": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C",
+    "runners/run-formal-replay.py": "3009F02E3CEB42DFB1C01C0FB234F1BC677F345090D1D91347C96B5D408CEE90",
+    "runners/run-capacity.py": "AA33F884E0A464CEEBDF4338C55500B067B47301747039F04BBDAE79E1609FD1",
+    "runners/run-formal-replay.patch": "111B4CA05C6679AA95F97E61FD47F3AA415B75929B46296D95AF12D62FCF4D90",
+    "runners/run-capacity.patch": "5AF47D8A8A49B95EF78B8F35138BF1586D430AD64B8F6D5C3871E0BEAE831B7C",
+    "runners/run-formal-replay.v1.patch": "742E5AB8C0DEA8C349AF5EE155ED5874B3DC73291F9E5D081D32385F297D662D (unchanged from first review)",
+    "runners/run-capacity.v1.patch": "EC3D715B683311127976B595E93C99F241AA121CF078C0429266904C755439D0 (unchanged from first review)",
+    "runners/run-live-recorded.py": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C",
+    "p2-completion.py": "ECDEC6DF5821886A0C0DFC9016A4A86433A2F2B315E332C573F641A693DCB9FD",
+    "generator.py": "086E7770DEB82B7F8EBD54D0D4BA54E7ED1233238989BCB5E4EB3C64EC837822"
+  },
+  "items": [
+    {
+      "id": "1",
+      "name": "originals unchanged; patches match current files",
+      "status": "PASS",
+      "evidence": "Original hashes are unchanged. The diff -u body (from line 3) of each original vs new runner equals the stored v2 .patch body: replay 5DD52430B5D1C028E90D0ACB5A0D96F47EC9CB0372F09D736B6BA2C7F25A1076, capacity 11795875CF2A6753581329C2F69D7D8D86A7042F89ED61D403845AE4CA484AF5. The coordinator's abbreviated hashes match the full values."
+    },
+    {
+      "id": "R1",
+      "name": "capacity generatedUtc lower bound",
+      "status": "PASS",
+      "evidence": "run-capacity.py: load_before = competing_load() runs before the receipt dict. The receipt then takes started_utc, and the next statements are started = time.perf_counter() and Popen. The generatedUtc lower bound has the original meaning again."
+    },
+    {
+      "id": "R2",
+      "name": "replay start assert before fresh-only mkdir",
+      "status": "PASS",
+      "evidence": "run-formal-replay.py: INITIAL_LOAD and its assert come before 'assert not OUT.exists() and not DATA.exists()' and 'OUT.mkdir(); DATA.mkdir(parents=True)'. A blocked start creates no directory. Capacity order is also assert -> 'assert not OUT.exists()' -> mkdir."
+    },
+    {
+      "id": "R3",
+      "name": "competing-load coverage",
+      "status": "PASS",
+      "evidence": {
+        "same_function": "competing_load() is identical in both runners: psutil imported inside the function; skip = own PID plus psutil.Process().parents(); 'ferrots' cmdline substring; lowercase name in cargo.exe/rustc.exe/monitor-bench.exe/monitor-db.exe; name suffix monitor-bench.exe/monitor-db.exe/library-tests.exe; python* names whose cmdline contains run-formal-replay.py, run-capacity.py, builder.py, generator.py, read-corpus-oracle.py or p2-completion.py.",
+        "coverage": "The suffixes match baseline-monitor-bench.exe, candidate-monitor-bench.exe, candidate-monitor-db.exe and candidate-library-tests.exe. Capacity now includes monitor-db.exe. Another runner instance is matched by its python cmdline. The run-live-recorded.py wrapper of a different runner is matched through the script name in its argv. The runner's own wrapper and shell are excluded as ancestors.",
+        "children": "Each scan runs when no child of the runner is alive (before Popen, or after communicate()), so the runner does not match its own native child.",
+        "psutil": "replay keeps the top-level import and also imports inside the function; capacity imports only inside the function. Both first calls run before any output directory exists."
+      }
+    },
+    {
+      "id": "2",
+      "name": "gate semantics unchanged vs originals",
+      "status": "PASS",
+      "evidence": "A multiset compare of +/- lines in v1 vs v2 patches shows only these differences: the competing_load() body, the R1 load_before line and the capacity receipt line. The R2 move changes line order only. Unchanged vs the originals: validate_report, expected options, matrix 11 cases with baseline->candidate order, primary r1..r3, capacity 21/21/1/21/21/21 = 106, F1-F12, limits 1.10/0.70/0.50, exit codes, failure policy. Competing-load data stays in receipt and summary fields only. In replay, started_utc still comes before the receipt scan, but replay does not use started_utc in any validation; wall_seconds starts after the scan."
+    },
+    {
+      "id": "3",
+      "name": "no old-tree references",
+      "status": "PASS",
+      "evidence": "Search for build-20260930, candidate-retained-20260930, retained-capacity-20260930, AppData, Temp, AA4A7ABD, 667A21E9, e6fdd679, run_root, FROZEN, database_sha256_after_probes in both runners: no match."
+    },
+    {
+      "id": "4",
+      "name": "p2-completion.py bind writes vs runner reads",
+      "status": "PASS",
+      "evidence": {
+        "status": "state.json status is 'P2_GENERATION_ORACLE_PROBES_ENDED; WAITING_P3_RUNNER_BINDING'; both runners require this prefix.",
+        "corpus_identities": "Keys '50' and '250'. Each has db, marker, db_sha256, marker_sha256 and db_bytes. Values equal generator/a50-identity.json and a250-identity.json; all identity checks are true. Hashes are 64-char uppercase, so they match the runner comparisons sha(marker).upper() and digest.upper().",
+        "paths": "db and marker paths equal <asset_root>/corpus-a{50,250}-30d/monitor.sqlite3 and production-corpus.json, which capacity derives from STATE['asset_root'].",
+        "other_keys": "executable_identities (4, uppercase), baseline_source, candidate_source, baseline_manifest (103), source_manifest (108), asset_root, repo and baseline_revision are unchanged. inputs/candidate-copy-after.json == state.source_manifest. state.json is ASCII without BOM.",
+        "unused_by_runners": "stage_probes is now a dict (a250-30d-production FAIL_DIAGNOSTIC, raw_fold NOT_RUN). generator_driver and the missing generator_sha256 are not read by either runner.",
+        "oracle_consistency": "In oracle/run-20261002/a250.json, rows for host-30d and network-30d equal the historical corpus-a250-verification.json result rows with the same params. The capacity A250 30d exact-row check is therefore consistent with the new corpus.",
+        "db_after": "bind.json db_after hashes equal the bound hashes; sidecars -wal 0 and -shm 32768. Capacity accepts a WAL that is missing or 0 bytes."
+      }
+    },
+    {
+      "id": "5",
+      "name": "fresh-only outputs",
+      "status": "PASS",
+      "evidence": "These directories do not exist: <EvidenceRoot>/matrix, primary, capacity, and <AssetRoot>/data/matrix, data/primary. <AssetRoot>/data contains only smoke/."
+    }
+  ],
+  "required_fixes": [],
+  "risks": [
+    "The coordinator reports 9 ferrots-suite processes. While they exist, both runners stop at the start assert, by design. The stop happens before any output is written.",
+    "p2-completion.py quiet-probes uses generator.competing_load(). That function matches only exact names and has no runner-script or suffix match, so it does not detect a running replay/capacity runner or its candidate-*.exe child. Do not run quiet-probes during P4-P6. If it runs during a runner, the runner records it only in the next per-run scan.",
+    "quiet-probes rewrites state.json (stage_probes only; status prefix kept). Runners read state.json only at start; a concurrent rewrite can only cause a start failure before any output exists.",
+    "If quiet-probes leaves a nonempty -wal on the A250 DB, capacity stops at its WAL assert. This is a stop, not a false pass. quiet-probes checks the DB hash afterwards but not the WAL size.",
+    "Ancestor exclusion uses psutil parent PIDs. A stale parent PID that Windows reused for another process would be excluded from the scan. Likelihood is low.",
+    "Script-name matching uses substrings (for example builder.py). An unrelated python cmdline that contains one of these names blocks start; this is a false stop, not a false pass.",
+    "Not changed since the first review: state.json SHA256 and the P2 oracle summary hash are not recorded in execution-contract.json. The candidate source label is the hash of inputs/candidate-copy-after.json. Neither runner checks dist. Do not change the status prefix before capacity ends."
+  ],
+  "reviewer_note": "No temporary files were written outside the two allowed outputs in this recheck."
+}

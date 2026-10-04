@@ -1,0 +1,23 @@
+{
+  "base": "rebuild-20261002 reviewed baseline copy (c278 + corpus-free instrumentation)",
+  "outputs": {
+    "bench.rs": {
+      "bytes": 16578,
+      "sha256": "AB9D7948ACC2992117012785608DAF5B87CBD7915DB98C62B8C82ADB276CE6C7"
+    },
+    "bin/monitor-bench.rs": {
+      "bytes": 12036,
+      "sha256": "0E8CA4667FB9E02401CF9504D3A1AF94F653A2599D474670BED35EAB114F7605"
+    },
+    "bench/facade.rs": {
+      "bytes": 30454,
+      "sha256": "B95DDC76B4AF6A26A5A2ED82A0B070A141117B480B8E6C30454ED267AC339460"
+    },
+    "bench/heap.rs": {
+      "bytes": 3494,
+      "sha256": "9677F4822CA67DD7615C9CF3A51693136A1A8E09255A87EF5A40386CF0771EA6"
+    }
+  },
+  "patch_sha256": "21A68BC7FD05EC8B200FD65AA9D940D7BD31967445BB5D7592DA6F5A1BC759B5",
+  "production_or_cargo_changes": false
+}

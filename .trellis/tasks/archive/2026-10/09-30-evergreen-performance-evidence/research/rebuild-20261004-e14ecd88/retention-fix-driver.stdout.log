@@ -1,0 +1,4 @@
+{"start": "a50-first-day", "pid": 55168, "now_utc": 1789862400}
+{"case": "a50-first-day", "exit_code": 0, "test_passed": true, "complete": true, "wall_secs": 166.8116763, "chunks": 2511, "chunk_wall_ms_max": 377.8812, "retry_attempts": 0}
+{"start": "a250-first-day", "pid": 43176, "now_utc": 1789862400}
+{"case": "a250-first-day", "exit_code": 0, "test_passed": true, "complete": true, "wall_secs": 682.5581155, "chunks": 7433, "chunk_wall_ms_max": 419.604, "retry_attempts": 0}

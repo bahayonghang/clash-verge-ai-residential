@@ -1,0 +1,33 @@
+{
+  "invocation_id": "20261002T135932Z-090bb8d7/grok/child",
+  "harness": "grok",
+  "phase": "child",
+  "argv": [
+    "<HOME>\\.grok\\bin\\grok.exe",
+    "--permission-mode",
+    "plan",
+    "--disable-web-search",
+    "--output-format",
+    "streaming-messages-json",
+    "--max-turns",
+    "8",
+    "-p",
+    "<PROMPT_SHA256:89127dc0c056b40c9a5d4102956bd3cfd3019f94f890183761e36bc44958d956>"
+  ],
+  "shell": false,
+  "timeout_seconds": 180,
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#grok",
+  "recorded_version_output": "grok 1.0.45 (c33bff361a6f) [alpha]",
+  "executable_sha256": "e09c0893cee4850a569bd90e7aed956ea503b34f551637d58187ca4dfb931611",
+  "prompt_sha256": "89127dc0c056b40c9a5d4102956bd3cfd3019f94f890183761e36bc44958d956",
+  "child_preparation_basis": {
+    "approved_route": "spawn_subagent(subagent_type=trellis-research)",
+    "basis_kind": "reviewed_local_prerequisite",
+    "basis_reference": {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-runs/entry-refresh-20261002T015253Z-a4336a75/final-sequence.md",
+      "locator": "执行顺序第 5–6 项；当前版本实际 schema、角色、权限与生命周期由本次 child 事件证明"
+    }
+  },
+  "basis_is_runtime_proof": false
+}

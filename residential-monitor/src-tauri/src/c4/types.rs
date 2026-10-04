@@ -297,3 +297,87 @@ pub fn health_root_keys() -> &'static [&'static str] {
         "backup",
     ]
 }
+
+#[cfg(test)]
+mod validate_rule_tests {
+    use super::*;
+
+    fn valid_rate() -> AlertRule {
+        AlertRule {
+            rule_id: "rate-cat".into(),
+            version: 1,
+            enabled: true,
+            kind: AlertKind::Rate,
+            selector_kind: SelectorKind::PrimaryCategory,
+            selector_value: Some("家宽".into()),
+            direction: Some(AlertDirection::Download),
+            threshold_value: 100,
+            recovery_threshold: Some(40),
+            period: None,
+            timezone: "UTC".into(),
+            cooldown_sec: 300,
+            quiet_start_min: None,
+            quiet_end_min: None,
+            created_utc: 0,
+            updated_utc: 0,
+        }
+    }
+
+    fn assert_invalid_rule(rule: &AlertRule, reason: &'static str) {
+        let error = validate_rule(rule).expect_err(reason);
+        assert!(
+            matches!(error, AlertError::InvalidRule(found) if found == reason),
+            "{error:?}"
+        );
+        assert_eq!(error.code(), "invalid_rule");
+    }
+
+    #[test]
+    fn validate_rule_rejects_invalid_parameters() {
+        let mut rule = valid_rate();
+        rule.rule_id.clear();
+        assert_invalid_rule(&rule, "rule id");
+
+        rule = valid_rate();
+        rule.rule_id = "x".repeat(129);
+        assert_invalid_rule(&rule, "rule id");
+
+        rule = valid_rate();
+        rule.cooldown_sec = -1;
+        assert_invalid_rule(&rule, "cooldown");
+
+        rule = valid_rate();
+        rule.threshold_value = 0;
+        assert_invalid_rule(&rule, "threshold");
+
+        rule = valid_rate();
+        rule.direction = None;
+        assert_invalid_rule(&rule, "direction");
+
+        rule = valid_rate();
+        rule.recovery_threshold = None;
+        assert_invalid_rule(&rule, "recovery");
+
+        rule = valid_rate();
+        rule.recovery_threshold = Some(100);
+        assert_invalid_rule(&rule, "hysteresis");
+
+        rule = valid_rate();
+        rule.kind = AlertKind::Health;
+        rule.selector_kind = SelectorKind::PrimaryCategory;
+        rule.direction = None;
+        rule.recovery_threshold = None;
+        assert_invalid_rule(&rule, "health selector");
+
+        rule = valid_rate();
+        rule.kind = AlertKind::PeriodUsage;
+        rule.period = None;
+        assert_invalid_rule(&rule, "period");
+
+        rule = valid_rate();
+        rule.kind = AlertKind::PeriodUsage;
+        rule.period = Some(AlertPeriod::LocalDay);
+        rule.timezone.clear();
+        assert_invalid_rule(&rule, "timezone");
+    }
+}

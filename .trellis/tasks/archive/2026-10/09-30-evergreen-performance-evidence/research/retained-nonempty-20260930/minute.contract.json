@@ -1,0 +1,17 @@
+{
+  "identity": {
+    "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-library-tests.exe",
+    "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+    "bytes": 12892160,
+    "sha256": "74ECF63AC02659AFF87AC5B6E2AE1264552E57630441E9337DB65450629BD638",
+    "source_manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462"
+  },
+  "overrides": {
+    "RESIWATCH_NONEMPTY_STAGE_DB": "C:/Users/lyh/AppData/Local/Temp/resiwatch-resource-measure-20260924-raw-fold/corpus-a250-30d/monitor.sqlite3",
+    "RESIWATCH_NONEMPTY_STAGE_OUT": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\retained-nonempty-20260930\\minute.json",
+    "RESIWATCH_NONEMPTY_STAGE_START": "1787184000",
+    "RESIWATCH_NONEMPTY_STAGE_END": "1787184060"
+  },
+  "cache": "same database read by earlier production, stage, oracle and hash; no eviction",
+  "now_utc": 1787184060
+}

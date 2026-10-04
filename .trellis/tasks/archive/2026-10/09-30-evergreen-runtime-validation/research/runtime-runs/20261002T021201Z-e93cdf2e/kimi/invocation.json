@@ -1,0 +1,22 @@
+{
+  "invocation_id": "20261002T021201Z-e93cdf2e/kimi/parent",
+  "harness": "kimi",
+  "phase": "parent",
+  "argv": [
+    "<HOME>\\.kimi-code\\bin\\kimi.exe",
+    "--plan",
+    "--output-format",
+    "stream-json",
+    "-p",
+    "<PROMPT_SHA256:6929c11cb6b906783c49256202fde9d01ce94c1cf74101591109ae4fbe4632ed>"
+  ],
+  "shell": false,
+  "timeout_seconds": 180,
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "version_source": ".trellis/tasks/09-30-evergreen-five-harness-audit/research/tool-versions.json#kimi",
+  "recorded_version_output": "2.0.0",
+  "executable_sha256": "f630b2a1cd40c275c5d2895252dbaf0c9f1879c79014aa225362f062e86573c0",
+  "prompt_sha256": "6929c11cb6b906783c49256202fde9d01ce94c1cf74101591109ae4fbe4632ed",
+  "child_preparation_basis": "NOT_APPLICABLE",
+  "basis_is_runtime_proof": false
+}

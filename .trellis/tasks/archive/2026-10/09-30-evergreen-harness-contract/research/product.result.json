@@ -1,0 +1,9 @@
+{
+  "command": "just ci",
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T12:50:20.328359+00:00",
+  "finished_utc": "2026-09-30T12:51:36.003597+00:00",
+  "exit_code": 1,
+  "raw_sha256": "962292fb85652c75f7089da3af1098e5381622d203059477d1788874bf8edcde",
+  "readable_normalization": "ANSI removed; trailing line whitespace removed; LF"
+}

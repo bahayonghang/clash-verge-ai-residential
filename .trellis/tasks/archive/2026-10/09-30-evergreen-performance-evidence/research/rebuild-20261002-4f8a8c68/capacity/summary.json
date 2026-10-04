@@ -1,0 +1,68 @@
+{
+  "cases": [
+    {
+      "case": "a50-host-30d",
+      "required_samples": 21,
+      "recorded_samples": 21,
+      "passing_samples": 21,
+      "max_wall_ms": 1788.8480999999956,
+      "status": "PASS",
+      "boundary": "21-process exact-oracle capacity gate"
+    },
+    {
+      "case": "a50-host-1d",
+      "required_samples": 21,
+      "recorded_samples": 21,
+      "passing_samples": 21,
+      "max_wall_ms": 89.78239999942161,
+      "status": "PASS",
+      "boundary": "21-process exact-oracle capacity gate"
+    },
+    {
+      "case": "a50-network-30d",
+      "required_samples": 1,
+      "recorded_samples": 1,
+      "passing_samples": 1,
+      "max_wall_ms": 1211.9570999993812,
+      "status": "PASS",
+      "boundary": "original one-sample diagnostic; not a 21-run gate"
+    },
+    {
+      "case": "a250-host-30d",
+      "required_samples": 21,
+      "recorded_samples": 21,
+      "passing_samples": 21,
+      "max_wall_ms": 7132.215599999654,
+      "status": "PASS",
+      "boundary": "21-process exact-oracle capacity gate"
+    },
+    {
+      "case": "a250-host-1d",
+      "required_samples": 21,
+      "recorded_samples": 21,
+      "passing_samples": 21,
+      "max_wall_ms": 247.02109999998356,
+      "status": "PASS",
+      "boundary": "21-process exact-oracle capacity gate"
+    },
+    {
+      "case": "a250-network-30d",
+      "required_samples": 21,
+      "recorded_samples": 21,
+      "passing_samples": 21,
+      "max_wall_ms": 6170.451499999217,
+      "status": "PASS",
+      "boundary": "21-process exact-oracle capacity gate"
+    }
+  ],
+  "expected_native_invocations": 106,
+  "recorded_native_invocations": 106,
+  "A1000": {
+    "status": "NOT_RUN",
+    "reason": "stage prerequisite for generation not met; 30d/21/10000ms requirement remains"
+  },
+  "initial_competing_load": [],
+  "competing_load_observed": [],
+  "cache": "all native queries follow preflight database reads; no physical cold-page proof",
+  "AC3": "NOT_COMPLETE"
+}

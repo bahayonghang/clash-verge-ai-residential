@@ -1,0 +1,215 @@
+{
+  "time_utc": "2026-09-30T13:03:51.617407+00:00",
+  "platforms": [
+    ".agents",
+    ".claude",
+    ".codex",
+    ".cursor",
+    ".omp",
+    ".grok",
+    ".kimi-code"
+  ],
+  "platform_count": 7,
+  "matching_files": 21,
+  "new_backups": [
+    {
+      "path": ".agents/skills/residential-rule-tuning/SKILL.md.bak-20260930T130351Z",
+      "sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "matches_before": ".agents/skills/residential-rule-tuning/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/residential-rule-tuning/reference.md.bak-20260930T130351Z",
+      "sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "matches_before": ".agents/skills/residential-rule-tuning/reference.md"
+    },
+    {
+      "path": ".agents/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260930T130351Z",
+      "sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "matches_before": ".agents/skills/residential-rule-tuning/scripts/build-inputs.js"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/SKILL.md.bak-20260930T130351Z",
+      "sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "matches_before": ".claude/skills/residential-rule-tuning/SKILL.md"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/reference.md.bak-20260930T130351Z",
+      "sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "matches_before": ".claude/skills/residential-rule-tuning/reference.md"
+    },
+    {
+      "path": ".claude/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260930T130351Z",
+      "sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "matches_before": ".claude/skills/residential-rule-tuning/scripts/build-inputs.js"
+    },
+    {
+      "path": ".codex/skills/residential-rule-tuning/SKILL.md.bak-20260930T130351Z",
+      "sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "matches_before": ".codex/skills/residential-rule-tuning/SKILL.md"
+    },
+    {
+      "path": ".codex/skills/residential-rule-tuning/reference.md.bak-20260930T130351Z",
+      "sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "matches_before": ".codex/skills/residential-rule-tuning/reference.md"
+    },
+    {
+      "path": ".codex/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260930T130351Z",
+      "sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "matches_before": ".codex/skills/residential-rule-tuning/scripts/build-inputs.js"
+    },
+    {
+      "path": ".cursor/skills/residential-rule-tuning/SKILL.md.bak-20260930T130351Z",
+      "sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "matches_before": ".cursor/skills/residential-rule-tuning/SKILL.md"
+    },
+    {
+      "path": ".cursor/skills/residential-rule-tuning/reference.md.bak-20260930T130351Z",
+      "sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "matches_before": ".cursor/skills/residential-rule-tuning/reference.md"
+    },
+    {
+      "path": ".cursor/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260930T130351Z",
+      "sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "matches_before": ".cursor/skills/residential-rule-tuning/scripts/build-inputs.js"
+    },
+    {
+      "path": ".omp/skills/residential-rule-tuning/SKILL.md.bak-20260930T130351Z",
+      "sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "matches_before": ".omp/skills/residential-rule-tuning/SKILL.md"
+    },
+    {
+      "path": ".omp/skills/residential-rule-tuning/reference.md.bak-20260930T130351Z",
+      "sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "matches_before": ".omp/skills/residential-rule-tuning/reference.md"
+    },
+    {
+      "path": ".omp/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260930T130351Z",
+      "sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "matches_before": ".omp/skills/residential-rule-tuning/scripts/build-inputs.js"
+    },
+    {
+      "path": ".grok/skills/residential-rule-tuning/SKILL.md.bak-20260930T130351Z",
+      "sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "matches_before": ".grok/skills/residential-rule-tuning/SKILL.md"
+    },
+    {
+      "path": ".grok/skills/residential-rule-tuning/reference.md.bak-20260930T130351Z",
+      "sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "matches_before": ".grok/skills/residential-rule-tuning/reference.md"
+    },
+    {
+      "path": ".grok/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260930T130351Z",
+      "sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "matches_before": ".grok/skills/residential-rule-tuning/scripts/build-inputs.js"
+    },
+    {
+      "path": ".kimi-code/skills/residential-rule-tuning/SKILL.md.bak-20260930T130351Z",
+      "sha256": "59af0e82123047234a7a8069b3e2a5073eb3c1697cb416a13645fadfe1d0935b",
+      "matches_before": ".kimi-code/skills/residential-rule-tuning/SKILL.md"
+    },
+    {
+      "path": ".kimi-code/skills/residential-rule-tuning/reference.md.bak-20260930T130351Z",
+      "sha256": "c752a91e9bd7f9f453bf7f3cabafa9a07acaa963bcd71cca5625041515482cc4",
+      "matches_before": ".kimi-code/skills/residential-rule-tuning/reference.md"
+    },
+    {
+      "path": ".kimi-code/skills/residential-rule-tuning/scripts/build-inputs.js.bak-20260930T130351Z",
+      "sha256": "67f99b81ddbcb39b2ff943c6539ed6911ce0b41538fe1e275e80e9eb2f36c036",
+      "matches_before": ".kimi-code/skills/residential-rule-tuning/scripts/build-inputs.js"
+    }
+  ],
+  "preserved_extras": 30,
+  "source_sha256": {
+    "SKILL.md": "b644d3db0a4947b4e01a7bcb341ec02d104c89cfcd43454229ca9485471dfcaa",
+    "reference.md": "6b9eeb99396817ff9337b8710e842b7549ccc4763eba8e0b108fe8ed97ad85af",
+    "scripts/build-inputs.js": "cfc32147e21b01dc766b5989a43648dabad7a22f01988c0fac6d518e72104cc1"
+  },
+  "generators": [
+    {
+      "platform": ".agents",
+      "routing": 26,
+      "supported": 13,
+      "unsupported": 13,
+      "extra_anyrouter": [
+        "anyrouter.top"
+      ],
+      "extra_unsupported": true,
+      "extra_supported": false,
+      "extra_anyrouter_unsupported": false
+    },
+    {
+      "platform": ".claude",
+      "routing": 26,
+      "supported": 13,
+      "unsupported": 13,
+      "extra_anyrouter": [
+        "anyrouter.top"
+      ],
+      "extra_unsupported": true,
+      "extra_supported": false,
+      "extra_anyrouter_unsupported": false
+    },
+    {
+      "platform": ".codex",
+      "routing": 26,
+      "supported": 13,
+      "unsupported": 13,
+      "extra_anyrouter": [
+        "anyrouter.top"
+      ],
+      "extra_unsupported": true,
+      "extra_supported": false,
+      "extra_anyrouter_unsupported": false
+    },
+    {
+      "platform": ".cursor",
+      "routing": 26,
+      "supported": 13,
+      "unsupported": 13,
+      "extra_anyrouter": [
+        "anyrouter.top"
+      ],
+      "extra_unsupported": true,
+      "extra_supported": false,
+      "extra_anyrouter_unsupported": false
+    },
+    {
+      "platform": ".omp",
+      "routing": 26,
+      "supported": 13,
+      "unsupported": 13,
+      "extra_anyrouter": [
+        "anyrouter.top"
+      ],
+      "extra_unsupported": true,
+      "extra_supported": false,
+      "extra_anyrouter_unsupported": false
+    },
+    {
+      "platform": ".grok",
+      "routing": 26,
+      "supported": 13,
+      "unsupported": 13,
+      "extra_anyrouter": [
+        "anyrouter.top"
+      ],
+      "extra_unsupported": true,
+      "extra_supported": false,
+      "extra_anyrouter_unsupported": false
+    },
+    {
+      "platform": ".kimi-code",
+      "routing": 26,
+      "supported": 13,
+      "unsupported": 13,
+      "extra_anyrouter": [
+        "anyrouter.top"
+      ],
+      "extra_unsupported": true,
+      "extra_supported": false,
+      "extra_anyrouter_unsupported": false
+    }
+  ],
+  "runtime_clients": "UNVERIFIED; separate T06 scope",
+  "private_toml_js": "Not opened or written by this delivery"
+}

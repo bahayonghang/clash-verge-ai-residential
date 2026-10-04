@@ -1,0 +1,75 @@
+{
+  "date": "2026-09-30",
+  "timezone": "America/Chicago",
+  "source_sha": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+  "checks": [
+    {
+      "command": "just ci",
+      "exit_code": 0,
+      "node_pass": 139,
+      "vitest_files": 73,
+      "vitest_pass": 300,
+      "rust_unit_pass": 542,
+      "rust_kill_gate_pass": 3,
+      "rust_ignored": 6,
+      "rust_doctest_count": 0,
+      "log": "just-ci.log"
+    },
+    {
+      "command": "just docs-build",
+      "exit_code": 0,
+      "clean_dependency_install": false,
+      "log": "docs-build.log"
+    },
+    {
+      "command": "actionlint .github/workflows/ci.yml",
+      "exit_code": 0,
+      "log": "actionlint.log"
+    },
+    {
+      "command": "node scripts/install-agent-skills.js --check",
+      "exit_code": 1,
+      "platform_count": 7,
+      "different_files": 21,
+      "log": "skill-check.log"
+    },
+    {
+      "command": "npm --prefix residential-monitor audit --json",
+      "exit_code": 1,
+      "high": 2,
+      "log": "npm-audit-monitor.json"
+    },
+    {
+      "command": "npm --prefix residential-monitor audit --omit=dev --json",
+      "exit_code": 0,
+      "log": "npm-audit-monitor-prod.json"
+    },
+    {
+      "command": "npm --prefix docs audit --json",
+      "exit_code": 0,
+      "log": "npm-audit-docs.json"
+    },
+    {
+      "command": "cargo audit --file residential-monitor/src-tauri/Cargo.lock --json",
+      "exit_code": 0,
+      "vulnerabilities": 0,
+      "unmaintained": 6,
+      "unsound": 1,
+      "log": "cargo-audit.json"
+    }
+  ],
+  "performance_paths": {
+    "baseline_exe_exists": false,
+    "a250_generated_db_exists": true,
+    "db_opened_in_this_audit": false
+  },
+  "unverified": [
+    "five harness fresh sessions",
+    "current source SHA hosted CI",
+    "installed Windows/WebView/tray/credentials",
+    "formal A1000 30-day capacity",
+    "same-window AB",
+    "30-minute peak",
+    "24-hour soak"
+  ]
+}

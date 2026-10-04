@@ -1,0 +1,6 @@
+   Compiling residential-monitor v0.3.0 (D:\Documents\Code\Github\clash-verge-ai-residential\residential-monitor\src-tauri)
+mbx[progress]: 15s elapsed; 0 hits, 0 misses, 0 bypassed, 0 not looked up; ~0s compiler work saved
+mbx[progress]: 30s elapsed; 0 hits, 0 misses, 0 bypassed, 0 not looked up; ~0s compiler work saved
+    Finished `release` profile [optimized] target(s) in 34.14s
+mbx[cache]: 0 hits, 1 misses, 2 bypassed; 0 B downloaded, 0 B uploaded, 74.0 MiB stored locally
+mbx[savings]: 35m 5s of compilation avoided across 947 builds. imagine the fan noise. now stop.

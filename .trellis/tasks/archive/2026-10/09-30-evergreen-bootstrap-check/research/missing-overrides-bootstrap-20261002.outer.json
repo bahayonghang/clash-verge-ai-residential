@@ -1,0 +1,15 @@
+{
+  "python": "C:\\Program Files\\Python314\\python.exe",
+  "argv": [
+    "C:\\Program Files\\Python314\\python.exe",
+    "-B",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\run-missing-overrides-bootstrap-20261002.py"
+  ],
+  "started_utc": "2026-10-02T14:14:43.2696966Z",
+  "finished_utc": "2026-10-02T14:15:05.9067438Z",
+  "wall_seconds": 22.6333435,
+  "driver_exit_observed": 1,
+  "powershell_intended_exit": 1,
+  "native_exits": "独立见每步receipt",
+  "outer_exit_observed": "由exec工具完成后单独补记"
+}

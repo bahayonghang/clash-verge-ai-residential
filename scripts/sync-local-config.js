@@ -24,6 +24,9 @@ const REQUIRED_KEYS = [
 const SWITCH_CONFIG_FIELDS = Object.freeze([
   { table: "routing", key: "openai_shared_dependencies", constant: "ROUTE_OPENAI_SHARED_DEPENDENCIES", type: "boolean" },
   { table: "routing", key: "openai_core", constant: "ROUTE_OPENAI_CORE", type: "boolean" },
+  { table: "routing", key: "anthropic_core", constant: "ROUTE_ANTHROPIC_CORE", type: "boolean" },
+  { table: "routing", key: "gemini_api_core", constant: "ROUTE_GEMINI_API_CORE", type: "boolean" },
+  { table: "routing", key: "antigravity_core", constant: "ROUTE_ANTIGRAVITY_CORE", type: "boolean" },
   { table: "routing", key: "openai_auth", constant: "ROUTE_OPENAI_AUTH", type: "boolean" },
   { table: "routing", key: "openai_web_assets", constant: "ROUTE_OPENAI_WEB_ASSETS", type: "boolean" },
   { table: "routing", key: "claude_shared_dependencies", constant: "ROUTE_CLAUDE_SHARED_DEPENDENCIES", type: "boolean" },
@@ -36,6 +39,8 @@ const SWITCH_CONFIG_FIELDS = Object.freeze([
   { table: "routing", key: "cursor_repository_indexing", constant: "ROUTE_CURSOR_REPOSITORY_INDEXING", type: "boolean" },
   { table: "routing", key: "grok_core", constant: "ROUTE_GROK_CORE", type: "boolean" },
   { table: "routing", key: "grok_web_assets", constant: "ROUTE_GROK_WEB_ASSETS", type: "boolean" },
+  { table: "routing", key: "extra", constant: "ROUTE_EXTRA", type: "boolean" },
+  { table: "routing", key: "extra_anyrouter", constant: "ROUTE_EXTRA_ANYROUTER", type: "boolean" },
   { table: "routing", key: "cursor_process_fallback", constant: "ROUTE_CURSOR_PROCESS_FALLBACK", type: "boolean" },
   { table: "routing", key: "claude_code_auxiliary", constant: "ROUTE_CLAUDE_CODE_AUXILIARY", type: "boolean" },
   { table: "routing", key: "ai_process_fallback", constant: "ENABLE_AI_PROCESS_FALLBACK", type: "boolean" },

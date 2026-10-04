@@ -220,9 +220,12 @@ describe("排名表未知行与能力", () => {
     expect(download).toBeDefined();
     expect(download).toContain('aria-sort="descending"');
     expect(download).toContain('data-sort-icon="descending"');
-    expect((thead.match(/data-sort-icon=/g) ?? []).length).toBe(4);
+    expect((thead.match(/data-sort-icon=/g) ?? []).length).toBe(3);
     expect(thead).toMatch(/aria-sort="none"/);
-    expect((thead.match(/<button/g) ?? []).length).toBe(4);
+    expect((thead.match(/<button/g) ?? []).length).toBe(3);
+    const connections = thead.split("</th>").find((chunk) => chunk.includes(">连接<") || chunk.endsWith(">连接"));
+    expect(connections).toBeDefined();
+    expect(connections).not.toContain("<button");
     expect(thead).toContain(">排名</th>");
     expect(thead).toContain("份额");
     expect(thead).toContain("归属");
@@ -375,6 +378,72 @@ describe("排名表归属列", () => {
     expect(html).not.toContain('data-exit="DIRECT"');
     expect(html).toContain("未知");
     expect(html).toContain('data-identity="old.example"');
+  });
+});
+
+describe("排名表保持后端序", () => {
+  const sources = import.meta.glob(["./rank-table.tsx"], {
+    query: "?raw",
+    eager: true,
+    import: "default"
+  }) as Record<string, string>;
+
+  it("源码不对 rankings 做聚合字节列 rows.sort", () => {
+    const source = Object.values(sources)[0] ?? "";
+    expect(source).not.toMatch(/rows\.sort\s*\(/);
+    expect(source).not.toMatch(/left\.upload/);
+    expect(source).not.toMatch(/left\.download/);
+    expect(source).not.toMatch(/left\.connectionCount/);
+  });
+
+  it("渲染顺序与后端 rankings 一致，不把 download Top N 重排成 upload 冠军", () => {
+    const html = renderToStaticMarkup(
+      <RankTable
+        locale="zh"
+        kind="host"
+        result={report({
+          queryEcho: {
+            ...report().queryEcho,
+            sort: { field: "upload", descending: true },
+            topN: 2
+          },
+          rankings: [
+            {
+              identity: "up.example",
+              label: "up.example",
+              upload: 90,
+              download: 10,
+              connectionCount: 1,
+              activeDurationSec: 1,
+              primaryExit: "DIRECT",
+              exitMixed: false
+            },
+            {
+              identity: "down.example",
+              label: "down.example",
+              upload: 10,
+              download: 90,
+              connectionCount: 2,
+              activeDurationSec: 1,
+              primaryExit: "DIRECT",
+              exitMixed: false
+            }
+          ]
+        })}
+        loading={false}
+        errorZh={null}
+        selectedIdentity={null}
+        onSelect={() => undefined}
+        sort={{ field: "upload", descending: true }}
+      />
+    );
+    const first = html.indexOf('data-identity="up.example"');
+    const second = html.indexOf('data-identity="down.example"');
+    expect(first).toBeGreaterThan(-1);
+    expect(second).toBeGreaterThan(first);
+    const uploadHead = html.slice(html.indexOf("<thead"), html.indexOf("</thead>"));
+    const upload = uploadHead.split("</th>").find((chunk) => chunk.includes(">上行<") || chunk.endsWith(">上行"));
+    expect(upload).toContain('aria-sort="descending"');
   });
 });
 

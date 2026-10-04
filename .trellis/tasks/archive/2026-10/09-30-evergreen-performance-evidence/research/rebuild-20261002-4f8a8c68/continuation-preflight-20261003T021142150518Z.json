@@ -1,0 +1,1059 @@
+{
+  "observed_utc": "2026-10-03T02:11:42.150518+00:00",
+  "observed_local": "2026-10-02T21:11:42.150518-05:00",
+  "local_timezone": "America/Chicago; Windows TimeZoneInfo current offset -05:00 verified; no Python tzdata installed",
+  "status": "BLOCKED_NOT_RUN",
+  "technical_binding_status": "FAIL",
+  "state_summary": {
+    "status": "P2_GENERATION_ORACLE_PROBES_ENDED; WAITING_P3_RUNNER_BINDING",
+    "baseline_revision": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+    "formal_matrix": "NOT_RUN",
+    "formal_primary": "NOT_RUN",
+    "formal_capacity": "NOT_RUN",
+    "corpus_generation": "PASS_A50_A250_FULL_30D",
+    "sql_oracle": "PASS_SQL_ORACLE_NATIVE_NOT_RUN",
+    "stage_probes": {
+      "a250-minute-production": "PASS_DIAGNOSTIC",
+      "a250-30d-production": "FAIL_DIAGNOSTIC",
+      "a250-30d-all": "NOT_RUN",
+      "a250-30d-residential": "NOT_RUN"
+    },
+    "generator_driver": "STOPPED_FIRST_FAILURE (driver KeyError after production DeadlineExceeded); see p2-completion/bind.json"
+  },
+  "scope": "Only two new continuation-preflight artifacts. No product/old runner/old evidence/state/task meta/spec/docs/Git index mutation. No runner, native, tests, build, install, new client, quiet-probes, DB open or DB hash.",
+  "checks": [
+    {
+      "name": "repository source",
+      "status": "PASS",
+      "details": {
+        "files": 108,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "baseline source",
+      "status": "PASS",
+      "details": {
+        "files": 103,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "candidate source",
+      "status": "PASS",
+      "details": {
+        "files": 108,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "repository dist",
+      "status": "PASS",
+      "details": {
+        "files": 36,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "baseline dist",
+      "status": "PASS",
+      "details": {
+        "files": 36,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "candidate dist",
+      "status": "PASS",
+      "details": {
+        "files": 36,
+        "mismatches": []
+      }
+    },
+    {
+      "name": "candidate copy manifest",
+      "status": "PASS",
+      "details": {
+        "sha256": "FB0AA37772BC274FF8637BD5AD049C322B569CBF62BD27C6123651A1FC1FA35B"
+      }
+    },
+    {
+      "name": "baseline-monitor-bench.exe",
+      "status": "PASS",
+      "details": {
+        "path": {
+          "sha256": "D590EF1082718856F0F92F865A260FE99D530F8DC05AE2DB4501157FE110F8A4",
+          "bytes": 5748224
+        },
+        "source": {
+          "sha256": "D590EF1082718856F0F92F865A260FE99D530F8DC05AE2DB4501157FE110F8A4",
+          "bytes": 5748224
+        }
+      }
+    },
+    {
+      "name": "candidate-monitor-bench.exe",
+      "status": "PASS",
+      "details": {
+        "path": {
+          "sha256": "AAF4A5ED3626FFA0502948F1911027ECA888E2F09460C1D86AD94F7CFFB51B9B",
+          "bytes": 6258688
+        },
+        "source": {
+          "sha256": "AAF4A5ED3626FFA0502948F1911027ECA888E2F09460C1D86AD94F7CFFB51B9B",
+          "bytes": 6258688
+        }
+      }
+    },
+    {
+      "name": "candidate-monitor-db.exe",
+      "status": "PASS",
+      "details": {
+        "path": {
+          "sha256": "F2AC7CF423513AA28127834003F676D5D6039479B41D4351042002DFE5F0324C",
+          "bytes": 5131264
+        },
+        "source": {
+          "sha256": "F2AC7CF423513AA28127834003F676D5D6039479B41D4351042002DFE5F0324C",
+          "bytes": 5131264
+        }
+      }
+    },
+    {
+      "name": "candidate-library-tests.exe",
+      "status": "PASS",
+      "details": {
+        "path": {
+          "sha256": "A6AE2DDF74E77EA6FA4A5E5A79DAF00714C1FF0A24251A3B5A49A58537DAD2EF",
+          "bytes": 12883968
+        },
+        "source": {
+          "sha256": "A6AE2DDF74E77EA6FA4A5E5A79DAF00714C1FF0A24251A3B5A49A58537DAD2EF",
+          "bytes": 12883968
+        }
+      }
+    },
+    {
+      "name": "reviewed hash original run-formal-replay.py",
+      "status": "PASS",
+      "details": {
+        "sha256": "6C88ACCA5994C02266F262FBC185EBF9D09DE1AB9EC96BAA302993A0CBF381E9"
+      }
+    },
+    {
+      "name": "reviewed hash original run-retained-capacity.py",
+      "status": "PASS",
+      "details": {
+        "sha256": "9FA8C225BEF9A9F7718676D7A5E2D00B1E174270784C99094ED5DCC2F8D9FAA4"
+      }
+    },
+    {
+      "name": "reviewed hash original run-live-recorded.py",
+      "status": "PASS",
+      "details": {
+        "sha256": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C"
+      }
+    },
+    {
+      "name": "reviewed hash runners/run-formal-replay.py",
+      "status": "PASS",
+      "details": {
+        "sha256": "3009F02E3CEB42DFB1C01C0FB234F1BC677F345090D1D91347C96B5D408CEE90"
+      }
+    },
+    {
+      "name": "reviewed hash runners/run-capacity.py",
+      "status": "PASS",
+      "details": {
+        "sha256": "AA33F884E0A464CEEBDF4338C55500B067B47301747039F04BBDAE79E1609FD1"
+      }
+    },
+    {
+      "name": "reviewed hash runners/run-formal-replay.patch",
+      "status": "PASS",
+      "details": {
+        "sha256": "111B4CA05C6679AA95F97E61FD47F3AA415B75929B46296D95AF12D62FCF4D90"
+      }
+    },
+    {
+      "name": "reviewed hash runners/run-capacity.patch",
+      "status": "PASS",
+      "details": {
+        "sha256": "5AF47D8A8A49B95EF78B8F35138BF1586D430AD64B8F6D5C3871E0BEAE831B7C"
+      }
+    },
+    {
+      "name": "reviewed hash runners/run-formal-replay.v1.patch",
+      "status": "FAIL",
+      "details": {
+        "sha256": "742E5AB8C0DEA8C349AF5EE155ED5874B3DC73291F9E5D081D32385F297D662D"
+      }
+    },
+    {
+      "name": "reviewed hash runners/run-capacity.v1.patch",
+      "status": "FAIL",
+      "details": {
+        "sha256": "EC3D715B683311127976B595E93C99F241AA121CF078C0429266904C755439D0"
+      }
+    },
+    {
+      "name": "reviewed hash runners/run-live-recorded.py",
+      "status": "PASS",
+      "details": {
+        "sha256": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C"
+      }
+    },
+    {
+      "name": "reviewed hash p2-completion.py",
+      "status": "PASS",
+      "details": {
+        "sha256": "ECDEC6DF5821886A0C0DFC9016A4A86433A2F2B315E332C573F641A693DCB9FD"
+      }
+    },
+    {
+      "name": "reviewed hash generator.py",
+      "status": "PASS",
+      "details": {
+        "sha256": "086E7770DEB82B7F8EBD54D0D4BA54E7ED1233238989BCB5E4EB3C64EC837822"
+      }
+    },
+    {
+      "name": "P1/P3 conclusions",
+      "status": "PASS",
+      "details": {
+        "P1": "P1_IDENTITY_REVIEW_PASS",
+        "P3": "P3_RUNNER_RECHECK_PASS"
+      }
+    },
+    {
+      "name": "reviewed load mechanisms equal",
+      "status": "PASS",
+      "details": {
+        "mode": "AST parse only; no import or execution"
+      }
+    },
+    {
+      "name": "fresh-only outputs",
+      "status": "PASS",
+      "details": [
+        {
+          "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\matrix",
+          "exists": false
+        },
+        {
+          "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\primary",
+          "exists": false
+        },
+        {
+          "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\capacity",
+          "exists": false
+        },
+        {
+          "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\data\\matrix",
+          "exists": false
+        },
+        {
+          "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\data\\primary",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "name": "fixed roots and reparse check",
+      "status": "PASS",
+      "details": {
+        "reparse_points": []
+      }
+    },
+    {
+      "name": "P2 receipt generate-a50",
+      "status": "PASS",
+      "details": {
+        "native_exit": 0,
+        "logs": [
+          {
+            "channel": "stdout",
+            "pass": true,
+            "raw_sha256": "2B6323D24492EAF263082F29995BE93D653CA95ABC5BB3D7E23594F7502DD5EE",
+            "bytes": 29005
+          },
+          {
+            "channel": "stderr",
+            "pass": true,
+            "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+            "bytes": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "P2 receipt generate-a250",
+      "status": "PASS",
+      "details": {
+        "native_exit": 0,
+        "logs": [
+          {
+            "channel": "stdout",
+            "pass": true,
+            "raw_sha256": "68FDB95E80A9C4BE6FB3EED6A39A05097F288A184BEF8D93F45A9FCB95CF22EE",
+            "bytes": 29089
+          },
+          {
+            "channel": "stderr",
+            "pass": true,
+            "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+            "bytes": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "P2 receipt sql-oracle",
+      "status": "PASS",
+      "details": {
+        "native_exit": 0,
+        "logs": [
+          {
+            "channel": "stdout",
+            "pass": true,
+            "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+            "bytes": 0
+          },
+          {
+            "channel": "stderr",
+            "pass": true,
+            "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+            "bytes": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "P2 receipt test-list",
+      "status": "PASS",
+      "details": {
+        "native_exit": 0,
+        "logs": [
+          {
+            "channel": "stdout",
+            "pass": true,
+            "raw_sha256": "D88A577F329B7069D43EF2EDB81E8581BD713D622B5057C21AC9AF6D622D15CD",
+            "bytes": 447
+          },
+          {
+            "channel": "stderr",
+            "pass": true,
+            "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+            "bytes": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "P2 receipt probe-a250-minute-production",
+      "status": "PASS",
+      "details": {
+        "native_exit": 0,
+        "logs": [
+          {
+            "channel": "stdout",
+            "pass": true,
+            "raw_sha256": "A38D3E1B14D05D7924A004215FD988A1A895FF15A5A7302ABD9524B680673931",
+            "bytes": 199
+          },
+          {
+            "channel": "stderr",
+            "pass": true,
+            "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+            "bytes": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "P2 receipt probe-a250-30d-production",
+      "status": "PASS",
+      "details": {
+        "native_exit": 0,
+        "logs": [
+          {
+            "channel": "stdout",
+            "pass": true,
+            "raw_sha256": "21B010F6AB1EB94E83A8E635A3EF6BBBB6DDF73FB872A13C189A8DFA7B73D699",
+            "bytes": 200
+          },
+          {
+            "channel": "stderr",
+            "pass": true,
+            "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+            "bytes": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "P2 corpus/oracle A50",
+      "status": "PASS",
+      "details": {
+        "active": 50,
+        "counts": {
+          "minutes": 2160000,
+          "sessions": 432000,
+          "chains": 1296000,
+          "receipts": 2592000
+        },
+        "db_bytes_live": 544940032,
+        "db_hash_from_P2": "E93A7807D2FD9157A95504AD3CCE29954B68317F8D6E0D77C8EB249459FF28E3",
+        "marker_hash_live": "00C934B4E355E6A212AE13DE334EEEE418F8B57E45B54F1AD8C835BBFFE95765",
+        "sidecars_live": {
+          "-wal": 0,
+          "-shm": 32768
+        },
+        "oracle_receipt_sha256": "FBC2A6E714A95EB89A56AE301992F724B2861899C8693C28996C7EBB2C508D78",
+        "oracle_end_utc": "2026-10-02T15:28:41.929438+00:00",
+        "live_db_hash": "NOT_RUN",
+        "live_SQLite_open": "NOT_RUN"
+      }
+    },
+    {
+      "name": "P2 corpus/oracle A250",
+      "status": "PASS",
+      "details": {
+        "active": 250,
+        "counts": {
+          "minutes": 10800000,
+          "sessions": 2160000,
+          "chains": 6480000,
+          "receipts": 2592000
+        },
+        "db_bytes_live": 1697222656,
+        "db_hash_from_P2": "DA44A49A3701025F1AA321471A5C6AB1FC066126C451D26CF865D2D6DDD7E900",
+        "marker_hash_live": "EFB0A47974D37DCBCEE0F744F2A85FE8B0239484262BF82BCCB79BD5B055730D",
+        "sidecars_live": {
+          "-wal": 0,
+          "-shm": 32768
+        },
+        "oracle_receipt_sha256": "9E99BCBEB17C973E3A5FCC3A6FE38D5C4BFC700C18487528D89F94BD96C41F58",
+        "oracle_end_utc": "2026-10-02T15:29:50.976676+00:00",
+        "live_db_hash": "NOT_RUN",
+        "live_SQLite_open": "NOT_RUN"
+      }
+    },
+    {
+      "name": "oracle source and SQL binding",
+      "status": "PASS",
+      "details": {
+        "status": "PASS_SQL_ORACLE_NATIVE_NOT_RUN",
+        "summary_sha256": "7D12FD49A84C661C0E98494FD72D5B3F058D1D1C573628AD505FD206841B92DB"
+      }
+    },
+    {
+      "name": "P2 first failures separate",
+      "status": "PASS",
+      "details": {
+        "driver_status": "STOPPED_FIRST_FAILURE",
+        "driver_error_type": "KeyError",
+        "driver_error": "'upload'",
+        "driver_exit": 1,
+        "production": {
+          "error": "DeadlineExceeded(\"report query\")",
+          "status": "error"
+        },
+        "test_native_exit": 0
+      }
+    },
+    {
+      "name": "state status and formal NOT_RUN",
+      "status": "PASS",
+      "details": {
+        "status": "P2_GENERATION_ORACLE_PROBES_ENDED; WAITING_P3_RUNNER_BINDING",
+        "formal_matrix": "NOT_RUN",
+        "formal_primary": "NOT_RUN",
+        "formal_capacity": "NOT_RUN"
+      }
+    },
+    {
+      "name": "protected state/first failures unchanged",
+      "status": "PASS",
+      "details": {
+        "sha256": {
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\state.json": "F53BCF2C81CE7BA6FCA38A4E477BCF8FC76E4A0005E18838B995F9B8CC5A0B02",
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\generator-driver.receipt.json": "BA9B5EC3AA2676DE742EBB86646D06966E22656886A12CAD25F731530F7D5F2D",
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\p2-completion\\bind.json": "F766E8E625F950F8C58FE59866B73BC867C64B0908263CA82FCD6662AC0E43CB",
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\generator\\probes\\a250-30d-production.json": "9CEB69A063D75504E0D5961414949F1227AC81B5CFF99CA0927CE1A11DF878AF"
+        }
+      }
+    }
+  ],
+  "program_bindings": {
+    "baseline-monitor-bench.exe": {
+      "copy_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\baseline-monitor-bench.exe",
+      "compiler_artifact_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\targets\\baseline\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+      "expected_sha256": "D590EF1082718856F0F92F865A260FE99D530F8DC05AE2DB4501157FE110F8A4",
+      "actual": {
+        "path": {
+          "sha256": "D590EF1082718856F0F92F865A260FE99D530F8DC05AE2DB4501157FE110F8A4",
+          "bytes": 5748224
+        },
+        "source": {
+          "sha256": "D590EF1082718856F0F92F865A260FE99D530F8DC05AE2DB4501157FE110F8A4",
+          "bytes": 5748224
+        }
+      }
+    },
+    "candidate-monitor-bench.exe": {
+      "copy_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\candidate-monitor-bench.exe",
+      "compiler_artifact_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+      "expected_sha256": "AAF4A5ED3626FFA0502948F1911027ECA888E2F09460C1D86AD94F7CFFB51B9B",
+      "actual": {
+        "path": {
+          "sha256": "AAF4A5ED3626FFA0502948F1911027ECA888E2F09460C1D86AD94F7CFFB51B9B",
+          "bytes": 6258688
+        },
+        "source": {
+          "sha256": "AAF4A5ED3626FFA0502948F1911027ECA888E2F09460C1D86AD94F7CFFB51B9B",
+          "bytes": 6258688
+        }
+      }
+    },
+    "candidate-monitor-db.exe": {
+      "copy_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\candidate-monitor-db.exe",
+      "compiler_artifact_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+      "expected_sha256": "F2AC7CF423513AA28127834003F676D5D6039479B41D4351042002DFE5F0324C",
+      "actual": {
+        "path": {
+          "sha256": "F2AC7CF423513AA28127834003F676D5D6039479B41D4351042002DFE5F0324C",
+          "bytes": 5131264
+        },
+        "source": {
+          "sha256": "F2AC7CF423513AA28127834003F676D5D6039479B41D4351042002DFE5F0324C",
+          "bytes": 5131264
+        }
+      }
+    },
+    "candidate-library-tests.exe": {
+      "copy_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\candidate-library-tests.exe",
+      "compiler_artifact_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+      "expected_sha256": "A6AE2DDF74E77EA6FA4A5E5A79DAF00714C1FF0A24251A3B5A49A58537DAD2EF",
+      "actual": {
+        "path": {
+          "sha256": "A6AE2DDF74E77EA6FA4A5E5A79DAF00714C1FF0A24251A3B5A49A58537DAD2EF",
+          "bytes": 12883968
+        },
+        "source": {
+          "sha256": "A6AE2DDF74E77EA6FA4A5E5A79DAF00714C1FF0A24251A3B5A49A58537DAD2EF",
+          "bytes": 12883968
+        }
+      }
+    }
+  },
+  "reviewed_hashes": {
+    "original run-formal-replay.py": {
+      "sha256": "6C88ACCA5994C02266F262FBC185EBF9D09DE1AB9EC96BAA302993A0CBF381E9",
+      "expected": "6C88ACCA5994C02266F262FBC185EBF9D09DE1AB9EC96BAA302993A0CBF381E9"
+    },
+    "original run-retained-capacity.py": {
+      "sha256": "9FA8C225BEF9A9F7718676D7A5E2D00B1E174270784C99094ED5DCC2F8D9FAA4",
+      "expected": "9FA8C225BEF9A9F7718676D7A5E2D00B1E174270784C99094ED5DCC2F8D9FAA4"
+    },
+    "original run-live-recorded.py": {
+      "sha256": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C",
+      "expected": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C"
+    },
+    "runners/run-formal-replay.py": {
+      "sha256": "3009F02E3CEB42DFB1C01C0FB234F1BC677F345090D1D91347C96B5D408CEE90",
+      "expected": "3009F02E3CEB42DFB1C01C0FB234F1BC677F345090D1D91347C96B5D408CEE90"
+    },
+    "runners/run-capacity.py": {
+      "sha256": "AA33F884E0A464CEEBDF4338C55500B067B47301747039F04BBDAE79E1609FD1",
+      "expected": "AA33F884E0A464CEEBDF4338C55500B067B47301747039F04BBDAE79E1609FD1"
+    },
+    "runners/run-formal-replay.patch": {
+      "sha256": "111B4CA05C6679AA95F97E61FD47F3AA415B75929B46296D95AF12D62FCF4D90",
+      "expected": "111B4CA05C6679AA95F97E61FD47F3AA415B75929B46296D95AF12D62FCF4D90"
+    },
+    "runners/run-capacity.patch": {
+      "sha256": "5AF47D8A8A49B95EF78B8F35138BF1586D430AD64B8F6D5C3871E0BEAE831B7C",
+      "expected": "5AF47D8A8A49B95EF78B8F35138BF1586D430AD64B8F6D5C3871E0BEAE831B7C"
+    },
+    "runners/run-formal-replay.v1.patch": {
+      "sha256": "742E5AB8C0DEA8C349AF5EE155ED5874B3DC73291F9E5D081D32385F297D662D",
+      "expected": "742E5AB8C0DEA8C349AF5EE155ED5874B3DC73291F9E5D081D32385F297D662D (unchanged from first review)"
+    },
+    "runners/run-capacity.v1.patch": {
+      "sha256": "EC3D715B683311127976B595E93C99F241AA121CF078C0429266904C755439D0",
+      "expected": "EC3D715B683311127976B595E93C99F241AA121CF078C0429266904C755439D0 (unchanged from first review)"
+    },
+    "runners/run-live-recorded.py": {
+      "sha256": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C",
+      "expected": "88550BB4FCA23D98A5E74ABE7AEEDAB18D1CE7731CF5D890638A0E8F36219F5C"
+    },
+    "p2-completion.py": {
+      "sha256": "ECDEC6DF5821886A0C0DFC9016A4A86433A2F2B315E332C573F641A693DCB9FD",
+      "expected": "ECDEC6DF5821886A0C0DFC9016A4A86433A2F2B315E332C573F641A693DCB9FD"
+    },
+    "generator.py": {
+      "sha256": "086E7770DEB82B7F8EBD54D0D4BA54E7ED1233238989BCB5E4EB3C64EC837822",
+      "expected": "086E7770DEB82B7F8EBD54D0D4BA54E7ED1233238989BCB5E4EB3C64EC837822"
+    }
+  },
+  "P2_native_receipts": [
+    {
+      "name": "generate-a50",
+      "sha256": "E1A199BC5B5A878F116DBB96F598B7CB993CA8448429319D59380EBB4CA9A647",
+      "native_exit": 0,
+      "wall_seconds": 83.61299190000136,
+      "started_utc": "2026-10-02T15:24:21.646630+00:00",
+      "ended_utc": "2026-10-02T15:25:45.293741+00:00",
+      "argv": [
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\candidate-monitor-bench.exe",
+        "generate-corpus",
+        "--average-active",
+        "50",
+        "--days",
+        "30",
+        "--seed",
+        "20260919",
+        "--start-utc",
+        "1787184000",
+        "--dir",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\corpus-a50-30d"
+      ],
+      "logs": [
+        {
+          "channel": "stdout",
+          "pass": true,
+          "raw_sha256": "2B6323D24492EAF263082F29995BE93D653CA95ABC5BB3D7E23594F7502DD5EE",
+          "bytes": 29005
+        },
+        {
+          "channel": "stderr",
+          "pass": true,
+          "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "name": "generate-a250",
+      "sha256": "DCF2A3741F2A8D57C963E8974DE5914EB8E2E3CCB7A43883D5A6E4E5B9439DEB",
+      "native_exit": 0,
+      "wall_seconds": 161.67540560000634,
+      "started_utc": "2026-10-02T15:25:45.622082+00:00",
+      "ended_utc": "2026-10-02T15:28:27.339144+00:00",
+      "argv": [
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\candidate-monitor-bench.exe",
+        "generate-corpus",
+        "--average-active",
+        "250",
+        "--days",
+        "30",
+        "--seed",
+        "20260919",
+        "--start-utc",
+        "1787184000",
+        "--dir",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\corpus-a250-30d"
+      ],
+      "logs": [
+        {
+          "channel": "stdout",
+          "pass": true,
+          "raw_sha256": "68FDB95E80A9C4BE6FB3EED6A39A05097F288A184BEF8D93F45A9FCB95CF22EE",
+          "bytes": 29089
+        },
+        {
+          "channel": "stderr",
+          "pass": true,
+          "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "name": "sql-oracle",
+      "sha256": "23A583E8662F06D01A1BE11B70F451454030B3AFCD01F85B9BA28A3CF8767594",
+      "native_exit": 0,
+      "wall_seconds": 83.09517329999653,
+      "started_utc": "2026-10-02T15:28:28.163258+00:00",
+      "ended_utc": "2026-10-02T15:29:51.309491+00:00",
+      "argv": [
+        "C:\\Program Files\\Python314\\python.exe",
+        "-B",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\oracle\\read-corpus-oracle.py",
+        "--a50-db",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\corpus-a50-30d\\monitor.sqlite3",
+        "--a50-db-sha256",
+        "E93A7807D2FD9157A95504AD3CCE29954B68317F8D6E0D77C8EB249459FF28E3",
+        "--a50-marker-sha256",
+        "00C934B4E355E6A212AE13DE334EEEE418F8B57E45B54F1AD8C835BBFFE95765",
+        "--a250-db",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\corpus-a250-30d\\monitor.sqlite3",
+        "--a250-db-sha256",
+        "DA44A49A3701025F1AA321471A5C6AB1FC066126C451D26CF865D2D6DDD7E900",
+        "--a250-marker-sha256",
+        "EFB0A47974D37DCBCEE0F744F2A85FE8B0239484262BF82BCCB79BD5B055730D",
+        "--output-dir",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\oracle\\run-20261002"
+      ],
+      "logs": [
+        {
+          "channel": "stdout",
+          "pass": true,
+          "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+          "bytes": 0
+        },
+        {
+          "channel": "stderr",
+          "pass": true,
+          "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "name": "test-list",
+      "sha256": "D8BEE399406CC465B02496CAB4FBC19DA61B6FF0FD3EC4CFDE8563DC7E54313D",
+      "native_exit": 0,
+      "wall_seconds": 0.5680491000020993,
+      "started_utc": "2026-10-02T15:29:51.312904+00:00",
+      "ended_utc": "2026-10-02T15:29:51.920215+00:00",
+      "argv": [
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\candidate-library-tests.exe",
+        "--list",
+        "--ignored"
+      ],
+      "logs": [
+        {
+          "channel": "stdout",
+          "pass": true,
+          "raw_sha256": "D88A577F329B7069D43EF2EDB81E8581BD713D622B5057C21AC9AF6D622D15CD",
+          "bytes": 447
+        },
+        {
+          "channel": "stderr",
+          "pass": true,
+          "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "name": "probe-a250-minute-production",
+      "sha256": "6C42FAA6C0823DE5FA80AD1DCFC705B7468CF0C8AA185B87A873B6ABE055CDCB",
+      "native_exit": 0,
+      "wall_seconds": 0.556638699999894,
+      "started_utc": "2026-10-02T15:29:51.923017+00:00",
+      "ended_utc": "2026-10-02T15:29:52.523822+00:00",
+      "argv": [
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\candidate-library-tests.exe",
+        "--exact",
+        "c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "logs": [
+        {
+          "channel": "stdout",
+          "pass": true,
+          "raw_sha256": "A38D3E1B14D05D7924A004215FD988A1A895FF15A5A7302ABD9524B680673931",
+          "bytes": 199
+        },
+        {
+          "channel": "stderr",
+          "pass": true,
+          "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "name": "probe-a250-30d-production",
+      "sha256": "A6634AAF2B62B6D1C22DF93FAF155BA85C9FEDA530B0861261DEDAEA7ED24EC7",
+      "native_exit": 0,
+      "wall_seconds": 23.578933099997812,
+      "started_utc": "2026-10-02T15:29:52.525078+00:00",
+      "ended_utc": "2026-10-02T15:30:16.137565+00:00",
+      "argv": [
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\executables\\candidate-library-tests.exe",
+        "--exact",
+        "c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof",
+        "--ignored",
+        "--nocapture",
+        "--test-threads=1"
+      ],
+      "logs": [
+        {
+          "channel": "stdout",
+          "pass": true,
+          "raw_sha256": "21B010F6AB1EB94E83A8E635A3EF6BBBB6DDF73FB872A13C189A8DFA7B73D699",
+          "bytes": 200
+        },
+        {
+          "channel": "stderr",
+          "pass": true,
+          "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+          "bytes": 0
+        }
+      ]
+    }
+  ],
+  "P2_corpora": [
+    {
+      "active": 50,
+      "counts": {
+        "minutes": 2160000,
+        "sessions": 432000,
+        "chains": 1296000,
+        "receipts": 2592000
+      },
+      "db_bytes_live": 544940032,
+      "db_hash_from_P2": "E93A7807D2FD9157A95504AD3CCE29954B68317F8D6E0D77C8EB249459FF28E3",
+      "marker_hash_live": "00C934B4E355E6A212AE13DE334EEEE418F8B57E45B54F1AD8C835BBFFE95765",
+      "sidecars_live": {
+        "-wal": 0,
+        "-shm": 32768
+      },
+      "oracle_receipt_sha256": "FBC2A6E714A95EB89A56AE301992F724B2861899C8693C28996C7EBB2C508D78",
+      "oracle_end_utc": "2026-10-02T15:28:41.929438+00:00",
+      "live_db_hash": "NOT_RUN",
+      "live_SQLite_open": "NOT_RUN"
+    },
+    {
+      "active": 250,
+      "counts": {
+        "minutes": 10800000,
+        "sessions": 2160000,
+        "chains": 6480000,
+        "receipts": 2592000
+      },
+      "db_bytes_live": 1697222656,
+      "db_hash_from_P2": "DA44A49A3701025F1AA321471A5C6AB1FC066126C451D26CF865D2D6DDD7E900",
+      "marker_hash_live": "EFB0A47974D37DCBCEE0F744F2A85FE8B0239484262BF82BCCB79BD5B055730D",
+      "sidecars_live": {
+        "-wal": 0,
+        "-shm": 32768
+      },
+      "oracle_receipt_sha256": "9E99BCBEB17C973E3A5FCC3A6FE38D5C4BFC700C18487528D89F94BD96C41F58",
+      "oracle_end_utc": "2026-10-02T15:29:50.976676+00:00",
+      "live_db_hash": "NOT_RUN",
+      "live_SQLite_open": "NOT_RUN"
+    }
+  ],
+  "P2_probes": {
+    "a250-minute-production": {
+      "status": "PASS_DIAGNOSTIC",
+      "checks": {
+        "native_exit_0": true,
+        "exactly_one_test_passed": true,
+        "production_status_ok": true,
+        "tier_raw": true,
+        "nonempty": true,
+        "deadline_ms_le_10000": true
+      },
+      "production_first_read": {
+        "connection_count": 250,
+        "data_version": 2592000,
+        "download": 11725,
+        "series_rows": 1,
+        "status": "ok",
+        "tier": "Raw",
+        "upload": 3497
+      },
+      "production_first_read_ms": 9.583400000000001,
+      "raw_query_ms": 3.897
+    },
+    "a250-30d-production": {
+      "status": "FAIL_DIAGNOSTIC",
+      "checks": {
+        "native_exit_0": true,
+        "exactly_one_test_passed": true,
+        "production_status_ok": false,
+        "tier_raw": false,
+        "nonempty": false,
+        "deadline_ms_le_10000": false,
+        "totals_match_oracle": false,
+        "series_rows_720": false,
+        "stage_connection_count_matches_oracle": true
+      },
+      "production_first_read": {
+        "error": "DeadlineExceeded(\"report query\")",
+        "status": "error"
+      },
+      "production_first_read_ms": 10035.869999999999,
+      "raw_query_ms": 13016.4438
+    }
+  },
+  "first_failures": {
+    "generator_driver": {
+      "status": "STOPPED_FIRST_FAILURE",
+      "error_type": "KeyError",
+      "error": "'upload'",
+      "driver_exit": 1
+    },
+    "production_30d": {
+      "status": "FAIL_DIAGNOSTIC",
+      "checks": {
+        "native_exit_0": true,
+        "exactly_one_test_passed": true,
+        "production_status_ok": false,
+        "tier_raw": false,
+        "nonempty": false,
+        "deadline_ms_le_10000": false,
+        "totals_match_oracle": false,
+        "series_rows_720": false,
+        "stage_connection_count_matches_oracle": true
+      },
+      "production_first_read": {
+        "error": "DeadlineExceeded(\"report query\")",
+        "status": "error"
+      },
+      "production_first_read_ms": 10035.869999999999,
+      "raw_query_ms": 13016.4438
+    },
+    "protected_hashes": {
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\state.json": "F53BCF2C81CE7BA6FCA38A4E477BCF8FC76E4A0005E18838B995F9B8CC5A0B02",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\generator-driver.receipt.json": "BA9B5EC3AA2676DE742EBB86646D06966E22656886A12CAD25F731530F7D5F2D",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\p2-completion\\bind.json": "F766E8E625F950F8C58FE59866B73BC867C64B0908263CA82FCD6662AC0E43CB",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\generator\\probes\\a250-30d-production.json": "9CEB69A063D75504E0D5961414949F1227AC81B5CFF99CA0927CE1A11DF878AF"
+    }
+  },
+  "competing_load_snapshot": {
+    "sampled_utc": "2026-10-03T02:11:46.256427+00:00",
+    "mechanism": "Exact reviewed predicates and ancestor exclusion; only PID/name/creation time/fixed reasons retained",
+    "processes": [
+      {
+        "pid": 43996,
+        "program_name": "pwsh.exe",
+        "created_utc": "2026-10-02T18:41:40.092951+00:00",
+        "matching_reasons": [
+          "reviewed fixed command token: ferrots"
+        ]
+      },
+      {
+        "pid": 48028,
+        "program_name": "pwsh.exe",
+        "created_utc": "2026-10-02T14:26:00.566294+00:00",
+        "matching_reasons": [
+          "reviewed fixed command token: ferrots"
+        ]
+      },
+      {
+        "pid": 51228,
+        "program_name": "bash.exe",
+        "created_utc": "2026-10-02T14:27:51.485206+00:00",
+        "matching_reasons": [
+          "reviewed fixed command token: ferrots"
+        ]
+      },
+      {
+        "pid": 52584,
+        "program_name": "bash.exe",
+        "created_utc": "2026-10-02T14:27:51.496589+00:00",
+        "matching_reasons": [
+          "reviewed fixed command token: ferrots"
+        ]
+      },
+      {
+        "pid": 55612,
+        "program_name": "ferrots.exe",
+        "created_utc": "2026-10-03T00:57:20.825126+00:00",
+        "matching_reasons": [
+          "reviewed fixed command token: ferrots"
+        ]
+      },
+      {
+        "pid": 62832,
+        "program_name": "python.exe",
+        "created_utc": "2026-10-02T18:41:41.757636+00:00",
+        "matching_reasons": [
+          "reviewed fixed command token: ferrots"
+        ]
+      }
+    ],
+    "inaccessible_or_vanished_count": 179,
+    "limitation": "Point-in-time scan cannot guarantee all unrelated loads absent"
+  },
+  "blockers": [
+    {
+      "kind": "BINDING_FAILURE",
+      "checks": [
+        "reviewed hash runners/run-formal-replay.v1.patch",
+        "reviewed hash runners/run-capacity.v1.patch"
+      ]
+    },
+    {
+      "kind": "COMPETING_LOAD",
+      "count": 6,
+      "pids": [
+        43996,
+        48028,
+        51228,
+        52584,
+        55612,
+        62832
+      ]
+    },
+    {
+      "kind": "MAIN_SESSION_GO_REQUIRED",
+      "source": "dispatch excludes execution of formal loads and quiet-probes"
+    }
+  ],
+  "pending_commands": [
+    {
+      "stage": "matrix",
+      "native_count": 22,
+      "command": "python -B \"D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\runners\\run-formal-replay.py\" --set matrix"
+    },
+    {
+      "stage": "primary",
+      "native_count": 6,
+      "command": "python -B \"D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\runners\\run-formal-replay.py\" --set primary"
+    },
+    {
+      "stage": "capacity",
+      "native_count": 106,
+      "command": "python -B \"D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\runners\\run-capacity.py\""
+    }
+  ],
+  "required_boundaries": [
+    "Explicit GO from main after competition ends and fresh stage preflight",
+    "No termination of user processes; serialize build/generator/oracle/diagnostic/formal stages",
+    "Keep original P4 22, P5 6, P6 106 counts and order; do not merge partial batches",
+    "Recheck identity/source/exe/dist/runner/hash and fresh-only outputs immediately before launch",
+    "Capacity runner must live rehash DB and check quick_check/WAL; current DB hashes are P2 receipt-derived",
+    "No quiet-probes during P4-P6. Any new diagnostic must remain separate; current all/residential probes NOT_RUN",
+    "Ordinary metric FAIL or all_application UNVERIFIED is not a new capacity startup gate"
+  ],
+  "thresholds": {
+    "deadline_ms": 10000,
+    "matrix_ratio_max": 1.1,
+    "primary_cpu_ratio_max": 0.7,
+    "all_application_write_ratio_max": 0.5,
+    "capacity_count": 106
+  },
+  "remaining_unverified": [
+    "A1000 full 30d",
+    "F12 nonempty same-window",
+    "all_application attribution",
+    "physical cold cache",
+    "installed/WebView/worker/24h/peak",
+    "hosted",
+    "P1 cache-key correctness and actual linker/SDK"
+  ],
+  "report_generation_failures_preserved": [
+    {
+      "operation": "initial summary read",
+      "native_exit": 1,
+      "error": "UnicodeDecodeError from missing explicit UTF-8; corrected subsequent read"
+    },
+    {
+      "operation": "first preflight report construction",
+      "native_exit": 1,
+      "error": "ZoneInfoNotFoundError America/Chicago caused by missing tzdata; no artifacts written; used Windows-observed offset without installation"
+    }
+  ],
+  "actual_tool_outer": "UNKNOWN at artifact creation; tool completion must be recorded separately by main",
+  "stop": "STOP_WRITING"
+}

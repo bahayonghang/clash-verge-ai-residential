@@ -1,0 +1,30 @@
+{
+  "baseline-monitor-bench.exe": {
+    "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\baseline-monitor-bench.exe",
+    "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-final-20260930\\baseline-monitor-bench.exe",
+    "bytes": 5748224,
+    "sha256": "06BAC94FD88E37DCD8971893BF79C91A05E9775CEED4A06AB7E2F10B690F3DD9",
+    "source_manifest_sha256": "1120B9D2B5C457F856BCD5F51ED9C88E0612E978AB4C7B76B4816640E1C6678F"
+  },
+  "candidate-monitor-bench.exe": {
+    "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-bench.exe",
+    "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+    "bytes": 6284800,
+    "sha256": "9604FBE6ED24C6DC4E40E556A6AD7F3338477582B223E15D20B795DDF73A7A5E",
+    "source_manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462"
+  },
+  "candidate-monitor-db.exe": {
+    "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-db.exe",
+    "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+    "bytes": 5245952,
+    "sha256": "8EE782EDE8F6F61997CCADC7476B48963A33410C36EB25DF2F03E4FB18F6BA13",
+    "source_manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462"
+  },
+  "candidate-library-tests.exe": {
+    "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-library-tests.exe",
+    "source": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+    "bytes": 12892160,
+    "sha256": "74ECF63AC02659AFF87AC5B6E2AE1264552E57630441E9337DB65450629BD638",
+    "source_manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462"
+  }
+}

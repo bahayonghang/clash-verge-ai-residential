@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "C:\\Program Files\\Python314\\python.exe",
+    "-B",
+    "-X",
+    "utf8",
+    ".trellis/scripts/task.py",
+    "validate",
+    "09-30-evergreen-runtime-validation"
+  ],
+  "shell": false,
+  "started_utc": "2026-10-03T02:39:11.400247+00:00",
+  "ended_utc": "2026-10-03T02:39:11.629697+00:00",
+  "native_exit_code": 0,
+  "stdout_sha256": "f9ba7ff8ce2fbfbfd1dd824b4f1b89bbd2651692976e59a3e0852e31bb30e555",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

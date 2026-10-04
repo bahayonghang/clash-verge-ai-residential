@@ -2,13 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
   decodeAbout,
   decodeAlertCenter,
+  decodeAlertRule,
+  decodeAlertSummary,
   decodeAutostartState,
   decodeDeleteReport,
   decodeDiagnostics,
+  decodeLiveRow,
   decodeReportArchivePage,
   decodeReportResult,
   decodeResidentialShare,
-  decodeShellStatus
+  decodeShellStatus,
+  EMPTY_METADATA_COVERAGE
 } from "./dto";
 
 function validReportPayload() {
@@ -181,11 +185,11 @@ describe("decodeShellStatus", () => {
   });
 
   it("拒绝缺少 checksum 的诊断", () => {
-    expect(() => decodeDiagnostics({ schemaVersion: 1 })).toThrow(/无效/);
+    expect(() => decodeDiagnostics({ schemaVersion: 1 })).toThrow(/缺失|无效/);
   });
 
   it("拒绝缺少 items 的告警中心", () => {
-    expect(() => decodeAlertCenter({ schemaVersion: 1 })).toThrow(/无效/);
+    expect(() => decodeAlertCenter({ schemaVersion: 1 })).toThrow(/缺失|无效/);
   });
 
   it("拒绝把未签名 about 标成 signed", () => {
@@ -277,6 +281,117 @@ describe("decodeShellStatus", () => {
     });
     expect(decoded.items[0]?.archiveId).toBe("a1");
     expect(decoded.next).toBe("1|a1");
+  });
+
+  it("毒化告警与诊断 payload 被拒绝，不进视图对象", () => {
+    expect(() => decodeAlertCenter({ items: [], nextCursor: null })).toThrow(/AlertCenterPage|无效/);
+    expect(() => decodeAlertSummary({ activeCount: 1, notEvaluableCount: 0, outboxBacklog: 0, lastEventUtc: null })).toThrow(
+      /AlertSummary/
+    );
+    expect(() =>
+      decodeAlertRule({
+        ruleId: "rate-home",
+        version: 1,
+        enabled: true,
+        kind: "mystery",
+        selectorKind: "primary-category",
+        selectorValue: "家宽",
+        direction: "download",
+        thresholdValue: 1,
+        recoveryThreshold: null,
+        period: null,
+        timezone: "Asia/Shanghai",
+        cooldownSec: 1,
+        quietStartMin: null,
+        quietEndMin: null,
+        createdUtc: 0,
+        updatedUtc: 0
+      })
+    ).toThrow(/kind/);
+    expect(() =>
+      decodeAlertCenter({
+        schemaVersion: 1,
+        items: [
+          {
+            instanceId: "i1",
+            ruleId: "r1",
+            ruleVersion: 1,
+            selectorIdentity: "家宽",
+            status: "mystery",
+            startedUtc: null,
+            resolvedUtc: null,
+            lastEvalUtc: 1,
+            lastObserved: null,
+            evidence: {}
+          }
+        ],
+        nextCursor: null
+      })
+    ).toThrow(/status|无效/);
+    expect(() => decodeDiagnostics({ schemaVersion: 1, c4Checksum: "x" })).toThrow(/缺失|无效/);
+  });
+
+  it("连接行剥离 processPath，缺字段拒绝", () => {
+    const row = {
+      identity: "0:a",
+      connectionId: "a",
+      epoch: 0,
+      upload: 1,
+      download: 1,
+      rateUpload: null,
+      rateDownload: null,
+      durationMs: null,
+      primary: null,
+      tags: [],
+      host: null,
+      sourceIp: null,
+      destinationIp: null,
+      processName: null,
+      network: "tcp",
+      inbound: null,
+      sourcePort: null,
+      destinationPort: null,
+      start: null,
+      rule: null,
+      rulePayload: null,
+      chains: [],
+      processPath: "C:\\secret\\a.exe"
+    };
+    const decoded = decodeLiveRow(row);
+    expect(decoded.identity).toBe("0:a");
+    expect(decoded).not.toHaveProperty("processPath");
+    expect(JSON.stringify(decoded)).not.toContain("processPath");
+    expect(JSON.stringify(decoded)).not.toContain("C:\\\\secret");
+    const missing = { ...row } as Record<string, unknown>;
+    delete missing.identity;
+    expect(() => decodeLiveRow(missing)).toThrow(/identity/);
+  });
+
+  it("接受完整诊断快照", () => {
+    const decoded = decodeDiagnostics({
+      schemaVersion: 1,
+      appVersion: "0.3.0",
+      sqliteUserVersion: 4,
+      supportedSchema: 4,
+      c4Checksum: "abc",
+      journalMode: "wal",
+      synchronous: "NORMAL",
+      controllerTransportStatus: "connected",
+      coverageSummary: "ok",
+      writerWatermark: 1,
+      writerReceipts: 1,
+      lastFrameUtc: null,
+      reconnectHintZh: "",
+      databaseOk: true,
+      walCheckpointOk: true,
+      backupRetentionNoteZh: "note",
+      alertActive: 0,
+      outboxBacklog: 0,
+      recentRedactedErrorClasses: [],
+      metadataCoverage: EMPTY_METADATA_COVERAGE
+    });
+    expect(decoded.c4Checksum).toBe("abc");
+    expect(decoded.metadataCoverage.processPathOnly).toBe(0);
   });
 
   it("接受手动档案 kind", () => {

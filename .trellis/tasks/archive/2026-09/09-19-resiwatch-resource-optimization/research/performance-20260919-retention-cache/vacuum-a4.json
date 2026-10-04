@@ -1,0 +1,53 @@
+{
+  "attributionQuality": {
+    "knownBytes": null,
+    "missingBytes": null,
+    "status": "n/a"
+  },
+  "capability": {
+    "layer": "raw",
+    "reason": null,
+    "supported": true
+  },
+  "command": "maint.vacuum",
+  "coverage": {
+    "gapSec": null,
+    "observedSec": null,
+    "status": "n/a"
+  },
+  "dataVersion": 0,
+  "generatedUtc": 1789832614,
+  "namedSql": [],
+  "notes": [
+    "CLI 不验证 ResiWatch 是否已退出，该前置条件由执行者保证。",
+    "vacuum 不可中断。中途终止进程后原库应仍可用；用 integrity_check 确认，失败则从备份恢复。",
+    "预计时长随主库大小变化，当前 428007424 字节。"
+  ],
+  "result": {
+    "interruptible": false,
+    "items": [
+      {
+        "byteBasis": "reclaimableUpperBound",
+        "bytes": 388022272,
+        "extra": {
+          "dbBytes": 428007424
+        },
+        "id": "vacuum",
+        "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260919-retention-cache\\corpus-a4-vacuum\\monitor.sqlite3"
+      }
+    ],
+    "ok": true
+  },
+  "schemaVersion": 1,
+  "truncation": {
+    "rowCap": 0,
+    "rows": 0,
+    "status": "complete"
+  },
+  "window": {
+    "endUtc": 0,
+    "granularity": "none",
+    "startUtc": 0,
+    "timezone": "UTC"
+  }
+}

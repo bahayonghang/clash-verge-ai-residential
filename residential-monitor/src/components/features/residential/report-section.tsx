@@ -3,11 +3,9 @@ import type { ReportQuery, ReportResult } from "../../../dto";
 import { RESIDENTIAL_ACCOUNTING_FILTER } from "../../../format/rank";
 import { formatUtc } from "../../../format/units";
 import { buildReportQuery, granularityForTimeRange, snapTimeRangeToMinute } from "../../../hooks/use-report";
-import { renderReportHtml, useReportArchive } from "../../../hooks/use-report-archive";
+import { useReportArchive } from "../../../hooks/use-report-archive";
 import { t, type UiLocale } from "../../../i18n";
-import { isTauriRuntime } from "../../../ipc/live-session";
 import type { TimeRange } from "../../../lib/time-range";
-import { invokeErrorZh } from "../../../lib/utils";
 import { Button } from "../../ui/button";
 import { Card } from "../../ui/card";
 import { Switch } from "../../ui/switch";
@@ -63,13 +61,13 @@ function statusLine(
 }
 
 export function ReportSection({ locale, timeRange }: { locale: UiLocale; timeRange: TimeRange }) {
-  const archive = useReportArchive(locale);
+  const archive = useReportArchive(locale, true);
   const titleId = useId();
   const [wantCurrent, setWantCurrent] = useState(false);
-  const [html, setHtml] = useState<string | null>(null);
-  const [htmlError, setHtmlError] = useState<string | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const report = archive.report;
+  const html = archive.html;
+  const htmlError = archive.htmlError;
   const currentAllowed = report ? report.drilldownCapability.currentPolicy : true;
   const currentOn = wantCurrent && currentAllowed;
   const showCurrentNote = Boolean(report && !report.drilldownCapability.currentPolicy);
@@ -82,33 +80,6 @@ export function ReportSection({ locale, timeRange }: { locale: UiLocale; timeRan
     // 进页只回看一次家宽手动档案。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!report || !isTauriRuntime()) {
-      setHtml(null);
-      return;
-    }
-    let cancelled = false;
-    setHtml(null);
-    setHtmlError(null);
-    void renderReportHtml(report.reportSnapshotToken)
-      .then((next) => {
-        if (cancelled) {
-          return;
-        }
-        setHtml(next);
-      })
-      .catch((caught: unknown) => {
-        if (cancelled) {
-          return;
-        }
-        setHtml(null);
-        setHtmlError(invokeErrorZh(caught, t(locale, "report.export_fail")));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [locale, report]);
 
   useEffect(() => {
     if (!viewerOpen) {

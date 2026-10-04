@@ -105,6 +105,7 @@ impl ExportService {
         space: &SpaceBudget,
         cancel: &Arc<AtomicBool>,
     ) -> Result<PathBuf, ReportError> {
+        crate::c3::service::poll_interrupt(cancel, "export")?;
         reject_secret(result)?;
         if dest.exists() {
             return Err(ReportError::Failed("destination exists"));
@@ -419,8 +420,7 @@ fn redact_label(value: &str, mode: RedactMode) -> String {
 
 fn reject_secret(result: &ReportResult) -> Result<(), ReportError> {
     let blob = serde_json::to_string(result).unwrap_or_default();
-    let lower = blob.to_ascii_lowercase();
-    if lower.contains("bearer ") || lower.contains("password=") || lower.contains("secret=") {
+    if crate::redact::scan_text_for_secrets(&blob) {
         return Err(ReportError::Failed("secret in report"));
     }
     Ok(())
@@ -549,6 +549,14 @@ mod export_tests {
             &cancel,
         )
         .expect_err("exists");
+        assert_eq!(error.code(), "storage_failure");
+    }
+
+    #[test]
+    fn preview_rejects_authorization_header() {
+        let mut result = sample();
+        result.rankings[0].label = "Authorization: fixture-token".into();
+        let error = ExportService::preview(&result, &ExportSpec::default()).expect_err("secret");
         assert_eq!(error.code(), "storage_failure");
     }
 

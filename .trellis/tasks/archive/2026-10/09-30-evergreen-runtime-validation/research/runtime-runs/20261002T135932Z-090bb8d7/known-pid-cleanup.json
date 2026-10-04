@@ -1,0 +1,18 @@
+{
+  "observed_utc": "2026-10-02T14:04:31.6906854Z",
+  "observations": [
+    {
+      "pid": 64480,
+      "present": false,
+      "process_name": null
+    },
+    {
+      "pid": 62408,
+      "present": false,
+      "process_name": null
+    }
+  ],
+  "scope": "exact client PID and capture execute PID only; no native child PID observed",
+  "cleanup_receipt": "Best effort owned Job cleanup recorded in native receipt; no absolute orphan descendant guarantee",
+  "process_mutations": "NONE; known PIDs absent"
+}

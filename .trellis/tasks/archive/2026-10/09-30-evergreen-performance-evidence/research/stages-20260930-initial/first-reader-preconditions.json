@@ -1,0 +1,9 @@
+{
+  "database": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+  "marker_sha256": "667A21E9FBE3FCF100974411D8E714E1589907E6458902AFD50683CEE68A3D42",
+  "database_bytes": 1697222656,
+  "database_read_hash_copy_integrity_check_before_first_reader": false,
+  "cache_statement": "本轮未主动预热；没有物理冷缓存证明",
+  "recorded_utc": "2026-09-30T13:49:49.540797+00:00",
+  "smoke_databases": "separate new isolated databases"
+}

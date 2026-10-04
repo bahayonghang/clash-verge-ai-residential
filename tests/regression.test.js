@@ -37,6 +37,8 @@ const {
   ROUTE_CURSOR_REPOSITORY_INDEXING,
   ROUTE_GROK_CORE,
   ROUTE_GROK_WEB_ASSETS,
+  ROUTE_EXTRA,
+  ROUTE_EXTRA_ANYROUTER,
   ROUTE_CURSOR_PROCESS_FALLBACK,
   ROUTE_OPENAI_AUTH,
   ROUTE_OPENAI_WEB_ASSETS,
@@ -50,6 +52,8 @@ const {
   GROK_SUFFIX_DOMAINS,
   GROK_STRICT_EXACT_DOMAINS,
   GROK_EXACT_DOMAINS,
+  EXTRA_SITES,
+  EXTRA_SUFFIX_DOMAINS,
   OPENAI_CORE_EXACT_DOMAINS,
   OPENAI_AUTH_SUFFIX_DOMAINS,
   OPENAI_AUTH_EXACT_DOMAINS,
@@ -59,13 +63,16 @@ const {
 function quietMainWith(scriptModule, config, profileName) {
   const originalInfo = console.info;
   const originalWarn = console.warn;
+  const originalError = console.error;
   console.info = () => {};
   console.warn = () => {};
+  console.error = () => {};
   try {
     return scriptModule.main(config, profileName);
   } finally {
     console.info = originalInfo;
     console.warn = originalWarn;
+    console.error = originalError;
   }
 }
 
@@ -243,6 +250,251 @@ function withPatchedOpenAiSwitches(openaiAuth, openaiWebAssets, fn) {
     ROUTE_OPENAI_WEB_ASSETS: openaiWebAssets
   }, fn);
 }
+
+const routingBaseline = require("./fixtures/routing-default-v5.11.json");
+const baselineUserRules = [
+  "DOMAIN,custom.example.test,DIRECT",
+  "DOMAIN-SUFFIX,company.example.test,Proxy",
+  "MATCH,Proxy"
+];
+
+// 与 fixture 来源提交执行时的虚构 Profile 一致；fixture 不包含节点凭据。
+function baselineProfile() {
+  return configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("Proxy", ["HK"])],
+    rules: [...baselineUserRules],
+    dns: {
+      nameserver: ["https://dns.example.test/dns-query"],
+      fallback: ["https://fallback.example.test/dns-query"],
+      "nameserver-policy": { "custom.example.test": ["https://custom-dns.example.test/dns-query"] },
+      "fake-ip-filter": ["custom.example.test"]
+    }
+  });
+}
+
+function normalizeObjectKeys(value) {
+  if (Array.isArray(value)) return value.map(normalizeObjectKeys);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(Object.keys(value).sort().map((key) => [key, normalizeObjectKeys(value[key])]));
+}
+
+function normalizeDefaultProjection(projection) {
+  const rules = [...projection.rules];
+  const isAiDomain = (rule) => /^DOMAIN(?:-SUFFIX|-REGEX)?,.*?,AI-家宽$/.test(rule);
+  const start = rules.findIndex(isAiDomain);
+  assert.equal(start, 16, "全部私网 DIRECT 必须位于核心域名之前");
+  assert.ok(rules.slice(0, start).every((rule) => /,DIRECT(?:,no-resolve)?$/.test(rule)));
+  let end = start;
+  while (end < rules.length && isAiDomain(rules[end])) end += 1;
+  assert.ok(!rules.slice(end).some(isAiDomain), "核心域名区段必须连续");
+  assert.deepEqual(rules.slice(end, -baselineUserRules.length), [
+    `IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`,
+    `IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`
+  ], "IP 兜底必须位于域名后、原规则前");
+  assert.deepEqual(rules.slice(-baselineUserRules.length), baselineUserRules);
+  rules.splice(start, end - start, ...rules.slice(start, end).sort());
+  return normalizeObjectKeys({ ...projection, rules });
+}
+
+test("默认输出与固定 v5.11 投影一致", () => {
+  assert.equal(routingBaseline.baselineCommit, "063c5561b9e81e42f89d7966a5d1a9772bdc44b3");
+  const expected = structuredClone(routingBaseline.projection);
+
+  const input = baselineProfile();
+  const snapshot = structuredClone(input);
+  const output = quietMain(input, routingBaseline.profileName);
+  assert.notEqual(output, input);
+  assert.deepEqual(input, snapshot);
+  const home = findProxy(output, HOME_PROXY_NAME);
+  const projection = {
+    rules: output.rules,
+    dns: output.dns,
+    group: findGroup(output, AI_GROUP),
+    home: { type: home.type, udp: home.udp, "dialer-proxy": home["dialer-proxy"] }
+  };
+  assert.deepEqual(normalizeDefaultProjection(projection), normalizeDefaultProjection(expected));
+  assert.deepEqual(quietMain(output, routingBaseline.profileName), output);
+  assert.equal(output.rules.includes(`DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`), false);
+  assert.equal("+.anyrouter.top" in output.dns["nameserver-policy"], false);
+});
+
+test("保留家宽组拒绝动态来源、排除条件、替代选择及未知字段，错误不改输入", () => {
+  const extraFields = {
+    use: ["provider-a"], "include-all": true, "include-all-proxies": false,
+    "include-all-providers": true, filter: "HK", "exclude-filter": "家宽",
+    "exclude-type": "socks5", "default-selected": "HK", "empty-fallback": "DIRECT",
+    url: "https://probe.example.test", interval: 300, "custom-option": "private-value"
+  };
+  for (const [key, value] of Object.entries(extraFields)) {
+    const config = baselineProfile();
+    config["proxy-groups"].push(group(AI_GROUP, [HOME_PROXY_NAME], { [key]: value }));
+    const snapshot = structuredClone(config);
+    assert.throws(() => quietMain(config, "fixture"), (error) => {
+      assert.ok(error.message.includes(key), key);
+      assert.match(error.message, /重命名.*移除额外字段/);
+      assert.doesNotMatch(error.message, /private-value|home-pass|airport-secret/);
+      return true;
+    });
+    assert.deepEqual(config, snapshot, key);
+  }
+});
+
+test("合法家宽组只保留展示字段并恢复 UDP，普通上游组不受封闭字段约束", () => {
+  for (const hidden of [true, false]) {
+    const config = baselineProfile();
+    config["proxy-groups"][0]["custom-option"] = "user-owned";
+    config["proxy-groups"].push(group(AI_GROUP, [HOME_PROXY_NAME], {
+      icon: "https://icons.example.test/ai.svg", hidden, "disable-udp": true
+    }));
+    const output = quietMain(config, "fixture");
+    assert.deepEqual(findGroup(output, AI_GROUP), {
+      name: AI_GROUP, type: "select", proxies: [HOME_PROXY_NAME], "disable-udp": false,
+      icon: "https://icons.example.test/ai.svg", hidden
+    });
+    assert.equal(findGroup(output, "Proxy")["custom-option"], "user-owned");
+    assert.deepEqual(quietMain(output, "fixture"), output);
+  }
+});
+
+const newCoreCases = [
+  { constant: "ROUTE_ANTHROPIC_CORE", suffix: ["claude.ai", "claude.com", "claudemcpcontent.com", "claudeusercontent.com"],
+    exact: ["api.anthropic.com", "mcp-proxy.anthropic.com", "assets-proxy.anthropic.com"] },
+  { constant: "ROUTE_GEMINI_API_CORE", suffix: [], exact: ["generativelanguage.googleapis.com"] },
+  { constant: "ROUTE_ANTIGRAVITY_CORE", suffix: [], exact: ["cloudcode-pa.googleapis.com",
+    "daily-cloudcode-pa.googleapis.com", "cloudaicompanion.googleapis.com", "antigravity.google"] }
+];
+
+for (const entry of newCoreCases) {
+  test(`${entry.constant} true→false→true 清理基线托管域名和 DNS，保留其他类别及原规则`, () => {
+    assert.equal(constants[entry.constant], true);
+    const enabled = quietMain(baselineProfile(), "fixture");
+    const oldOutput = baselineProfile();
+    oldOutput.rules = [...routingBaseline.projection.rules];
+    oldOutput.dns = structuredClone(routingBaseline.projection.dns);
+    const userRule = `DOMAIN,user-owned.example.test,${AI_GROUP}`;
+    oldOutput.rules.splice(-1, 0, userRule);
+    const inputSnapshot = structuredClone(oldOutput);
+    withPatchedSwitches({ [entry.constant]: false }, (disabledScript) => {
+      const disabled = quietMainWith(disabledScript, oldOutput, "fixture");
+      assert.deepEqual(oldOutput, inputSnapshot);
+      const removedRules = new Set([
+        ...entry.suffix.map((host) => `DOMAIN-SUFFIX,${host},${AI_GROUP}`),
+        ...entry.exact.map((host) => `DOMAIN,${host},${AI_GROUP}`)
+      ]);
+      if (entry.constant === "ROUTE_ANTHROPIC_CORE") {
+        removedRules.add(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`);
+        removedRules.add(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`);
+      }
+      assert.deepEqual(disabled.rules, [
+        ...enabled.rules.slice(0, -1).filter((rule) => !removedRules.has(rule)), userRule, "MATCH,Proxy"
+      ]);
+      const expectedDns = structuredClone(enabled.dns);
+      for (const key of [...entry.suffix.map((host) => `+.${host}`), ...entry.exact]) {
+        delete expectedDns["nameserver-policy"][key];
+      }
+      assert.deepEqual(disabled.dns, expectedDns);
+      assert.deepEqual(quietMainWith(disabledScript, disabled, "fixture"), disabled);
+      const restored = quietMain(disabled, "fixture");
+      assert.deepEqual(restored.rules, [...enabled.rules.slice(0, -1), userRule, "MATCH,Proxy"]);
+      assert.deepEqual(restored.dns, enabled.dns);
+    });
+  });
+}
+
+test("Anthropic IP 独立开关关闭时不影响核心域名，并清理旧 IP 兜底", () => {
+  const enabled = quietMain(baselineProfile(), "fixture");
+  withPatchedSwitches({ ENABLE_ANTHROPIC_IP_FALLBACK: false }, (patched) => {
+    const output = quietMainWith(patched, enabled, "fixture");
+    assert.ok(!output.rules.some((rule) => /^IP-CIDR6?,.*?,AI-家宽,/.test(rule)));
+    assert.ok(ruleMatchesHost(output.rules, "api.anthropic.com"));
+    assert.deepEqual(output.dns, enabled.dns);
+  });
+});
+
+test("各服务进程兜底服从 core，Cursor 同时受全局与专属开关约束且全量清理不受门控", () => {
+  const fallbacks = { ENABLE_AI_PROCESS_FALLBACK: true, ROUTE_CURSOR_PROCESS_FALLBACK: true };
+  withPatchedSwitches(fallbacks, (allEnabledScript) => {
+    const enabled = quietMainWith(allEnabledScript, baselineProfile(), "fixture");
+    const allProcesses = enabled.rules.filter((rule) => rule.startsWith("PROCESS-"));
+    assert.equal(allProcesses.length, 8);
+    for (const [constant, product] of [
+      ["ROUTE_ANTHROPIC_CORE", "claude"], ["ROUTE_OPENAI_CORE", "chatgpt"],
+      ["ROUTE_ANTIGRAVITY_CORE", "antigravity"], ["ROUTE_CURSOR_CORE", "cursor"],
+      ["ROUTE_CURSOR_PROCESS_FALLBACK", "cursor"]
+    ]) {
+      withPatchedSwitches({ ...fallbacks, [constant]: false }, (patched) => {
+        const inputSnapshot = structuredClone(enabled);
+        const output = quietMainWith(patched, enabled, "fixture");
+        assert.deepEqual(enabled, inputSnapshot);
+        assert.deepEqual(output.rules.filter((rule) => rule.startsWith("PROCESS-")),
+          allProcesses.filter((rule) => !rule.includes(product)), constant);
+        assert.equal(output.rules.slice(0, 16).every((rule) => /,DIRECT(?:,no-resolve)?$/.test(rule)), true);
+        assert.deepEqual(output.rules.slice(-3), baselineUserRules);
+        assert.deepEqual(quietMainWith(patched, output, "fixture"), output);
+        assert.deepEqual(quietMainWith(allEnabledScript, output, "fixture"), enabled);
+      });
+    }
+    withPatchedSwitches({ ...fallbacks, ENABLE_AI_PROCESS_FALLBACK: false }, (patched) => {
+      const output = quietMainWith(patched, enabled, "fixture");
+      assert.deepEqual(output.rules.filter((rule) => rule.startsWith("PROCESS-")), []);
+    });
+    withPatchedSwitches({ ...fallbacks, ROUTE_ANTHROPIC_CORE: false, ROUTE_OPENAI_CORE: false,
+      ROUTE_ANTIGRAVITY_CORE: false, ROUTE_CURSOR_CORE: false }, (patched) => {
+      const output = quietMainWith(patched, enabled, "fixture");
+      assert.deepEqual(output.rules.filter((rule) => rule.startsWith("PROCESS-")), []);
+    });
+  });
+});
+
+test("核心关闭不关闭独立认证、辅助、资源和全局捕获开关", () => {
+  withPatchedSwitches({
+    ROUTE_ANTHROPIC_CORE: false, ROUTE_OPENAI_CORE: false, ROUTE_ANTIGRAVITY_CORE: false,
+    ROUTE_GEMINI_API_CORE: false, ROUTE_GEMINI_WEB_CORE: false, ROUTE_VERTEX_AI_ENDPOINTS: false,
+    ROUTE_CURSOR_CORE: false, ROUTE_CLAUDE_CODE_AUXILIARY: true,
+    ROUTE_CLAUDE_SHARED_DEPENDENCIES: true, ROUTE_OPENAI_AUTH: true, ROUTE_OPENAI_WEB_ASSETS: true,
+    ROUTE_ANTIGRAVITY_GOOGLE_AUTH: true, ROUTE_ANTIGRAVITY_PROJECT_APIS: true,
+    ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY: true, ROUTE_CURSOR_REPOSITORY_INDEXING: true,
+    ROUTE_SHARED_REALTIME_INFRASTRUCTURE: true, ROUTE_GLOBAL_REALTIME_PORTS: true,
+    ROUTE_PUBLIC_ENCRYPTED_DNS: true
+  }, (patched) => {
+    const output = quietMainWith(patched, baselineProfile(), "fixture");
+    for (const host of ["auth.openai.com", "cdn.oaistatic.com", "registry.npmjs.org",
+      "cdn.usefathom.com", "accounts.google.com", "serviceusage.googleapis.com",
+      "update.googleapis.com", "repo42.cursor.sh"]) {
+      assert.ok(ruleMatchesHost(output.rules, host), host);
+    }
+    for (const host of newCoreCases.flatMap((entry) => [...entry.exact, ...entry.suffix])) {
+      assert.equal(ruleMatchesHost(output.rules, host), false, host);
+    }
+    assert.ok(output.rules.includes(`DST-PORT,5349,${AI_GROUP}`));
+    assert.ok(output.rules.includes(`DST-PORT,853,${AI_GROUP}`));
+  });
+});
+
+test("关闭全部 Google 核心撤销原五个无开关端点，正则仍不生成宽域 DNS policy", () => {
+  withPatchedSwitches({ ROUTE_GEMINI_WEB_CORE: false, ROUTE_GEMINI_API_CORE: false,
+    ROUTE_VERTEX_AI_ENDPOINTS: false, ROUTE_ANTIGRAVITY_CORE: false }, (patched) => {
+    const output = quietMainWith(patched, baselineProfile(), "fixture");
+    for (const host of ["gemini.google.com", "generativelanguage.googleapis.com",
+      "us-central1-aiplatform.googleapis.com", "antigravity.google", "cloudcode-pa.googleapis.com",
+      "daily-cloudcode-pa.googleapis.com", "cloudaicompanion.googleapis.com"]) {
+      assert.equal(ruleMatchesHost(output.rules, host), false, host);
+    }
+  });
+  withPatchedSwitches({ ROUTE_CURSOR_REPOSITORY_INDEXING: true }, (patched) => {
+    const policy = patched.buildNameserverPolicy();
+    const rules = patched.buildInjectedRules();
+    for (const host of ["us-central1-aiplatform.googleapis.com", "repo42.cursor.sh"]) {
+      assert.ok(ruleMatchesHost(rules, host));
+      assert.equal(host in policy, false);
+    }
+    for (const key of ["+.googleapis.com", "+.cursor.sh", ...VERTEX_AI_DOMAIN_REGEXES,
+      ...CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES]) assert.equal(key in policy, false, key);
+    for (const host of ["storage.googleapis.com", "repoevil.cursor.sh", "docs.anthropic.com",
+      "www.antigravity.google"]) assert.equal(ruleMatchesHost(rules, host), false, host);
+  });
+});
 
 const CURSOR_CORE_HOSTS = [
   "api2.cursor.sh",
@@ -485,6 +737,73 @@ test("只配置 endpoint 而保留 xxx 凭据时明确报错", () => {
   }
 });
 
+test("占位凭据失败时不改调用方配置，并 console.error [AI-家宽]", () => {
+  const original = {
+    server: template.server,
+    port: template.port,
+    username: template.username,
+    password: template.password
+  };
+  template.server = "configured.example.test";
+  template.port = 1080;
+  template.username = "xxx";
+  template.password = "xxx";
+
+  const errors = [];
+  const originalError = console.error;
+  const originalInfo = console.info;
+  const originalWarn = console.warn;
+  console.error = (message) => errors.push(String(message));
+  console.info = () => {};
+  console.warn = () => {};
+
+  try {
+    const config = configFixture({
+      includeHome: false,
+      proxies: [airportNode("JP")],
+      groups: [
+        group("🚀节点选择", ["JP"], {
+          "include-all-proxies": true,
+          "exclude-filter": "^过期节点$"
+        })
+      ]
+    });
+    const before = JSON.stringify({
+      proxies: config.proxies,
+      "proxy-groups": config["proxy-groups"]
+    });
+
+    assert.throws(
+      () => main(config, "赔钱机场"),
+      /username\/password 仍是占位值 xxx/
+    );
+
+    assert.equal(
+      JSON.stringify({
+        proxies: config.proxies,
+        "proxy-groups": config["proxy-groups"]
+      }),
+      before
+    );
+    assert.equal(
+      findGroup(config, "🚀节点选择")["exclude-filter"],
+      "^过期节点$"
+    );
+    assert.ok(
+      errors.some((line) => line.includes("[AI-家宽]")),
+      `console.error 应含 [AI-家宽]，实际：${errors.join(" | ")}`
+    );
+  } finally {
+    console.error = originalError;
+    console.info = originalInfo;
+    console.warn = originalWarn;
+    template.server = original.server;
+    template.port = original.port;
+    template.username = original.username;
+    template.password = original.password;
+  }
+});
+
 test("findOutbound 缺索引时抛错，合法索引可解析唯一节点", () => {
   assert.throws(() => findOutbound(), /需要 outbound 索引/);
   assert.throws(() => findOutbound({}, "x"), /需要 outbound 索引/);
@@ -619,18 +938,18 @@ test("2000 叶子同一对象连续两次 main 保持规则、policy 与 dialer-
     groups: [group("🚀节点选择", leafNames)]
   });
 
-  quietMain(config, "赔钱机场");
-  const firstRules = config.rules.slice();
-  const firstPolicy = structuredClone(config.dns["nameserver-policy"]);
-  const firstHome = findProxy(config, HOME_PROXY_NAME);
+  const first = quietMain(config, "赔钱机场");
+  const firstRules = first.rules.slice();
+  const firstPolicy = structuredClone(first.dns["nameserver-policy"]);
+  const firstHome = findProxy(first, HOME_PROXY_NAME);
   const firstServer = firstHome.server;
   const firstPort = firstHome.port;
   const firstDialer = firstHome["dialer-proxy"];
-  quietMain(config, "赔钱机场");
+  const second = quietMain(first, "赔钱机场");
 
-  const secondHome = findProxy(config, HOME_PROXY_NAME);
-  assert.deepEqual(config.rules, firstRules);
-  assert.deepEqual(config.dns["nameserver-policy"], firstPolicy);
+  const secondHome = findProxy(second, HOME_PROXY_NAME);
+  assert.deepEqual(second.rules, firstRules);
+  assert.deepEqual(second.dns["nameserver-policy"], firstPolicy);
   assert.equal(secondHome.server, firstServer);
   assert.equal(secondHome.port, firstPort);
   assert.equal(secondHome["dialer-proxy"], firstDialer);
@@ -884,6 +1203,107 @@ test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走
   assert.equal("x.ai" in policy, false);
 });
 
+function leftoverAnyRouterConfig(target) {
+  return configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])],
+    rules: [`DOMAIN-SUFFIX,anyrouter.top,${target}`, "MATCH,🚀节点选择"],
+    dns: {
+      "nameserver-policy": {
+        "+.anyrouter.top": RESIDENTIAL_DOH
+      }
+    }
+  });
+}
+
+function assertAnyRouterCleaned(patched) {
+  const target = patched.constants.AI_GROUP;
+  const managedRule = `DOMAIN-SUFFIX,anyrouter.top,${target}`;
+  const first = quietMainWith(patched, leftoverAnyRouterConfig(target), "赔钱机场");
+  assert.equal(ruleMatchesHost(first.rules, "anyrouter.top", target), false);
+  assert.equal(first.rules.includes(managedRule), false);
+  assert.equal("+.anyrouter.top" in first.dns["nameserver-policy"], false);
+  const second = quietMainWith(patched, first, "赔钱机场");
+  assert.deepEqual(second.rules, first.rules);
+  assert.deepEqual(second.dns["nameserver-policy"], first.dns["nameserver-policy"]);
+}
+
+test("extra 分类默认关闭，登记表仍保留 AnyRouter 清理全集", () => {
+  assert.equal(ROUTE_EXTRA, false);
+  assert.equal(ROUTE_EXTRA_ANYROUTER, true);
+  assert.deepEqual(EXTRA_SITES.map((site) => site.id), ["anyrouter"]);
+  assert.equal(EXTRA_SITES[0].residentialDns, false);
+  assert.deepEqual(EXTRA_SITES[0].suffixDomains, ["anyrouter.top"]);
+  assert.deepEqual(EXTRA_SUFFIX_DOMAINS, ["anyrouter.top"]);
+  assert.deepEqual(script.allPossibleExtraSuffixDomains(), ["anyrouter.top"]);
+
+  const rules = buildInjectedRules();
+  assertNoAiRoute(rules, ["anyrouter.top", "www.anyrouter.top", "anyrouter.com"]);
+  assert.equal(rules.includes(`DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`), false);
+
+  const policy = buildNameserverPolicy({});
+  assert.equal("+.anyrouter.top" in policy, false);
+  assert.equal("anyrouter.top" in policy, false);
+});
+
+test("extra 与 extra_anyrouter 同时打开时只注入 AnyRouter 规则、不写住宅 DNS", () => {
+  withPatchedSwitches({
+    ROUTE_EXTRA: true,
+    ROUTE_EXTRA_ANYROUTER: true
+  }, (patched) => {
+    const target = patched.constants.AI_GROUP;
+    const rules = patched.buildInjectedRules();
+    assert.equal(rules.includes(`DOMAIN-SUFFIX,anyrouter.top,${target}`), true);
+    assert.equal(ruleMatchesHost(rules, "anyrouter.top", target), true);
+    assert.equal(ruleMatchesHost(rules, "www.anyrouter.top", target), true);
+    assert.equal(ruleMatchesHost(rules, "anyrouter.com", target), false);
+    assert.equal(ruleMatchesHost(rules, "notanyrouter.top", target), false);
+
+    const policy = patched.buildNameserverPolicy({});
+    assert.equal("+.anyrouter.top" in policy, false);
+    assert.equal("anyrouter.top" in policy, false);
+    assert.equal("+.anyrouter.com" in policy, false);
+    assert.deepEqual(policy["+.claude.ai"], RESIDENTIAL_DOH);
+    assert.deepEqual(policy["+.api.openai.com"], RESIDENTIAL_DOH);
+  });
+});
+
+test("关闭 extra 分类、关闭 extra_anyrouter 或两者都关时清理 AnyRouter 且幂等", () => {
+  withPatchedSwitches({ ROUTE_EXTRA: false, ROUTE_EXTRA_ANYROUTER: true }, assertAnyRouterCleaned);
+  withPatchedSwitches({ ROUTE_EXTRA: true, ROUTE_EXTRA_ANYROUTER: false }, assertAnyRouterCleaned);
+  withPatchedSwitches({ ROUTE_EXTRA: false, ROUTE_EXTRA_ANYROUTER: false }, assertAnyRouterCleaned);
+});
+
+test("补丁第二 extra 站点后可只开一部分，且默认不写住宅 DNS", () => {
+  withPatchedSwitches({
+    ROUTE_EXTRA: true,
+    ROUTE_EXTRA_ANYROUTER: true
+  }, (patched) => {
+    patched.constants.EXTRA_SITES.push({
+      id: "example",
+      constant: "ROUTE_EXTRA_EXAMPLE",
+      suffixDomains: ["example-extra.test"],
+      exactDomains: [],
+      residentialDns: false
+    });
+    patched.constants.EXTRA_SITE_SWITCHES.ROUTE_EXTRA_EXAMPLE = false;
+
+    const target = patched.constants.AI_GROUP;
+    const rules = patched.buildInjectedRules();
+    const policy = patched.buildNameserverPolicy({});
+    assert.equal(ruleMatchesHost(rules, "anyrouter.top", target), true);
+    assert.equal(ruleMatchesHost(rules, "www.anyrouter.top", target), true);
+    assert.equal(ruleMatchesHost(rules, "example-extra.test", target), false);
+    assert.equal(rules.includes(`DOMAIN-SUFFIX,example-extra.test,${target}`), false);
+    assert.equal("+.anyrouter.top" in policy, false);
+    assert.equal("+.example-extra.test" in policy, false);
+    assert.ok(
+      patched.allPossibleExtraSuffixDomains().includes("example-extra.test"),
+      "第二站点后缀必须进入清理全集"
+    );
+  });
+});
+
 test("Cursor 插件市场、下载、CDN、更新与 Remote-SSH 资产不走家宽", () => {
   const rules = buildInjectedRules();
   assertNoAiRoute(rules, [
@@ -1044,12 +1464,12 @@ test("OpenAI 第一方认证与网页资源开关默认关闭且可独立组合"
           groups: [group("🚀节点选择", ["HK"])],
           rules: ["MATCH,🚀节点选择"]
         });
-        quietMainWith(patched, config, "赔钱机场");
-        const firstRules = structuredClone(config.rules);
-        const firstPolicy = structuredClone(config.dns["nameserver-policy"]);
-        quietMainWith(patched, config, "赔钱机场");
-        assert.deepEqual(config.rules, firstRules);
-        assert.deepEqual(config.dns["nameserver-policy"], firstPolicy);
+        const first = quietMainWith(patched, config, "赔钱机场");
+        const firstRules = structuredClone(first.rules);
+        const firstPolicy = structuredClone(first.dns["nameserver-policy"]);
+        const second = quietMainWith(patched, first, "赔钱机场");
+        assert.deepEqual(second.rules, firstRules);
+        assert.deepEqual(second.dns["nameserver-policy"], firstPolicy);
       }
     });
   }
@@ -1075,50 +1495,51 @@ test("OpenAI 开关分别由开启切换为关闭时清理规则与 DNS，并保
       rules: [customAiRule, "MATCH,🚀节点选择"]
     });
 
+    let output;
     withPatchedOpenAiSwitches(true, true, (enabled) => {
-      quietMainWith(enabled, config, "赔钱机场");
+      output = quietMainWith(enabled, config, "赔钱机场");
     });
-    assert.equal(ruleMatchesHost(config.rules, "auth.openai.com"), true);
-    assert.equal(ruleMatchesHost(config.rules, "auth0.openai.com"), true);
-    assert.equal(ruleMatchesHost(config.rules, "oaistatic.com"), true);
-    assert.equal("+.auth.openai.com" in config.dns["nameserver-policy"], true);
-    assert.equal("auth0.openai.com" in config.dns["nameserver-policy"], true);
-    assert.equal("+.oaistatic.com" in config.dns["nameserver-policy"], true);
+    assert.equal(ruleMatchesHost(output.rules, "auth.openai.com"), true);
+    assert.equal(ruleMatchesHost(output.rules, "auth0.openai.com"), true);
+    assert.equal(ruleMatchesHost(output.rules, "oaistatic.com"), true);
+    assert.equal("+.auth.openai.com" in output.dns["nameserver-policy"], true);
+    assert.equal("auth0.openai.com" in output.dns["nameserver-policy"], true);
+    assert.equal("+.oaistatic.com" in output.dns["nameserver-policy"], true);
 
     withPatchedOpenAiSwitches(
       item.authEnabledAfter,
       item.assetsEnabledAfter,
       (disabled) => {
-        quietMainWith(disabled, config, "赔钱机场");
+        output = quietMainWith(disabled, output, "赔钱机场");
       }
     );
 
     assert.equal(
-      ruleMatchesHost(config.rules, "auth.openai.com"),
+      ruleMatchesHost(output.rules, "auth.openai.com"),
       item.authEnabledAfter
     );
     assert.equal(
-      ruleMatchesHost(config.rules, "auth0.openai.com"),
+      ruleMatchesHost(output.rules, "auth0.openai.com"),
       item.authEnabledAfter
     );
     assert.equal(
-      ruleMatchesHost(config.rules, "oaistatic.com"),
+      ruleMatchesHost(output.rules, "oaistatic.com"),
       item.assetsEnabledAfter
     );
     assert.equal(
-      "+.auth.openai.com" in config.dns["nameserver-policy"],
+      "+.auth.openai.com" in output.dns["nameserver-policy"],
       item.authEnabledAfter
     );
     assert.equal(
-      "auth0.openai.com" in config.dns["nameserver-policy"],
+      "auth0.openai.com" in output.dns["nameserver-policy"],
       item.authEnabledAfter
     );
     assert.equal(
-      "+.oaistatic.com" in config.dns["nameserver-policy"],
+      "+.oaistatic.com" in output.dns["nameserver-policy"],
       item.assetsEnabledAfter
     );
-    assert.equal(config.rules.includes(customAiRule), true);
-    assert.equal(new Set(config.rules).size, config.rules.length);
+    assert.equal(output.rules.includes(customAiRule), true);
+    assert.equal(new Set(output.rules).size, output.rules.length);
   }
 });
 
@@ -1146,6 +1567,7 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
     `DOMAIN-SUFFIX,cursorvm.com,${AI_GROUP}`,
     `DOMAIN,api.cursor.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,grok.com,${AI_GROUP}`,
+    `DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`,
     `DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`,
     `DOMAIN-SUFFIX,clau.de,${AI_GROUP}`,
     `DOMAIN-SUFFIX,claudemcpclient.com,${AI_GROUP}`,
@@ -1208,72 +1630,72 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
     ]
   });
 
-  quietMain(config, "赔钱机场");
-  const firstNameserverPolicy = structuredClone(config.dns["nameserver-policy"]);
-  quietMain(config, "赔钱机场");
+  const first = quietMain(config, "赔钱机场");
+  const firstNameserverPolicy = structuredClone(first.dns["nameserver-policy"]);
+  const output = quietMain(first, "赔钱机场");
 
-  assert.equal(countNamed(config.proxies, HOME_PROXY_NAME), 1);
-  assert.equal(countNamed(config["proxy-groups"], AI_GROUP), 1);
-  assert.equal(config.rules.includes(anthropicFallbackRule), true);
+  assert.equal(countNamed(output.proxies, HOME_PROXY_NAME), 1);
+  assert.equal(countNamed(output["proxy-groups"], AI_GROUP), 1);
+  assert.equal(output.rules.includes(anthropicFallbackRule), true);
   {
     const exactRule = `DOMAIN,api.anthropic.com,${AI_GROUP}`;
-    assert.equal(config.rules.filter((rule) => rule === exactRule).length, 1);
-    assert.ok(config.rules.indexOf(exactRule) < config.rules.indexOf(anthropicFallbackRule));
+    assert.equal(output.rules.filter((rule) => rule === exactRule).length, 1);
+    assert.ok(output.rules.indexOf(exactRule) < output.rules.indexOf(anthropicFallbackRule));
   }
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN,a-api.anthropic.com,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN,a-api.anthropic.com,${AI_GROUP}`).length,
     0
   );
-  assert.equal(config.rules.filter((rule) => rule === customAiRule).length, 1);
-  assert.equal(config.rules.includes(normalYoutubeRule), true);
-  assert.equal(config.rules.includes(normalMarketplaceRule), true);
-  assert.equal(config.rules.includes(`DOMAIN,www.youtube.com,${AI_GROUP}`), true);
-  assert.equal(config.rules.includes(`DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`), true);
-  assert.equal(config.rules.includes(`DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`), true);
+  assert.equal(output.rules.filter((rule) => rule === customAiRule).length, 1);
+  assert.equal(output.rules.includes(normalYoutubeRule), true);
+  assert.equal(output.rules.includes(normalMarketplaceRule), true);
+  assert.equal(output.rules.includes(`DOMAIN,www.youtube.com,${AI_GROUP}`), true);
+  assert.equal(output.rules.includes(`DOMAIN,marketplace.cursorapi.com,${AI_GROUP}`), true);
+  assert.equal(output.rules.includes(`DOMAIN-SUFFIX,cursor.com,${AI_GROUP}`), true);
   // cursor_core 默认开启：旧 suffix 被清理，改注入 exact 一次。
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
     0
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN,api2.cursor.sh,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN,api2.cursor.sh,${AI_GROUP}`).length,
     1
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,grok.com,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN-SUFFIX,grok.com,${AI_GROUP}`).length,
     1
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN,api.openai.com,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN,api.openai.com,${AI_GROUP}`).length,
     0
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api.openai.com,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api.openai.com,${AI_GROUP}`).length,
     1
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,chat.openai.com,${AI_GROUP}`).length,
+    output.rules.filter((rule) => rule === `DOMAIN-SUFFIX,chat.openai.com,${AI_GROUP}`).length,
     0
   );
   for (const host of OPENAI_CORE_EXACT_DOMAINS) {
     assert.equal(
-      config.rules.filter((rule) => rule === `DOMAIN,${host},${AI_GROUP}`).length,
+      output.rules.filter((rule) => rule === `DOMAIN,${host},${AI_GROUP}`).length,
       1,
       `exact 主机应重注一次：${host}`
     );
   }
-  for (const rule of retiredCursorRules) assert.equal(config.rules.includes(rule), true);
+  for (const rule of retiredCursorRules) assert.equal(output.rules.includes(rule), true);
   assert.equal(
-    config.rules.includes(`DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`),
+    output.rules.includes(`DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$,${AI_GROUP}`),
     false,
     "默认关闭仓库索引后不应重新注入托管 repo 正则"
   );
-  assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), true);
-  assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`), true);
-  assert.equal(config.rules.includes(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`), true);
-  assert.equal(config.rules.includes(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`), true);
-  assert.equal(new Set(config.rules).size, config.rules.length);
-  assert.deepEqual(config.dns["nameserver-policy"], firstNameserverPolicy);
+  assert.equal(output.rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), true);
+  assert.equal(output.rules.includes(`IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`), true);
+  assert.equal(output.rules.includes(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`), true);
+  assert.equal(output.rules.includes(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`), true);
+  assert.equal(new Set(output.rules).size, output.rules.length);
+  assert.deepEqual(output.dns["nameserver-policy"], firstNameserverPolicy);
 });
 
 test("关闭仓库索引后二次运行会移除托管 repo 正则，并保留用户自有规则", () => {
@@ -1294,26 +1716,26 @@ test("关闭仓库索引后二次运行会移除托管 repo 正则，并保留�
     ]
   });
 
-  quietMain(config, "赔钱机场");
-  assert.equal(config.rules.includes(managedRepoRule), false);
-  assert.equal(config.rules.filter((rule) => rule === unknownAiRule).length, 1);
-  assert.equal(config.rules.includes(retiredExactRule), true);
-  assert.equal(config.rules.includes(retiredRegexRule), true);
+  const first = quietMain(config, "赔钱机场");
+  assert.equal(first.rules.includes(managedRepoRule), false);
+  assert.equal(first.rules.filter((rule) => rule === unknownAiRule).length, 1);
+  assert.equal(first.rules.includes(retiredExactRule), true);
+  assert.equal(first.rules.includes(retiredRegexRule), true);
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
+    first.rules.filter((rule) => rule === `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`).length,
     0
   );
   assert.equal(
-    config.rules.filter((rule) => rule === `DOMAIN,api2.cursor.sh,${AI_GROUP}`).length,
+    first.rules.filter((rule) => rule === `DOMAIN,api2.cursor.sh,${AI_GROUP}`).length,
     1
   );
 
-  quietMain(config, "赔钱机场");
-  assert.equal(config.rules.includes(managedRepoRule), false);
-  assert.equal(config.rules.filter((rule) => rule === unknownAiRule).length, 1);
-  assert.equal(config.rules.includes(retiredExactRule), true);
-  assert.equal(config.rules.includes(retiredRegexRule), true);
-  assert.equal(new Set(config.rules).size, config.rules.length);
+  const second = quietMain(first, "赔钱机场");
+  assert.equal(second.rules.includes(managedRepoRule), false);
+  assert.equal(second.rules.filter((rule) => rule === unknownAiRule).length, 1);
+  assert.equal(second.rules.includes(retiredExactRule), true);
+  assert.equal(second.rules.includes(retiredRegexRule), true);
+  assert.equal(new Set(second.rules).size, second.rules.length);
 });
 
 // ---------------------------------------------------------------------------
@@ -1431,21 +1853,179 @@ test("严格 DNS 模式移除独立旁路，并保持私有域名使用系统 DN
   assert.equal(dns["prefer-h3"], false);
 });
 
-test("已开启 TUN 时只补齐 DNS 劫持；AI-only 写顶层查找进程 always，不注入进程路由", () => {
+function tunWarnings(warnings) {
+  return warnings.filter((line) => line.includes("TUN"));
+}
+
+function ipv6Warnings(warnings) {
+  return warnings.filter((line) => line.includes("IPv6"));
+}
+
+test("已开启 TUN 缺少 DNS 劫持时只 warn 不写入；AI-only 写顶层查找进程 always，不注入进程路由", () => {
   const config = configFixture({
     proxies: [airportNode("HK")],
     groups: [group("🚀节点选择", ["HK"])],
     tun: { enable: true, "dns-hijack": ["udp://any:53"] },
     findProcessMode: "off"
   });
-  const output = quietMain(config, "赔钱机场");
-  assert.equal(output.tun["dns-hijack"].includes("any:53"), true);
-  assert.equal(output.tun["dns-hijack"].includes("tcp://any:53"), true);
+  const inputTun = structuredClone(config.tun);
+  const { output, warnings } = captureMain(config, "赔钱机场");
+  assert.deepEqual(output.tun, inputTun);
+  const tunWarning = tunWarnings(warnings);
+  assert.equal(tunWarning.length, 1, `实际：${warnings.join(" | ")}`);
+  assert.match(tunWarning[0], /any:53/);
+  assert.match(tunWarning[0], /tcp:\/\/any:53/);
+  assert.match(tunWarning[0], /Verge 设置/);
   assert.equal(output["find-process-mode"], "always");
   assert.deepEqual(
     output.rules.filter((rule) => String(rule).startsWith("PROCESS-")),
     []
   );
+  assert.deepEqual(quietMain(output, "赔钱机场"), output);
+});
+
+test("已开启 TUN 且 DNS 劫持已齐全时不输出 TUN warn", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])],
+    tun: { enable: true, "dns-hijack": ["any:53", "tcp://any:53"] }
+  });
+  const inputTun = structuredClone(config.tun);
+  const { output, warnings } = captureMain(config, "赔钱机场");
+  assert.deepEqual(output.tun, inputTun);
+  assert.deepEqual(tunWarnings(warnings), []);
+});
+
+test("未开启 TUN 时不输出 TUN warn，也不新增 tun", () => {
+  for (const tun of [undefined, { enable: false }, { enable: "true", "dns-hijack": [] }]) {
+    const config = configFixture({
+      proxies: [airportNode("HK")],
+      groups: [group("🚀节点选择", ["HK"])],
+      tun
+    });
+    const { output, warnings } = captureMain(config, "赔钱机场");
+    assert.deepEqual(tunWarnings(warnings), [], JSON.stringify(tun));
+    if (tun === undefined) assert.equal("tun" in output, false);
+    else assert.deepEqual(output.tun, tun);
+  }
+});
+
+test("TUN 检查开关矩阵：只按开关 warn，不写入 tun", () => {
+  const cases = [
+    { harden: true, strict: false, hijackWarn: 1, strictWarn: 0 },
+    { harden: true, strict: true, hijackWarn: 1, strictWarn: 1 },
+    { harden: false, strict: true, hijackWarn: 0, strictWarn: 0 },
+    { harden: false, strict: false, hijackWarn: 0, strictWarn: 0 }
+  ];
+  for (const { harden, strict, hijackWarn, strictWarn } of cases) {
+    withPatchedSwitches({
+      HARDEN_EXISTING_TUN_DNS_HIJACK: harden,
+      ENABLE_TUN_STRICT_ROUTE: strict
+    }, (patched) => {
+      const label = JSON.stringify({ harden, strict });
+      const config = configFixture({
+        proxies: [airportNode("HK")],
+        groups: [group("🚀节点选择", ["HK"])],
+        tun: { enable: true, "dns-hijack": ["udp://any:53"], "strict-route": false }
+      });
+      const inputTun = structuredClone(config.tun);
+      const warnings = [];
+      const originalInfo = console.info;
+      const originalWarn = console.warn;
+      console.info = () => {};
+      console.warn = (message) => warnings.push(String(message));
+      let output;
+      try {
+        output = patched.main(config, "赔钱机场");
+      } finally {
+        console.info = originalInfo;
+        console.warn = originalWarn;
+      }
+      assert.deepEqual(output.tun, inputTun, label);
+      assert.equal(
+        warnings.filter((line) => line.includes("dns-hijack")).length,
+        hijackWarn,
+        label
+      );
+      assert.equal(
+        warnings.filter((line) => line.includes("strict-route")).length,
+        strictWarn,
+        label
+      );
+
+      const strictOn = configFixture({
+        proxies: [airportNode("HK")],
+        groups: [group("🚀节点选择", ["HK"])],
+        tun: { enable: true, "dns-hijack": ["any:53", "tcp://any:53"], "strict-route": true }
+      });
+      const quietWarnings = [];
+      console.info = () => {};
+      console.warn = (message) => quietWarnings.push(String(message));
+      try {
+        patched.main(strictOn, "赔钱机场");
+      } finally {
+        console.info = originalInfo;
+        console.warn = originalWarn;
+      }
+      assert.deepEqual(tunWarnings(quietWarnings), [], label);
+    });
+  }
+});
+
+test("顶层 ipv6 为 true 时保留原值并输出 IPv6 warn；无 ipv6 或 false 时不改不 warn", () => {
+  const enabled = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])]
+  });
+  enabled.ipv6 = true;
+  const on = captureMain(enabled, "赔钱机场");
+  assert.equal(on.output.ipv6, true);
+  const warning = ipv6Warnings(on.warnings);
+  assert.equal(warning.length, 1, `实际：${on.warnings.join(" | ")}`);
+  assert.match(warning[0], /Verge 设置页/);
+
+  const absent = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])]
+  });
+  const none = captureMain(absent, "赔钱机场");
+  assert.equal("ipv6" in none.output, false);
+  assert.deepEqual(ipv6Warnings(none.warnings), []);
+
+  const disabled = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("🚀节点选择", ["HK"])]
+  });
+  disabled.ipv6 = false;
+  const off = captureMain(disabled, "赔钱机场");
+  assert.equal(off.output.ipv6, false);
+  assert.deepEqual(ipv6Warnings(off.warnings), []);
+});
+
+test("模拟 Verge 丢弃检测：输出的 tun 与顶层 ipv6 与输入一致", () => {
+  const cases = [
+    { tun: undefined, ipv6: undefined },
+    { tun: { enable: true }, ipv6: true },
+    { tun: { enable: true, "dns-hijack": ["udp://any:53"], "strict-route": false }, ipv6: false },
+    { tun: { enable: true, "dns-hijack": ["any:53", "tcp://any:53"], stack: "mixed" }, ipv6: true },
+    { tun: { enable: false, "dns-hijack": [] }, ipv6: undefined }
+  ];
+  for (const { tun, ipv6 } of cases) {
+    const config = configFixture({
+      proxies: [airportNode("HK")],
+      groups: [group("🚀节点选择", ["HK"])],
+      tun
+    });
+    if (ipv6 !== undefined) config.ipv6 = ipv6;
+    const snapshot = structuredClone(config);
+    const output = quietMain(config, "赔钱机场");
+    const label = JSON.stringify({ tun, ipv6 });
+    assert.deepEqual(output.tun, snapshot.tun, label);
+    assert.equal("tun" in output, "tun" in snapshot, label);
+    assert.equal(output.ipv6, snapshot.ipv6, label);
+    assert.equal("ipv6" in output, "ipv6" in snapshot, label);
+    assert.deepEqual(quietMain(output, "赔钱机场"), output, label);
+  }
 });
 
 test("profile 嵌套的 find-process-mode 仍写出顶层 always", () => {
@@ -1594,6 +2174,11 @@ test("grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话�
     assert.equal(rules.includes(`DOMAIN,grok.com,${target}`), true);
     assert.equal(rules.includes(`DOMAIN,cli-chat-proxy.grok.com,${target}`), true);
     assert.equal(rules.includes(`DOMAIN,code.grok.com,${target}`), true);
+    assert.equal(
+      ruleMatchesHost(rules, "auth.x.ai", target),
+      true,
+      "grok_web_assets=false 时 auth.x.ai 仍由 grok_core 覆盖"
+    );
   });
 
   withPatchedGrokWebAssets(true, (patched) => {
@@ -1601,6 +2186,11 @@ test("grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话�
     const target = patched.constants.AI_GROUP;
     assert.equal(ruleMatchesHost(rules, "assets.grok.com", target), true);
     assert.equal(rules.includes(`DOMAIN-SUFFIX,grok.com,${target}`), true);
+    assert.equal(
+      ruleMatchesHost(rules, "auth.x.ai", target),
+      true,
+      "grok_web_assets=true 时 auth.x.ai 仍由 grok_core 覆盖"
+    );
   });
 });
 

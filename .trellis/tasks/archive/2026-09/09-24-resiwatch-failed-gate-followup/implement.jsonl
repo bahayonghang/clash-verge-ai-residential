@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "报告 SQL 与 deadline 契约"}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "报告与档案模块边界"}
+{"file": ".trellis/tasks/archive/2026-09/09-19-resiwatch-resource-optimization/research/performance-20260924-current-binary/note.md", "reason": "当前二进制矩阵与主场景失败记录"}
+{"file": ".trellis/tasks/archive/2026-09/09-19-resiwatch-resource-optimization/research/performance-20260924-raw-fold/capacity-note.md", "reason": "A50/A250 已通过与 A1000 未生成的原因"}

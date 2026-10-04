@@ -38,10 +38,10 @@ upstreamName)`) and an options object when several paths have defaults
 transformed value or a small result object; throw a specific `Error` when a
 safety invariant cannot be met.
 
-`main(config, profileName)` intentionally mutates the received top-level config
-and returns it because that is the Clash extension contract. Helpers that rebuild
-nested sections usually clone or allocate (`buildDnsConfig`, `upsertNamedItem`)
-so they do not accidentally retain incompatible fields.
+`main(config, profileName)` clones the editable configuration with
+`cloneConfigForEdit`, validates and rebuilds the clone, then returns it. The input
+must remain unchanged on success and failure. Nested builders also clone or
+allocate (`buildDnsConfig`, `upsertNamedItem`) to avoid retaining incompatible fields.
 
 ## Composition And Portability
 

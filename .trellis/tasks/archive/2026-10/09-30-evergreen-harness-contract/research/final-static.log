@@ -1,0 +1,28 @@
+
+warning: in the working copy of '.codex/config.toml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/workflows/ci.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.kimi-code/skills/trellis-check/SKILL.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.trellis/spec/frontend/index.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.trellis/spec/frontend/quality-guidelines.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.trellis/spec/residential-monitor/frontend/index.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.trellis/workflow.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'AGENTS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/agents/harnesses.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'justfile', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'residential-monitor/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'skills/residential-rule-tuning/SKILL.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/sync-monitor-version.test.js', LF will be replaced by CRLF the next time Git touches it
+
+=== Validating Context Files ===
+Target dir: D:\Documents\Code\Github\clash-verge-ai-residential\.trellis\tasks\09-30-evergreen-harness-contract
+
+  implement.jsonl:2: Warning: .trellis/workflow.md is 44244 bytes, exceeds context_injection.max_file_bytes (32768); injection will truncate it
+  implement.jsonl: ✓ (6 entries)
+  check.jsonl:2: Warning: .trellis/workflow.md is 44244 bytes, exceeds context_injection.max_file_bytes (32768); injection will truncate it
+  check.jsonl: ✓ (6 entries)
+
+✓ All validations passed
+
+
+{"formal_gate_hashes_still_match": true, "checks": [{"command": ["git", "diff", "--check"], "exit_code": 0}, {"command": ["python", ".trellis/scripts/task.py", "validate", ".trellis/tasks/09-30-evergreen-harness-contract"], "exit_code": 0}], "untracked_text_files_checked": 33, "whitespace_findings": []}

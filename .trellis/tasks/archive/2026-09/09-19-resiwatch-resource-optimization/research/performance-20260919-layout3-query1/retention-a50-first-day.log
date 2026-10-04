@@ -1,0 +1,17 @@
+
+running 1 test
+
+thread 'bench::corpus::tests::isolated_corpus_retention_capacity_gate' (58552) panicked at src\bench\corpus.rs:550:9:
+assertion `left == right` failed: 未完成；保留完整 evidence，不能宣布容量门通过
+  left: Bool(false)
+ right: true
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test bench::corpus::tests::isolated_corpus_retention_capacity_gate ... FAILED
+
+failures:
+
+failures:
+    bench::corpus::tests::isolated_corpus_retention_capacity_gate
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 524 filtered out; finished in 163.16s
+

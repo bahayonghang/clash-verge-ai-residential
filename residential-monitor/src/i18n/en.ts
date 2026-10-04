@@ -203,6 +203,9 @@ export const EN: Record<string, string> = {
   "live.columns.reset": "Reset columns",
   "live.columns.panel": "Show columns",
   "live.table": "Live connections table",
+  "live.page.prev": "Previous",
+  "live.page.next": "Next",
+  "live.page.status": "Page {page} / {matched} matched",
   "live.resize": "Resize column: {column}",
   "live.layout_save_fail": "Could not save the column layout. This window still uses the new widths. Next: drag again or check the disk.",
   "live.filter.title": "Filter workspace",
@@ -508,6 +511,8 @@ export const EN: Record<string, string> = {
   "secret.show": "Show secret",
   "secret.hide": "Hide secret",
   "secret.hint": "After save, this box is filled with dots by default. The secret is not written to logs or the Channel.",
+  "secret.load_fail": "Cannot read the TCP secret. The password box was not updated. Retry.",
+  "secret.retry": "Retry reading the secret",
   "recovery.missing": "Recovery information is not available.",
   "recovery.title": "Recovery Shell",
   "recovery.meta": "App version {app}, database version {db}, supported maximum {max}.",
@@ -705,5 +710,6 @@ export const EN: Record<string, string> = {
   "residential.report.current_off": "Current-policy recalculation is available on the raw tier only.",
   "residential.state.gap": "A collection gap is present. A gap is not zero.",
   "residential.state.paused": "Collection is paused.",
-  "residential.state.disconnected": "The controller is not connected."
+  "residential.state.disconnected": "The controller is not connected.",
+  "window.visibility_fail": "Window state is unavailable. Display refresh is paused. Reopen the window to retry."
 };

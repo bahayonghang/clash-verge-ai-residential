@@ -1,0 +1,9 @@
+{
+  "command": "python .trellis/scripts/get_context.py --mode phase",
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T12:50:55.138420+00:00",
+  "finished_utc": "2026-09-30T12:50:55.547638+00:00",
+  "exit_code": 0,
+  "raw_sha256": "84bd3c9ad52cbdfc52e8f71e0bb0cb0c82d5f017e5ec2f9676a31d04061dd02b",
+  "readable_normalization": "ANSI removed; trailing line whitespace removed; LF"
+}

@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "powershell.exe",
+    "-NoLogo",
+    "-NoProfile",
+    "-Command",
+    "cargo clippy --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace --all-targets -- -D warnings"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:23:42.188900+00:00",
+  "status": "finished",
+  "exit_code": 0,
+  "wall_seconds": 8.456545399999413,
+  "finished_utc": "2026-09-30T15:23:50.646171+00:00"
+}

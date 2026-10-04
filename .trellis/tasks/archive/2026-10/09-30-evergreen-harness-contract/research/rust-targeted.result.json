@@ -1,0 +1,9 @@
+{
+  "command": "cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --lib storage::lifecycle::tests::session_fanout_yields_a_durable_prefix_before_hard_deadline -- --exact --nocapture",
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T12:53:40.891258+00:00",
+  "finished_utc": "2026-09-30T12:53:42.421680+00:00",
+  "exit_code": 0,
+  "raw_sha256": "46415e52cd2b0fefdda6758234e5b2177a6cfc2daae6aedb5c57a0b60f33b7d2",
+  "readable_normalization": "ANSI removed; trailing line whitespace removed; LF"
+}

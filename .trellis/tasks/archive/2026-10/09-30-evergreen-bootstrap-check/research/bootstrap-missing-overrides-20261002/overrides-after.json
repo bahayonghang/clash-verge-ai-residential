@@ -1,0 +1,30 @@
+{
+  ".codex/config.toml": {
+    "present": true,
+    "sha256": "9f2d20e28f0bc9c886312eca3ad3bba41533ef4615aaaafe25e98152302267bb",
+    "selected": false,
+    "copied": false,
+    "origin": "isolated_init_default"
+  },
+  ".kimi-code/skills/trellis-implement/SKILL.md": {
+    "present": true,
+    "sha256": "fb1fa4c36fea58437d20f8a43f0028d1976333bc5bbb4487de1e9c32c48e6e8d",
+    "selected": false,
+    "copied": false,
+    "origin": "isolated_init_default"
+  },
+  ".kimi-code/skills/trellis-check/SKILL.md": {
+    "present": true,
+    "sha256": "882c7a2e5fe966de7511c30bab4d5409e7c9dcf2872ea48d1a8f14e6bc6f2bdb",
+    "selected": false,
+    "copied": false,
+    "origin": "isolated_init_default"
+  },
+  ".kimi-code/skills/trellis-research/SKILL.md": {
+    "present": true,
+    "sha256": "b5c0e7a7282d0b133e3700d2815f893e38adc89c817c61e49f7025c66b58a995",
+    "selected": false,
+    "copied": false,
+    "origin": "isolated_init_default"
+  }
+}

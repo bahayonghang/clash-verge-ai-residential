@@ -1,0 +1,96 @@
+{
+  "corpora": [],
+  "queries": [
+    {
+      "average_active": 50,
+      "window": "30d",
+      "runs": 21,
+      "successful_runs": 21,
+      "first_reader_ms": 6193.5522,
+      "first_reader_exit": 0,
+      "repeated_success_p50_ms": 5775.6395,
+      "repeated_success_p95_ms": 5983.259,
+      "repeated_success_max_ms": 6143.8028
+    },
+    {
+      "average_active": 50,
+      "window": "1d",
+      "runs": 21,
+      "successful_runs": 21,
+      "first_reader_ms": 185.4597,
+      "first_reader_exit": 0,
+      "repeated_success_p50_ms": 216.0609,
+      "repeated_success_p95_ms": 249.6894,
+      "repeated_success_max_ms": 252.9938
+    },
+    {
+      "average_active": 250,
+      "window": "30d",
+      "runs": 2,
+      "successful_runs": 0,
+      "first_reader_ms": 10052.7436,
+      "first_reader_exit": 7,
+      "repeated_success_p50_ms": null,
+      "repeated_success_p95_ms": null,
+      "repeated_success_max_ms": null
+    },
+    {
+      "average_active": 250,
+      "window": "1d",
+      "runs": 21,
+      "successful_runs": 21,
+      "first_reader_ms": 921.8147,
+      "first_reader_exit": 0,
+      "repeated_success_p50_ms": 964.1981,
+      "repeated_success_p95_ms": 1115.1766,
+      "repeated_success_max_ms": 1135.7594
+    },
+    {
+      "average_active": 1000,
+      "window": "30d",
+      "runs": 2,
+      "successful_runs": 0,
+      "first_reader_ms": 10030.4446,
+      "first_reader_exit": 7,
+      "repeated_success_p50_ms": null,
+      "repeated_success_p95_ms": null,
+      "repeated_success_max_ms": null
+    },
+    {
+      "average_active": 1000,
+      "window": "1d",
+      "runs": 21,
+      "successful_runs": 21,
+      "first_reader_ms": 4055.0481,
+      "first_reader_exit": 0,
+      "repeated_success_p50_ms": 4227.3237,
+      "repeated_success_p95_ms": 4853.4803,
+      "repeated_success_max_ms": 5288.779
+    }
+  ],
+  "network_count_checks": [
+    {
+      "name": "network-a50-30d",
+      "exit_code": 0,
+      "connection_count": 324000.0,
+      "expected_connection_count": 324000
+    },
+    {
+      "name": "network-a250-30d",
+      "exit_code": 7,
+      "connection_count": null,
+      "expected_connection_count": 1620000
+    },
+    {
+      "name": "network-a1000-30d",
+      "exit_code": 7,
+      "connection_count": null,
+      "expected_connection_count": 6480000
+    }
+  ],
+  "boundaries": [
+    "Query timings include CLI startup; OS cache was not flushed.",
+    "Nonzero query exits remain failures, not zero counts.",
+    "Generation success does not establish retention, soak or total application memory acceptance."
+  ]
+}

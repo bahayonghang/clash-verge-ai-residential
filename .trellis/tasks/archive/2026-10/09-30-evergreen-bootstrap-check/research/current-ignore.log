@@ -1,0 +1,8 @@
+.gitignore:33:.claude/	.claude/agents/trellis-implement.md
+.gitignore:33:.claude/	.claude/settings.json
+.gitignore:39:.codex/*	.codex/hooks.json
+.gitignore:36:.grok/	.grok/agents/trellis-implement.md
+.gitignore:45:.kimi-code/skills/*	.kimi-code/skills/trellis-start/SKILL.md
+.gitignore:35:.omp/	.omp/agents/trellis-implement.md
+.gitignore:35:.omp/	.omp/extensions/trellis/index.ts
+.gitignore:32:.agents/	.agents/skills/trellis-start/SKILL.md

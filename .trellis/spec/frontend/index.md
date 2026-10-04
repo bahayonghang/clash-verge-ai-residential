@@ -9,14 +9,15 @@ dependencies in the pasteable script. The VitePress docs site lives under
 ## Runtime Model
 
 `clash-verge-ai-residential.js` is a pasteable Clash Verge Rev global extension.
-Its host entry point receives a Mihomo configuration object and returns the same
-object after a validated, idempotent transformation:
+Its host entry point receives a Mihomo configuration object and returns a cloned,
+validated, idempotently transformed configuration without mutating the input:
 
 ```js
 function main(config, profileName) {
-  if (!config || typeof config !== "object") return config;
-  // validate, clean current-managed state, and rebuild configuration
-  return config;
+  if (!isPlainObject(config)) fail("Invalid configuration");
+  const working = cloneConfigForEdit(config);
+  // validate, clean current-managed state, and rebuild working
+  return working;
 }
 ```
 
@@ -40,21 +41,23 @@ and repository secret scanner.
 
 ## Pre-Development Checklist
 
-- Read `CLAUDE.md` and the guide matching the code being changed.
+- Read the shared `AGENTS.md` and the guide matching the code being changed.
+  `CLAUDE.md` is the Claude Code loader only; other tools do not require it.
 - Read the relevant section of `clash-verge-ai-residential.js` before changing a
   constant, rule list, DNS policy, or reserved name.
 - Search `tests/regression.test.js` for the existing positive, negative,
   managed-rule ownership, and idempotence coverage for that behavior.
 - For local rendering changes, read `scripts/sync-local-config.js`,
   `tests/sync-local-config.test.js`, and `docs/local-configuration.md` together.
-- Keep the public `HOME_PROXY_TEMPLATE` credentials as `"xxx"` or `""`; never
-  edit or commit `*.local.toml` or `*.local.js`.
+- Keep the public `HOME_PROXY_TEMPLATE` credentials as `"xxx"` or `""`. Never
+  commit `*.local.toml` or `*.local.js`. Follow the `AGENTS.md` authorization
+  boundary for local TOML; never hand-edit generated local JavaScript.
 
 ## Quality Check
 
-Run `just ci` (equivalent to `npm run ci`). It performs `node --check`, three
-`node:test` suites, and the direct `scripts/check-template-safety.js` repository
-scan. Domain changes also require narrow positive coverage and explicit negative
+Run the actual `just ci` target: `monitor-check` followed by root `npm run ci`.
+The root gate performs syntax checks, the explicitly listed Node test suites,
+and the repository template-safety scan. Domain changes require positive and negative
 coverage for shared or non-AI traffic. Node tests do not replace a sanitized
 real-profile check in Clash Verge Rev when host behavior changes.
 

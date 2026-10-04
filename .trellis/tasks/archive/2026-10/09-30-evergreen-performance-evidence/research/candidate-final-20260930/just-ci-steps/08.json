@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "powershell.exe",
+    "-NoLogo",
+    "-NoProfile",
+    "-Command",
+    "npm run ci"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:15:06.986347+00:00",
+  "status": "finished",
+  "exit_code": 0,
+  "wall_seconds": 5.099589200000082,
+  "finished_utc": "2026-09-30T15:15:12.086775+00:00"
+}

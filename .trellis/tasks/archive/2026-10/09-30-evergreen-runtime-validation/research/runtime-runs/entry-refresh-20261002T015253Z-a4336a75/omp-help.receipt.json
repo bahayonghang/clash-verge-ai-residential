@@ -1,0 +1,20 @@
+{
+  "metadata_only": true,
+  "inference_started": false,
+  "argv": [
+    "<HOME>\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\native\\powershell\\pwsh.EXE",
+    "-NoLogo",
+    "-NoProfile",
+    "-NonInteractive",
+    "-File",
+    "<HOME>\\.npm-global\\omp.ps1",
+    "--help"
+  ],
+  "started_utc": "2026-10-02T01:52:57.782946+00:00",
+  "ended_utc": "2026-10-02T01:52:58.567294+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "7e2961eb00decc25d3a14e46aa800a0c7742baee47c0b19d71e7b2cde150f4f1",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "redactions": [],
+  "representation": "redacted_decoded_output_not_original_bytes"
+}

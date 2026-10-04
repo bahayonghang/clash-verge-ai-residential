@@ -1,0 +1,637 @@
+{
+  "reviewed_utc": "2026-09-30T15:12:08.595373+00:00",
+  "status": "PASS",
+  "scope": "receipt/source/executable metadata only; no product tests, corpus reads or benchmarks run by reviewer",
+  "errors": [],
+  "receipt_count": 36,
+  "receipts": [
+    {
+      "file": "projection-cache-20260930/cache-bench-tests.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "12",
+          "0",
+          "1"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-20260930/cache-bin-build.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-20260930/cache-clippy.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-20260930/cache-diff-check.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-20260930/cache-fmt.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-20260930/cache-raw-fold-tests.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "4",
+          "0",
+          "1"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-20260930/cache-service-tests.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "53",
+          "0",
+          "3"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-20260930/cache-test-build.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-20260930/network-contract-restored.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-20260930/original-semantics.receipt.json",
+      "exit_code": 101,
+      "test_summaries": [
+        [
+          "0",
+          "1",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-20260930/resource-before-lazy.receipt.json",
+      "exit_code": 101,
+      "test_summaries": [
+        [
+          "0",
+          "1",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-lazy-20260930/lazy-raw-fold-tests.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "5",
+          "0",
+          "1"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/production-30d-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/production-30d-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/production-minute-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/production-minute-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r1-all-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r1-all-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r1-residential-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r1-residential-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r2-all-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r2-all-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r2-residential-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r2-residential-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r3-all-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r3-all-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r3-residential-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-comparison-20260930/r3-residential-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-lazy-comparison-20260930/r1-all-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-lazy-comparison-20260930/r1-all-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-lazy-comparison-20260930/r1-residential-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-lazy-comparison-20260930/r1-residential-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-lazy-comparison-20260930/r2-all-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-lazy-comparison-20260930/r2-all-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-lazy-comparison-20260930/r2-residential-before.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    },
+    {
+      "file": "projection-cache-lazy-comparison-20260930/r2-residential-cache.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "log_hashes_match": true
+    }
+  ],
+  "lazy_source_sha256": "F6495AC9C01D99FB5F4D4B950AE3F255A59FF4FDC46ACA230FFD9A59E994C936",
+  "identities": {
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-library-tests.exe": {
+      "sha256": "91FF44C0EB081C3E1F572F4ABA7C9574C18FECE73CB172BBBF0881FEC0ACA1DA",
+      "matches": true
+    },
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\projection-cache-v1\\candidate-library-tests.exe": {
+      "sha256": "8BCCEC95F7C26741B25FDB478AD454A30516528595E0BDB0111589ABB1D49A44",
+      "matches": true
+    },
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\projection-cache-lazy\\candidate-library-tests.exe": {
+      "sha256": "EFBD43FFB61FC8D0CB290F116AC6F0FB6A5888C000332FC4C4E093429D3E37DC",
+      "matches": true
+    }
+  },
+  "comparisons": [
+    {
+      "folder": "projection-cache-comparison-20260930",
+      "filter": "all",
+      "samples_per_side": 3,
+      "projection_ms": {
+        "samples": {
+          "before": [
+            3352.8212000000003,
+            3176.7212,
+            3146.6355
+          ],
+          "cache": [
+            2705.9514,
+            2729.552,
+            2787.2702
+          ]
+        },
+        "before_median": 3176.7212,
+        "cache_median": 2729.552,
+        "ratio": 0.8592356168995883
+      },
+      "scan_ms": {
+        "samples": {
+          "before": [
+            3922.8486,
+            3889.1742000000004,
+            3869.7581
+          ],
+          "cache": [
+            3808.4645,
+            3959.5855,
+            3906.8561
+          ]
+        },
+        "before_median": 3889.1742000000004,
+        "cache_median": 3906.8561,
+        "ratio": 1.0045464407328424
+      }
+    },
+    {
+      "folder": "projection-cache-comparison-20260930",
+      "filter": "residential",
+      "samples_per_side": 3,
+      "projection_ms": {
+        "samples": {
+          "before": [
+            2628.9666,
+            2644.1376999999998,
+            2568.8687999999997
+          ],
+          "cache": [
+            2277.9109000000003,
+            2253.5996,
+            2268.6029
+          ]
+        },
+        "before_median": 2628.9666,
+        "cache_median": 2268.6029,
+        "ratio": 0.8629257214602878
+      },
+      "scan_ms": {
+        "samples": {
+          "before": [
+            3495.5474,
+            3554.2898000000005,
+            3461.7095999999997
+          ],
+          "cache": [
+            3757.0764,
+            3760.4062000000004,
+            3545.258
+          ]
+        },
+        "before_median": 3495.5474,
+        "cache_median": 3757.0764,
+        "ratio": 1.07481775243557
+      }
+    },
+    {
+      "folder": "projection-cache-lazy-comparison-20260930",
+      "filter": "all",
+      "samples_per_side": 2,
+      "projection_ms": {
+        "samples": {
+          "before": [
+            3296.0671,
+            3163.3391
+          ],
+          "cache": [
+            2741.0274,
+            2723.6039
+          ]
+        },
+        "before_median": 3229.7031,
+        "cache_median": 2732.31565,
+        "ratio": 0.8459959214207646
+      },
+      "scan_ms": {
+        "samples": {
+          "before": [
+            3765.5087,
+            3866.9202
+          ],
+          "cache": [
+            3793.0148,
+            3896.8444
+          ]
+        },
+        "before_median": 3816.21445,
+        "cache_median": 3844.9296,
+        "ratio": 1.0075245116269607
+      }
+    },
+    {
+      "folder": "projection-cache-lazy-comparison-20260930",
+      "filter": "residential",
+      "samples_per_side": 2,
+      "projection_ms": {
+        "samples": {
+          "before": [
+            2680.8552,
+            2550.4833
+          ],
+          "cache": [
+            2331.9664,
+            2350.2684999999997
+          ]
+        },
+        "before_median": 2615.66925,
+        "cache_median": 2341.1174499999997,
+        "ratio": 0.8950357351182684
+      },
+      "scan_ms": {
+        "samples": {
+          "before": [
+            3424.8295,
+            3413.3676
+          ],
+          "cache": [
+            3411.4695,
+            3362.6433
+          ]
+        },
+        "before_median": 3419.0985499999997,
+        "cache_median": 3387.0564000000004,
+        "ratio": 0.9906284801296531
+      }
+    }
+  ],
+  "production_v1_samples": [
+    {
+      "file": "projection-cache-comparison-20260930\\production-30d-before.receipt.json",
+      "result": {
+        "connection_count": 2160000,
+        "data_version": 2592000,
+        "download": 507599545,
+        "series_rows": 720,
+        "status": "ok",
+        "tier": "Raw",
+        "upload": 151200035
+      },
+      "production_first_read_ms": 7178.2956
+    },
+    {
+      "file": "projection-cache-comparison-20260930\\production-30d-cache.receipt.json",
+      "result": {
+        "connection_count": 2160000,
+        "data_version": 2592000,
+        "download": 507599545,
+        "series_rows": 720,
+        "status": "ok",
+        "tier": "Raw",
+        "upload": 151200035
+      },
+      "production_first_read_ms": 6730.6508
+    },
+    {
+      "file": "projection-cache-comparison-20260930\\production-minute-before.receipt.json",
+      "result": {
+        "connection_count": 250,
+        "data_version": 2592000,
+        "download": 11725,
+        "series_rows": 1,
+        "status": "ok",
+        "tier": "Raw",
+        "upload": 3497
+      },
+      "production_first_read_ms": 4.8246
+    },
+    {
+      "file": "projection-cache-comparison-20260930\\production-minute-cache.receipt.json",
+      "result": {
+        "connection_count": 250,
+        "data_version": 2592000,
+        "download": 11725,
+        "series_rows": 1,
+        "status": "ok",
+        "tier": "Raw",
+        "upload": 3497
+      },
+      "production_first_read_ms": 4.1297
+    }
+  ],
+  "limits": [
+    "stage proofs disable production deadline",
+    "database was already read; no OS cache eviction",
+    "before identity predates independent Network semantic fix",
+    "selected report scalar checks do not establish complete 21-query capacity or formal matrix gates",
+    "serial receipt intervals do not establish whole-machine load exclusivity"
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "errors": [],
+  "source_files_checked": 108,
+  "source_manifest": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+  "raw_fold_hash": "4D6E8FEB88B142E09F8E62D60BAF20BAC970F11CB8D8E9108B08CFFBF717E6AA",
+  "production_only_process_restriction": true,
+  "tests_bytes_unchanged": true,
+  "historical_files_checked": 195,
+  "historical_unchanged": true,
+  "owner_checks": [
+    {
+      "check": "rust-fmt",
+      "exit": 0,
+      "hashes": {
+        "stdout": true,
+        "stderr": true
+      }
+    },
+    {
+      "check": "raw-fold-tests",
+      "exit": 0,
+      "hashes": {
+        "stdout": true,
+        "stderr": true
+      }
+    },
+    {
+      "check": "report-service-tests",
+      "exit": 0,
+      "hashes": {
+        "stdout": true,
+        "stderr": true
+      }
+    },
+    {
+      "check": "rust-clippy",
+      "exit": 0,
+      "hashes": {
+        "stdout": true,
+        "stderr": true
+      }
+    },
+    {
+      "check": "just-ci",
+      "exit": 0,
+      "hashes": {
+        "stdout": true,
+        "stderr": true
+      }
+    }
+  ],
+  "repeated_native_tests": 0,
+  "release_performance_identity": "NOT_ESTABLISHED; debug local checks only",
+  "reviewer_assertion_correction": "Initial script expected reordered conjunction; corrected to actual authorized line. No product change or repeated native check."
+}

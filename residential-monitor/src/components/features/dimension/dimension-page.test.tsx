@@ -20,6 +20,8 @@ describe("聚合页骨架", () => {
     expect(app.match(/DimensionPage/g)?.length).toBe(3);
     expect(page).toContain("kind: DimensionKind");
     expect(page).toContain("setSelected(null)");
+    expect(page).toContain("onSortChange={setSort}");
+    expect(page).toMatch(/useReport\(\{[\s\S]*?\bsort\b/);
     expect(page).not.toContain("function HostPage");
     expect(page).not.toContain("function RulePage");
   });

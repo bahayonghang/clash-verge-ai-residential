@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "just",
+    "docs-build"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "status": "finished",
+  "started_utc": "2026-10-02T01:48:41.506443+00:00",
+  "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+  "pid": 54592,
+  "stdout_raw_sha256": "eca550f19a48af8e8cfa16a378081c1858f7e77b055cb09850436fe3bd05c223",
+  "stderr_raw_sha256": "c7a080df23c6c03b36c60ba80c2d2f6d3e36e79a20189c0f079467c656a07404",
+  "exit_code": 0,
+  "finished_utc": "2026-10-02T01:48:44.004249+00:00",
+  "wall_seconds": 2.497806499999797
+}

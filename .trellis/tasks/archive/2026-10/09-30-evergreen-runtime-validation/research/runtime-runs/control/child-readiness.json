@@ -1,0 +1,23 @@
+{
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "reviewed_by_main": true,
+  "harnesses": {
+    "codex": {
+      "approved_route": "spawn_agent + trellis-research；V1 非 full-history；不覆盖模型或 V1/V2",
+      "basis_kind": "reviewed_local_prerequisite",
+      "basis_reference": {
+        "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture-plan.md",
+        "locator": "固定命令与 freeze/execute 条件；当前二进制的实际 schema、角色发现与 backend 仍须原生事件证明"
+      }
+    },
+    "grok": {
+      "approved_route": "spawn_subagent(subagent_type=trellis-research)",
+      "basis_kind": "reviewed_local_prerequisite",
+      "basis_reference": {
+        "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-runs/entry-refresh-20261002T015253Z-a4336a75/final-sequence.md",
+        "locator": "执行顺序第 5–6 项；当前版本实际 schema、角色、权限与生命周期由本次 child 事件证明"
+      }
+    }
+  },
+  "review_boundary": "Codex 中文证据损失与 Grok parent TIMEOUT 保留。Child 仅按既定单工具阶段各尝试一次，不重跑 parent、不扩大时限或权限。Claude API400、Kimi 参数互斥、OMP 敏感停止的同失败路线不启动 child。准备依据不证明实际模型、schema、角色或权限通过。"
+}

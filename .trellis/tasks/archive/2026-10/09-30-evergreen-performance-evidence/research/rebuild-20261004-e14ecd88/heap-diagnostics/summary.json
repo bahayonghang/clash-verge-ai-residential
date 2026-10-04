@@ -1,0 +1,282 @@
+{
+  "rounds": 3,
+  "scenes": {
+    "a1000-unchanged": {
+      "baseline": {
+        "runs": 3,
+        "private_p95_median": 11157504.0,
+        "rust_window_peak_median": 1972631,
+        "sqlite_window_peak_median": 194408,
+        "phases": {
+          "rust": {
+            "archive": {
+              "median_p95": 235955.0,
+              "median_max": 235955.0
+            },
+            "ingest": {
+              "median_p95": 1360380.0,
+              "median_max": 1360380.0
+            },
+            "live_query": {
+              "median_p95": 798784.0,
+              "median_max": 798784.0
+            },
+            "report_first_reader": {
+              "median_p95": 4360.0,
+              "median_max": 4360.0
+            },
+            "report_repeated_reader": {
+              "median_p95": 4360.0,
+              "median_max": 4360.0
+            },
+            "sample": {
+              "median_p95": 660111.0,
+              "median_max": 660111.0
+            },
+            "snapshot": {
+              "median_p95": 566000.0,
+              "median_max": 566000.0
+            }
+          },
+          "sqlite": {
+            "archive": {
+              "median_p95": 2400.0,
+              "median_max": 2400.0
+            },
+            "ingest": {
+              "median_p95": 49560.0,
+              "median_max": 49560.0
+            },
+            "live_query": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            },
+            "report_first_reader": {
+              "median_p95": 194408.0,
+              "median_max": 194408.0
+            },
+            "report_repeated_reader": {
+              "median_p95": 194408.0,
+              "median_max": 194408.0
+            },
+            "sample": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            },
+            "snapshot": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            }
+          }
+        }
+      },
+      "candidate": {
+        "runs": 3,
+        "private_p95_median": 12591104.0,
+        "rust_window_peak_median": 1939574,
+        "sqlite_window_peak_median": 238448,
+        "phases": {
+          "rust": {
+            "archive": {
+              "median_p95": 159.0,
+              "median_max": 159.0
+            },
+            "ingest": {
+              "median_p95": 1327323.0,
+              "median_max": 1327323.0
+            },
+            "live_query": {
+              "median_p95": 798784.0,
+              "median_max": 798784.0
+            },
+            "report_first_reader": {
+              "median_p95": 3214.0,
+              "median_max": 3214.0
+            },
+            "report_repeated_reader": {
+              "median_p95": 3214.0,
+              "median_max": 3214.0
+            },
+            "sample": {
+              "median_p95": 660111.0,
+              "median_max": 660111.0
+            },
+            "snapshot": {
+              "median_p95": 566000.0,
+              "median_max": 566000.0
+            }
+          },
+          "sqlite": {
+            "archive": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            },
+            "ingest": {
+              "median_p95": 69824.0,
+              "median_max": 69824.0
+            },
+            "live_query": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            },
+            "report_first_reader": {
+              "median_p95": 238448.0,
+              "median_max": 238448.0
+            },
+            "report_repeated_reader": {
+              "median_p95": 238448.0,
+              "median_max": 238448.0
+            },
+            "sample": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            },
+            "snapshot": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            }
+          }
+        }
+      }
+    },
+    "a1000-metadata": {
+      "baseline": {
+        "runs": 1,
+        "private_p95_median": 11669504.0,
+        "rust_window_peak_median": 3000544,
+        "sqlite_window_peak_median": 198768,
+        "phases": {
+          "rust": {
+            "archive": {
+              "median_p95": 235955.0,
+              "median_max": 235955.0
+            },
+            "ingest": {
+              "median_p95": 2270789.0,
+              "median_max": 2291717.0
+            },
+            "live_query": {
+              "median_p95": 799532.0,
+              "median_max": 799532.0
+            },
+            "report_first_reader": {
+              "median_p95": 4360.0,
+              "median_max": 4360.0
+            },
+            "report_repeated_reader": {
+              "median_p95": 4360.0,
+              "median_max": 4360.0
+            },
+            "sample": {
+              "median_p95": 660111.0,
+              "median_max": 660111.0
+            },
+            "snapshot": {
+              "median_p95": 566000.0,
+              "median_max": 566000.0
+            }
+          },
+          "sqlite": {
+            "archive": {
+              "median_p95": 2400.0,
+              "median_max": 2400.0
+            },
+            "ingest": {
+              "median_p95": 49560.0,
+              "median_max": 49560.0
+            },
+            "live_query": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            },
+            "report_first_reader": {
+              "median_p95": 198768.0,
+              "median_max": 198768.0
+            },
+            "report_repeated_reader": {
+              "median_p95": 198768.0,
+              "median_max": 198768.0
+            },
+            "sample": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            },
+            "snapshot": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            }
+          }
+        }
+      },
+      "candidate": {
+        "runs": 1,
+        "private_p95_median": 13275136.0,
+        "rust_window_peak_median": 3012065,
+        "sqlite_window_peak_median": 251552,
+        "phases": {
+          "rust": {
+            "archive": {
+              "median_p95": 158.0,
+              "median_max": 158.0
+            },
+            "ingest": {
+              "median_p95": 2282310.0,
+              "median_max": 2303238.0
+            },
+            "live_query": {
+              "median_p95": 799532.0,
+              "median_max": 799532.0
+            },
+            "report_first_reader": {
+              "median_p95": 3214.0,
+              "median_max": 3214.0
+            },
+            "report_repeated_reader": {
+              "median_p95": 3214.0,
+              "median_max": 3214.0
+            },
+            "sample": {
+              "median_p95": 660111.0,
+              "median_max": 660111.0
+            },
+            "snapshot": {
+              "median_p95": 566000.0,
+              "median_max": 566000.0
+            }
+          },
+          "sqlite": {
+            "archive": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            },
+            "ingest": {
+              "median_p95": 84936.0,
+              "median_max": 84936.0
+            },
+            "live_query": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            },
+            "report_first_reader": {
+              "median_p95": 251552.0,
+              "median_max": 251552.0
+            },
+            "report_repeated_reader": {
+              "median_p95": 251552.0,
+              "median_max": 251552.0
+            },
+            "sample": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            },
+            "snapshot": {
+              "median_p95": 0.0,
+              "median_max": 0.0
+            }
+          }
+        }
+      }
+    }
+  },
+  "boundary": "Diagnostic only; heap counter adds per-allocation atomics; not a formal F6/F7 measurement."
+}

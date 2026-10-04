@@ -1,0 +1,20 @@
+{
+  "authorization": "Main approved only this generated pyc and empty non-reparse directory",
+  "deviation": "Snapshot importlib generated pyc outside runtime-runs; protected snapshot excluded ignored pyc",
+  "cause": "Missing dont_write_bytecode",
+  "absolute_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-runtime-validation\\research\\__pycache__\\runtime-capture.cpython-314.pyc",
+  "directory": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-runtime-validation\\research\\__pycache__",
+  "created_utc": "2026-10-02T02:13:57.5752424Z",
+  "modified_utc": "2026-10-02T02:13:57.5757883Z",
+  "size_bytes": 53651,
+  "sha256": "792920c37423267d6d10a46a758f63b0a97a0d555e3ac21436e032ea6553de3d",
+  "frozen_capture_sha256": "392b2f4c211c03f0bb9479dcbb5e6804660a8b3a82f31c618ef814d28036cf27",
+  "reparse_point": false,
+  "cleanup_status": "CONFIRMED_SINGLE_FILE_AND_EMPTY_DIRECTORY_DELETED",
+  "observed_utc": "2026-10-02T02:16:05.7235883Z",
+  "initial_policy_rejection": "Combined PowerShell cleanup command blocked by policy; no more specific reason supplied",
+  "file_deleted": true,
+  "empty_directory_deleted": true,
+  "completed_utc": "2026-10-02T02:17:17.063377+00:00",
+  "safer_retry": "Read-only validation/receipt, fixed absolute single-file deletion, empty directory validation, fixed absolute empty-directory deletion; no recursive delete"
+}

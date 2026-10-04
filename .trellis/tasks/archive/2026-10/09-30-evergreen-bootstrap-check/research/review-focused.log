@@ -1,0 +1,27 @@
+✔ 版本解析忽略升级警告中的项目版本，只使用明确的版本行 (1.224ms)
+✔ Windows 发现与版本探针保留中文和单引号路径 (601.4329ms)
+✔ 项目版本匹配时只报告 bootstrap 前提，不执行 init (10.5246ms)
+✔ 版本不匹配阻断 bootstrap，不能采用警告中的匹配版本 (8.1757ms)
+✔ 入口缺失阻断 bootstrap (8.506ms)
+✔ 启动权限失败阻断 bootstrap (7.8522ms)
+✔ 非零但输出匹配版本阻断 bootstrap (8.6733ms)
+✔ 包装器运行失败阻断 bootstrap (8.1798ms)
+✔ 版本未知阻断 bootstrap (8.4038ms)
+✔ 版本只出现在 stderr阻断 bootstrap (7.8668ms)
+✔ 进程被信号终止阻断 bootstrap (7.9236ms)
+✔ 版本探针超时阻断 bootstrap (8.0773ms)
+✔ 可用替代入口不掩盖首选包装器失败，bootstrap 与客户端分别报告 (9.9446ms)
+✔ 显式入口不回落 PATH，发现失败和零候选均报告阻断 (10.4538ms)
+✔ 缺失项目版本或覆盖文件不能放行 bootstrap (11.8508ms)
+✔ 参数拒绝未知工具、相对入口、重复入口和执行型开关 (0.3978ms)
+✔ 显式入口和替代入口使用规范化绝对路径 (0.0736ms)
+✔ CLI fixture 保留 JSON 与失败退出码，不依赖本机客户端 (629.676ms)
+✔ 根质量门只接入环境检查语法与 fixture，不要求本机客户端可用 (0.5624ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1438.3778

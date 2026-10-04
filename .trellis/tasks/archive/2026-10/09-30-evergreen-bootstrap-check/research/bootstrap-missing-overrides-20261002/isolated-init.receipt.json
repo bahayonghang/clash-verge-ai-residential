@@ -1,0 +1,26 @@
+{
+  "name": "isolated-init",
+  "argv": [
+    "D:\\GreenSoftware\\node\\node.EXE",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\tool\\node_modules\\@mindfoldhq\\trellis\\bin\\trellis.js",
+    "init",
+    "--claude",
+    "--codex",
+    "--grok",
+    "--kimi",
+    "--omp",
+    "--skip-existing",
+    "-y"
+  ],
+  "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\candidate",
+  "started_utc": "2026-10-02T14:15:00.035152+00:00",
+  "native_exit_code": 0,
+  "timed_out": false,
+  "pid": 59536,
+  "finished_utc": "2026-10-02T14:15:00.778320+00:00",
+  "wall_seconds": 0.7431949000019813,
+  "stdout": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\bootstrap-missing-overrides-20261002\\isolated-init.stdout.raw.log",
+  "stderr": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\bootstrap-missing-overrides-20261002\\isolated-init.stderr.raw.log",
+  "stdout_sha256": "67591df029a1395d489029e7c939391cb8d95fe79e4c38ac9637b707b86bead4",
+  "stderr_sha256": "d91c7cfaa089baba02d8026d5eb3d8883a8004cdad94dcdd0f9fca6bd32da4cf"
+}

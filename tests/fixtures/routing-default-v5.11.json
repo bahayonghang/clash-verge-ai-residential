@@ -1,0 +1,317 @@
+{
+  "baselineCommit": "063c5561b9e81e42f89d7966a5d1a9772bdc44b3",
+  "profileName": "Baseline fixture",
+  "projection": {
+    "rules": [
+      "DOMAIN,localhost,DIRECT",
+      "DOMAIN-SUFFIX,localhost,DIRECT",
+      "DOMAIN-SUFFIX,local,DIRECT",
+      "DOMAIN-SUFFIX,lan,DIRECT",
+      "DOMAIN-SUFFIX,home.arpa,DIRECT",
+      "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
+      "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve",
+      "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
+      "IP-CIDR,169.254.0.0/16,DIRECT,no-resolve",
+      "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
+      "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
+      "IP-CIDR,224.0.0.0/4,DIRECT,no-resolve",
+      "IP-CIDR6,::1/128,DIRECT,no-resolve",
+      "IP-CIDR6,fc00::/7,DIRECT,no-resolve",
+      "IP-CIDR6,fe80::/10,DIRECT,no-resolve",
+      "IP-CIDR6,ff00::/8,DIRECT,no-resolve",
+      "DOMAIN-SUFFIX,claude.ai,AI-家宽",
+      "DOMAIN-SUFFIX,claude.com,AI-家宽",
+      "DOMAIN-SUFFIX,claudemcpcontent.com,AI-家宽",
+      "DOMAIN-SUFFIX,claudeusercontent.com,AI-家宽",
+      "DOMAIN-SUFFIX,chatgpt.com,AI-家宽",
+      "DOMAIN-SUFFIX,oaiusercontent.com,AI-家宽",
+      "DOMAIN-SUFFIX,api.openai.com,AI-家宽",
+      "DOMAIN-SUFFIX,gemini.google.com,AI-家宽",
+      "DOMAIN-SUFFIX,aistudio.google.com,AI-家宽",
+      "DOMAIN-SUFFIX,api5.cursor.sh,AI-家宽",
+      "DOMAIN-SUFFIX,gcpp.cursor.sh,AI-家宽",
+      "DOMAIN-SUFFIX,authentication.cursor.sh,AI-家宽",
+      "DOMAIN-SUFFIX,cursorvm.com,AI-家宽",
+      "DOMAIN-SUFFIX,grok.com,AI-家宽",
+      "DOMAIN-SUFFIX,api.x.ai,AI-家宽",
+      "DOMAIN,api.anthropic.com,AI-家宽",
+      "DOMAIN,mcp-proxy.anthropic.com,AI-家宽",
+      "DOMAIN,assets-proxy.anthropic.com,AI-家宽",
+      "DOMAIN,cloudcode-pa.googleapis.com,AI-家宽",
+      "DOMAIN,daily-cloudcode-pa.googleapis.com,AI-家宽",
+      "DOMAIN,cloudaicompanion.googleapis.com,AI-家宽",
+      "DOMAIN,generativelanguage.googleapis.com,AI-家宽",
+      "DOMAIN,antigravity.google,AI-家宽",
+      "DOMAIN,chat.openai.com,AI-家宽",
+      "DOMAIN,android.chat.openai.com,AI-家宽",
+      "DOMAIN,desktop.chat.openai.com,AI-家宽",
+      "DOMAIN,ios.chat.openai.com,AI-家宽",
+      "DOMAIN,tcr9i.chat.openai.com,AI-家宽",
+      "DOMAIN,alkalicore-pa.clients6.google.com,AI-家宽",
+      "DOMAIN,alkalimakersuite-pa.clients6.google.com,AI-家宽",
+      "DOMAIN,webchannel-alkalimakersuite-pa.clients6.google.com,AI-家宽",
+      "DOMAIN,aiplatform.googleapis.com,AI-家宽",
+      "DOMAIN,aiplatform.us.rep.googleapis.com,AI-家宽",
+      "DOMAIN,aiplatform.eu.rep.googleapis.com,AI-家宽",
+      "DOMAIN,api2.cursor.sh,AI-家宽",
+      "DOMAIN,api3.cursor.sh,AI-家宽",
+      "DOMAIN,api4.cursor.sh,AI-家宽",
+      "DOMAIN,authenticate.cursor.sh,AI-家宽",
+      "DOMAIN,authenticator.cursor.sh,AI-家宽",
+      "DOMAIN,adminportal42.cursor.sh,AI-家宽",
+      "DOMAIN,api.cursor.com,AI-家宽",
+      "DOMAIN,auth.x.ai,AI-家宽",
+      "DOMAIN-REGEX,^[a-z0-9-]+-aiplatform\\.googleapis\\.com$,AI-家宽",
+      "IP-CIDR,160.79.104.0/23,AI-家宽,no-resolve",
+      "IP-CIDR6,2607:6bc0::/48,AI-家宽,no-resolve",
+      "DOMAIN,custom.example.test,DIRECT",
+      "DOMAIN-SUFFIX,company.example.test,Proxy",
+      "MATCH,Proxy"
+    ],
+    "dns": {
+      "nameserver": [
+        "https://1.1.1.1/dns-query#Proxy&disable-ipv6=true",
+        "https://8.8.8.8/dns-query#Proxy&disable-ipv6=true"
+      ],
+      "nameserver-policy": {
+        "localhost": [
+          "system"
+        ],
+        "+.localhost": [
+          "system"
+        ],
+        "+.local": [
+          "system"
+        ],
+        "+.lan": [
+          "system"
+        ],
+        "+.home.arpa": [
+          "system"
+        ],
+        "+.claude.ai": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.claude.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.claudemcpcontent.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.claudeusercontent.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.chatgpt.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.oaiusercontent.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.api.openai.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.gemini.google.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.aistudio.google.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.api5.cursor.sh": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.gcpp.cursor.sh": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.authentication.cursor.sh": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.cursorvm.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.grok.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "+.api.x.ai": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "api.anthropic.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "mcp-proxy.anthropic.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "assets-proxy.anthropic.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "cloudcode-pa.googleapis.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "daily-cloudcode-pa.googleapis.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "cloudaicompanion.googleapis.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "generativelanguage.googleapis.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "antigravity.google": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "chat.openai.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "android.chat.openai.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "desktop.chat.openai.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "ios.chat.openai.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "tcr9i.chat.openai.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "alkalicore-pa.clients6.google.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "alkalimakersuite-pa.clients6.google.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "webchannel-alkalimakersuite-pa.clients6.google.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "aiplatform.googleapis.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "aiplatform.us.rep.googleapis.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "aiplatform.eu.rep.googleapis.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "api2.cursor.sh": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "api3.cursor.sh": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "api4.cursor.sh": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "authenticate.cursor.sh": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "authenticator.cursor.sh": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "adminportal42.cursor.sh": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "api.cursor.com": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "auth.x.ai": [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ],
+        "geosite:private": [
+          "system"
+        ],
+        "geosite:cn": [
+          "https://dns.alidns.com/dns-query#DIRECT&disable-ipv6=true",
+          "https://doh.pub/dns-query#DIRECT&disable-ipv6=true"
+        ]
+      },
+      "fake-ip-filter": [
+        "custom.example.test",
+        "+.lan",
+        "+.local",
+        "+.localhost",
+        "+.home.arpa",
+        "localhost",
+        "time.*.com",
+        "ntp.*.com",
+        "+.msftncsi.com",
+        "+.msftconnecttest.com",
+        "localhost.ptlogin2.qq.com"
+      ],
+      "enable": true,
+      "ipv6": false,
+      "cache-algorithm": "arc",
+      "prefer-h3": false,
+      "enhanced-mode": "fake-ip",
+      "fake-ip-range": "198.18.0.1/16",
+      "fake-ip-filter-mode": "blacklist",
+      "default-nameserver": [
+        "223.5.5.5",
+        "119.29.29.29"
+      ],
+      "proxy-server-nameserver": [
+        "https://dns.alidns.com/dns-query#DIRECT&disable-ipv6=true",
+        "https://doh.pub/dns-query#DIRECT&disable-ipv6=true"
+      ],
+      "direct-nameserver": [
+        "https://dns.alidns.com/dns-query#DIRECT&disable-ipv6=true",
+        "https://doh.pub/dns-query#DIRECT&disable-ipv6=true"
+      ],
+      "direct-nameserver-follow-policy": true,
+      "respect-rules": true
+    },
+    "group": {
+      "name": "AI-家宽",
+      "type": "select",
+      "proxies": [
+        "家宽-SOCKS5"
+      ],
+      "disable-udp": false
+    },
+    "home": {
+      "type": "socks5",
+      "udp": true,
+      "dialer-proxy": "Proxy"
+    }
+  }
+}

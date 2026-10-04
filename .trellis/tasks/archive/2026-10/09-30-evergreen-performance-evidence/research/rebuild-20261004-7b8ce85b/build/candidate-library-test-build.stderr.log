@@ -1,0 +1,6 @@
+   Compiling fastrand v2.5.0
+   Compiling tempfile v3.27.0
+   Compiling residential-monitor v0.3.0 (D:\Documents\Code\Github\clash-verge-ai-residential\bench-data\t05-rebuild-20261004-7b8ce85b\sources\candidate\residential-monitor\src-tauri)
+    Finished `release` profile [optimized] target(s) in 16.88s
+mbx[cache]: 2 hits, 0 misses, 1 bypassed; 0 B downloaded, 0 B uploaded, 0 B stored locally
+mbx[savings]: disposed of 67.0 GiB logical without being asked. that is rather the point.

@@ -1,0 +1,11 @@
+
+running 1 test
+test bench::corpus::tests::isolated_corpus_retention_capacity_gate ... FAILED
+
+failures:
+
+failures:
+    bench::corpus::tests::isolated_corpus_retention_capacity_gate
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 553 filtered out; finished in 2753.55s
+

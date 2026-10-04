@@ -1,0 +1,61 @@
+
+running 56 tests
+test c3::service::dimension_capability_tests::attribution_quality_is_exact_and_independent_of_top_n ... ok
+test c3::service::dimension_capability_tests::category_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::category_rank_differs_from_host ... ok
+test c3::service::dimension_capability_tests::category_rank_sum_does_not_exceed_totals ... ok
+test c3::service::dimension_capability_tests::chain_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::chain_grouping_does_not_fill_exits ... ok
+test c3::service::dimension_capability_tests::chain_rank_differs_from_host ... ok
+test c3::service::dimension_capability_tests::daily_dimension_leaves_exits_unknown ... ok
+test c3::service::dimension_capability_tests::drilldown_filter_chain_and_rule_take_subset ... ok
+test c3::service::dimension_capability_tests::empty_chain_key_is_unknown_not_direct ... ok
+test c3::service::dimension_capability_tests::first_materialization_starts_at_actual_retained_raw ... ok
+test c3::service::dimension_capability_tests::five_kinds_materialize_and_keys_match_raw ... ok
+test c3::service::dimension_capability_tests::fused_raw_summary_matches_independent_totals_and_attribution ... ok
+test c3::service::dimension_capability_tests::host_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::host_rank_uses_destination_ip_and_keeps_empty_unknown ... ok
+test c3::service::dimension_capability_tests::minute_granularity_raw_series_buckets ... ok
+test c3::service::dimension_capability_tests::named_sql_matches_grouping ... ok
+test c3::service::dimension_capability_tests::network_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::process_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::process_rule_chain_network_category_rank_outside_raw ... ok
+test c3::service::dimension_capability_tests::raw_bucket_series_keeps_registered_cancel_and_deadline_across_buckets ... ok
+test c3::service::dimension_capability_tests::raw_bucket_series_matches_grouped_oracle_with_negative_minutes_and_filters ... ok
+test c3::service::dimension_capability_tests::raw_bucket_series_uses_minute_range_without_group_sort ... ok
+test c3::service::dimension_capability_tests::raw_host_direct_exit_is_not_mixed ... ok
+test c3::service::dimension_capability_tests::raw_host_mixed_exits_pick_download_then_chain_key_asc ... ok
+test c3::service::dimension_capability_tests::raw_process_exit_uses_attr_identity ... ok
+test c3::service::dimension_capability_tests::raw_rule_exit_uses_rule_identity ... ok
+test c3::service::dimension_capability_tests::residential_accounting_filter_keeps_tagged_sessions ... ok
+test c3::service::dimension_capability_tests::residential_history_without_raw_or_materialized_category_is_unsupported ... ok
+test c3::service::dimension_capability_tests::residential_host_rank_sorts_before_dimension_top_n ... ok
+test c3::service::dimension_capability_tests::residential_host_rank_sorts_before_raw_top_n_and_conserves_filtered_traffic ... ok
+test c3::service::dimension_capability_tests::residential_raw_recovery_restores_null_categories_without_multiplying_traffic ... ok
+test c3::service::dimension_capability_tests::rule_filter_reduces_and_series_matches_totals ... ok
+test c3::service::dimension_capability_tests::rule_rank_uses_policy_group_not_raw_type ... ok
+test c3::service::dimension_capability_tests::single_hop_direct_chain_keeps_raw_rule_identity ... ok
+test c3::service::dimension_capability_tests::unknown_process_filter_keeps_only_missing_process_sessions ... ok
+test c3::service::dimension_capability_tests::unknown_rank_row_closes_totals ... ok
+test c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof ... ignored, 只读隔离库；记录非空分钟窗口的生产报告阶段，不改变生产 deadline
+test c3::service::raw_stage_probe_tests::isolated_raw_stage_probe ... ignored, 仅显式只读的隔离生成库；逐阶段最多60秒，不输出明细
+test c3::service::raw_stage_probe_tests::isolated_session_first_stage_proof ... ignored, 仅显式只读的隔离生成库；比较 m-first 与 session-first 的计划、摘要和阶段耗时
+test c3::service::report_service_tests::cancel_stops_sqlite_work ... ok
+test c3::service::report_service_tests::deleted_previous_window_is_unknown_and_raw_only_capability_stays_closed ... ok
+test c3::service::report_service_tests::empty_range_is_zero_not_invented ... ok
+test c3::service::report_service_tests::eqp_named_queries_have_no_temp_or_autoindex_on_fixture ... ok
+test c3::service::report_service_tests::golden_totals_and_token_close_transaction ... ok
+test c3::service::report_service_tests::incomplete_day_backlog_reads_retained_raw_but_mixed_deleted_range_fails_closed ... ok
+test c3::service::report_service_tests::internal_usage_combines_deleted_and_raw_days_without_distinct_claims ... ok
+test c3::service::report_service_tests::postdelete_daily_core_preserves_gap_duration_without_fabricated_gap_span ... ok
+test c3::service::report_service_tests::postdelete_daily_totals_and_category_filter_use_core_without_double_counting ... ok
+test c3::service::report_service_tests::postdelete_distinct_daily_count_survives_hour_series_and_shared_minutes ... ok
+test c3::service::report_service_tests::progress_stride_interrupts_active_sql_on_cancel_and_deadline ... ok
+test c3::service::report_service_tests::query_deadline_is_distinct_from_user_cancellation ... ok
+test c3::service::report_service_tests::report_and_period_usage_read_latest_receipt_version_without_floor_rewrite ... ok
+test c3::service::report_service_tests::restart_same_query_same_totals ... ok
+test c3::service::report_service_tests::same_token_export_matches_ui_totals ... ok
+test c3::service::report_service_tests::writer_report_checkpoint_can_run_together ... ok
+
+test result: ok. 53 passed; 0 failed; 3 ignored; 0 measured; 493 filtered out; finished in 12.23s
+

@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "just ci, docs tables, suffix policy keys, baseline projection"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Renderer mapping, example TOML, and public-template defaults must stay aligned"}
+{"file": ".trellis/spec/guides/index.md", "reason": "Removed extra rules must remain in allPossible* for cleanup"}
+{"file": ".trellis/tasks/09-16-fix-anyrouter-dns-egress/research/apex-console-dns-tls.md", "reason": "AC8 host check uses apex /console, not www; no hosts pin"}
+{"file": ".trellis/tasks/09-16-fix-anyrouter-dns-egress/research/extra-dns-coupling.md", "reason": "Enabled extra must not reintroduce +.anyrouter.top residential DNS"}

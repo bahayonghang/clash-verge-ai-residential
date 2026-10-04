@@ -1,0 +1,1 @@
+{"event_index": 1, "stream": "stderr", "stream_sequence": 1, "received_utc": "2026-10-02T02:12:06.238052+00:00", "payload": "error: Cannot combine --prompt with --plan."}

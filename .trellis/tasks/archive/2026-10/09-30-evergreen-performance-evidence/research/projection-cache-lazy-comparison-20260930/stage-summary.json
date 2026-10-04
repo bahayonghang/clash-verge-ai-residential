@@ -1,0 +1,242 @@
+[
+  {
+    "round": 1,
+    "variant": "before",
+    "filter": "all",
+    "report": {
+      "connection_count": 2160000,
+      "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+      "download": 507599545,
+      "filter": "all",
+      "kind": "raw-fold-stage-proof",
+      "limits": [
+        "诊断计时不使用生产 10 秒 deadline",
+        "不清除 OS 缓存",
+        "只读打开，不写安装库"
+      ],
+      "previous_connection_count": 0,
+      "previous_download": 0,
+      "previous_scan_ms": 16.0931,
+      "previous_upload": 0,
+      "projection_end_min": 29829600,
+      "projection_ms": 3296.0671,
+      "projection_start_min": 29743200,
+      "rank_rows": 20,
+      "scan_ms": 3765.5087,
+      "series_rows": 720,
+      "session_count": 2160000,
+      "top_identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+      "upload": 151200035
+    }
+  },
+  {
+    "round": 1,
+    "variant": "cache",
+    "filter": "all",
+    "report": {
+      "connection_count": 2160000,
+      "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+      "download": 507599545,
+      "filter": "all",
+      "kind": "raw-fold-stage-proof",
+      "limits": [
+        "诊断计时不使用生产 10 秒 deadline",
+        "不清除 OS 缓存",
+        "只读打开，不写安装库"
+      ],
+      "previous_connection_count": 0,
+      "previous_download": 0,
+      "previous_scan_ms": 15.899300000000002,
+      "previous_upload": 0,
+      "projection_end_min": 29829600,
+      "projection_ms": 2741.0274,
+      "projection_start_min": 29743200,
+      "rank_rows": 20,
+      "scan_ms": 3793.0148,
+      "series_rows": 720,
+      "session_count": 2160000,
+      "top_identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+      "upload": 151200035
+    }
+  },
+  {
+    "round": 1,
+    "variant": "before",
+    "filter": "residential",
+    "report": {
+      "connection_count": 1620000,
+      "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+      "download": 380699625,
+      "filter": "residential",
+      "kind": "raw-fold-stage-proof",
+      "limits": [
+        "诊断计时不使用生产 10 秒 deadline",
+        "不清除 OS 缓存",
+        "只读打开，不写安装库"
+      ],
+      "previous_connection_count": null,
+      "previous_download": null,
+      "previous_scan_ms": null,
+      "previous_upload": null,
+      "projection_end_min": 29829600,
+      "projection_ms": 2680.8552,
+      "projection_start_min": 29786400,
+      "rank_rows": 20,
+      "scan_ms": 3424.8295,
+      "series_rows": 720,
+      "session_count": 1620000,
+      "top_identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+      "upload": 113399990
+    }
+  },
+  {
+    "round": 1,
+    "variant": "cache",
+    "filter": "residential",
+    "report": {
+      "connection_count": 1620000,
+      "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+      "download": 380699625,
+      "filter": "residential",
+      "kind": "raw-fold-stage-proof",
+      "limits": [
+        "诊断计时不使用生产 10 秒 deadline",
+        "不清除 OS 缓存",
+        "只读打开，不写安装库"
+      ],
+      "previous_connection_count": null,
+      "previous_download": null,
+      "previous_scan_ms": null,
+      "previous_upload": null,
+      "projection_end_min": 29829600,
+      "projection_ms": 2331.9664,
+      "projection_start_min": 29786400,
+      "rank_rows": 20,
+      "scan_ms": 3411.4695,
+      "series_rows": 720,
+      "session_count": 1620000,
+      "top_identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+      "upload": 113399990
+    }
+  },
+  {
+    "round": 2,
+    "variant": "cache",
+    "filter": "all",
+    "report": {
+      "connection_count": 2160000,
+      "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+      "download": 507599545,
+      "filter": "all",
+      "kind": "raw-fold-stage-proof",
+      "limits": [
+        "诊断计时不使用生产 10 秒 deadline",
+        "不清除 OS 缓存",
+        "只读打开，不写安装库"
+      ],
+      "previous_connection_count": 0,
+      "previous_download": 0,
+      "previous_scan_ms": 16.3138,
+      "previous_upload": 0,
+      "projection_end_min": 29829600,
+      "projection_ms": 2723.6039,
+      "projection_start_min": 29743200,
+      "rank_rows": 20,
+      "scan_ms": 3896.8444,
+      "series_rows": 720,
+      "session_count": 2160000,
+      "top_identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+      "upload": 151200035
+    }
+  },
+  {
+    "round": 2,
+    "variant": "before",
+    "filter": "all",
+    "report": {
+      "connection_count": 2160000,
+      "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+      "download": 507599545,
+      "filter": "all",
+      "kind": "raw-fold-stage-proof",
+      "limits": [
+        "诊断计时不使用生产 10 秒 deadline",
+        "不清除 OS 缓存",
+        "只读打开，不写安装库"
+      ],
+      "previous_connection_count": 0,
+      "previous_download": 0,
+      "previous_scan_ms": 16.2928,
+      "previous_upload": 0,
+      "projection_end_min": 29829600,
+      "projection_ms": 3163.3391,
+      "projection_start_min": 29743200,
+      "rank_rows": 20,
+      "scan_ms": 3866.9202,
+      "series_rows": 720,
+      "session_count": 2160000,
+      "top_identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+      "upload": 151200035
+    }
+  },
+  {
+    "round": 2,
+    "variant": "cache",
+    "filter": "residential",
+    "report": {
+      "connection_count": 1620000,
+      "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+      "download": 380699625,
+      "filter": "residential",
+      "kind": "raw-fold-stage-proof",
+      "limits": [
+        "诊断计时不使用生产 10 秒 deadline",
+        "不清除 OS 缓存",
+        "只读打开，不写安装库"
+      ],
+      "previous_connection_count": null,
+      "previous_download": null,
+      "previous_scan_ms": null,
+      "previous_upload": null,
+      "projection_end_min": 29829600,
+      "projection_ms": 2350.2684999999997,
+      "projection_start_min": 29786400,
+      "rank_rows": 20,
+      "scan_ms": 3362.6433,
+      "series_rows": 720,
+      "session_count": 1620000,
+      "top_identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+      "upload": 113399990
+    }
+  },
+  {
+    "round": 2,
+    "variant": "before",
+    "filter": "residential",
+    "report": {
+      "connection_count": 1620000,
+      "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+      "download": 380699625,
+      "filter": "residential",
+      "kind": "raw-fold-stage-proof",
+      "limits": [
+        "诊断计时不使用生产 10 秒 deadline",
+        "不清除 OS 缓存",
+        "只读打开，不写安装库"
+      ],
+      "previous_connection_count": null,
+      "previous_download": null,
+      "previous_scan_ms": null,
+      "previous_upload": null,
+      "projection_end_min": 29829600,
+      "projection_ms": 2550.4833,
+      "projection_start_min": 29786400,
+      "rank_rows": 20,
+      "scan_ms": 3413.3676,
+      "series_rows": 720,
+      "session_count": 1620000,
+      "top_identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+      "upload": 113399990
+    }
+  }
+]

@@ -1,0 +1,3 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.86s
+     Running unittests src\lib.rs (residential-monitor\src-tauri\target\debug\deps\residential_monitor_lib-8c9211dd5db70bc1.exe)
+mbx[gc]: evicted 0 objects and 0 action results (5.3 MiB logical); 43.4 GiB logical remain

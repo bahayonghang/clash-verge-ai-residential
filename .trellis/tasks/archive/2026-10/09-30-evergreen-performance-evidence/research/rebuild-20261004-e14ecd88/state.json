@@ -1,0 +1,1218 @@
+{
+  "status": "P2_GENERATION_ORACLE_PROBES_ENDED; WAITING_P3_RUNNER_BINDING",
+  "created_utc": "2026-10-04T05:38:37.157168+00:00",
+  "repo": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "asset_root": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88",
+  "evidence_root": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-e14ecd88",
+  "previous_evidence": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68",
+  "baseline_revision": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+  "baseline_source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\baseline",
+  "candidate_source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\candidate",
+  "baseline_target": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline",
+  "candidate_target": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate",
+  "executables": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables",
+  "toolchain": "1.98.0",
+  "target": "x86_64-pc-windows-msvc",
+  "environment_override": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "source_manifest": {
+    "residential-monitor/src-tauri/Cargo.lock": {
+      "bytes": 138364,
+      "sha256": "0291B2FF5C33E209EA6D93E6DB6C3503DF6C5BB3E7FC86E7CFF6DE37D427A2B2"
+    },
+    "residential-monitor/src-tauri/Cargo.toml": {
+      "bytes": 1806,
+      "sha256": "0ECB4669D35F0BB53A020735F96B2A7E30A507CD190FBF2A9FF214DC244322B9"
+    },
+    "residential-monitor/src-tauri/build.rs": {
+      "bytes": 1622,
+      "sha256": "17A6B16F529AFBC24A2085F14AF3BE518FEA90B40EA7A8ED39532D795BDBF478"
+    },
+    "residential-monitor/src-tauri/capabilities/default.json": {
+      "bytes": 409,
+      "sha256": "BA25394BE995A8D3A1EC6E4283CBD0AF57513042F6A2318976C294F778776F5B"
+    },
+    "residential-monitor/src-tauri/icons/128x128.png": {
+      "bytes": 17538,
+      "sha256": "330250FC9AAF0D819560F72EF27EB665CB2332C4BE98687823E4E53338550231"
+    },
+    "residential-monitor/src-tauri/icons/128x128@2x.png": {
+      "bytes": 52361,
+      "sha256": "112EC4ADFA200CAD6B314B924D7D8FFFCB9E3D16C4996BBE0E25CF0F39959C44"
+    },
+    "residential-monitor/src-tauri/icons/32x32.png": {
+      "bytes": 1883,
+      "sha256": "1FD42D50C19DAD95AF340A84EABC7AEA6306DC427CFE35DD725955929F53DF71"
+    },
+    "residential-monitor/src-tauri/icons/icon-source.png": {
+      "bytes": 334405,
+      "sha256": "19896735B1FA7B663FA0B7D264DA4EB2583C44598D1C51A87C04DEAC31028064"
+    },
+    "residential-monitor/src-tauri/icons/icon-source.png.json": {
+      "bytes": 386,
+      "sha256": "903E9FDA997A262E4E0461EBE997481E68334BF2CE1EE71FB91021D8973DD0FB"
+    },
+    "residential-monitor/src-tauri/icons/icon.ico": {
+      "bytes": 66119,
+      "sha256": "610C4572B85A5EC76998F37261CB65B5785F161D67BFB2D350D3CA0B10AC3EA9"
+    },
+    "residential-monitor/src-tauri/icons/icon.png": {
+      "bytes": 153389,
+      "sha256": "9EC461D08FC6070D14535616A8C603A1368B1C16C0696C7969FAF30C905C32BC"
+    },
+    "residential-monitor/src-tauri/icons/icon.png.json": {
+      "bytes": 301,
+      "sha256": "490F41696AE88EA74149BE287E6DF91D8481867C85BB57C34FC95CDED06C1AF9"
+    },
+    "residential-monitor/src-tauri/icons/tray-collecting.png": {
+      "bytes": 144252,
+      "sha256": "0DF6F1AE9FA164AB5F93395B83D0512C518ECD3948DB4DAD4867C9CCF05AAE38"
+    },
+    "residential-monitor/src-tauri/icons/tray-collecting.png.json": {
+      "bytes": 299,
+      "sha256": "799720B42CFDD578D52ACDF23ECC12BBA209942952D21E2AE0A26F080BAD2A61"
+    },
+    "residential-monitor/src-tauri/icons/tray-connecting.png": {
+      "bytes": 145731,
+      "sha256": "C62888FD4A197BCC58942337ACB4CDF5915F8DB364A7BCE8782E9F7AC22C86D9"
+    },
+    "residential-monitor/src-tauri/icons/tray-connecting.png.json": {
+      "bytes": 298,
+      "sha256": "0CE882B952D3C872CCE1F931EBEBF4F1822CCB6659657863B43CA14A53C29191"
+    },
+    "residential-monitor/src-tauri/icons/tray-fault.png": {
+      "bytes": 145233,
+      "sha256": "7E97F003B175C3889EAB6DA4337A3113D0C32DDB3B8157555B0702CB6EAF2B70"
+    },
+    "residential-monitor/src-tauri/icons/tray-fault.png.json": {
+      "bytes": 292,
+      "sha256": "1A2F1F0B6D6C21844DAFB7AD0340087EC5F006FE97C5D6FEF2549BAEA92EC71A"
+    },
+    "residential-monitor/src-tauri/icons/tray-paused.png": {
+      "bytes": 145507,
+      "sha256": "B1DF283EDDB838B6F104E49B9D400D29C134D9192CFEBFA9DA5C7826E34E83FE"
+    },
+    "residential-monitor/src-tauri/icons/tray-paused.png.json": {
+      "bytes": 295,
+      "sha256": "4BF95B11B0BDC6D599EDADF79E12289668F006817A42E18DE6F5BDFE6B42DC04"
+    },
+    "residential-monitor/src-tauri/installer.nsh": {
+      "bytes": 1688,
+      "sha256": "2B1E65E5C7DE975182856C3C71C49C4E404D456E045869EF4BD7FE604ACCB776"
+    },
+    "residential-monitor/src-tauri/src/accounting.rs": {
+      "bytes": 37158,
+      "sha256": "A649637A9D886B67D7BC31F060DD44307056CA4520A0C9A043C35566F8A4DFE7"
+    },
+    "residential-monitor/src-tauri/src/app_log.rs": {
+      "bytes": 12101,
+      "sha256": "1D72E9EAAA61A1DDAFB70C0F722D55DF3F07FA032DB3AC238241C2A24280BDC9"
+    },
+    "residential-monitor/src-tauri/src/bench.rs": {
+      "bytes": 16594,
+      "sha256": "121CB2C506C54A0CDCAB6A5B6890A265D6CC9B4B7C964EC66B4BAA2D87A37F98"
+    },
+    "residential-monitor/src-tauri/src/bench/corpus.rs": {
+      "bytes": 33460,
+      "sha256": "EE159B24E153DCF019F18639E20AC47E006D6E80D698EB51B1FF7BE0AFE5EAD6"
+    },
+    "residential-monitor/src-tauri/src/bench/facade.rs": {
+      "bytes": 30454,
+      "sha256": "B95DDC76B4AF6A26A5A2ED82A0B070A141117B480B8E6C30454ED267AC339460"
+    },
+    "residential-monitor/src-tauri/src/bench/heap.rs": {
+      "bytes": 3494,
+      "sha256": "9677F4822CA67DD7615C9CF3A51693136A1A8E09255A87EF5A40386CF0771EA6"
+    },
+    "residential-monitor/src-tauri/src/bench/process.rs": {
+      "bytes": 3330,
+      "sha256": "83734ABF3F95C1BC7313EF9ACEB7BC20E6C5799D416C48CA3723BF9AA9E906EA"
+    },
+    "residential-monitor/src-tauri/src/bench/write_vfs.rs": {
+      "bytes": 17391,
+      "sha256": "C3B5D8849E3EA206C036515D86E9E7D77E75399D037EFEBBEC15685D6E48DA7A"
+    },
+    "residential-monitor/src-tauri/src/bin/monitor-bench.rs": {
+      "bytes": 13846,
+      "sha256": "2E181437144CA02DE6112A338B1E15C1ABEE6296FE79C5FEFB45E3148A98A1F8"
+    },
+    "residential-monitor/src-tauri/src/bin/monitor-db.rs": {
+      "bytes": 101,
+      "sha256": "9CE33620FBAB3B920778E77788B1DA5917CD03A42B200B1419ACC020CE96A7E6"
+    },
+    "residential-monitor/src-tauri/src/c0_contract.rs": {
+      "bytes": 3288,
+      "sha256": "782A2C021749545328D94414D936CC49AF7B71DC86C919BD25578D6911AFF8D7"
+    },
+    "residential-monitor/src-tauri/src/c2/close.rs": {
+      "bytes": 3142,
+      "sha256": "F05AE2361B88D18CAA5D9C4E6D047A89BFF51B1EFF4D2DD7185002B53085BA23"
+    },
+    "residential-monitor/src-tauri/src/c2/collector.rs": {
+      "bytes": 13158,
+      "sha256": "4C9FB1AD3B43EAA791D233539CDE141D614F011AE30633289BCCF9C9126F53C1"
+    },
+    "residential-monitor/src-tauri/src/c2/contract.rs": {
+      "bytes": 795,
+      "sha256": "4992F6B9FB52ED7118F2271C0DAEE00FA288391A7E40EDE07FF457CA88CB2598"
+    },
+    "residential-monitor/src-tauri/src/c2/desktop.rs": {
+      "bytes": 14356,
+      "sha256": "6F14F94FB3D5AE94C1DA08B0FA0D5A326FA2ECDB42126568FF5ADB0AB418DC00"
+    },
+    "residential-monitor/src-tauri/src/c2/dialog.rs": {
+      "bytes": 1059,
+      "sha256": "E7373502B43FFFE6FACB96BF64540869D08FB8CCBA25DA127E54FBFA259DEFC8"
+    },
+    "residential-monitor/src-tauri/src/c2/facade.rs": {
+      "bytes": 160373,
+      "sha256": "0FFF10F7BCA6064E34B839F27D872501A157FD5E03BB9F677808657989A581E2"
+    },
+    "residential-monitor/src-tauri/src/c2/hub.rs": {
+      "bytes": 28959,
+      "sha256": "01E778D6800BEC14336E0B4127A9B4410F7F5EA2915D475B8AC18A6EFDA2AD38"
+    },
+    "residential-monitor/src-tauri/src/c2/mod.rs": {
+      "bytes": 258,
+      "sha256": "2A08601232BF07F98C2A5C6B652FE3715BFDE5EC2C45855F363712F113A216D0"
+    },
+    "residential-monitor/src-tauri/src/c2/query.rs": {
+      "bytes": 30358,
+      "sha256": "4696A5F5F7C004741A5770D486F56A60CAC3D832D3ADBCCCD0B493FC2B7B1BE1"
+    },
+    "residential-monitor/src-tauri/src/c2/settings.rs": {
+      "bytes": 15065,
+      "sha256": "5CEE84FF32D2CD9A0B78B31748D97282BBECD0C10C4AF77C329FF84F4337D9CE"
+    },
+    "residential-monitor/src-tauri/src/c2/shell.rs": {
+      "bytes": 17035,
+      "sha256": "341515C42E3AEF76A4F28F716A4DFC84A84AB276C7E0793B80E8BB9A35C6FBA3"
+    },
+    "residential-monitor/src-tauri/src/c2/subscriptions.rs": {
+      "bytes": 5627,
+      "sha256": "B3C539EBB73113BA90CC8CD0B77F4701AB0828427C1DBFA24C14221238FE3682"
+    },
+    "residential-monitor/src-tauri/src/c3/archive.rs": {
+      "bytes": 64369,
+      "sha256": "8B790BD117339F24FB54B4BACDFA80E94D6AD507ED9D286D0A920588E23539D4"
+    },
+    "residential-monitor/src-tauri/src/c3/backup.rs": {
+      "bytes": 11142,
+      "sha256": "169D51DFE1C5E252E36052EC2F3B7EB1E88C24D8D5BBCC6DDE578FAEF0635A76"
+    },
+    "residential-monitor/src-tauri/src/c3/export.rs": {
+      "bytes": 20367,
+      "sha256": "3E2DF98FAE5EB09A812362C7BF4852483D0BDFC47B6EE9DA1E6413380B01078B"
+    },
+    "residential-monitor/src-tauri/src/c3/mod.rs": {
+      "bytes": 1858,
+      "sha256": "5457581D84240FA73BEA4E4A2DF34664C711D8B7643D955AFE36A61D2021552B"
+    },
+    "residential-monitor/src-tauri/src/c3/query.rs": {
+      "bytes": 48422,
+      "sha256": "F8D19E6D7C3EEF00DB3105D5C5E09DF1B433A25E499D1E1E1621632E80F9A759"
+    },
+    "residential-monitor/src-tauri/src/c3/raw_fold.rs": {
+      "bytes": 58728,
+      "sha256": "4D6E8FEB88B142E09F8E62D60BAF20BAC970F11CB8D8E9108B08CFFBF717E6AA"
+    },
+    "residential-monitor/src-tauri/src/c3/retention.rs": {
+      "bytes": 47044,
+      "sha256": "DFDE9392BCDED56CF71D921753411D7F22E76D44F9A73639FCBCDE66D9A829C6"
+    },
+    "residential-monitor/src-tauri/src/c3/retention_day.rs": {
+      "bytes": 55154,
+      "sha256": "3C8EDA7D7D81D74283E44E198B8CF03E6FDBC33EE9344F243D4B51B3CF9B12D3"
+    },
+    "residential-monitor/src-tauri/src/c3/retention_staged.rs": {
+      "bytes": 39326,
+      "sha256": "49D222ACA11D3813C53A54421954FEC71E936F672C14D0200D1889631159600D"
+    },
+    "residential-monitor/src-tauri/src/c3/rule_name.rs": {
+      "bytes": 6044,
+      "sha256": "E96C59B2E951C7903FAE8C64AB787C1304293F0C247B4290DBE2F061B1875420"
+    },
+    "residential-monitor/src-tauri/src/c3/schema.rs": {
+      "bytes": 15751,
+      "sha256": "958DE605E9901ED925F7147227FC8392D3832A0137F728FE33F9430E6C627873"
+    },
+    "residential-monitor/src-tauri/src/c3/service.rs": {
+      "bytes": 152475,
+      "sha256": "CD2B0E5504D2A4D0DCC956398BF99653FD67AB811B92AE5C0789016E5675D785"
+    },
+    "residential-monitor/src-tauri/src/c3/share.rs": {
+      "bytes": 16155,
+      "sha256": "325D3251776E04AF6FA5A5857DE9ADC8CBFAD8CE040B6476667DFFA3722D407A"
+    },
+    "residential-monitor/src-tauri/src/c3/snapshot.rs": {
+      "bytes": 17108,
+      "sha256": "645D32C59C46B7EDE7503D596A84DDAA1A98FCFB9885475B566595D044E87036"
+    },
+    "residential-monitor/src-tauri/src/c3/space.rs": {
+      "bytes": 1946,
+      "sha256": "C804AE9018E3CF7B62A34F93982E43AE81C48CD437C92A6AB15AA1CAE6D137EE"
+    },
+    "residential-monitor/src-tauri/src/c3/sql.rs": {
+      "bytes": 39434,
+      "sha256": "BA2C80645324081DFF8CFC08E33902047454A631A4F2EDF5980F8D899F268BC9"
+    },
+    "residential-monitor/src-tauri/src/c4/diagnose.rs": {
+      "bytes": 5840,
+      "sha256": "4F8D9E7AF26DC594510B2C19FC0F88AFC04313D56D9B3B2247E3D3D378A418DB"
+    },
+    "residential-monitor/src-tauri/src/c4/engine.rs": {
+      "bytes": 40653,
+      "sha256": "3716B29B77C3FDBFFD134EA443D4780A3143B0DDD07999B0C4805F4394566A60"
+    },
+    "residential-monitor/src-tauri/src/c4/mod.rs": {
+      "bytes": 1023,
+      "sha256": "59CBF0C2CADDF8A7C6667B3C4F11ADED7856763A412A13F816DA114E1AE6592E"
+    },
+    "residential-monitor/src-tauri/src/c4/notify.rs": {
+      "bytes": 8220,
+      "sha256": "CFD4E83BE809B32C563B4741BE3D0E35DB1CA81BB8434AED10CF4D077036644A"
+    },
+    "residential-monitor/src-tauri/src/c4/outbox.rs": {
+      "bytes": 15399,
+      "sha256": "7A11DD7DBFEE7F4ADE285F5866B1AE4AD593F01F9052577387EDD25AFBD87F0C"
+    },
+    "residential-monitor/src-tauri/src/c4/period.rs": {
+      "bytes": 15753,
+      "sha256": "6A7525B0DC2C5E647A44D69CAA67B9A497E1D3384A974C3D523D2EC00503F9D7"
+    },
+    "residential-monitor/src-tauri/src/c4/schema.rs": {
+      "bytes": 4425,
+      "sha256": "7C7A5BB682F2272B725F040CAB04C708CA610A91B6308C1F3B219E2701A98F19"
+    },
+    "residential-monitor/src-tauri/src/c4/store.rs": {
+      "bytes": 14761,
+      "sha256": "B405F83B93874D192D3586C75B886D630EE24F8D0AE6809AF7BA8628CF3D8DF0"
+    },
+    "residential-monitor/src-tauri/src/c4/types.rs": {
+      "bytes": 11233,
+      "sha256": "52E06EF67EB8D3CE0C09617D4F66DD28DB98513D3667D3816767A1B042692CA6"
+    },
+    "residential-monitor/src-tauri/src/c5/about.rs": {
+      "bytes": 1687,
+      "sha256": "71C00536236E7114EC5D24841278FDCC3D75536B3AACE694C8E59BB04473D9C5"
+    },
+    "residential-monitor/src-tauri/src/c5/baseline.rs": {
+      "bytes": 4215,
+      "sha256": "50622FEDCB0BCD74FB5E96F3172D5F140B1A5A8F15E04DB8DBC1863FA3804844"
+    },
+    "residential-monitor/src-tauri/src/c5/concurrent.rs": {
+      "bytes": 5078,
+      "sha256": "3D718B84FD1DAE9F55BEB6ED7AE81A52FC237D71506FDBD2C32758DAC05409D9"
+    },
+    "residential-monitor/src-tauri/src/c5/fault.rs": {
+      "bytes": 7084,
+      "sha256": "2A03D0969EF57BB385FE8C3ECC3384D405D87AB71CA4DD8A55DDEF8548DFB18C"
+    },
+    "residential-monitor/src-tauri/src/c5/mod.rs": {
+      "bytes": 753,
+      "sha256": "A3F69573FCE3AE70CFA44A81F7F450C43FE477C1325BD7F0C8348113C936113A"
+    },
+    "residential-monitor/src-tauri/src/c5/purge.rs": {
+      "bytes": 7745,
+      "sha256": "7C5758378B1F61B689FF65B1BD91FEC4562F0BB8609C258BE845B5FFC82D04DD"
+    },
+    "residential-monitor/src-tauri/src/c5/soak.rs": {
+      "bytes": 2464,
+      "sha256": "E655415ECA24E5E6DAECE23CE61570499E989C132AF4B4E187CFD50473634EEA"
+    },
+    "residential-monitor/src-tauri/src/c5/supply.rs": {
+      "bytes": 3895,
+      "sha256": "92345C8FC04F7A3811F86FEB04FE0DA77926C12BFC2691E060273B0E4548C68F"
+    },
+    "residential-monitor/src-tauri/src/c5/vacuum.rs": {
+      "bytes": 2686,
+      "sha256": "4BA772E04D971BC78D95F79152A1EF25387197219A1FA696394AD36CEE1827B6"
+    },
+    "residential-monitor/src-tauri/src/candidate_schema.rs": {
+      "bytes": 11981,
+      "sha256": "86F221CE359E4A491E59B445B2446A3E55CF830EC6F224841218E585403E22ED"
+    },
+    "residential-monitor/src-tauri/src/controller.rs": {
+      "bytes": 18926,
+      "sha256": "64F809D128AAC3630762F9640EB04F4919913B1DCC379F255607F879016EEAA2"
+    },
+    "residential-monitor/src-tauri/src/credential.rs": {
+      "bytes": 10454,
+      "sha256": "04D746F4AC13633B6D6F1EB9E6AF4F9DE712D0ED971C6A475DD9AF5E864CE471"
+    },
+    "residential-monitor/src-tauri/src/data_dir.rs": {
+      "bytes": 10888,
+      "sha256": "AEC046B99567C2A89B385BA90CB25CA318B09018989591ECD9434763950C003B"
+    },
+    "residential-monitor/src-tauri/src/dbcli/audit.rs": {
+      "bytes": 28172,
+      "sha256": "A532B5F205EF2CFDF889554C763FBEEF7735C35B4708421649919E36299C7EAF"
+    },
+    "residential-monitor/src-tauri/src/dbcli/envelope.rs": {
+      "bytes": 3998,
+      "sha256": "60B825F495FAD3A94DF8A83E367D85BC11F99D152D81DC9F95476182F3881F79"
+    },
+    "residential-monitor/src-tauri/src/dbcli/maint.rs": {
+      "bytes": 15886,
+      "sha256": "15ADCE2A400E06B1CD6DDF48604DA5B8E846B50462BE26BCB23DA80AC034F454"
+    },
+    "residential-monitor/src-tauri/src/dbcli/mod.rs": {
+      "bytes": 27680,
+      "sha256": "1B1C73884C3F148661F10E2F810D536757C6099CD22069445E6F7CC8AB9C0D06"
+    },
+    "residential-monitor/src-tauri/src/dbcli/patterns.rs": {
+      "bytes": 6648,
+      "sha256": "DC1525AF1BA9EEFFA7316BE1F2B5CD19C29CCD75729B2B3871B07BF71C8555E4"
+    },
+    "residential-monitor/src-tauri/src/dbcli/render.rs": {
+      "bytes": 5839,
+      "sha256": "27588517827B378538B7604D5A2AD43F8D1E4D67E6433693A48341B6D3B50CCC"
+    },
+    "residential-monitor/src-tauri/src/dbcli/resolve.rs": {
+      "bytes": 3838,
+      "sha256": "B56DB9438A4620077851F7706ACC25388C5314EE87C0A4ACB1D30E432A49063D"
+    },
+    "residential-monitor/src-tauri/src/dimension_rank_table_layout.rs": {
+      "bytes": 4902,
+      "sha256": "E864819BDC7854117EA2695066BE9B168C79EBE1089867CA39A4604682360757"
+    },
+    "residential-monitor/src-tauri/src/evidence.rs": {
+      "bytes": 3728,
+      "sha256": "1F68C8048433C75B11EA7A436101F37419B94DA598F0E4BE709C7D0A409D047D"
+    },
+    "residential-monitor/src-tauri/src/i18n.rs": {
+      "bytes": 24150,
+      "sha256": "C1E395FE1B6847415FFDA71FB0F9ACE3BC43B1F0AAE044B3A84482246BC928E3"
+    },
+    "residential-monitor/src-tauri/src/identity.rs": {
+      "bytes": 1372,
+      "sha256": "83FCCEFC2ED58E757995AF68EEA13584366955F9E9FC3929A8A8339D2869062C"
+    },
+    "residential-monitor/src-tauri/src/lib.rs": {
+      "bytes": 79244,
+      "sha256": "0BAF7563E612B8364F0EFD2E585D9D7F66DF204B967376D559FB5E10A8EC6B5D"
+    },
+    "residential-monitor/src-tauri/src/live.rs": {
+      "bytes": 2512,
+      "sha256": "1936125AE15B168A9EBE16902AD3243108682A7DF1B0E8CE0E0CD106B6D470BC"
+    },
+    "residential-monitor/src-tauri/src/live_table_layout.rs": {
+      "bytes": 5877,
+      "sha256": "1FC4D1B0FF90C486F4292B7160BBB82AC46AD286A78EFB9A284618A97AE03EB1"
+    },
+    "residential-monitor/src-tauri/src/main.rs": {
+      "bytes": 118,
+      "sha256": "2E162270F6726A0BF25D75533A95922227A1540CA0FB72F148D67253631FC2E2"
+    },
+    "residential-monitor/src-tauri/src/redact.rs": {
+      "bytes": 688,
+      "sha256": "CE0714883EE987AF4F176A02B8623F6EFBE7C29B7068623B65CEE7B55F8E4276"
+    },
+    "residential-monitor/src-tauri/src/residential.rs": {
+      "bytes": 3481,
+      "sha256": "225C288CCB7FC12FB90C12023D6E93F7077DABEDEB0824DEE40EC0937B7AD0BB"
+    },
+    "residential-monitor/src-tauri/src/session.rs": {
+      "bytes": 8914,
+      "sha256": "C259FFF15069147B1D90258B2C830B3B8095B3CF4550F12AE1B131FCE459EEFA"
+    },
+    "residential-monitor/src-tauri/src/session_host.rs": {
+      "bytes": 3164,
+      "sha256": "C15B38A27429EEE61FA329DEC4EEE7F59DE4F6FE41CA9A96A1FFD8CE162F8825"
+    },
+    "residential-monitor/src-tauri/src/sqlite_probe.rs": {
+      "bytes": 8090,
+      "sha256": "546E107AD5090AFEABFFE80B43C7019D3527428D758F26E81E0A879BD0F82FFC"
+    },
+    "residential-monitor/src-tauri/src/storage.rs": {
+      "bytes": 115446,
+      "sha256": "A1D2DE441A9603A010693FCB083B13B8725B88A6ED2184886DC7C01D9DDC44FD"
+    },
+    "residential-monitor/src-tauri/src/storage_lifecycle.rs": {
+      "bytes": 40016,
+      "sha256": "7701DA69C285855DCA208790B60C1D703CA0F6CACCDDA45910C4C11CFA7B7FD7"
+    },
+    "residential-monitor/src-tauri/src/theme.rs": {
+      "bytes": 9790,
+      "sha256": "A3C11B9DD5768B60FE59C1BE80A0793BA91860E8E84ACB6B278D74F18547C95A"
+    },
+    "residential-monitor/src-tauri/src/transport.rs": {
+      "bytes": 16693,
+      "sha256": "74C6AB1B2AB2B3169FE54999D46CFFD1B8F90BB0A75A23AAF63BAB282E827330"
+    },
+    "residential-monitor/src-tauri/src/workload.rs": {
+      "bytes": 5059,
+      "sha256": "789F156362AE82B68E186F806C2D174DEDC5642E71F57BF968D1C15C2B21B9D0"
+    },
+    "residential-monitor/src-tauri/tauri.conf.json": {
+      "bytes": 1092,
+      "sha256": "E203957783EE929991EAC99C8239BCB6931DC0AD140D038804DA389A40B7EB97"
+    },
+    "residential-monitor/src-tauri/tests/kill_gate.rs": {
+      "bytes": 2856,
+      "sha256": "61B58882B6498454958782311263BEE9A0B9B29B2D607885BDFAA80F5695DAA5"
+    }
+  },
+  "baseline_manifest": {
+    "residential-monitor/src-tauri/Cargo.lock": {
+      "bytes": 144038,
+      "sha256": "D84090D6A1073125A92D45F22CA90497F15629FF43528B9962F5313602385829"
+    },
+    "residential-monitor/src-tauri/Cargo.toml": {
+      "bytes": 1873,
+      "sha256": "83F934829D715A37303E6390D88BE979D8DA7F3F410BDD204D8C006558516686"
+    },
+    "residential-monitor/src-tauri/build.rs": {
+      "bytes": 1659,
+      "sha256": "9B1244B4C131FC4D4545FEED557C08DE15557074F1FF4A8F1503BABE9F314720"
+    },
+    "residential-monitor/src-tauri/capabilities/default.json": {
+      "bytes": 422,
+      "sha256": "50E78469881B183B6AAC5AE61117BB9EB08EC362B559266BEA806836D2C177E8"
+    },
+    "residential-monitor/src-tauri/icons/128x128.png": {
+      "bytes": 17538,
+      "sha256": "330250FC9AAF0D819560F72EF27EB665CB2332C4BE98687823E4E53338550231"
+    },
+    "residential-monitor/src-tauri/icons/128x128@2x.png": {
+      "bytes": 52361,
+      "sha256": "112EC4ADFA200CAD6B314B924D7D8FFFCB9E3D16C4996BBE0E25CF0F39959C44"
+    },
+    "residential-monitor/src-tauri/icons/32x32.png": {
+      "bytes": 1883,
+      "sha256": "1FD42D50C19DAD95AF340A84EABC7AEA6306DC427CFE35DD725955929F53DF71"
+    },
+    "residential-monitor/src-tauri/icons/icon-source.png": {
+      "bytes": 334405,
+      "sha256": "19896735B1FA7B663FA0B7D264DA4EB2583C44598D1C51A87C04DEAC31028064"
+    },
+    "residential-monitor/src-tauri/icons/icon-source.png.json": {
+      "bytes": 386,
+      "sha256": "903E9FDA997A262E4E0461EBE997481E68334BF2CE1EE71FB91021D8973DD0FB"
+    },
+    "residential-monitor/src-tauri/icons/icon.ico": {
+      "bytes": 66119,
+      "sha256": "610C4572B85A5EC76998F37261CB65B5785F161D67BFB2D350D3CA0B10AC3EA9"
+    },
+    "residential-monitor/src-tauri/icons/icon.png": {
+      "bytes": 153389,
+      "sha256": "9EC461D08FC6070D14535616A8C603A1368B1C16C0696C7969FAF30C905C32BC"
+    },
+    "residential-monitor/src-tauri/icons/icon.png.json": {
+      "bytes": 301,
+      "sha256": "490F41696AE88EA74149BE287E6DF91D8481867C85BB57C34FC95CDED06C1AF9"
+    },
+    "residential-monitor/src-tauri/icons/tray-collecting.png": {
+      "bytes": 144252,
+      "sha256": "0DF6F1AE9FA164AB5F93395B83D0512C518ECD3948DB4DAD4867C9CCF05AAE38"
+    },
+    "residential-monitor/src-tauri/icons/tray-collecting.png.json": {
+      "bytes": 299,
+      "sha256": "799720B42CFDD578D52ACDF23ECC12BBA209942952D21E2AE0A26F080BAD2A61"
+    },
+    "residential-monitor/src-tauri/icons/tray-connecting.png": {
+      "bytes": 145731,
+      "sha256": "C62888FD4A197BCC58942337ACB4CDF5915F8DB364A7BCE8782E9F7AC22C86D9"
+    },
+    "residential-monitor/src-tauri/icons/tray-connecting.png.json": {
+      "bytes": 298,
+      "sha256": "0CE882B952D3C872CCE1F931EBEBF4F1822CCB6659657863B43CA14A53C29191"
+    },
+    "residential-monitor/src-tauri/icons/tray-fault.png": {
+      "bytes": 145233,
+      "sha256": "7E97F003B175C3889EAB6DA4337A3113D0C32DDB3B8157555B0702CB6EAF2B70"
+    },
+    "residential-monitor/src-tauri/icons/tray-fault.png.json": {
+      "bytes": 292,
+      "sha256": "1A2F1F0B6D6C21844DAFB7AD0340087EC5F006FE97C5D6FEF2549BAEA92EC71A"
+    },
+    "residential-monitor/src-tauri/icons/tray-paused.png": {
+      "bytes": 145507,
+      "sha256": "B1DF283EDDB838B6F104E49B9D400D29C134D9192CFEBFA9DA5C7826E34E83FE"
+    },
+    "residential-monitor/src-tauri/icons/tray-paused.png.json": {
+      "bytes": 295,
+      "sha256": "4BF95B11B0BDC6D599EDADF79E12289668F006817A42E18DE6F5BDFE6B42DC04"
+    },
+    "residential-monitor/src-tauri/installer.nsh": {
+      "bytes": 1738,
+      "sha256": "000D89ADF4726DC159712E5CF69C4097C93BFBFDBB47B405EEA15C859BC7F889"
+    },
+    "residential-monitor/src-tauri/src/accounting.rs": {
+      "bytes": 35183,
+      "sha256": "102AF133A445DA11817C095430596702FD7685BEE1AB9849ADE2162C698E3593"
+    },
+    "residential-monitor/src-tauri/src/app_log.rs": {
+      "bytes": 12539,
+      "sha256": "6035C96F5B09158D859037CBE1F4CE441612071220443707C360718993E5790E"
+    },
+    "residential-monitor/src-tauri/src/bench.rs": {
+      "bytes": 16578,
+      "sha256": "AB9D7948ACC2992117012785608DAF5B87CBD7915DB98C62B8C82ADB276CE6C7"
+    },
+    "residential-monitor/src-tauri/src/bench/facade.rs": {
+      "bytes": 30454,
+      "sha256": "B95DDC76B4AF6A26A5A2ED82A0B070A141117B480B8E6C30454ED267AC339460"
+    },
+    "residential-monitor/src-tauri/src/bench/heap.rs": {
+      "bytes": 3494,
+      "sha256": "9677F4822CA67DD7615C9CF3A51693136A1A8E09255A87EF5A40386CF0771EA6"
+    },
+    "residential-monitor/src-tauri/src/bench/process.rs": {
+      "bytes": 3330,
+      "sha256": "83734ABF3F95C1BC7313EF9ACEB7BC20E6C5799D416C48CA3723BF9AA9E906EA"
+    },
+    "residential-monitor/src-tauri/src/bench/write_vfs.rs": {
+      "bytes": 17391,
+      "sha256": "C3B5D8849E3EA206C036515D86E9E7D77E75399D037EFEBBEC15685D6E48DA7A"
+    },
+    "residential-monitor/src-tauri/src/bin/monitor-bench.rs": {
+      "bytes": 12036,
+      "sha256": "0E8CA4667FB9E02401CF9504D3A1AF94F653A2599D474670BED35EAB114F7605"
+    },
+    "residential-monitor/src-tauri/src/bin/monitor-db.rs": {
+      "bytes": 105,
+      "sha256": "74419146671EDFB9E60FE1C6C1CF1C3ED5BD5D08BAB2509F2E199157B34B7252"
+    },
+    "residential-monitor/src-tauri/src/c0_contract.rs": {
+      "bytes": 3398,
+      "sha256": "E4F1DEC52E8303B548FBE69E8CA39AA003928B6DE40BD6BE3D12DAB04E25B4E9"
+    },
+    "residential-monitor/src-tauri/src/c2/close.rs": {
+      "bytes": 3255,
+      "sha256": "B465A915D4958326D29A3BD2CB1681828438FB4FF692A847E22448EBB5682322"
+    },
+    "residential-monitor/src-tauri/src/c2/collector.rs": {
+      "bytes": 13496,
+      "sha256": "1F41E58EA8AE8C15F71D4C05C099AF1311225528AD13640BF1A3D6D3749C37FE"
+    },
+    "residential-monitor/src-tauri/src/c2/contract.rs": {
+      "bytes": 819,
+      "sha256": "ED618AF9F259A03924F9006F9FE8C7B0BAE021782BAC1BFB79D0104739FB0BF5"
+    },
+    "residential-monitor/src-tauri/src/c2/desktop.rs": {
+      "bytes": 14851,
+      "sha256": "F95FB010B31B21356476BA95F8E612B5247104B546D45E3837E7F9C0FC6FCA74"
+    },
+    "residential-monitor/src-tauri/src/c2/dialog.rs": {
+      "bytes": 1059,
+      "sha256": "E7373502B43FFFE6FACB96BF64540869D08FB8CCBA25DA127E54FBFA259DEFC8"
+    },
+    "residential-monitor/src-tauri/src/c2/facade.rs": {
+      "bytes": 137904,
+      "sha256": "607D3CBDFAB400447A73A83BA42CF7F2037C5A92E70F55B17F917BC6B7BA06C1"
+    },
+    "residential-monitor/src-tauri/src/c2/hub.rs": {
+      "bytes": 28959,
+      "sha256": "01E778D6800BEC14336E0B4127A9B4410F7F5EA2915D475B8AC18A6EFDA2AD38"
+    },
+    "residential-monitor/src-tauri/src/c2/mod.rs": {
+      "bytes": 271,
+      "sha256": "B46D3F40CE8DD963218B6074FE66AD440B7B73D4DCD08151C27913A1B49BA70A"
+    },
+    "residential-monitor/src-tauri/src/c2/query.rs": {
+      "bytes": 30374,
+      "sha256": "39043444884CC269877F0017E55FEB00F9F48A90BA76EEE9DAF74DB4F8A605AE"
+    },
+    "residential-monitor/src-tauri/src/c2/settings.rs": {
+      "bytes": 15525,
+      "sha256": "6C27681A10330F0DA0BD1D596012EE105F52843B437CBA1DDB1D739AE0BE60DD"
+    },
+    "residential-monitor/src-tauri/src/c2/shell.rs": {
+      "bytes": 12923,
+      "sha256": "3CB94AEB4AAF2F61FAC6F3F9015F8B34BDA90D9C1C729CF2CDB1FCC0E532C62B"
+    },
+    "residential-monitor/src-tauri/src/c2/subscriptions.rs": {
+      "bytes": 5822,
+      "sha256": "FF6D4CDACE44E356FC77ED339AC3A366C15822D8F59B8FC4F821065E21190A24"
+    },
+    "residential-monitor/src-tauri/src/c3/archive.rs": {
+      "bytes": 43696,
+      "sha256": "7AEE35A0EC76F23C16DF0CA9117F7485ADC3F7F383A5D6ED55A39478939D079A"
+    },
+    "residential-monitor/src-tauri/src/c3/backup.rs": {
+      "bytes": 11376,
+      "sha256": "D59BA207046826788A18748D6E0C13CF688B99CBD1C0A47B51AE2803D234BAD8"
+    },
+    "residential-monitor/src-tauri/src/c3/export.rs": {
+      "bytes": 20367,
+      "sha256": "3E2DF98FAE5EB09A812362C7BF4852483D0BDFC47B6EE9DA1E6413380B01078B"
+    },
+    "residential-monitor/src-tauri/src/c3/mod.rs": {
+      "bytes": 1899,
+      "sha256": "3AC49076B52B3B2CDC678D09D8AB0D0EDBF03C9EC02BA41C5A365C67742A63BE"
+    },
+    "residential-monitor/src-tauri/src/c3/query.rs": {
+      "bytes": 46256,
+      "sha256": "4DA1F6D9631D101B6CF571F519E0729EE88B703CF06790F0DBE0A67692F61515"
+    },
+    "residential-monitor/src-tauri/src/c3/retention.rs": {
+      "bytes": 56010,
+      "sha256": "D31B27541400E54915FADD9F9B35DB4D02BAA0498C199FA8AE8AD67B51996861"
+    },
+    "residential-monitor/src-tauri/src/c3/rule_name.rs": {
+      "bytes": 6044,
+      "sha256": "E96C59B2E951C7903FAE8C64AB787C1304293F0C247B4290DBE2F061B1875420"
+    },
+    "residential-monitor/src-tauri/src/c3/schema.rs": {
+      "bytes": 6110,
+      "sha256": "2C6E1BB6F965019A91A2F902736649F35D4B446F769D956009A6435C772AC299"
+    },
+    "residential-monitor/src-tauri/src/c3/service.rs": {
+      "bytes": 83218,
+      "sha256": "C6F3DC7C60EB21F76E36B8C57BF65E3169F3C40BA8857A5F50CF62E504B4BF07"
+    },
+    "residential-monitor/src-tauri/src/c3/share.rs": {
+      "bytes": 12693,
+      "sha256": "C13C52A624D27A73BC428A00DFA04B0B02F820D80E3277206383101E71BD4087"
+    },
+    "residential-monitor/src-tauri/src/c3/snapshot.rs": {
+      "bytes": 12020,
+      "sha256": "85AA225F9A0E658ECBE185628427C03473E3C657D63384062FCB0A5AFA04881D"
+    },
+    "residential-monitor/src-tauri/src/c3/space.rs": {
+      "bytes": 2016,
+      "sha256": "9AF7AD3FE3A15EFA6EFB0097101C651BE15CB93198BCEB35DDD0B7116BCC954B"
+    },
+    "residential-monitor/src-tauri/src/c3/sql.rs": {
+      "bytes": 34727,
+      "sha256": "1A3311BA025D11AEA39F10E684836D4B4BEC2BC1C3CEAA416FEEF550BE7A512E"
+    },
+    "residential-monitor/src-tauri/src/c4/diagnose.rs": {
+      "bytes": 5840,
+      "sha256": "4F8D9E7AF26DC594510B2C19FC0F88AFC04313D56D9B3B2247E3D3D378A418DB"
+    },
+    "residential-monitor/src-tauri/src/c4/engine.rs": {
+      "bytes": 41909,
+      "sha256": "4A86D3319748892716C38F67A6179054A9DBC1BB19E7F554FAAD5AAF30F6657A"
+    },
+    "residential-monitor/src-tauri/src/c4/mod.rs": {
+      "bytes": 1063,
+      "sha256": "33607486422B89824A652F011D1275E86C7B9CE1603238DBFF0A9B5B5B29998E"
+    },
+    "residential-monitor/src-tauri/src/c4/notify.rs": {
+      "bytes": 8485,
+      "sha256": "EEBBDFE4387BB013279840CC25EB169C068517DC6F4A91D31899CEBBBCD21B8F"
+    },
+    "residential-monitor/src-tauri/src/c4/outbox.rs": {
+      "bytes": 15399,
+      "sha256": "7A11DD7DBFEE7F4ADE285F5866B1AE4AD593F01F9052577387EDD25AFBD87F0C"
+    },
+    "residential-monitor/src-tauri/src/c4/period.rs": {
+      "bytes": 11703,
+      "sha256": "3A8BD11D3F5375011413AB7EFCBA7DC9E044CCFBD02994916E6282D62A3B4D95"
+    },
+    "residential-monitor/src-tauri/src/c4/schema.rs": {
+      "bytes": 4541,
+      "sha256": "31A3118C9160EF2A3C5E1A607655181189E6B8EDD8EF7C94A27D62E65F4C9CC5"
+    },
+    "residential-monitor/src-tauri/src/c4/store.rs": {
+      "bytes": 15148,
+      "sha256": "33C9656F9735E72299C97F96E12EFD14829F6332C8ACD1DC9F46D472B3875C29"
+    },
+    "residential-monitor/src-tauri/src/c4/types.rs": {
+      "bytes": 11616,
+      "sha256": "FA21E96C6CA9E92DC00ABD7FB2290A5B91670201E0446F7275958E0C33A6DF97"
+    },
+    "residential-monitor/src-tauri/src/c5/about.rs": {
+      "bytes": 1742,
+      "sha256": "4367C25B9EDFAACB167396EEC50A086FF91732DDBACA4E40292E0AEC1F1F532C"
+    },
+    "residential-monitor/src-tauri/src/c5/baseline.rs": {
+      "bytes": 4328,
+      "sha256": "BADFCD35EC7338419506AA4C84B0BAE16755CEECC47807398F3C7AB303690ADD"
+    },
+    "residential-monitor/src-tauri/src/c5/concurrent.rs": {
+      "bytes": 5242,
+      "sha256": "875D70C66B736F15645DCC8F98067B3826A45309FE30C8CFE8703A95B8498B4F"
+    },
+    "residential-monitor/src-tauri/src/c5/fault.rs": {
+      "bytes": 7084,
+      "sha256": "2A03D0969EF57BB385FE8C3ECC3384D405D87AB71CA4DD8A55DDEF8548DFB18C"
+    },
+    "residential-monitor/src-tauri/src/c5/mod.rs": {
+      "bytes": 773,
+      "sha256": "3BFC56C5872B6CB07CB502E7DE61C233351DBF17F3E0632A3D6A02E4C4A183A8"
+    },
+    "residential-monitor/src-tauri/src/c5/purge.rs": {
+      "bytes": 7977,
+      "sha256": "F3647E6672BFB148B1E1F6EDC8D6A3ACA616159B3C1A1433989890D3FB21E2D9"
+    },
+    "residential-monitor/src-tauri/src/c5/soak.rs": {
+      "bytes": 2544,
+      "sha256": "0C9D56E179B9D32D436BFE8EB2CFE7E3C4426850F79CC9DD386E9AED30BDD507"
+    },
+    "residential-monitor/src-tauri/src/c5/supply.rs": {
+      "bytes": 4015,
+      "sha256": "60866D74BA4ECC426A14E246DF0B3519D4D2176D86E7A6D333342C04EEB1762E"
+    },
+    "residential-monitor/src-tauri/src/c5/vacuum.rs": {
+      "bytes": 2380,
+      "sha256": "94E88064D9E720CCF1BBA276E9CE0C1286180515370713C439179DE1772BA604"
+    },
+    "residential-monitor/src-tauri/src/candidate_schema.rs": {
+      "bytes": 12315,
+      "sha256": "EF1DBA3754DEA67060759C8727F6E545D19D046276A7B71A0E665A2A3BF48F03"
+    },
+    "residential-monitor/src-tauri/src/controller.rs": {
+      "bytes": 18926,
+      "sha256": "64F809D128AAC3630762F9640EB04F4919913B1DCC379F255607F879016EEAA2"
+    },
+    "residential-monitor/src-tauri/src/credential.rs": {
+      "bytes": 10781,
+      "sha256": "8427DFAE43A07CBDF3BFC2E300E35B3263BD2FEC217B6000A9DD6D53BAECE754"
+    },
+    "residential-monitor/src-tauri/src/data_dir.rs": {
+      "bytes": 11177,
+      "sha256": "19E1F6E88C9029A8D6E1B8926E0E2F8168562F694F370C28C3BFA61E9F4A1563"
+    },
+    "residential-monitor/src-tauri/src/dbcli/audit.rs": {
+      "bytes": 29010,
+      "sha256": "4F34E3033BA06BE536600A73286C659E9ECDA0A5DAA9918A48F6DB1AFCA63238"
+    },
+    "residential-monitor/src-tauri/src/dbcli/envelope.rs": {
+      "bytes": 4148,
+      "sha256": "5000702179A42DF10C5F111F6EA297B001CE62EAA867A629BFC422339CBB6AA0"
+    },
+    "residential-monitor/src-tauri/src/dbcli/maint.rs": {
+      "bytes": 16385,
+      "sha256": "651394AE1B6E09F68AE2CC0B774ACD3D5688ACF9384DF7C6861DA186CF5BE622"
+    },
+    "residential-monitor/src-tauri/src/dbcli/mod.rs": {
+      "bytes": 28649,
+      "sha256": "761E83F6D93BCD17EF9A570A1E85040F391C74825BFA225998770E3D2E59CB88"
+    },
+    "residential-monitor/src-tauri/src/dbcli/patterns.rs": {
+      "bytes": 6862,
+      "sha256": "317703C86C88496B0D342F38F85A8C85B5A00C5AED372ABB3ACFDF2568BE00A8"
+    },
+    "residential-monitor/src-tauri/src/dbcli/render.rs": {
+      "bytes": 6021,
+      "sha256": "53260A4F4418F2D2DC95E13B359B3889BF6A1CAD8C6A80C62372B880D0A56FFB"
+    },
+    "residential-monitor/src-tauri/src/dbcli/resolve.rs": {
+      "bytes": 3956,
+      "sha256": "9FC4CA5D2F7E419EC6816430C2F89748E411F5009AA5ED5A5AE5BCF7E5FADE90"
+    },
+    "residential-monitor/src-tauri/src/dimension_rank_table_layout.rs": {
+      "bytes": 5053,
+      "sha256": "4072A35CEFFCB395192107C1BF450D3E87DEABA8C581C26FB15EE8DA34B906D0"
+    },
+    "residential-monitor/src-tauri/src/evidence.rs": {
+      "bytes": 3843,
+      "sha256": "EB427DB01F668FC53174D6E4BCFCDC97942412F05CE4A10E1335C3C711C70868"
+    },
+    "residential-monitor/src-tauri/src/i18n.rs": {
+      "bytes": 24150,
+      "sha256": "C1E395FE1B6847415FFDA71FB0F9ACE3BC43B1F0AAE044B3A84482246BC928E3"
+    },
+    "residential-monitor/src-tauri/src/identity.rs": {
+      "bytes": 1407,
+      "sha256": "011EC931882962D90F8057E3D8983E4C17BE57CB997056E7964E4176ED94C236"
+    },
+    "residential-monitor/src-tauri/src/lib.rs": {
+      "bytes": 60963,
+      "sha256": "A36837EA569D42F4A02E4447D278BB8EE8EEABB3E3F9BF26BC24946556DAF071"
+    },
+    "residential-monitor/src-tauri/src/live.rs": {
+      "bytes": 2614,
+      "sha256": "A34613D6B62A624BD33A5DA4B2C962393E630DECD82741A7BA31E225D23E2D62"
+    },
+    "residential-monitor/src-tauri/src/live_table_layout.rs": {
+      "bytes": 6077,
+      "sha256": "8A677F2883D5F88D031B5413B683664F7FD494BFA8A383C30FC5FD42F101F3CA"
+    },
+    "residential-monitor/src-tauri/src/main.rs": {
+      "bytes": 123,
+      "sha256": "CC36495B428B48A8370A98D51DB6D9018D9959679B3AFBF5E01C31705BFA4B06"
+    },
+    "residential-monitor/src-tauri/src/redact.rs": {
+      "bytes": 715,
+      "sha256": "62299BADBEB3E23F94E1DD7AD298DCB5826BA82CD666DD86776059AB695339EC"
+    },
+    "residential-monitor/src-tauri/src/residential.rs": {
+      "bytes": 3578,
+      "sha256": "95E213969AC48B922119C87DC2A8C148EFA1DFD1E004333149A7E86B459BB14D"
+    },
+    "residential-monitor/src-tauri/src/session.rs": {
+      "bytes": 9167,
+      "sha256": "D2455223A3FF0F7D420C8CCCDCA692850AED7DC0942CFEE4B6ED9E7E0B9A4B1B"
+    },
+    "residential-monitor/src-tauri/src/session_host.rs": {
+      "bytes": 3164,
+      "sha256": "C15B38A27429EEE61FA329DEC4EEE7F59DE4F6FE41CA9A96A1FFD8CE162F8825"
+    },
+    "residential-monitor/src-tauri/src/sqlite_probe.rs": {
+      "bytes": 8323,
+      "sha256": "C808B3710EEAD7DB568559698BFD6ED847779473573DF3A9A5CE465A60A02815"
+    },
+    "residential-monitor/src-tauri/src/storage.rs": {
+      "bytes": 80812,
+      "sha256": "C3CDA7909E6A350DC780BE2348A3AAD943FA48572A9E9918CCCA7C436EB60BA5"
+    },
+    "residential-monitor/src-tauri/src/theme.rs": {
+      "bytes": 9790,
+      "sha256": "A3C11B9DD5768B60FE59C1BE80A0793BA91860E8E84ACB6B278D74F18547C95A"
+    },
+    "residential-monitor/src-tauri/src/transport.rs": {
+      "bytes": 17163,
+      "sha256": "1F07DE82A44FA11BA6A8867613884F31EF4CFF1D91605C760A24191A90C14291"
+    },
+    "residential-monitor/src-tauri/src/workload.rs": {
+      "bytes": 5221,
+      "sha256": "63554E6F808EFA2F237648534C64E2F6DABC3893A6AAE6A9DABD6CF28CB633DF"
+    },
+    "residential-monitor/src-tauri/tauri.conf.json": {
+      "bytes": 1092,
+      "sha256": "E203957783EE929991EAC99C8239BCB6931DC0AD140D038804DA389A40B7EB97"
+    },
+    "residential-monitor/src-tauri/tests/kill_gate.rs": {
+      "bytes": 2942,
+      "sha256": "65542DDA2C00CE69C4D2CCAF06FF558F204649657DBD1B567FFF4558685EEBDF"
+    }
+  },
+  "dist_manifest": {
+    "residential-monitor/dist/assets/alerts-Bx4GoUCf.jpg": {
+      "bytes": 59648,
+      "sha256": "705DE8BFA1F02F4B70654F2B86ADC54E143EDBCE8641D14BFF97170E7ACB0522"
+    },
+    "residential-monitor/dist/assets/alerts-CpejMWLp.js": {
+      "bytes": 18857,
+      "sha256": "0CEE0E289AA3EF8B8AFD78550C50BD6BD6C85C0B3E19058BA8EA1CC6E422293F"
+    },
+    "residential-monitor/dist/assets/attribution-quality-note-Cs5NGShI.js": {
+      "bytes": 643,
+      "sha256": "5B75F9470B13F793FA6B4E4598FB0A5A8A339B33CB9A042F3E5F75324064BE39"
+    },
+    "residential-monitor/dist/assets/capability-note-CHkw11cC.js": {
+      "bytes": 1398,
+      "sha256": "BCA948C14CAA17D9E9D7D999ECEEBBC67BC24F5451942E77C63AB85DDE3490DA"
+    },
+    "residential-monitor/dist/assets/col-resizer-DWEZ4Gez.js": {
+      "bytes": 2328,
+      "sha256": "9F3A21485BECFADE29BFD765DCF299A00DF4227BBB92BC01007CE053CBF9EF2F"
+    },
+    "residential-monitor/dist/assets/data-table-CovW2Zkl.js": {
+      "bytes": 3345,
+      "sha256": "EE80357FBA9D935785C4BBF7154D1465CA904D36A8D0ABF2F269D6B38B71AF88"
+    },
+    "residential-monitor/dist/assets/dimension-page-B0oygBSg.js": {
+      "bytes": 10427,
+      "sha256": "716F963E2FA0F8A2592ECC884CD0E2374F2639E0185843787003A65C71038878"
+    },
+    "residential-monitor/dist/assets/export-panel-D4FQKErF.js": {
+      "bytes": 15633,
+      "sha256": "126A308E3F4A24E9E6EBC33EA892C52D8143EEF66D6F9F7499C02D78516A61E2"
+    },
+    "residential-monitor/dist/assets/form-styles-IEljBRW0.js": {
+      "bytes": 231,
+      "sha256": "B9834F4022E38D08E08C64F86E2BB5917D9C295036A91AEC4BF056205915FD05"
+    },
+    "residential-monitor/dist/assets/hotspot-cards-CEI4uJvD.js": {
+      "bytes": 11586,
+      "sha256": "C3DC35E41F1F57198DCA8124D62FC1356140F346ED08198B820640BD0E968B3E"
+    },
+    "residential-monitor/dist/assets/index-ATMCB5bk.css": {
+      "bytes": 49434,
+      "sha256": "BDE84AC8F511D51341D5FD01670B50E8AB1E4554C1D4E0872AB3B560F1D8BAAC"
+    },
+    "residential-monitor/dist/assets/index-DJcgw2eO.js": {
+      "bytes": 53356,
+      "sha256": "F9A1FAC4B560E3D5A586BD52505F33DAB8F62D3E9A15B54E0FB5AEE2BC5A8FA6"
+    },
+    "residential-monitor/dist/assets/live-B7udjdSM.js": {
+      "bytes": 18731,
+      "sha256": "F7E88CE4FD02D4E914086C634AC6088CAB54A795049215620280D919AB37E32F"
+    },
+    "residential-monitor/dist/assets/live-DdJ2lJHf.jpg": {
+      "bytes": 68666,
+      "sha256": "E4F7F7D2D1FDA39C201B88B18F0C867643C52D5B4243311569CF619A771E8FCA"
+    },
+    "residential-monitor/dist/assets/live-session-BUfguXgt.js": {
+      "bytes": 125078,
+      "sha256": "438469F565E04015B4AC90486F3F51458571A47F0A89BF080012387D55569BAC"
+    },
+    "residential-monitor/dist/assets/mark-app-bpEXdmtM.png": {
+      "bytes": 334405,
+      "sha256": "19896735B1FA7B663FA0B7D264DA4EB2583C44598D1C51A87C04DEAC31028064"
+    },
+    "residential-monitor/dist/assets/overview-CPhBd8j-.js": {
+      "bytes": 753,
+      "sha256": "146187572052E78DC7CA4B8FD87AAF89E7C3D56CA697122C2D735F5AB63000A1"
+    },
+    "residential-monitor/dist/assets/overview-CsGFsE7J.js": {
+      "bytes": 14091,
+      "sha256": "1AE2BE4948AE97F77B571057404F106763A9040D62222FA59096A045C71E6F9A"
+    },
+    "residential-monitor/dist/assets/overview-CsePzCxx.jpg": {
+      "bytes": 69950,
+      "sha256": "30362CC9AB797327575CD0CE49FDB6A0247342E5BD9694F68FD47FAF2F653BA5"
+    },
+    "residential-monitor/dist/assets/radix-luJ-1des.js": {
+      "bytes": 111079,
+      "sha256": "D4FBDBBC5F0158F3358E88258B363A100B21E3F799440BE76D733E2A4940A623"
+    },
+    "residential-monitor/dist/assets/react-WTBKx2fN.js": {
+      "bytes": 179287,
+      "sha256": "CD79BF114003701C78A6A64CC83CF7D96E1BBD0A273B0C1E957D745CE59D75DA"
+    },
+    "residential-monitor/dist/assets/recharts-9zeMv3As.js": {
+      "bytes": 408536,
+      "sha256": "2D7EA060DD804416E7CCD668FEA6D1723B7AC9231F92C447AA4BDF00CD4078AA"
+    },
+    "residential-monitor/dist/assets/recovery-B6IVx6O6.js": {
+      "bytes": 1891,
+      "sha256": "4F89DC054F478C24334ACD112D93F2D6DB48BE73F0EE873AD9A95B4EE920C0D4"
+    },
+    "residential-monitor/dist/assets/reports-Dtubk-uf.jpg": {
+      "bytes": 68630,
+      "sha256": "A06F6C405EACEB3936F69B1A56F0ADF80A5C0AD57C70264300E2B3703EEA3ADB"
+    },
+    "residential-monitor/dist/assets/reports-aV7mG5WP.js": {
+      "bytes": 18327,
+      "sha256": "1BFD4C075E7E7960518CBFBC10C11EED324679CB4F332427D629E865C33FA3BE"
+    },
+    "residential-monitor/dist/assets/residential-CBHSRqpI.js": {
+      "bytes": 23134,
+      "sha256": "C58D39C3CD150EA1E9A2B474940B8E31CC4F300B0A3A615CEE8E351FB842CBF8"
+    },
+    "residential-monitor/dist/assets/rolldown-runtime-CXHxssQy.js": {
+      "bytes": 717,
+      "sha256": "5CC960457405F4677D7F7E3EEE166CEABD1608DF13BC972F15A76135ECCB1E28"
+    },
+    "residential-monitor/dist/assets/settings-Dc4sjzPA.js": {
+      "bytes": 25212,
+      "sha256": "9FC65DB3352D8096F53ED788019B43AC0ECB844C0450AC85838076CE03CDFF3B"
+    },
+    "residential-monitor/dist/assets/settings-DvUrh-VT.jpg": {
+      "bytes": 109015,
+      "sha256": "DB1A40C2BE3AD0B11DEDAEC522AEDF6BF1FAD1F3DC5B94D46FF86B2D4667EB9F"
+    },
+    "residential-monitor/dist/assets/sortable-th-B7ktUSOS.js": {
+      "bytes": 1054,
+      "sha256": "39345E98E15E663961A331525364F2AB266F4AC1822FC05DB98C348CACA2A0C3"
+    },
+    "residential-monitor/dist/assets/switch-BJ-i8aQA.js": {
+      "bytes": 859,
+      "sha256": "8671D7EFD575676107D5424893D67C87776E23244E1190544FC6EF3601C3210D"
+    },
+    "residential-monitor/dist/assets/trend-area-BTPZ2CqO.js": {
+      "bytes": 10893,
+      "sha256": "795E7BC6732336A1F6130825F08C4376A8C37274701EE8945D3EA294DAECACC7"
+    },
+    "residential-monitor/dist/assets/units-CMrBX937.js": {
+      "bytes": 394,
+      "sha256": "DCD5E42FE042B76AC7DCD668D615C466A4A46CD537A9DF84D48C72535A7875D3"
+    },
+    "residential-monitor/dist/assets/use-display-query-BqFMWqzo.js": {
+      "bytes": 1353,
+      "sha256": "1FCFB39C863603749F31528CF1359B2D429397A27E5D5E58478F4ADFF7CAD891"
+    },
+    "residential-monitor/dist/assets/use-settings-B0wSAR06.js": {
+      "bytes": 10852,
+      "sha256": "B9888FB9011DC72F60B2EC3C4FD973EEA06EDFB1810F8E0BF881A519C1157496"
+    },
+    "residential-monitor/dist/index.html": {
+      "bytes": 1476,
+      "sha256": "E211F3E42BE388117D8E0B53F9059DC80427D9B0CD9142E8526411F0D3C2DB3E"
+    }
+  },
+  "candidate_changed_files": [
+    "residential-monitor/src-tauri/src/bench.rs",
+    "residential-monitor/src-tauri/src/bench/facade.rs",
+    "residential-monitor/src-tauri/src/bench/heap.rs",
+    "residential-monitor/src-tauri/src/bin/monitor-bench.rs",
+    "residential-monitor/src-tauri/src/c3/retention_day.rs",
+    "residential-monitor/src-tauri/src/c3/schema.rs",
+    "residential-monitor/src-tauri/src/storage.rs"
+  ],
+  "heap_counter": "monitor-bench only; RESIWATCH_BENCH_HEAP=1 enables; formal runs keep it disabled",
+  "builder_sha256": "CBBD231E4059BA4038D036621E7F88D274246F9B29FEF585ADE91B539D69829A",
+  "formal_loads": "NOT_RUN",
+  "corpus_generation": "PASS_A50_A250_FULL_30D",
+  "scope": "P0/P1 only; fresh source and two release target roots; no product or previous evidence writes",
+  "executable_identities": {
+    "baseline-monitor-bench.exe": {
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+      "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\baseline-monitor-bench.exe",
+      "bytes": 5818368,
+      "sha256": "AB26881AF77948371D3A6E300682FE6773887FFF10B410DA795D87C5FBDE8076",
+      "compiler_artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file:///D:/Documents/Code/Github/clash-verge-ai-residential/bench-data/t05-rebuild-20261004-e14ecd88/sources/baseline/residential-monitor/src-tauri#residential-monitor@0.3.0",
+        "manifest_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\baseline\\residential-monitor\\src-tauri\\Cargo.toml",
+        "target": {
+          "kind": [
+            "bin"
+          ],
+          "crate_types": [
+            "bin"
+          ],
+          "name": "monitor-bench",
+          "src_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\baseline\\residential-monitor\\src-tauri\\src\\bin\\monitor-bench.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": false,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [],
+        "filenames": [
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\x86_64-pc-windows-msvc\\release\\monitor_bench.pdb"
+        ],
+        "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\baseline\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+        "fresh": false
+      }
+    },
+    "candidate-monitor-bench.exe": {
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+      "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-monitor-bench.exe",
+      "bytes": 6330880,
+      "sha256": "6C166E4C4E3C33461C2E47119230A53DDBD4DAF750AAA2A22000D38C24D8107F",
+      "compiler_artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file:///D:/Documents/Code/Github/clash-verge-ai-residential/bench-data/t05-rebuild-20261004-e14ecd88/sources/candidate/residential-monitor/src-tauri#residential-monitor@0.3.0",
+        "manifest_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\candidate\\residential-monitor\\src-tauri\\Cargo.toml",
+        "target": {
+          "kind": [
+            "bin"
+          ],
+          "crate_types": [
+            "bin"
+          ],
+          "name": "monitor-bench",
+          "src_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\candidate\\residential-monitor\\src-tauri\\src\\bin\\monitor-bench.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": false,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [],
+        "filenames": [
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor_bench.pdb"
+        ],
+        "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+        "fresh": false
+      }
+    },
+    "candidate-monitor-db.exe": {
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+      "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-monitor-db.exe",
+      "bytes": 5164544,
+      "sha256": "9467B215E9B200FCD8C65FFFCB4776D93BB73BCAC2B65AAAEA3722E7875AD85E",
+      "compiler_artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file:///D:/Documents/Code/Github/clash-verge-ai-residential/bench-data/t05-rebuild-20261004-e14ecd88/sources/candidate/residential-monitor/src-tauri#residential-monitor@0.3.0",
+        "manifest_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\candidate\\residential-monitor\\src-tauri\\Cargo.toml",
+        "target": {
+          "kind": [
+            "bin"
+          ],
+          "crate_types": [
+            "bin"
+          ],
+          "name": "monitor-db",
+          "src_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\candidate\\residential-monitor\\src-tauri\\src\\bin\\monitor-db.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": false,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": false
+        },
+        "features": [],
+        "filenames": [
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor_db.pdb"
+        ],
+        "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+        "fresh": false
+      }
+    },
+    "candidate-library-tests.exe": {
+      "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+      "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-library-tests.exe",
+      "bytes": 12964352,
+      "sha256": "D3FCB4C5C9B50824DC0A020896954335DE34E8FC6B66705B384CA24201ECCE0A",
+      "compiler_artifact": {
+        "reason": "compiler-artifact",
+        "package_id": "path+file:///D:/Documents/Code/Github/clash-verge-ai-residential/bench-data/t05-rebuild-20261004-e14ecd88/sources/candidate/residential-monitor/src-tauri#residential-monitor@0.3.0",
+        "manifest_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\candidate\\residential-monitor\\src-tauri\\Cargo.toml",
+        "target": {
+          "kind": [
+            "rlib"
+          ],
+          "crate_types": [
+            "rlib"
+          ],
+          "name": "residential_monitor_lib",
+          "src_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\sources\\candidate\\residential-monitor\\src-tauri\\src\\lib.rs",
+          "edition": "2021",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        },
+        "profile": {
+          "opt_level": "3",
+          "debuginfo": 0,
+          "debug_assertions": false,
+          "overflow_checks": false,
+          "test": true
+        },
+        "features": [],
+        "filenames": [
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+          "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.pdb"
+        ],
+        "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+        "fresh": false
+      }
+    }
+  },
+  "completed_utc": "2026-10-04T05:41:17.337374+00:00",
+  "virtual_smoke_fixture_hash": "557540697a8a1e8e41edf6bb7366f6bff4ddab43419442a2596761a1d1729bb8",
+  "formal_matrix": "NOT_RUN",
+  "formal_primary": "NOT_RUN",
+  "formal_capacity": "NOT_RUN",
+  "sql_oracle": "PASS_SQL_ORACLE_NATIVE_NOT_RUN",
+  "corpus_identities": {
+    "50": {
+      "db": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\corpus-a50-30d\\monitor.sqlite3",
+      "marker": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\corpus-a50-30d\\production-corpus.json",
+      "db_sha256": "036950214F645734235AC8F0CD8C767EFE1CF6299B106891A7630CFD3810F619",
+      "marker_sha256": "BD052C143F7DD7EDA78ACD2ECE6E6262F8110E6535840CEDDE67FE2761590911",
+      "db_bytes": 550350848
+    },
+    "250": {
+      "db": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\corpus-a250-30d\\monitor.sqlite3",
+      "marker": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\corpus-a250-30d\\production-corpus.json",
+      "db_sha256": "610606F60FB87CDC78655867479A5A56167B9AA46DF16B6BAA19B53893EF7141",
+      "marker_sha256": "4C8B6016E9B6D0F960292AFEDD2E0B8D608081081EBDA93AE8851147AD2AC693",
+      "db_bytes": 1724293120
+    }
+  },
+  "stage_probes": "PASS_DIAGNOSTIC",
+  "stage_probe_failures": {},
+  "generator_sha256": "43042AE7C2940A0A10D4EBF81F696CE825DDCECC09CBE8A1685D6CE954ACEBF8"
+}

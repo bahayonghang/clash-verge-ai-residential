@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Root script remains zero-dep CommonJS; npm run ci still passes."}
+{"file": ".trellis/spec/residential-monitor/frontend/index.md", "reason": "Frontend typecheck, lint, vitest, build; no remote URL/CDN."}
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "fmt, clippy -D warnings, workspace tests after Cargo batches."}
+{"file": ".trellis/tasks/09-03-dependency-upgrade/research/inventory.md", "reason": "Verify landed batches match inventory decisions and deferred items."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Lockfile/toolchain changes must not alter IPC DTO or SQLite contracts."}

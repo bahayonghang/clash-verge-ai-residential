@@ -103,7 +103,6 @@ export interface LiveConnectionView {
   sourceIp: string | null;
   destinationIp: string | null;
   processName: string | null;
-  processPath: string | null;
   network: string | null;
   inbound?: string | null;
   sourcePort?: string | null;
@@ -493,18 +492,293 @@ export function decodeDeleteReport(value: unknown): DeleteReport {
   return value as unknown as DeleteReport;
 }
 
+const ALERT_KINDS = ["health", "rate", "period-usage"] as const;
+const SELECTOR_KINDS = ["health-kind", "primary-category", "domain", "process"] as const;
+const ALERT_DIRECTIONS = ["upload", "download", "combined"] as const;
+const ALERT_PERIODS = ["rolling-1h", "local-day", "local-month"] as const;
+const INSTANCE_STATUSES = ["inactive", "active", "not-evaluable", "resolved", "superseded"] as const;
+
+const LIVE_ROW_FIELDS = [
+  "identity",
+  "connectionId",
+  "epoch",
+  "upload",
+  "download",
+  "rateUpload",
+  "rateDownload",
+  "durationMs",
+  "primary",
+  "tags",
+  "host",
+  "sourceIp",
+  "destinationIp",
+  "processName",
+  "network",
+  "inbound",
+  "sourcePort",
+  "destinationPort",
+  "start",
+  "rule",
+  "rulePayload",
+  "chains"
+] as const;
+
+export function decodeLiveRow(value: unknown): LiveConnectionView {
+  if (!isRecord(value)) {
+    throw new Error("连接行无效");
+  }
+  for (const field of LIVE_ROW_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(value, field)) {
+      throw new Error(`连接行字段缺失: ${field}`);
+    }
+  }
+  if (typeof value.identity !== "string" || value.identity.length === 0) {
+    throw new Error("连接行.identity 无效");
+  }
+  if (typeof value.connectionId !== "string" || value.connectionId.length === 0) {
+    throw new Error("连接行.connectionId 无效");
+  }
+  return {
+    identity: value.identity,
+    connectionId: value.connectionId,
+    epoch: dtoInteger(value.epoch, "连接行.epoch", true),
+    upload: dtoInteger(value.upload, "连接行.upload", true),
+    download: dtoInteger(value.download, "连接行.download", true),
+    rateUpload: dtoNullableInteger(value.rateUpload, "连接行.rateUpload", true),
+    rateDownload: dtoNullableInteger(value.rateDownload, "连接行.rateDownload", true),
+    durationMs: dtoNullableInteger(value.durationMs, "连接行.durationMs", true),
+    primary: dtoNullableString(value.primary, "连接行.primary"),
+    tags: dtoStringArray(value.tags, "连接行.tags"),
+    host: dtoNullableString(value.host, "连接行.host"),
+    sourceIp: dtoNullableString(value.sourceIp, "连接行.sourceIp"),
+    destinationIp: dtoNullableString(value.destinationIp, "连接行.destinationIp"),
+    processName: dtoNullableString(value.processName, "连接行.processName"),
+    network: dtoNullableString(value.network, "连接行.network"),
+    inbound: dtoNullableString(value.inbound, "连接行.inbound"),
+    sourcePort: dtoNullableString(value.sourcePort, "连接行.sourcePort"),
+    destinationPort: dtoNullableString(value.destinationPort, "连接行.destinationPort"),
+    start: dtoNullableString(value.start, "连接行.start"),
+    rule: dtoNullableString(value.rule, "连接行.rule"),
+    rulePayload: dtoNullableString(value.rulePayload, "连接行.rulePayload"),
+    chains: dtoStringArray(value.chains, "连接行.chains")
+  };
+}
+
+export function decodeAlertRule(value: unknown): AlertRule {
+  if (!isRecord(value)) {
+    throw new Error("AlertRule 无效");
+  }
+  return {
+    ruleId: dtoString(own(value, "ruleId", "AlertRule"), "AlertRule.ruleId"),
+    version: dtoInteger(own(value, "version", "AlertRule"), "AlertRule.version"),
+    enabled: dtoBoolean(own(value, "enabled", "AlertRule"), "AlertRule.enabled"),
+    kind: dtoEnum(own(value, "kind", "AlertRule"), ALERT_KINDS, "AlertRule.kind"),
+    selectorKind: dtoEnum(own(value, "selectorKind", "AlertRule"), SELECTOR_KINDS, "AlertRule.selectorKind"),
+    selectorValue: dtoNullableString(own(value, "selectorValue", "AlertRule"), "AlertRule.selectorValue"),
+    direction: dtoNullableEnum(own(value, "direction", "AlertRule"), ALERT_DIRECTIONS, "AlertRule.direction"),
+    thresholdValue: dtoInteger(own(value, "thresholdValue", "AlertRule"), "AlertRule.thresholdValue"),
+    recoveryThreshold: dtoNullableInteger(
+      own(value, "recoveryThreshold", "AlertRule"),
+      "AlertRule.recoveryThreshold"
+    ),
+    period: dtoNullableEnum(own(value, "period", "AlertRule"), ALERT_PERIODS, "AlertRule.period"),
+    timezone: dtoString(own(value, "timezone", "AlertRule"), "AlertRule.timezone"),
+    cooldownSec: dtoInteger(own(value, "cooldownSec", "AlertRule"), "AlertRule.cooldownSec"),
+    quietStartMin: dtoNullableInteger(own(value, "quietStartMin", "AlertRule"), "AlertRule.quietStartMin"),
+    quietEndMin: dtoNullableInteger(own(value, "quietEndMin", "AlertRule"), "AlertRule.quietEndMin"),
+    createdUtc: dtoInteger(own(value, "createdUtc", "AlertRule"), "AlertRule.createdUtc"),
+    updatedUtc: dtoInteger(own(value, "updatedUtc", "AlertRule"), "AlertRule.updatedUtc")
+  };
+}
+
+export function decodeAlertRules(value: unknown): AlertRule[] {
+  if (!Array.isArray(value)) {
+    throw new Error("告警规则列表无效");
+  }
+  return value.map(decodeAlertRule);
+}
+
+export function decodeAlertSummary(value: unknown): AlertSummary {
+  if (!isRecord(value) || value.schemaVersion !== 1) {
+    throw new Error("AlertSummary 无效");
+  }
+  return {
+    schemaVersion: 1,
+    activeCount: dtoInteger(own(value, "activeCount", "AlertSummary"), "AlertSummary.activeCount", true),
+    notEvaluableCount: dtoInteger(
+      own(value, "notEvaluableCount", "AlertSummary"),
+      "AlertSummary.notEvaluableCount",
+      true
+    ),
+    outboxBacklog: dtoInteger(own(value, "outboxBacklog", "AlertSummary"), "AlertSummary.outboxBacklog", true),
+    lastEventUtc: dtoNullableInteger(own(value, "lastEventUtc", "AlertSummary"), "AlertSummary.lastEventUtc")
+  };
+}
+
+function decodeAlertEvidence(value: unknown): AlertEvidence {
+  if (!isRecord(value)) {
+    throw new Error("AlertEvidence 无效");
+  }
+  const reportQueryRaw = own(value, "reportQuery", "AlertEvidence");
+  return {
+    ruleId: dtoString(own(value, "ruleId", "AlertEvidence"), "AlertEvidence.ruleId"),
+    ruleVersion: dtoInteger(own(value, "ruleVersion", "AlertEvidence"), "AlertEvidence.ruleVersion"),
+    dataVersion: dtoNullableInteger(own(value, "dataVersion", "AlertEvidence"), "AlertEvidence.dataVersion", true),
+    evaluatedAtUtc: dtoInteger(own(value, "evaluatedAtUtc", "AlertEvidence"), "AlertEvidence.evaluatedAtUtc"),
+    windowStartUtc: dtoNullableInteger(own(value, "windowStartUtc", "AlertEvidence"), "AlertEvidence.windowStartUtc"),
+    windowEndUtc: dtoNullableInteger(own(value, "windowEndUtc", "AlertEvidence"), "AlertEvidence.windowEndUtc"),
+    displayTimezone: dtoString(own(value, "displayTimezone", "AlertEvidence"), "AlertEvidence.displayTimezone"),
+    selector: dtoString(own(value, "selector", "AlertEvidence"), "AlertEvidence.selector"),
+    direction: dtoNullableEnum(own(value, "direction", "AlertEvidence"), ALERT_DIRECTIONS, "AlertEvidence.direction"),
+    observedValue: dtoNullableInteger(own(value, "observedValue", "AlertEvidence"), "AlertEvidence.observedValue"),
+    triggerThreshold: dtoInteger(own(value, "triggerThreshold", "AlertEvidence"), "AlertEvidence.triggerThreshold"),
+    recoveryThreshold: dtoNullableInteger(
+      own(value, "recoveryThreshold", "AlertEvidence"),
+      "AlertEvidence.recoveryThreshold"
+    ),
+    coverageSummary: dtoString(own(value, "coverageSummary", "AlertEvidence"), "AlertEvidence.coverageSummary"),
+    policyMetadata: dtoNullableString(own(value, "policyMetadata", "AlertEvidence"), "AlertEvidence.policyMetadata"),
+    reportQuery: reportQueryRaw === null ? null : decodeReportQuery(reportQueryRaw),
+    notEvaluableReason: dtoNullableString(
+      own(value, "notEvaluableReason", "AlertEvidence"),
+      "AlertEvidence.notEvaluableReason"
+    )
+  };
+}
+
+function decodeAlertInstance(value: unknown): AlertInstance {
+  if (!isRecord(value)) {
+    throw new Error("AlertInstance 无效");
+  }
+  return {
+    instanceId: dtoString(own(value, "instanceId", "AlertInstance"), "AlertInstance.instanceId"),
+    ruleId: dtoString(own(value, "ruleId", "AlertInstance"), "AlertInstance.ruleId"),
+    ruleVersion: dtoInteger(own(value, "ruleVersion", "AlertInstance"), "AlertInstance.ruleVersion"),
+    selectorIdentity: dtoString(own(value, "selectorIdentity", "AlertInstance"), "AlertInstance.selectorIdentity"),
+    status: dtoEnum(own(value, "status", "AlertInstance"), INSTANCE_STATUSES, "AlertInstance.status"),
+    startedUtc: dtoNullableInteger(own(value, "startedUtc", "AlertInstance"), "AlertInstance.startedUtc"),
+    resolvedUtc: dtoNullableInteger(own(value, "resolvedUtc", "AlertInstance"), "AlertInstance.resolvedUtc"),
+    lastEvalUtc: dtoInteger(own(value, "lastEvalUtc", "AlertInstance"), "AlertInstance.lastEvalUtc"),
+    lastObserved: dtoNullableInteger(own(value, "lastObserved", "AlertInstance"), "AlertInstance.lastObserved"),
+    evidence: decodeAlertEvidence(own(value, "evidence", "AlertInstance"))
+  };
+}
+
 export function decodeAlertCenter(value: unknown): AlertCenterPage {
-  if (!isRecord(value) || value.schemaVersion !== 1 || !Array.isArray(value.items)) {
+  if (!isRecord(value) || value.schemaVersion !== 1) {
     throw new Error("AlertCenterPage 无效");
   }
-  return value as unknown as AlertCenterPage;
+  const items = own(value, "items", "AlertCenterPage");
+  if (!Array.isArray(items)) {
+    throw new Error("AlertCenterPage 无效");
+  }
+  const nextCursor = own(value, "nextCursor", "AlertCenterPage");
+  if (nextCursor !== null && typeof nextCursor !== "string") {
+    throw new Error("AlertCenterPage nextCursor 无效");
+  }
+  return {
+    schemaVersion: 1,
+    items: items.map(decodeAlertInstance),
+    nextCursor
+  };
+}
+
+function decodeDiagnosticsCoverage(value: unknown): MetadataCoverage {
+  if (!isRecord(value)) {
+    throw new Error("DiagnosticsSnapshot metadataCoverage 无效");
+  }
+  return {
+    connections: dtoInteger(own(value, "connections", "metadataCoverage"), "metadataCoverage.connections", true),
+    hostPresent: dtoInteger(own(value, "hostPresent", "metadataCoverage"), "metadataCoverage.hostPresent", true),
+    sniffHostOnly: dtoInteger(own(value, "sniffHostOnly", "metadataCoverage"), "metadataCoverage.sniffHostOnly", true),
+    destinationIpOnly: dtoInteger(
+      own(value, "destinationIpOnly", "metadataCoverage"),
+      "metadataCoverage.destinationIpOnly",
+      true
+    ),
+    hostAbsent: dtoInteger(own(value, "hostAbsent", "metadataCoverage"), "metadataCoverage.hostAbsent", true),
+    processPresent: dtoInteger(own(value, "processPresent", "metadataCoverage"), "metadataCoverage.processPresent", true),
+    processPathOnly: dtoInteger(
+      own(value, "processPathOnly", "metadataCoverage"),
+      "metadataCoverage.processPathOnly",
+      true
+    ),
+    processAbsent: dtoInteger(own(value, "processAbsent", "metadataCoverage"), "metadataCoverage.processAbsent", true),
+    chainsPresent: dtoInteger(own(value, "chainsPresent", "metadataCoverage"), "metadataCoverage.chainsPresent", true),
+    providerChainsOnly: dtoInteger(
+      own(value, "providerChainsOnly", "metadataCoverage"),
+      "metadataCoverage.providerChainsOnly",
+      true
+    ),
+    chainsAbsent: dtoInteger(own(value, "chainsAbsent", "metadataCoverage"), "metadataCoverage.chainsAbsent", true)
+  };
 }
 
 export function decodeDiagnostics(value: unknown): DiagnosticsSnapshot {
-  if (!isRecord(value) || value.schemaVersion !== 1 || typeof value.c4Checksum !== "string") {
+  if (!isRecord(value) || value.schemaVersion !== 1) {
     throw new Error("DiagnosticsSnapshot 无效");
   }
-  return value as unknown as DiagnosticsSnapshot;
+  return {
+    schemaVersion: 1,
+    appVersion: dtoString(own(value, "appVersion", "DiagnosticsSnapshot"), "DiagnosticsSnapshot.appVersion"),
+    sqliteUserVersion: dtoInteger(
+      own(value, "sqliteUserVersion", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.sqliteUserVersion"
+    ),
+    supportedSchema: dtoInteger(
+      own(value, "supportedSchema", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.supportedSchema"
+    ),
+    c4Checksum: dtoString(own(value, "c4Checksum", "DiagnosticsSnapshot"), "DiagnosticsSnapshot.c4Checksum"),
+    journalMode: dtoString(own(value, "journalMode", "DiagnosticsSnapshot"), "DiagnosticsSnapshot.journalMode"),
+    synchronous: dtoString(own(value, "synchronous", "DiagnosticsSnapshot"), "DiagnosticsSnapshot.synchronous"),
+    controllerTransportStatus: dtoString(
+      own(value, "controllerTransportStatus", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.controllerTransportStatus"
+    ),
+    coverageSummary: dtoString(
+      own(value, "coverageSummary", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.coverageSummary"
+    ),
+    writerWatermark: dtoInteger(
+      own(value, "writerWatermark", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.writerWatermark",
+      true
+    ),
+    writerReceipts: dtoInteger(
+      own(value, "writerReceipts", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.writerReceipts",
+      true
+    ),
+    lastFrameUtc: dtoNullableInteger(
+      own(value, "lastFrameUtc", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.lastFrameUtc"
+    ),
+    reconnectHintZh: dtoString(
+      own(value, "reconnectHintZh", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.reconnectHintZh"
+    ),
+    databaseOk: dtoBoolean(own(value, "databaseOk", "DiagnosticsSnapshot"), "DiagnosticsSnapshot.databaseOk"),
+    walCheckpointOk: dtoBoolean(
+      own(value, "walCheckpointOk", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.walCheckpointOk"
+    ),
+    backupRetentionNoteZh: dtoString(
+      own(value, "backupRetentionNoteZh", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.backupRetentionNoteZh"
+    ),
+    alertActive: dtoInteger(own(value, "alertActive", "DiagnosticsSnapshot"), "DiagnosticsSnapshot.alertActive", true),
+    outboxBacklog: dtoInteger(
+      own(value, "outboxBacklog", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.outboxBacklog",
+      true
+    ),
+    recentRedactedErrorClasses: dtoStringArray(
+      own(value, "recentRedactedErrorClasses", "DiagnosticsSnapshot"),
+      "DiagnosticsSnapshot.recentRedactedErrorClasses"
+    ),
+    metadataCoverage: decodeDiagnosticsCoverage(own(value, "metadataCoverage", "DiagnosticsSnapshot"))
+  };
 }
 
 const REPORT_GRANULARITIES = [
@@ -525,6 +799,56 @@ function own(record: Record<string, unknown>, field: string, owner: string): unk
     throw new Error(`${owner} 缺失 ${field}`);
   }
   return record[field];
+}
+
+function dtoInteger(value: unknown, label: string, nonNegative = false): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || (nonNegative && value < 0)) {
+    throw new Error(`${label} 无效`);
+  }
+  return value;
+}
+
+function dtoNullableInteger(value: unknown, label: string, nonNegative = false): number | null {
+  return value === null ? null : dtoInteger(value, label, nonNegative);
+}
+
+function dtoString(value: unknown, label: string): string {
+  if (typeof value !== "string") {
+    throw new Error(`${label} 无效`);
+  }
+  return value;
+}
+
+function dtoNullableString(value: unknown, label: string): string | null {
+  return value === null ? null : dtoString(value, label);
+}
+
+function dtoBoolean(value: unknown, label: string): boolean {
+  if (typeof value !== "boolean") {
+    throw new Error(`${label} 无效`);
+  }
+  return value;
+}
+
+function dtoStringArray(value: unknown, label: string): string[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${label} 无效`);
+  }
+  return value.map((item, index) => dtoString(item, `${label}[${index}]`));
+}
+
+function dtoEnum<T extends string>(value: unknown, allowed: readonly T[], label: string): T {
+  if (typeof value !== "string" || !(allowed as readonly string[]).includes(value)) {
+    throw new Error(`${label} 无效`);
+  }
+  return value as T;
+}
+
+function dtoNullableEnum<T extends string>(value: unknown, allowed: readonly T[], label: string): T | null {
+  if (value === null) {
+    return null;
+  }
+  return dtoEnum(value, allowed, label);
 }
 
 function reportInteger(value: unknown, label: string, nonNegative = false): number {

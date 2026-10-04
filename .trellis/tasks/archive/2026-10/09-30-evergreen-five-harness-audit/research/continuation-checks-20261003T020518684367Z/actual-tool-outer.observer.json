@@ -1,0 +1,127 @@
+{
+  "kind": "actual-exec-command-observer",
+  "driver_template": "@'\nfrom pathlib import Path\nfrom datetime import datetime, timezone\nimport subprocess,json,time,hashlib,sys,shutil\nroot=Path(r'D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-five-harness-audit\\research\\continuation-checks-20261003T020518684367Z')\nlabel='__LABEL__'\nargv=json.loads(r'''__ARGV__''')\ncwd=str(Path.cwd())\nstarted=datetime.now(timezone.utc).isoformat()\nt=time.monotonic()\nresolved=shutil.which(argv[0])\nout=root/(label+'.stdout.raw')\nerr=root/(label+'.stderr.raw')\nerror=None\npid=None\ncode=None\ntry:\n    with out.open('xb') as stdout,err.open('xb') as stderr:\n        proc=subprocess.Popen(argv,cwd=cwd,stdout=stdout,stderr=stderr)\n        pid=proc.pid\n        code=proc.wait()\nexcept Exception as exc:\n    error=repr(exc)\ndriver_code=code if code is not None else 120\nreceipt={'label':label,'argv':argv,'cwd':cwd,'executable':resolved,'executable_sha256':hashlib.sha256(Path(resolved).read_bytes()).hexdigest() if resolved and Path(resolved).is_file() else None,'started_utc':started,'finished_utc':datetime.now(timezone.utc).isoformat(),'wall_seconds':time.monotonic()-t,'pid':pid,'native_exit_code':code,'driver_exit_code':driver_code,'driver_exit_observation':'sys.exit invoked below; confirmed separately by tool-outer observer','tool_outer_exit_code':None,'tool_outer_exit_observation':'PENDING; recorded in separate observer after exec returns','status':'PASS' if code==0 and error is None else 'FAIL','exception':error,'streams':{name:{'path':p.name,'size':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for name,p in [('stdout',out),('stderr',err)]}}\nwith (root/(label+'.receipt.json')).open('x',encoding='utf-8') as f:\n    json.dump(receipt,f,ensure_ascii=False,indent=2)\n    f.write('\\n')\nprint(json.dumps({'label':label,'native_exit_code':code,'driver_exit_code':driver_code,'status':receipt['status'],'stdout_size':out.stat().st_size,'stderr_size':err.stat().st_size}))\nif code!=0:\n    print(out.read_text(encoding='utf-8',errors='replace')[-6000:])\n    print(err.read_text(encoding='utf-8',errors='replace')[-6000:])\nsys.exit(driver_code)\n'@ | python -X utf8 -\nexit $LASTEXITCODE",
+  "receipt_write_first_failure": {
+    "status": "TOOL_REJECTED_BEFORE_NATIVE_START",
+    "native_exit_code": null,
+    "driver_exit_code": null,
+    "tool_outer_exit_code": null,
+    "error": "CreateProcess: Rejected(\"Failed to create unified exec process: The filename or extension is too long. (os error 206)\")",
+    "native_started": false,
+    "artifact_written": false,
+    "correction": "store shared driver template once and reconstruct command per receipt; no check re-run"
+  },
+  "observations": [
+    {
+      "label": "01-docs-build",
+      "actual_tool_result": {
+        "chunk_id": "b0c01d",
+        "wall_time_seconds": 3.2848532,
+        "exit_code": 0,
+        "original_token_count": 33,
+        "output": "{\"label\": \"01-docs-build\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 74, \"stderr_size\": 220}\r\n"
+      }
+    },
+    {
+      "label": "02-agent-contract",
+      "actual_tool_result": {
+        "chunk_id": "98de03",
+        "wall_time_seconds": 0.4290641,
+        "exit_code": 0,
+        "original_token_count": 34,
+        "output": "{\"label\": \"02-agent-contract\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 85, \"stderr_size\": 0}\r\n"
+      }
+    },
+    {
+      "label": "03-installed-skills",
+      "actual_tool_result": {
+        "chunk_id": "eba6da",
+        "wall_time_seconds": 0.476807,
+        "exit_code": 0,
+        "original_token_count": 34,
+        "output": "{\"label\": \"03-installed-skills\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 0, \"stderr_size\": 0}\r\n"
+      }
+    },
+    {
+      "label": "04-diff-check",
+      "actual_tool_result": {
+        "chunk_id": "d8408f",
+        "wall_time_seconds": 0.408687,
+        "exit_code": 0,
+        "original_token_count": 33,
+        "output": "{\"label\": \"04-diff-check\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 0, \"stderr_size\": 3261}\r\n"
+      }
+    },
+    {
+      "label": "05-validate-parent",
+      "actual_tool_result": {
+        "chunk_id": "070bee",
+        "wall_time_seconds": 0.3897647,
+        "exit_code": 0,
+        "original_token_count": 34,
+        "output": "{\"label\": \"05-validate-parent\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 601, \"stderr_size\": 0}\r\n"
+      }
+    },
+    {
+      "label": "06-validate-t01",
+      "actual_tool_result": {
+        "chunk_id": "2098f6",
+        "wall_time_seconds": 0.4530804,
+        "exit_code": 0,
+        "original_token_count": 33,
+        "output": "{\"label\": \"06-validate-t01\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 598, \"stderr_size\": 0}\r\n"
+      }
+    },
+    {
+      "label": "07-validate-t02",
+      "actual_tool_result": {
+        "chunk_id": "96f9d7",
+        "wall_time_seconds": 0.466499,
+        "exit_code": 0,
+        "original_token_count": 33,
+        "output": "{\"label\": \"07-validate-t02\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 593, \"stderr_size\": 0}\r\n"
+      }
+    },
+    {
+      "label": "08-validate-t03",
+      "actual_tool_result": {
+        "chunk_id": "8d0b05",
+        "wall_time_seconds": 0.4398928,
+        "exit_code": 0,
+        "original_token_count": 33,
+        "output": "{\"label\": \"08-validate-t03\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 599, \"stderr_size\": 0}\r\n"
+      }
+    },
+    {
+      "label": "09-validate-t04",
+      "actual_tool_result": {
+        "chunk_id": "fe1802",
+        "wall_time_seconds": 0.462925,
+        "exit_code": 0,
+        "original_token_count": 33,
+        "output": "{\"label\": \"09-validate-t04\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 598, \"stderr_size\": 0}\r\n"
+      }
+    },
+    {
+      "label": "10-validate-t05",
+      "actual_tool_result": {
+        "chunk_id": "36ae33",
+        "wall_time_seconds": 0.4421332,
+        "exit_code": 0,
+        "original_token_count": 33,
+        "output": "{\"label\": \"10-validate-t05\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 605, \"stderr_size\": 0}\r\n"
+      }
+    },
+    {
+      "label": "11-validate-t06",
+      "actual_tool_result": {
+        "chunk_id": "7d354c",
+        "wall_time_seconds": 0.4755411,
+        "exit_code": 0,
+        "original_token_count": 33,
+        "output": "{\"label\": \"11-validate-t06\", \"native_exit_code\": 0, \"driver_exit_code\": 0, \"status\": \"PASS\", \"stdout_size\": 601, \"stderr_size\": 0}\r\n"
+      }
+    }
+  ],
+  "observed_utc": "2026-10-03T02:08:14.936781+00:00"
+}

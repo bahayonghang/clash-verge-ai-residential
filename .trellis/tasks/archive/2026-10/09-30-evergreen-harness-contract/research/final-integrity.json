@@ -1,0 +1,24 @@
+{
+  "formal_gate_hashes_still_match": true,
+  "checks": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "python",
+        ".trellis/scripts/task.py",
+        "validate",
+        ".trellis/tasks/09-30-evergreen-harness-contract"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "untracked_text_files_checked": 33,
+  "whitespace_findings": []
+}

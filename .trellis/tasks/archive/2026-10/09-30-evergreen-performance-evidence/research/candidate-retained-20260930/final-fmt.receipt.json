@@ -1,0 +1,31 @@
+{
+  "argv": [
+    "cargo",
+    "+1.98.0",
+    "fmt",
+    "--manifest-path",
+    "residential-monitor/src-tauri/Cargo.toml",
+    "--check"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:23:04.661839+00:00",
+  "status": "finished",
+  "environment_overrides": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "exit_code": 0,
+  "finished_utc": "2026-09-30T15:23:05.293546+00:00",
+  "wall_seconds": 0.6309522999999899,
+  "logs": {
+    "stdout": {
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzip": "final-fmt.stdout.raw.gz",
+      "readable": "final-fmt.stdout.log"
+    },
+    "stderr": {
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzip": "final-fmt.stderr.raw.gz",
+      "readable": "final-fmt.stderr.log"
+    }
+  }
+}

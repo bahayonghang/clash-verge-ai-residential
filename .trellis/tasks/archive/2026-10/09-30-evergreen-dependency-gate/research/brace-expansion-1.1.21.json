@@ -1,0 +1,26 @@
+[
+  {
+    "version": "1.1.21",
+    "dist": {
+      "shasum": "edf4fab5c64d051aea5a8def49aba1c7522279f3",
+      "tarball": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-1.1.21.tgz",
+      "fileCount": 4,
+      "integrity": "sha512-9zeA+KLZNNzglF2TPKRQEDyx6Yby7daAkuy8MiPzpXPsYDWi/DRM8jmwUDxokQjYqBpv5DgPiwD4h4ZZSy1Ujw==",
+      "signatures": [
+        {
+          "sig": "MEUCIEpGNO6Ap5gYaU6eqeOpeU4bhJKXytH4Lqv+qn8tWP70AiEAgmtv6dYJ/sbiMeioq8VTAvlpDMIOF2bV7ojJ6qTtCIk=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIQCsE4a0+wmILmbniwNtbsZAwHHlEiC/u0HpBs9/R0pwvgIgATLztBHUYS81VxfEvVfmSjwIFwwRSJAP8SlYYJWwn3A=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "unpackedSize": 21359
+    },
+    "dependencies": {
+      "concat-map": "0.0.1",
+      "balanced-match": "^1.0.0"
+    }
+  }
+]

@@ -1,0 +1,47 @@
+✔ 正常仓库的说明合同通过 (11.7557ms)
+✔ 正常临时 fixture 通过且不改文件：LF (40.9292ms)
+✔ 正常临时 fixture 通过且不改文件：CRLF (40.5439ms)
+✔ 缺少共享产品合同 (37.7574ms)
+✔ 共享合同反向导入 Claude (36.0055ms)
+✔ Claude 缺少共享导入 (37.3904ms)
+✔ frontend 恢复 Claude 专属入口 (36.977ms)
+✔ 根合同缺少只读边界 (38.8122ms)
+✔ 根合同缺少实施批准 (37.6346ms)
+✔ skill 移除用户例外授权 (33.7232ms)
+✔ skill 移除用户应用建议 (35.3683ms)
+✔ check 角色缺少只读边界 (35.2516ms)
+✔ Kimi 跳过派发路径核对 (35.41ms)
+✔ Kimi 忽略任务路径冲突 (39.3491ms)
+✔ workflow 缺少授权段 (38.432ms)
+✔ workflow 缺少路径不一致处理 (42.8496ms)
+✔ workflow 缺少阶段闭合 (43.3697ms)
+✔ workflow 重复阶段 (46.6171ms)
+✔ workflow 缺少执行授权提示 (48.1742ms)
+✔ harness 缺少派发首行 (44.0299ms)
+✔ Codex 深度发生变化 (40.7876ms)
+✔ Codex 声称 V2 受深度限制 (40.442ms)
+✔ Codex 声称提示词硬隔离 (38.9039ms)
+✔ 共享说明门禁名称漂移 (38.2879ms)
+✔ spec 的 Windows step 数回退 (37.4881ms)
+✔ CI 聚合门名称漂移 (41.3541ms)
+✔ CI 聚合门漏掉 docs (39.984ms)
+✔ CI docs 审计漏掉开发依赖 (42.2019ms)
+✔ just 独立审计门被重命名 (49.0504ms)
+✔ 说明引用旧的未归档路径 (39.5275ms)
+✔ 交付覆盖缺失：.codex/config.toml (36.3155ms)
+✔ 交付覆盖缺失：.kimi-code/skills/trellis-implement/SKILL.md (34.3604ms)
+✔ 交付覆盖缺失：.kimi-code/skills/trellis-check/SKILL.md (34.0331ms)
+✔ 交付覆盖缺失：.kimi-code/skills/trellis-research/SKILL.md (37.8385ms)
+✔ 根命令接线缺失：check:agents (34.5157ms)
+✔ 根命令接线缺失：check (33.5862ms)
+✔ 根命令接线缺失：test (35.1703ms)
+✔ 引用越出仓库时失败 (31.3305ms)
+✔ CLI 正常退出 0，破坏共享合同后退出 1 (226.7795ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1794.5824

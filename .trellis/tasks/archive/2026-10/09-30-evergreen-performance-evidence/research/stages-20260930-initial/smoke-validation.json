@@ -1,0 +1,16 @@
+{
+  "baseline": {
+    "fixture_hash": "557540697a8a1e8e41edf6bb7366f6bff4ddab43419442a2596761a1d1729bb8",
+    "commits": 3,
+    "conserved": true,
+    "journal_mode_after_run": "wal",
+    "synchronous_reported": "FULL"
+  },
+  "candidate": {
+    "fixture_hash": "557540697a8a1e8e41edf6bb7366f6bff4ddab43419442a2596761a1d1729bb8",
+    "commits": 3,
+    "conserved": true,
+    "journal_mode_after_run": "wal",
+    "synchronous_reported": "FULL"
+  }
+}

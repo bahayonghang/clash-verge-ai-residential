@@ -1,0 +1,31 @@
+{
+  "applied_utc": "2026-10-02T01:41:26.255434+00:00",
+  "rollback_scope": [
+    [
+      "struct Dict {",
+      "pub(crate) struct FoldedRaw {"
+    ],
+    [
+      "pub(crate) fn load_sessions(",
+      "fn intern_text("
+    ],
+    [
+      "fn identity_from_dict(",
+      "fn add_i64("
+    ]
+  ],
+  "snapshot": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\projection-cache-20260930\\raw_fold-contract-restored.rs",
+  "snapshot_sha256": "E975D19F9FF52993EFCC537DD36B5E1F8D7CD763770291817CF649533AE63EDF",
+  "source_before_sha256": "87AE258BB6EFB14B19F33625A99AF749DD49EEB69B399A1BD7E5E1888DE002C9",
+  "source_after_sha256": "4D6E8FEB88B142E09F8E62D60BAF20BAC970F11CB8D8E9108B08CFFBF717E6AA",
+  "tests_section_unchanged": true,
+  "resolve_id_section_unchanged": true,
+  "source_manifest_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+  "source_files": 108,
+  "native_evidence_files": 195,
+  "changed_vs_retained": [
+    "residential-monitor/src-tauri/src/c3/raw_fold.rs"
+  ],
+  "capacity": "BLOCKED; 0/106; assets missing; no rebuild",
+  "identity_transfer": "Old retained native measurement results do not apply to rollback source or a new executable."
+}

@@ -1,0 +1,7 @@
+{
+  "driver_exit_code": 0,
+  "outer_exit_code": 0,
+  "observation": "exec_command完成首CHECK_GO_T04，exit_code=0；不推断检查器内部函数的进程exit",
+  "candidate_checker_native_exit_code": 0,
+  "new_init_repeated": false
+}

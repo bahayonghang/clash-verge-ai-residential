@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\projection-cache-lazy\\candidate-library-tests.exe",
+    "--exact",
+    "c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof",
+    "--ignored",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "environment_overrides": {
+    "RESIWATCH_NONEMPTY_STAGE_DB": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+    "RESIWATCH_NONEMPTY_STAGE_OUT": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\minute-set-comparison-20260930\\production-30d-before.json",
+    "RESIWATCH_NONEMPTY_STAGE_START": "1787184000",
+    "RESIWATCH_NONEMPTY_STAGE_END": "1789776000"
+  },
+  "started_utc": "2026-09-30T15:17:54.187266+00:00",
+  "status": "finished",
+  "variant": "before",
+  "stdout_raw_sha256": "9ce06f8e9d59d00dbd09e5248d4078e038d71b2fc212d3064b3b6a44b5c7c212",
+  "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "finished_utc": "2026-09-30T15:18:07.549300+00:00",
+  "wall_seconds": 13.361478799999531,
+  "exit_code": 0,
+  "ran_exactly_one_test": true,
+  "json_exists": true
+}

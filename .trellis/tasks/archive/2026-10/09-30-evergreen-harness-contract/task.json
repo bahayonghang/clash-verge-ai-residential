@@ -1,0 +1,68 @@
+{
+  "id": "evergreen-harness-contract",
+  "name": "evergreen-harness-contract",
+  "title": "常青审查 T03：统一五工具授权与说明合同",
+  "description": "让五工具读取一致的授权和质量合同，并准确描述 Codex V1/V2 的递归边界。",
+  "status": "completed",
+  "dev_type": null,
+  "scope": "harness-audit",
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-30",
+  "completedAt": "2026-10-04",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-30-evergreen-five-harness-audit",
+  "relatedFiles": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".trellis/workflow.md",
+    ".trellis/spec/frontend/index.md",
+    "docs/agents/harnesses.md",
+    "skills/residential-rule-tuning/SKILL.md",
+    ".codex/config.toml",
+    ".kimi-code/skills/trellis-check/SKILL.md",
+    "scripts/check-agent-contract.js",
+    "tests/check-agent-contract.test.js",
+    "package.json",
+    ".trellis/spec/frontend/quality-guidelines.md"
+  ],
+  "notes": "2026-09-30 合同、39 项定向测试及正式复跑通过。首次 Rust SQLITE_INTERRUPT 和未查明触发原因保留。独立审查补正 Kimi 任务冲突核对。2026-10-01 用户批准保留本机覆盖不跟踪策略并同步合同/规范；新 AC5 已于2026-10-01本地验收，旧收据只覆盖当日合同。未提交或归档。",
+  "meta": {
+    "audit_item": "T03",
+    "approval": "approved-project-scope",
+    "source_sha": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+    "approval_date": "2026-09-30",
+    "approval_text": "批准实施",
+    "implementation_status": "verified-local-with-preserved-initial-failure",
+    "review": "research/review.md",
+    "historical_verification_scope": "implementation_status 与 review 仅对应 2026-09-30 合同；2026-10-01 本机可选覆盖合同的新验收另见 local_override_policy_verification。",
+    "approval_updates": [
+      {
+        "date": "2026-10-01",
+        "text": "保留当前不跟踪策略，更新任务合同和规范",
+        "scope": "T03 本机可选覆盖合同与规范同步；本轮代理仅编辑 prd.md/design.md/implement.md/task.json 及新增 research 说明，规范由主会话负责；不扩展 T01/T02，不修改本机覆盖、Git 索引或产品",
+        "evidence": "research/local-override-policy-20261001.md",
+        "validation_status": "verified-local"
+      }
+    ],
+    "local_override_policy_verification": {
+      "date": "2026-10-01",
+      "status": "PASS_LOCAL_CONTRACT",
+      "focused_tests": "55/55 PASS; parent research/local-override-policy-checks-20261001.receipt.json",
+      "full_product_gate": "owner just ci exit0; T05 rollback-cache-20261001 original logs independently reviewed",
+      "docs_and_final_checks": "parent research/final-checks-20261001/summary.json",
+      "review": "../09-30-evergreen-five-harness-audit/research/final-review-20261001.md",
+      "native_role_loaded": "UNVERIFIED",
+      "hosted": "UNVERIFIED",
+      "fresh_session": "UNVERIFIED"
+    }
+  }
+}

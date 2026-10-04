@@ -59,7 +59,6 @@ export function MonitorSection({
   const live = useLivePage({
     applied: residentialFilter(),
     sort: { sortField: "download", descending: true },
-    cursor: null,
     refreshSignal: autoRefresh ? stream.lastSeq : null,
     locale
   });

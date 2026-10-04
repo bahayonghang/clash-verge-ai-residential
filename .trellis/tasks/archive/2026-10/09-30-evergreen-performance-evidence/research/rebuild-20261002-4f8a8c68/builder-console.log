@@ -1,0 +1,27 @@
+{"phase": "preflight-ignore", "pid": 64404, "status": "STARTED", "utc": "2026-10-02T15:18:47.860742+00:00"}
+{"phase": "preflight-ignore", "native_exit": 0, "wall_seconds": 0.5465234000002965, "status": "ENDED"}
+{"phase": "rustc-version", "pid": 55560, "status": "STARTED", "utc": "2026-10-02T15:18:48.443502+00:00"}
+{"phase": "rustc-version", "native_exit": 0, "wall_seconds": 0.5744943999961833, "status": "ENDED"}
+{"phase": "cargo-version", "pid": 42436, "status": "STARTED", "utc": "2026-10-02T15:18:48.991321+00:00"}
+{"phase": "cargo-version", "native_exit": 0, "wall_seconds": 0.5494634999995469, "status": "ENDED"}
+{"phase": "installed-targets", "pid": 37768, "status": "STARTED", "utc": "2026-10-02T15:18:49.571264+00:00"}
+{"phase": "installed-targets", "native_exit": 0, "wall_seconds": 0.5672460999994655, "status": "ENDED"}
+{"phase": "baseline-object", "pid": 2100, "status": "STARTED", "utc": "2026-10-02T15:18:50.133721+00:00"}
+{"phase": "baseline-object", "native_exit": 0, "wall_seconds": 0.5655373000045074, "status": "ENDED"}
+{"phase": "vswhere", "pid": 44976, "status": "STARTED", "utc": "2026-10-02T15:18:50.684827+00:00"}
+{"phase": "vswhere", "native_exit": 0, "wall_seconds": 0.5421805000005406, "status": "ENDED"}
+{"phase": "baseline-archive", "pid": 64252, "status": "STARTED", "utc": "2026-10-02T15:18:51.263003+00:00"}
+{"phase": "baseline-archive", "native_exit": 0, "wall_seconds": 0.5460625999985496, "status": "ENDED"}
+{"phase": "baseline-build", "pid": 63204, "status": "STARTED", "utc": "2026-10-02T15:18:54.750383+00:00"}
+{"phase": "baseline-build", "pid": 63204, "elapsed_seconds": 55.308, "stderr_tail": ["   Compiling residential-monitor v0.3.0 (D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\sources\\baseline\\residential-monitor\\src-tauri)", "   Compiling rusqlite v0.40.2"], "status": "RUNNING"}
+{"phase": "baseline-build", "native_exit": 0, "wall_seconds": 98.23984360000031, "status": "ENDED"}
+{"phase": "candidate-build", "pid": 54956, "status": "STARTED", "utc": "2026-10-02T15:20:33.000588+00:00"}
+{"phase": "candidate-build", "pid": 54956, "elapsed_seconds": 55.254, "stderr_tail": ["   Compiling chrono v0.4.45", "   Compiling rusqlite v0.40.2"], "status": "RUNNING"}
+{"phase": "candidate-build", "native_exit": 0, "wall_seconds": 92.74204210000607, "status": "ENDED"}
+{"phase": "candidate-library-test-build", "pid": 39956, "status": "STARTED", "utc": "2026-10-02T15:22:05.761448+00:00"}
+{"phase": "candidate-library-test-build", "native_exit": 0, "wall_seconds": 21.847973299998557, "status": "ENDED"}
+{"phase": "baseline-smoke", "pid": 63164, "status": "STARTED", "utc": "2026-10-02T15:22:28.398156+00:00"}
+{"phase": "baseline-smoke", "native_exit": 0, "wall_seconds": 13.53701379999984, "status": "ENDED"}
+{"phase": "candidate-smoke", "pid": 54052, "status": "STARTED", "utc": "2026-10-02T15:22:41.940896+00:00"}
+{"phase": "candidate-smoke", "native_exit": 0, "wall_seconds": 12.496242900000652, "status": "ENDED"}
+driver_exit=0

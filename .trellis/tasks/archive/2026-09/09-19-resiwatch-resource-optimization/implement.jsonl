@@ -1,0 +1,8 @@
+{"file":".trellis/spec/residential-monitor/backend/index.md","reason":"Rust ownership and lifecycle"}
+{"file":".trellis/spec/residential-monitor/backend/modules-and-errors.md","reason":"Canonical metadata and collector contracts"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"Cancellation and privacy"}
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"Writer durability and conservation gate"}
+{"file":".trellis/spec/residential-monitor/frontend/index.md","reason":"React IPC ownership"}
+{"file":".trellis/spec/residential-monitor/frontend/dto-and-decoding.md","reason":"DTO and capability contracts"}
+{"file":".trellis/spec/residential-monitor/frontend/view-state.md","reason":"View lifecycle and stale responses"}
+{"file":".trellis/tasks/09-19-resiwatch-resource-optimization/research/diagnosis.md","reason":"Installed evidence and source hypotheses"}

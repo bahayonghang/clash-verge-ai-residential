@@ -1,0 +1,10 @@
+{"file":"AGENTS.md","reason":"Applicable project contract and validation boundary"}
+{"file":".trellis/workflow.md","reason":"Applicable project contract and validation boundary"}
+{"file":".trellis/tasks/09-30-evergreen-five-harness-audit/research/audit.md","reason":"Current audit evidence and approval boundaries"}
+{"file":".trellis/spec/residential-monitor/backend/index.md","reason":"Applicable project contract and validation boundary"}
+{"file":".trellis/spec/residential-monitor/backend/secrets-and-cancellation.md","reason":"Applicable project contract and validation boundary"}
+{"file":".trellis/spec/residential-monitor/storage/sqlite-contract.md","reason":"Applicable project contract and validation boundary"}
+{"file":".trellis/tasks/archive/2026-09/09-19-resiwatch-resource-optimization/research/benchmark-harness.md","reason":"Applicable project contract and validation boundary"}
+{"file":".trellis/tasks/archive/2026-09/09-24-resiwatch-failed-gate-followup/prd.md","reason":"Applicable project contract and validation boundary"}
+{"file": ".trellis/tasks/09-30-evergreen-performance-evidence/research/measurement-prerequisites.md", "reason": "Frozen baseline reconstruction, formal parameters, attribution and resource boundaries"}
+{"file": ".trellis/tasks/09-30-evergreen-performance-evidence/research/preflight-review.md", "reason": "Independent performance preflight, production status checks, formal thresholds and scope boundaries"}

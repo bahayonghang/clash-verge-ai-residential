@@ -6,6 +6,12 @@ const path = require("node:path");
 const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 
 const SUPPORTED_SWITCH_BUILDERS = Object.freeze({
+  anthropic_core: (constants) => [
+    ...constants.ANTHROPIC_CORE_SUFFIX_DOMAINS,
+    ...constants.ANTHROPIC_CORE_EXACT_DOMAINS
+  ],
+  gemini_api_core: (constants) => [...constants.GEMINI_API_CORE_EXACT_DOMAINS],
+  antigravity_core: (constants) => [...constants.ANTIGRAVITY_CORE_EXACT_DOMAINS],
   openai_core: (constants) => [
     ...constants.OPENAI_CORE_SUFFIX_DOMAINS,
     ...constants.OPENAI_CORE_EXACT_DOMAINS
@@ -32,10 +38,17 @@ const SUPPORTED_SWITCH_BUILDERS = Object.freeze({
   ],
   grok_core: (constants) => [
     ...constants.GROK_SUFFIX_DOMAINS,
-    ...constants.GROK_STRICT_EXACT_DOMAINS,
     ...constants.GROK_EXACT_DOMAINS
   ],
-  grok_web_assets: (constants) => [...constants.GROK_EXACT_DOMAINS]
+  grok_web_assets: (constants) => [...constants.GROK_STRICT_EXACT_DOMAINS],
+  extra_anyrouter: (constants) => {
+    const site = (constants.EXTRA_SITES || []).find((item) => item.id === "anyrouter");
+    if (!site) throw new Error("登记表缺少 anyrouter 站点");
+    return uniqueStrings([
+      ...(site.suffixDomains || []),
+      ...(site.exactDomains || [])
+    ]);
+  }
 });
 
 function uniqueStrings(values) {

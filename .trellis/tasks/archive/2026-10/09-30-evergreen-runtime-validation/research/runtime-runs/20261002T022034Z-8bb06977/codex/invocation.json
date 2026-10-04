@@ -1,0 +1,32 @@
+{
+  "invocation_id": "20261002T022034Z-8bb06977/codex/child",
+  "harness": "codex",
+  "phase": "child",
+  "argv": [
+    "<HOME>\\AppData\\Local\\OpenAI\\Codex\\bin\\a51e250fa15c740a\\codex.exe",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "-c",
+    "approval_policy=\"never\"",
+    "--ephemeral",
+    "--json",
+    "<PROMPT_SHA256:bcb972df453330fe3b3cdaba64fda2240d0732ab17aec46749d3ace052ba3a46>"
+  ],
+  "shell": false,
+  "timeout_seconds": 180,
+  "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+  "version_source": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-bindings-20261001.json#codex_app_binary",
+  "recorded_version_output": "codex-cli 0.159.2",
+  "executable_sha256": "fcd5eafefb4ff4a607f244e099e0974f66e17966b6ffda6948de2ef3a7a79530",
+  "prompt_sha256": "bcb972df453330fe3b3cdaba64fda2240d0732ab17aec46749d3ace052ba3a46",
+  "child_preparation_basis": {
+    "approved_route": "spawn_agent + trellis-research；V1 非 full-history；不覆盖模型或 V1/V2",
+    "basis_kind": "reviewed_local_prerequisite",
+    "basis_reference": {
+      "path": ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture-plan.md",
+      "locator": "固定命令与 freeze/execute 条件；当前二进制的实际 schema、角色发现与 backend 仍须原生事件证明"
+    }
+  },
+  "basis_is_runtime_proof": false
+}

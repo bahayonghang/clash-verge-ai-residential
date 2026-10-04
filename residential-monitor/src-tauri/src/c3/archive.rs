@@ -2,19 +2,21 @@
 
 use crate::c3::query::{
     closed_local_day_bounds, closed_local_hour_bounds, default_auto_report_query, local_day_bounds,
-    local_hour_bounds, query_fingerprint, DimensionKind, Granularity, ReportError, ReportQuery,
-    ReportResult, DIMENSION_RETAIN_DAYS, REPORT_DTO_VERSION,
+    local_hour_bounds, query_fingerprint, timezone_offset_secs, DimensionKind, Granularity,
+    ReportError, ReportQuery, ReportResult, DIMENSION_RETAIN_DAYS, REPORT_DTO_VERSION,
 };
+use crate::c3::service::{attach_cancel, poll_interrupt, run_uncached};
 use crate::c3::snapshot::ReportSnapshotStore;
 use crate::c3::sql::RESIDENTIAL_ACCOUNTING_FILTER;
-use crate::c3::ReportService;
+use crate::storage::open_interruptible_reader;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::Path;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 pub const ARCHIVE_DTO_VERSION: u32 = 1;
 pub const ARCHIVE_HOUR_RETAIN_DAYS: i64 = 30;
@@ -94,9 +96,301 @@ pub struct ArchiveJob {
     pub fingerprint: String,
 }
 
+const ARCHIVE_RETRY_SECS: i64 = 60;
+const ARCHIVE_MAX_RETRY_SECS: i64 = 3_600;
+
+/// 自动档案候选的最小持久描述。完整查询只在作业即将执行时重建，避免
+/// 长期积压为每个候选保留 ReportQuery 的多个空字段和重复字符串。
+#[derive(Debug, Clone)]
+struct ArchiveDescriptor {
+    kind: ArchiveKind,
+    range_start_utc: i64,
+    range_end_utc: i64,
+    display_timezone: String,
+    fingerprint: String,
+    retry_after: i64,
+    failures: u32,
+}
+
+impl ArchiveDescriptor {
+    fn from_job(job: &ArchiveJob, retry_after: i64, failures: u32) -> Self {
+        Self {
+            kind: job.kind,
+            range_start_utc: job.range_start_utc,
+            range_end_utc: job.range_end_utc,
+            display_timezone: job.query.display_timezone.clone(),
+            fingerprint: job.fingerprint.clone(),
+            retry_after,
+            failures,
+        }
+    }
+
+    fn to_job(&self) -> ArchiveJob {
+        let mut query = default_auto_report_query(
+            self.kind.granularity(),
+            self.range_start_utc,
+            self.range_end_utc,
+        );
+        query.display_timezone = self.display_timezone.clone();
+        ArchiveJob {
+            kind: self.kind,
+            range_start_utc: self.range_start_utc,
+            range_end_utc: self.range_end_utc,
+            query,
+            fingerprint: self.fingerprint.clone(),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct PendingArchive {
+    descriptor: ArchiveDescriptor,
+}
+
+/// 唯一后台 owner 的有界队列。仅启动、时区变化、时钟回拨和周期边界重建。
+#[derive(Debug, Default)]
+pub struct ArchiveScheduler {
+    pending: VecDeque<PendingArchive>,
+    in_flight: Option<PendingArchive>,
+    refresh_after: i64,
+    zone_check_after: i64,
+    zone: Option<(String, i32)>,
+    last_tick: Option<i64>,
+    purge_after: i64,
+    job_after: i64,
+}
+
+impl ArchiveScheduler {
+    pub fn next_job(
+        &mut self,
+        db_path: &Path,
+        now_utc: i64,
+        cancel: &Arc<AtomicBool>,
+    ) -> Result<Option<ArchiveJob>, ReportError> {
+        self.next_job_in_zone(db_path, now_utc, "local", cancel)
+    }
+
+    fn next_job_in_zone(
+        &mut self,
+        db_path: &Path,
+        now_utc: i64,
+        timezone: &str,
+        cancel: &Arc<AtomicBool>,
+    ) -> Result<Option<ArchiveJob>, ReportError> {
+        if self.in_flight.is_some() {
+            return Ok(None);
+        }
+        if self.last_tick.is_some_and(|last| now_utc < last) {
+            self.refresh_after = now_utc;
+            self.zone_check_after = now_utc;
+            self.purge_after = now_utc;
+        }
+        self.last_tick = Some(now_utc);
+        if self.zone.is_none() || now_utc >= self.zone_check_after {
+            // 系统时区最多每分钟探测一次，稳态秒级 tick 不调用本地历法转换。
+            self.zone_check_after = now_utc.saturating_add(60);
+            let zone = (
+                timezone.to_string(),
+                timezone_offset_secs(timezone, now_utc)?,
+            );
+            if self.zone.as_ref() != Some(&zone) {
+                self.refresh_after = now_utc;
+                self.zone = Some(zone);
+            }
+        }
+        if now_utc >= self.refresh_after {
+            // 发现失败也必须退避，不能下一秒重扫。
+            self.refresh_after = now_utc.saturating_add(ARCHIVE_RETRY_SECS);
+            self.refresh(db_path, now_utc, timezone, cancel)?;
+        }
+        if now_utc < self.job_after {
+            return Ok(None);
+        }
+        let Some(index) = self
+            .pending
+            .iter()
+            .position(|item| item.descriptor.retry_after <= now_utc)
+        else {
+            return Ok(None);
+        };
+        let pending = self.pending.remove(index).expect("已定位档案作业");
+        self.update_job_after();
+        let job = pending.descriptor.to_job();
+        self.in_flight = Some(pending);
+        Ok(Some(job))
+    }
+
+    fn refresh(
+        &mut self,
+        db_path: &Path,
+        now_utc: i64,
+        timezone: &str,
+        cancel: &Arc<AtomicBool>,
+    ) -> Result<(), ReportError> {
+        poll_interrupt(cancel, "archive discovery")?;
+        let due = local_hour_bounds(timezone, now_utc)?
+            .1
+            .min(local_day_bounds(timezone, now_utc)?.1);
+        let jobs = candidate_jobs(now_utc, timezone)?;
+        let reader = open_interruptible_reader(db_path)
+            .map_err(|_| ReportError::StorageBusy("archive reader"))?;
+        attach_cancel(&reader, cancel, Instant::now(), Duration::from_secs(10))?;
+        // 按唯一索引查询有界候选，不加载 manual 或无关历史键。
+        let mut statement = reader
+            .prepare(
+                "select status, generated_utc from report_archive
+              where kind = ?1 and range_start_utc = ?2 and query_fingerprint = ?3",
+            )
+            .map_err(map_sqlite)?;
+        let mut next = VecDeque::new();
+        for job in jobs {
+            if cancel.load(std::sync::atomic::Ordering::SeqCst) {
+                return Err(ReportError::Cancelled("archive discovery"));
+            }
+            let state: Option<(String, i64)> = statement
+                .query_row(
+                    params![job.kind.as_sql(), job.range_start_utc, job.fingerprint],
+                    |row| Ok((row.get(0)?, row.get(1)?)),
+                )
+                .optional()
+                .map_err(map_sqlite)?;
+            if state.as_ref().is_some_and(|(status, _)| status == "ok") {
+                continue;
+            }
+            let retry_after = state.as_ref().map_or(now_utc, |(_, failed_at)| {
+                failed_at
+                    .saturating_add(ARCHIVE_RETRY_SECS)
+                    .min(now_utc.saturating_add(ARCHIVE_MAX_RETRY_SECS))
+            });
+            next.push_back(PendingArchive {
+                descriptor: ArchiveDescriptor::from_job(
+                    &job,
+                    retry_after,
+                    u32::from(state.is_some()),
+                ),
+            });
+        }
+        let previous: HashMap<_, _> = self
+            .pending
+            .drain(..)
+            .map(|item| {
+                (
+                    // 将旧描述符的指纹所有权移入索引，刷新期间不再复制长字符串。
+                    item.descriptor.fingerprint,
+                    (item.descriptor.retry_after, item.descriptor.failures),
+                )
+            })
+            .collect();
+        for item in &mut next {
+            if let Some((retry_after, failures)) = previous.get(&item.descriptor.fingerprint) {
+                // 尚未尝试的作业没有退避；时钟回拨后仍立即可运行。
+                item.descriptor.retry_after = if *failures == 0 {
+                    now_utc
+                } else {
+                    (*retry_after).min(now_utc.saturating_add(ARCHIVE_MAX_RETRY_SECS))
+                };
+                item.descriptor.failures = *failures;
+            }
+        }
+        self.pending = next;
+        self.update_job_after();
+        self.refresh_after = due.max(now_utc.saturating_add(1));
+        Ok(())
+    }
+
+    pub fn complete(&mut self, succeeded: bool, now_utc: i64) {
+        let Some(mut pending) = self.in_flight.take() else {
+            return;
+        };
+        if !succeeded {
+            pending.descriptor.failures = pending.descriptor.failures.saturating_add(1);
+            let delay = ARCHIVE_RETRY_SECS
+                .saturating_mul(1_i64 << pending.descriptor.failures.saturating_sub(1).min(6))
+                .min(ARCHIVE_MAX_RETRY_SECS);
+            pending.descriptor.retry_after = now_utc.saturating_add(delay);
+            // 失败项移至队尾，已到期的新档案与积压均能继续推进。
+            self.pending.push_back(pending);
+            self.update_job_after();
+        }
+    }
+
+    fn update_job_after(&mut self) {
+        self.job_after = self
+            .pending
+            .iter()
+            .map(|item| item.descriptor.retry_after)
+            .min()
+            .unwrap_or(i64::MAX);
+    }
+
+    pub fn purge_due(&mut self, now_utc: i64) -> bool {
+        if now_utc < self.purge_after {
+            return false;
+        }
+        self.purge_after = now_utc.saturating_add(3_600);
+        true
+    }
+
+    pub fn complete_purge(&mut self, removed: Option<u64>, now_utc: i64) {
+        self.purge_after = now_utc.saturating_add(match removed {
+            Some(128) => 5,
+            Some(_) => 3_600,
+            None => ARCHIVE_RETRY_SECS,
+        });
+    }
+}
+
 pub struct ReportArchiveService;
 
 impl ReportArchiveService {
+    /// 自动清理按行数和执行时间双重限流；退出前归还共享 writer 的 handler。
+    pub(crate) fn purge_expired_chunk(
+        connection: &Connection,
+        now_utc: i64,
+        cancel: &Arc<AtomicBool>,
+    ) -> Result<u64, ReportError> {
+        poll_interrupt(cancel, "archive purge")?;
+        let started = Instant::now();
+        let deadline = Duration::from_millis(250);
+        connection
+            .busy_timeout(Duration::ZERO)
+            .map_err(map_sqlite)?;
+        let result = (|| {
+            attach_cancel(connection, cancel, started, deadline)?;
+            let removed = connection
+                .execute(
+                    "delete from report_archive where rowid in (
+                       select rowid from report_archive
+                       where (kind = 'hour' and range_end_utc < ?1)
+                          or (kind = 'day' and range_end_utc < ?2)
+                          or (kind = 'manual' and generated_utc < ?3)
+                       limit 128)",
+                    params![
+                        now_utc.saturating_sub(ARCHIVE_HOUR_RETAIN_DAYS * 86_400),
+                        now_utc.saturating_sub(DIMENSION_RETAIN_DAYS * 86_400),
+                        now_utc.saturating_sub(ARCHIVE_MANUAL_RETAIN_DAYS * 86_400),
+                    ],
+                )
+                .map_err(map_sqlite)?;
+            Ok(removed as u64)
+        })();
+        let clear = connection.progress_handler(0, None::<fn() -> bool>);
+        let timeout = connection.busy_timeout(Duration::from_millis(u64::from(
+            crate::c0_contract::BUSY_TIMEOUT_MS,
+        )));
+        clear.map_err(map_sqlite)?;
+        timeout.map_err(map_sqlite)?;
+        match result {
+            Err(_) if cancel.load(std::sync::atomic::Ordering::SeqCst) => {
+                Err(ReportError::Cancelled("archive purge"))
+            }
+            Err(_) if started.elapsed() >= deadline => {
+                Err(ReportError::DeadlineExceeded("archive purge"))
+            }
+            other => other,
+        }
+    }
+
     pub fn purge_expired(connection: &Connection, now_utc: i64) -> Result<u64, ReportError> {
         let hour_cut = now_utc.saturating_sub(ARCHIVE_HOUR_RETAIN_DAYS * 86_400);
         let day_cut = now_utc.saturating_sub(DIMENSION_RETAIN_DAYS * 86_400);
@@ -118,35 +412,12 @@ impl ReportArchiveService {
         now_utc: i64,
     ) -> Result<Option<ArchiveJob>, ReportError> {
         let ok = load_ok_keys(connection)?;
-        let hours = walk_closed_periods(
-            now_utc,
-            now_utc.saturating_sub(ARCHIVE_HOUR_RETAIN_DAYS * 86_400),
-            local_hour_bounds,
-            closed_local_hour_bounds,
-        )?;
-        let days = walk_closed_periods(
-            now_utc,
-            now_utc.saturating_sub(DIMENSION_RETAIN_DAYS * 86_400),
-            local_day_bounds,
-            closed_local_day_bounds,
-        )?;
-        if let Some(range) = hours.first() {
-            if let Some(job) = job_if_missing(ArchiveKind::Hour, *range, &ok) {
-                return Ok(Some(job));
-            }
-        }
-        if let Some(range) = days.first() {
-            if let Some(job) = job_if_missing(ArchiveKind::Day, *range, &ok) {
-                return Ok(Some(job));
-            }
-        }
-        for range in hours.iter().skip(1) {
-            if let Some(job) = job_if_missing(ArchiveKind::Hour, *range, &ok) {
-                return Ok(Some(job));
-            }
-        }
-        for range in days.iter().skip(1) {
-            if let Some(job) = job_if_missing(ArchiveKind::Day, *range, &ok) {
+        for job in candidate_jobs(now_utc, "local")? {
+            if !ok.contains(&(
+                job.kind.as_sql().to_string(),
+                job.range_start_utc,
+                job.fingerprint.clone(),
+            )) {
                 return Ok(Some(job));
             }
         }
@@ -449,37 +720,52 @@ fn persist_failed(
     Ok(())
 }
 
-fn job_if_missing(
-    kind: ArchiveKind,
-    range: (i64, i64),
-    ok: &HashSet<(String, i64, String)>,
-) -> Option<ArchiveJob> {
-    if range.1 <= range.0 {
-        return None;
-    }
-    let query = default_auto_report_query(kind.granularity(), range.0, range.1);
-    let fingerprint = query_fingerprint(&query);
-    if ok.contains(&(kind.as_sql().to_string(), range.0, fingerprint.clone())) {
-        return None;
-    }
-    Some(ArchiveJob {
-        kind,
-        range_start_utc: range.0,
-        range_end_utc: range.1,
-        query,
-        fingerprint,
-    })
+fn candidate_jobs(now_utc: i64, timezone: &str) -> Result<Vec<ArchiveJob>, ReportError> {
+    let hours = walk_closed_periods(
+        timezone,
+        now_utc,
+        now_utc.saturating_sub(ARCHIVE_HOUR_RETAIN_DAYS * 86_400),
+        local_hour_bounds,
+        closed_local_hour_bounds,
+    )?;
+    let days = walk_closed_periods(
+        timezone,
+        now_utc,
+        now_utc.saturating_sub(DIMENSION_RETAIN_DAYS * 86_400),
+        local_day_bounds,
+        closed_local_day_bounds,
+    )?;
+    Ok(hours
+        .iter()
+        .take(1)
+        .map(|range| (ArchiveKind::Hour, range))
+        .chain(days.iter().take(1).map(|range| (ArchiveKind::Day, range)))
+        .chain(hours.iter().skip(1).map(|range| (ArchiveKind::Hour, range)))
+        .chain(days.iter().skip(1).map(|range| (ArchiveKind::Day, range)))
+        .map(|(kind, &(start, end))| {
+            let mut query = default_auto_report_query(kind.granularity(), start, end);
+            query.display_timezone = timezone.into();
+            ArchiveJob {
+                kind,
+                range_start_utc: start,
+                range_end_utc: end,
+                fingerprint: query_fingerprint(&query),
+                query,
+            }
+        })
+        .collect())
 }
 
 type TimeBoundsFn = fn(&str, i64) -> Result<(i64, i64), ReportError>;
 
 fn walk_closed_periods(
+    timezone: &str,
     now_utc: i64,
     retain_end: i64,
     bounds: TimeBoundsFn,
     closed: TimeBoundsFn,
 ) -> Result<Vec<(i64, i64)>, ReportError> {
-    let (mut start, mut end) = match closed("local", now_utc) {
+    let (mut start, mut end) = match closed(timezone, now_utc) {
         Ok(range) => range,
         Err(_) => return Ok(Vec::new()),
     };
@@ -491,7 +777,7 @@ fn walk_closed_periods(
         if start <= 0 {
             break;
         }
-        match bounds("local", start.saturating_sub(1)) {
+        match bounds(timezone, start.saturating_sub(1)) {
             Ok((prev_s, prev_e)) => {
                 if prev_s >= start {
                     break;
@@ -611,6 +897,9 @@ fn new_archive_id(now_utc: i64, job: &ArchiveJob) -> String {
 }
 
 fn map_sqlite(error: rusqlite::Error) -> ReportError {
+    if crate::sqlite_probe::map_sqlite_error(&error) == "cancelled" {
+        return ReportError::Cancelled("archive sqlite");
+    }
     if crate::sqlite_probe::map_sqlite_error(&error) == "busy" {
         return ReportError::StorageBusy("archive sqlite");
     }
@@ -621,7 +910,6 @@ fn map_sqlite(error: rusqlite::Error) -> ReportError {
 pub fn run_one_archive_job(
     connection: &Connection,
     db_path: &Path,
-    spool_dir: &Path,
     now_utc: i64,
     raw_retain_days: i64,
 ) -> Result<bool, ReportError> {
@@ -629,25 +917,16 @@ pub fn run_one_archive_job(
     let Some(job) = ReportArchiveService::next_job(connection, now_utc)? else {
         return Ok(false);
     };
-    let mut store = ReportSnapshotStore::open(spool_dir);
     let cancel = Arc::new(AtomicBool::new(false));
-    let outcome = ReportService::run(
+    let outcome = run_uncached(
         db_path,
-        &mut store,
         job.query.clone(),
         now_utc,
         raw_retain_days,
         &cancel,
         None,
     );
-    let token = outcome
-        .as_ref()
-        .ok()
-        .map(|item| item.report_snapshot_token.clone());
     ReportArchiveService::persist_outcome(connection, &job, outcome, now_utc)?;
-    if let Some(token) = token {
-        store.release(&token);
-    }
     Ok(true)
 }
 
@@ -660,6 +939,57 @@ mod archive_service_tests {
     };
     use crate::storage::StorageCoordinator;
     use tempfile::tempdir;
+
+    #[test]
+    fn automatic_purge_is_bounded_and_releases_the_writer_cancel_handler() {
+        let dir = tempdir().expect("dir");
+        let coordinator =
+            StorageCoordinator::open(&dir.path().join("purge.sqlite3")).expect("open");
+        let connection = coordinator.connection();
+        let now = 500 * 86_400;
+        for id in 0..131 {
+            let generated = if id == 130 { now } else { now - 8 * 86_400 };
+            connection
+                .execute(
+                    "insert into report_archive(archive_id,kind,range_start_utc,range_end_utc,
+                     display_timezone,grouping,query_fingerprint,status,generated_utc)
+                     values (?1,'manual',0,1,'UTC','hour',?1,'ok',?2)",
+                    params![format!("purge-{id}"), generated],
+                )
+                .expect("seed");
+        }
+        let cancel = Arc::new(AtomicBool::new(false));
+        assert_eq!(
+            ReportArchiveService::purge_expired_chunk(connection, now, &cancel).expect("chunk"),
+            128
+        );
+        cancel.store(true, std::sync::atomic::Ordering::SeqCst);
+        let count: i64 = connection
+            .query_row(
+                "with recursive n(x) as (values(1) union all select x+1 from n where x<200)
+                 select count(*) from n",
+                [],
+                |row| row.get(0),
+            )
+            .expect("later writer work has no stale cancellation hook");
+        assert_eq!(count, 200);
+        assert!(matches!(
+            ReportArchiveService::purge_expired_chunk(connection, now, &cancel),
+            Err(ReportError::Cancelled(_))
+        ));
+        cancel.store(false, std::sync::atomic::Ordering::SeqCst);
+        assert_eq!(
+            ReportArchiveService::purge_expired_chunk(connection, now, &cancel).expect("remainder"),
+            2
+        );
+        assert_eq!(
+            connection
+                .query_row("select count(*) from report_archive", [], |row| row
+                    .get::<_, i64>(0))
+                .expect("retained"),
+            1
+        );
+    }
 
     fn dummy_ok(query: ReportQuery, now: i64) -> ReportResult {
         let plan = CapabilityPlan {
@@ -682,6 +1012,243 @@ mod archive_service_tests {
         result.coverage.status = "covered".into();
         result.policy_metadata.target_policy = TargetPolicy::Historical;
         result
+    }
+
+    #[test]
+    fn scheduler_complete_history_needs_no_reader_for_3600_ticks() {
+        let dir = tempdir().expect("dir");
+        let coordinator =
+            StorageCoordinator::open(&dir.path().join("schedule.sqlite3")).expect("open");
+        let now = 20 * 86_400;
+        coordinator
+            .connection()
+            .execute_batch("begin immediate")
+            .expect("begin");
+        for job in candidate_jobs(now, "UTC").expect("jobs") {
+            ReportArchiveService::persist_outcome(
+                coordinator.connection(),
+                &job,
+                Ok(dummy_ok(job.query.clone(), now)),
+                now,
+            )
+            .expect("persist");
+        }
+        coordinator
+            .connection()
+            .execute_batch("commit")
+            .expect("commit");
+        let cancel = Arc::new(AtomicBool::new(false));
+        let mut scheduler = ArchiveScheduler::default();
+        assert!(scheduler
+            .next_job_in_zone(coordinator.path(), now, "UTC", &cancel)
+            .expect("load")
+            .is_none());
+        // 移走表后仍应完成这一小时的全部空闲 tick：任何重新读历史都会报错。
+        coordinator
+            .connection()
+            .execute_batch("drop table report_archive")
+            .expect("drop");
+        for tick in 0..3_600 {
+            assert!(scheduler
+                .next_job_in_zone(coordinator.path(), now + tick, "UTC", &cancel)
+                .expect("idle")
+                .is_none());
+        }
+        assert!(scheduler
+            .next_job_in_zone(coordinator.path(), now + 3_600, "UTC", &cancel)
+            .is_err());
+        // 发现失败后也不会立即再读；先等待有界重试。
+        assert!(scheduler
+            .next_job_in_zone(coordinator.path(), now + 3_601, "UTC", &cancel)
+            .expect("backoff")
+            .is_none());
+    }
+
+    #[test]
+    fn archive_descriptor_round_trip_keeps_dispatch_semantics_and_retry_state() {
+        let mut job = job_at(ArchiveKind::Day, 1_700_000_000, 1_700_086_400);
+        job.query.display_timezone = "America/New_York".into();
+        job.fingerprint = query_fingerprint(&job.query);
+        let descriptor = ArchiveDescriptor::from_job(&job, 1_700_100_000, 4);
+
+        assert_eq!(descriptor.kind, job.kind);
+        assert_eq!(
+            (descriptor.range_start_utc, descriptor.range_end_utc),
+            (job.range_start_utc, job.range_end_utc)
+        );
+        assert_eq!(descriptor.display_timezone, job.query.display_timezone);
+        assert_eq!(descriptor.fingerprint, job.fingerprint);
+        assert_eq!(descriptor.retry_after, 1_700_100_000);
+        assert_eq!(descriptor.failures, 4);
+
+        let dispatched = descriptor.to_job();
+        assert_eq!(dispatched.kind, job.kind);
+        assert_eq!(
+            (dispatched.range_start_utc, dispatched.range_end_utc),
+            (job.range_start_utc, job.range_end_utc)
+        );
+        assert_eq!(
+            dispatched.query.display_timezone,
+            job.query.display_timezone
+        );
+        assert_eq!(dispatched.fingerprint, job.fingerprint);
+        assert_eq!(query_fingerprint(&dispatched.query), dispatched.fingerprint);
+    }
+
+    #[test]
+    fn scheduler_pending_inventory_stays_bounded_and_query_free() {
+        let dir = tempdir().expect("dir");
+        let coordinator =
+            StorageCoordinator::open(&dir.path().join("schedule.sqlite3")).expect("open");
+        let cancel = Arc::new(AtomicBool::new(false));
+        let mut scheduler = ArchiveScheduler::default();
+        let _ = scheduler
+            .next_job_in_zone(coordinator.path(), 20 * 86_400, "UTC", &cancel)
+            .expect("load");
+
+        assert!(scheduler.pending.len() <= 2_000);
+        assert!(std::mem::size_of::<ArchiveDescriptor>() < std::mem::size_of::<ArchiveJob>());
+        assert!(scheduler.pending.iter().all(|item| {
+            item.descriptor.fingerprint.len() == 64 && item.descriptor.display_timezone == "UTC"
+        }));
+    }
+
+    #[test]
+    fn scheduler_failure_advances_backlog_and_survives_restart() {
+        let dir = tempdir().expect("dir");
+        let coordinator =
+            StorageCoordinator::open(&dir.path().join("schedule.sqlite3")).expect("open");
+        let now = 20 * 86_400;
+        let cancel = Arc::new(AtomicBool::new(false));
+        let mut scheduler = ArchiveScheduler::default();
+        let failed = scheduler
+            .next_job_in_zone(coordinator.path(), now, "UTC", &cancel)
+            .expect("load")
+            .expect("hour");
+        assert!(scheduler
+            .next_job_in_zone(coordinator.path(), now, "UTC", &cancel)
+            .expect("in flight")
+            .is_none());
+        ReportArchiveService::persist_outcome(
+            coordinator.connection(),
+            &failed,
+            Err(ReportError::DeadlineExceeded("fixture")),
+            now,
+        )
+        .expect("failure");
+        scheduler.complete(false, now);
+        let next = scheduler
+            .next_job_in_zone(coordinator.path(), now + 1, "UTC", &cancel)
+            .expect("next")
+            .expect("day");
+        assert_eq!(next.kind, ArchiveKind::Day);
+        assert_ne!(next.fingerprint, failed.fingerprint);
+        let mut restarted = ArchiveScheduler::default();
+        let next = restarted
+            .next_job_in_zone(coordinator.path(), now + 2, "UTC", &cancel)
+            .expect("restart")
+            .expect("day");
+        assert_eq!(next.kind, ArchiveKind::Day);
+        assert!(restarted.pending.len() <= 2_000);
+        scheduler.complete(true, now + 1);
+        while let Some(job) = scheduler
+            .next_job_in_zone(coordinator.path(), now + 2, "UTC", &cancel)
+            .expect("drain")
+        {
+            assert_ne!(job.fingerprint, failed.fingerprint);
+            scheduler.complete(true, now + 2);
+        }
+        assert!(scheduler
+            .next_job_in_zone(coordinator.path(), now + 59, "UTC", &cancel)
+            .expect("wait")
+            .is_none());
+        assert_eq!(
+            scheduler
+                .next_job_in_zone(coordinator.path(), now + 60, "UTC", &cancel)
+                .expect("retry")
+                .expect("failed")
+                .fingerprint,
+            failed.fingerprint
+        );
+        scheduler.complete(false, now + 60);
+        assert!(scheduler
+            .next_job_in_zone(coordinator.path(), now + 179, "UTC", &cancel)
+            .expect("longer wait")
+            .is_none());
+    }
+
+    #[test]
+    fn scheduler_clock_rewind_pause_and_timezone_change_rebuild_boundaries() {
+        let dir = tempdir().expect("dir");
+        let coordinator =
+            StorageCoordinator::open(&dir.path().join("schedule.sqlite3")).expect("open");
+        let cancel = Arc::new(AtomicBool::new(false));
+        let mut scheduler = ArchiveScheduler::default();
+        let now = 20 * 86_400;
+        for (utc, zone) in [
+            (now, "UTC"),
+            (now - 7_200, "UTC"),
+            (now + 2 * 86_400, "Asia/Shanghai"),
+        ] {
+            let job = scheduler
+                .next_job_in_zone(coordinator.path(), utc, zone, &cancel)
+                .expect("load")
+                .expect("hour");
+            assert_eq!(
+                (job.range_start_utc, job.range_end_utc),
+                closed_local_hour_bounds(zone, utc).expect("bounds")
+            );
+            assert_eq!(
+                scheduler.refresh_after,
+                local_hour_bounds(zone, utc).expect("next boundary").1
+            );
+            scheduler.complete(true, utc);
+        }
+    }
+
+    #[test]
+    fn scheduler_dst_uses_closed_civil_periods() {
+        let dir = tempdir().expect("dir");
+        let coordinator =
+            StorageCoordinator::open(&dir.path().join("schedule.sqlite3")).expect("open");
+        let cancel = Arc::new(AtomicBool::new(false));
+        for date in ["2024-03-11T04:00:00Z", "2024-11-04T05:00:00Z"] {
+            let now = chrono::DateTime::parse_from_rfc3339(date)
+                .expect("date")
+                .timestamp();
+            let mut scheduler = ArchiveScheduler::default();
+            let _ = scheduler
+                .next_job_in_zone(coordinator.path(), now, "America/New_York", &cancel)
+                .expect("hour");
+            scheduler.complete(true, now);
+            let day = scheduler
+                .next_job_in_zone(coordinator.path(), now, "America/New_York", &cancel)
+                .expect("day")
+                .expect("closed day");
+            assert_eq!(day.kind, ArchiveKind::Day);
+            let expected_hours = if date.contains("03-11") { 23 } else { 25 };
+            assert_eq!(
+                day.range_end_utc - day.range_start_utc,
+                expected_hours * 3_600
+            );
+            assert!(scheduler.pending.len() <= 2_000);
+        }
+    }
+
+    #[test]
+    fn internal_archive_query_never_creates_spool_directory() {
+        let dir = tempdir().expect("dir");
+        let coordinator =
+            StorageCoordinator::open(&dir.path().join("schedule.sqlite3")).expect("open");
+        let spool = dir.path().join("report-spool");
+        assert!(run_one_archive_job(
+            coordinator.connection(),
+            coordinator.path(),
+            20 * 86_400,
+            30
+        )
+        .expect("archive"));
+        assert!(!spool.exists());
     }
 
     fn job_at(kind: ArchiveKind, start: i64, end: i64) -> ArchiveJob {
@@ -964,27 +1531,15 @@ mod archive_service_tests {
         let coordinator = StorageCoordinator::open(&path).expect("open");
         coordinator.seed_report_fixture().expect("seed");
         let now = chrono::Utc::now().timestamp();
-        let wrote = run_one_archive_job(
-            coordinator.connection(),
-            coordinator.path(),
-            dir.path(),
-            now,
-            30,
-        )
-        .expect("run");
+        let wrote = run_one_archive_job(coordinator.connection(), coordinator.path(), now, 30)
+            .expect("run");
         assert!(wrote);
         let page = ReportArchiveService::list(coordinator.connection(), Some("hour"), None, None)
             .expect("list");
         assert_eq!(page.items.len(), 1);
         assert_eq!(page.items[0].status, "ok");
-        run_one_archive_job(
-            coordinator.connection(),
-            coordinator.path(),
-            dir.path(),
-            now,
-            30,
-        )
-        .expect("second tick");
+        run_one_archive_job(coordinator.connection(), coordinator.path(), now, 30)
+            .expect("second tick");
         let hours = ReportArchiveService::list(coordinator.connection(), Some("hour"), None, None)
             .expect("hours");
         let days = ReportArchiveService::list(coordinator.connection(), Some("day"), None, None)

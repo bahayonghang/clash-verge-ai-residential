@@ -1,0 +1,1598 @@
+[
+  {
+    "label": "a1000-unchanged-r1-baseline",
+    "workload": "unchanged",
+    "round": 1,
+    "side": "baseline",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\baseline-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "unchanged",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-unchanged-r1-baseline"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 47.359058599999116,
+    "stderr_tail": "",
+    "native_private_p95": 11202560.0,
+    "native_private_max": 11538432.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 235955.0,
+          "p50": 235955.0,
+          "p95": 235955.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 1360386.0,
+          "p50": 1360386.0,
+          "p95": 1360386.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 798784.0,
+          "p50": 798784.0,
+          "p95": 798784.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 1972637,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 2400.0,
+          "p50": 2400.0,
+          "p95": 2400.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 49560.0,
+          "p50": 49560.0,
+          "p95": 49560.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 194424.0,
+          "p50": 194424.0,
+          "p95": 194424.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 194424.0,
+          "p50": 194424.0,
+          "p95": 194424.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 194424,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "ab26881af77948371d3a6e300682fe6773887fff10b410da795d87c5fbde8076"
+  },
+  {
+    "label": "a1000-unchanged-r1-candidate",
+    "workload": "unchanged",
+    "round": 1,
+    "side": "candidate",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "unchanged",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "heap-diagnostics-candidate",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-unchanged-r1-candidate"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 46.69479209999918,
+    "stderr_tail": "",
+    "native_private_p95": 12615680.0,
+    "native_private_max": 12668928.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 165.0,
+          "p50": 165.0,
+          "p95": 165.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 1327323.0,
+          "p50": 1327323.0,
+          "p95": 1327323.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 798784.0,
+          "p50": 798784.0,
+          "p95": 798784.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 1939574,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 69824.0,
+          "p50": 69824.0,
+          "p95": 69824.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 238464.0,
+          "p50": 238464.0,
+          "p95": 238464.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 238464.0,
+          "p50": 238464.0,
+          "p95": 238464.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 238464,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "6c166e4c4e3c33461c2e47119230a53ddbd4daf750aaa2a22000d38c24d8107f"
+  },
+  {
+    "label": "a1000-unchanged-r2-baseline",
+    "workload": "unchanged",
+    "round": 2,
+    "side": "baseline",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\baseline-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "unchanged",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-unchanged-r2-baseline"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 46.85904020000089,
+    "stderr_tail": "",
+    "native_private_p95": 10702848.0,
+    "native_private_max": 11403264.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 235955.0,
+          "p50": 235955.0,
+          "p95": 235955.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 1360386.0,
+          "p50": 1360386.0,
+          "p95": 1360386.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 798784.0,
+          "p50": 798784.0,
+          "p95": 798784.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 1972637,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 2400.0,
+          "p50": 2400.0,
+          "p95": 2400.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 49560.0,
+          "p50": 49560.0,
+          "p95": 49560.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 194424.0,
+          "p50": 194424.0,
+          "p95": 194424.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 194424.0,
+          "p50": 194424.0,
+          "p95": 194424.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 194424,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "ab26881af77948371d3a6e300682fe6773887fff10b410da795d87c5fbde8076"
+  },
+  {
+    "label": "a1000-unchanged-r2-candidate",
+    "workload": "unchanged",
+    "round": 2,
+    "side": "candidate",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "unchanged",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "heap-diagnostics-candidate",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-unchanged-r2-candidate"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 47.35059090000141,
+    "stderr_tail": "",
+    "native_private_p95": 12611584.0,
+    "native_private_max": 12886016.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 165.0,
+          "p50": 165.0,
+          "p95": 165.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 1327323.0,
+          "p50": 1327323.0,
+          "p95": 1327323.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 798784.0,
+          "p50": 798784.0,
+          "p95": 798784.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 1939574,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 69824.0,
+          "p50": 69824.0,
+          "p95": 69824.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 238464.0,
+          "p50": 238464.0,
+          "p95": 238464.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 238464.0,
+          "p50": 238464.0,
+          "p95": 238464.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 238464,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "6c166e4c4e3c33461c2e47119230a53ddbd4daf750aaa2a22000d38c24d8107f"
+  },
+  {
+    "label": "a1000-unchanged-r3-baseline",
+    "workload": "unchanged",
+    "round": 3,
+    "side": "baseline",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\baseline-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "unchanged",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-unchanged-r3-baseline"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 46.686763800000335,
+    "stderr_tail": "",
+    "native_private_p95": 10346496.0,
+    "native_private_max": 10956800.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 235955.0,
+          "p50": 235955.0,
+          "p95": 235955.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 1360386.0,
+          "p50": 1360386.0,
+          "p95": 1360386.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 798784.0,
+          "p50": 798784.0,
+          "p95": 798784.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 1972637,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 2400.0,
+          "p50": 2400.0,
+          "p95": 2400.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 49560.0,
+          "p50": 49560.0,
+          "p95": 49560.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 194424.0,
+          "p50": 194424.0,
+          "p95": 194424.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 194424.0,
+          "p50": 194424.0,
+          "p95": 194424.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 194424,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "ab26881af77948371d3a6e300682fe6773887fff10b410da795d87c5fbde8076"
+  },
+  {
+    "label": "a1000-unchanged-r3-candidate",
+    "workload": "unchanged",
+    "round": 3,
+    "side": "candidate",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "unchanged",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "heap-diagnostics-candidate",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-unchanged-r3-candidate"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 46.6572253000013,
+    "stderr_tail": "",
+    "native_private_p95": 12369920.0,
+    "native_private_max": 12890112.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 165.0,
+          "p50": 165.0,
+          "p95": 165.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 1327323.0,
+          "p50": 1327323.0,
+          "p95": 1327323.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 798784.0,
+          "p50": 798784.0,
+          "p95": 798784.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 1939574,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 69824.0,
+          "p50": 69824.0,
+          "p95": 69824.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 238464.0,
+          "p50": 238464.0,
+          "p95": 238464.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 238464.0,
+          "p50": 238464.0,
+          "p95": 238464.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 238464,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "6c166e4c4e3c33461c2e47119230a53ddbd4daf750aaa2a22000d38c24d8107f"
+  },
+  {
+    "label": "a1000-metadata-r1-baseline",
+    "workload": "metadata",
+    "round": 1,
+    "side": "baseline",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\baseline-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "metadata",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-metadata-r1-baseline"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 45.87269190000006,
+    "stderr_tail": "",
+    "native_private_p95": 11464704.0,
+    "native_private_max": 12353536.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 235955.0,
+          "p50": 235955.0,
+          "p95": 235955.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 2291723.0,
+          "p50": 2249867.0,
+          "p95": 2270795.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 799532.0,
+          "p50": 799532.0,
+          "p95": 799532.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 3000550,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 2400.0,
+          "p50": 2400.0,
+          "p95": 2400.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 49560.0,
+          "p50": 49560.0,
+          "p95": 49560.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 198784.0,
+          "p50": 198784.0,
+          "p95": 198784.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 198784.0,
+          "p50": 198784.0,
+          "p95": 198784.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 198784,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "ab26881af77948371d3a6e300682fe6773887fff10b410da795d87c5fbde8076"
+  },
+  {
+    "label": "a1000-metadata-r1-candidate",
+    "workload": "metadata",
+    "round": 1,
+    "side": "candidate",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "metadata",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "heap-diagnostics-candidate",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-metadata-r1-candidate"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 46.68853919999674,
+    "stderr_tail": "",
+    "native_private_p95": 12955648.0,
+    "native_private_max": 13221888.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 164.0,
+          "p50": 164.0,
+          "p95": 164.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 2303244.0,
+          "p50": 2261388.0,
+          "p95": 2282316.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 799532.0,
+          "p50": 799532.0,
+          "p95": 799532.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 3012071,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 84936.0,
+          "p50": 84424.0,
+          "p95": 84936.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 251568.0,
+          "p50": 251568.0,
+          "p95": 251568.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 251568.0,
+          "p50": 251568.0,
+          "p95": 251568.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 251568,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "6c166e4c4e3c33461c2e47119230a53ddbd4daf750aaa2a22000d38c24d8107f"
+  },
+  {
+    "label": "a1000-metadata-r2-baseline",
+    "workload": "metadata",
+    "round": 2,
+    "side": "baseline",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\baseline-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "metadata",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-metadata-r2-baseline"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 46.94790880000073,
+    "stderr_tail": "",
+    "native_private_p95": 11579392.0,
+    "native_private_max": 11689984.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 235955.0,
+          "p50": 235955.0,
+          "p95": 235955.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 2291723.0,
+          "p50": 2249867.0,
+          "p95": 2270795.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 799532.0,
+          "p50": 799532.0,
+          "p95": 799532.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 3000550,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 2400.0,
+          "p50": 2400.0,
+          "p95": 2400.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 49560.0,
+          "p50": 49560.0,
+          "p95": 49560.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 198784.0,
+          "p50": 198784.0,
+          "p95": 198784.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 198784.0,
+          "p50": 198784.0,
+          "p95": 198784.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 198784,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "ab26881af77948371d3a6e300682fe6773887fff10b410da795d87c5fbde8076"
+  },
+  {
+    "label": "a1000-metadata-r2-candidate",
+    "workload": "metadata",
+    "round": 2,
+    "side": "candidate",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "metadata",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "heap-diagnostics-candidate",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-metadata-r2-candidate"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 45.6516303999997,
+    "stderr_tail": "",
+    "native_private_p95": 12627968.0,
+    "native_private_max": 12947456.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 164.0,
+          "p50": 164.0,
+          "p95": 164.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 2303244.0,
+          "p50": 2261388.0,
+          "p95": 2282316.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 799532.0,
+          "p50": 799532.0,
+          "p95": 799532.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 3012071,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 84936.0,
+          "p50": 84424.0,
+          "p95": 84936.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 251568.0,
+          "p50": 251568.0,
+          "p95": 251568.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 251568.0,
+          "p50": 251568.0,
+          "p95": 251568.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 251568,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "6c166e4c4e3c33461c2e47119230a53ddbd4daf750aaa2a22000d38c24d8107f"
+  },
+  {
+    "label": "a1000-metadata-r3-baseline",
+    "workload": "metadata",
+    "round": 3,
+    "side": "baseline",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\baseline-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "metadata",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-metadata-r3-baseline"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 46.73318980000113,
+    "stderr_tail": "",
+    "native_private_p95": 11571200.0,
+    "native_private_max": 11919360.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 235955.0,
+          "p50": 235955.0,
+          "p95": 235955.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 2291723.0,
+          "p50": 2249867.0,
+          "p95": 2270795.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 799532.0,
+          "p50": 799532.0,
+          "p95": 799532.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 4360.0,
+          "p50": 4360.0,
+          "p95": 4360.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 3000550,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 2400.0,
+          "p50": 2400.0,
+          "p95": 2400.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 49560.0,
+          "p50": 49560.0,
+          "p95": 49560.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 198784.0,
+          "p50": 198784.0,
+          "p95": 198784.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 198784.0,
+          "p50": 198784.0,
+          "p95": 198784.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 198784,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "ab26881af77948371d3a6e300682fe6773887fff10b410da795d87c5fbde8076"
+  },
+  {
+    "label": "a1000-metadata-r3-candidate",
+    "workload": "metadata",
+    "round": 3,
+    "side": "candidate",
+    "argv": [
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\executables\\candidate-monitor-bench.exe",
+      "replay-facade",
+      "--active",
+      "1000",
+      "--hz",
+      "1",
+      "--duration-secs",
+      "30",
+      "--warmup-secs",
+      "5",
+      "--workload",
+      "metadata",
+      "--metadata-change-percent",
+      "100",
+      "--archive",
+      "complete",
+      "--query-every-frames",
+      "5",
+      "--seed",
+      "20260919",
+      "--start-utc",
+      "1800001800",
+      "--source-revision",
+      "heap-diagnostics-candidate",
+      "--dir",
+      "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-e14ecd88\\data\\heap-diagnostics-rerun\\a1000-metadata-r3-candidate"
+    ],
+    "exit_code": 0,
+    "wall_seconds": 45.90340410000135,
+    "stderr_tail": "",
+    "native_private_p95": 13348864.0,
+    "native_private_max": 13594624.0,
+    "heap_phases": {
+      "rust": {
+        "archive": {
+          "count": 30,
+          "max": 164.0,
+          "p50": 164.0,
+          "p95": 164.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 2303244.0,
+          "p50": 2261388.0,
+          "p95": 2282316.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 799532.0,
+          "p50": 799532.0,
+          "p95": 799532.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 3214.0,
+          "p50": 3214.0,
+          "p95": 3214.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 660111.0,
+          "p50": 660111.0,
+          "p95": 660111.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 566000.0,
+          "p50": 566000.0,
+          "p95": 566000.0
+        }
+      },
+      "rust_window_peak": 3012071,
+      "sqlite": {
+        "archive": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "ingest": {
+          "count": 30,
+          "max": 84936.0,
+          "p50": 84424.0,
+          "p95": 84936.0
+        },
+        "live_query": {
+          "count": 6,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "report_first_reader": {
+          "count": 6,
+          "max": 251568.0,
+          "p50": 251568.0,
+          "p95": 251568.0
+        },
+        "report_repeated_reader": {
+          "count": 6,
+          "max": 251568.0,
+          "p50": 251568.0,
+          "p95": 251568.0
+        },
+        "sample": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "snapshot": {
+          "count": 30,
+          "max": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        }
+      },
+      "sqlite_window_peak": 251568,
+      "unit": "bytes above phase start"
+    },
+    "executable_sha256": "6c166e4c4e3c33461c2e47119230a53ddbd4daf750aaa2a22000d38c24d8107f"
+  }
+]

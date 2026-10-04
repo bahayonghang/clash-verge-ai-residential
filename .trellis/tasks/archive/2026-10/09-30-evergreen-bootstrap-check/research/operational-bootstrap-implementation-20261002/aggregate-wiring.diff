@@ -1,0 +1,59 @@
+diff --git a/justfile b/justfile
+index 72163be..c5d0f27 100644
+--- a/justfile
++++ b/justfile
+@@ -17,6 +17,25 @@ help:
+ ci: monitor-check
+     npm run ci
+ 
++# 独立依赖审计：需要 npm 注册表、RustSec 数据库网络访问及已安装的 cargo-audit。
++# npm 包含开发依赖并以 high 为失败阈值；网络/工具失败须单独分类，不得当作审计通过。
++dependency-audit:
++    npm --prefix residential-monitor audit --include=dev --audit-level=high
++    npm --prefix docs audit --include=dev --audit-level=high
++    cargo audit --file residential-monitor/src-tauri/Cargo.lock
++
++# 只读入口与版本诊断。独立于 CI；失败不会安装工具或执行 bootstrap。
++check-harness-environment:
++    node scripts/check-harness-environment.js
++
++# 仅初始化显式隔离候选；Node 脚本 recipe 以 argv 接收路径，不经 shell 拼接。
++[script("node")]
++[positional-arguments]
++bootstrap-harnesses root entry:
++    const path = require("node:path");
++    const { main } = require(path.resolve("scripts/bootstrap-harnesses.js"));
++    process.exitCode = main([process.execPath, "bootstrap-harnesses", "--root", process.argv[2], "--entry", process.argv[3]]);
++
+ # 本地 VitePress 文档站。需要 Node.js 22+，依赖在 docs/package.json。
+ docs-dev:
+     npm --prefix docs run dev
+@@ -107,3 +126,7 @@ render-local:
+ 
+ # 向后兼容旧命令；请使用 render-local，它更准确地表示单向生成行为。
+ sync: render-local
++
++# 单向渲染副本：local copy.toml -> local copy.js。源 TOML 必须已存在。
++sync-copy:
++    @node scripts/sync-local-config.js 'clash-verge-ai-residential.local copy.toml' 'clash-verge-ai-residential.local copy.js'
+diff --git a/package.json b/package.json
+index 8de63a8..86943f3 100644
+--- a/package.json
++++ b/package.json
+@@ -8,12 +8,13 @@
+     "node": ">=18"
+   },
+   "scripts": {
+-    "check": "node --check clash-verge-ai-residential.js && node --check tests/regression.test.js && node --check tests/sync-local-config.test.js && node --check tests/check-template-safety.test.js && node --check tests/sync-monitor-version.test.js && node --check tests/nsis-silent-install.test.js && node --check tests/install-agent-skills.test.js && node --check scripts/check-template-safety.js && node --check scripts/sync-local-config.js && node --check scripts/sync-monitor-version.js && node --check scripts/nsis-silent-install.js && node --check scripts/install-agent-skills.js && node --check skills/residential-rule-tuning/scripts/build-inputs.js",
+-    "test": "node --test tests/regression.test.js tests/sync-local-config.test.js tests/check-template-safety.test.js tests/sync-monitor-version.test.js tests/nsis-silent-install.test.js tests/install-agent-skills.test.js",
++    "check": "node --check clash-verge-ai-residential.js && node --check tests/regression.test.js && node --check tests/sync-local-config.test.js && node --check tests/check-template-safety.test.js && node --check tests/sync-monitor-version.test.js && node --check tests/nsis-silent-install.test.js && node --check tests/install-agent-skills.test.js && node --check scripts/check-template-safety.js && node --check scripts/sync-local-config.js && node --check scripts/sync-monitor-version.js && node --check scripts/nsis-silent-install.js && node --check scripts/install-agent-skills.js && node --check skills/residential-rule-tuning/scripts/build-inputs.js && node --check scripts/check-agent-contract.js && node --check tests/check-agent-contract.test.js && node --check scripts/check-harness-environment.js && node --check tests/check-harness-environment.test.js && node --check scripts/bootstrap-harnesses.js && node --check tests/bootstrap-harnesses.test.js && npm run check:agents",
++    "test": "node --test tests/regression.test.js tests/sync-local-config.test.js tests/check-template-safety.test.js tests/sync-monitor-version.test.js tests/nsis-silent-install.test.js tests/install-agent-skills.test.js tests/check-agent-contract.test.js tests/check-harness-environment.test.js tests/bootstrap-harnesses.test.js",
+     "check:secrets": "node scripts/check-template-safety.js",
+     "ci": "npm run check && npm run test && npm run check:secrets",
+     "docs:dev": "npm --prefix docs run dev",
+     "docs:build": "npm --prefix docs run build",
+-    "docs:preview": "npm --prefix docs run preview"
++    "docs:preview": "npm --prefix docs run preview",
++    "check:agents": "node scripts/check-agent-contract.js"
+   }
+ }

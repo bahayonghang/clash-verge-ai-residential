@@ -1,0 +1,411 @@
+{
+  "reviewed_utc": "2026-09-30T15:29:04.756869+00:00",
+  "status": "PASS",
+  "errors": [],
+  "scope": "read-only retained source/binary/log verification; reviewer did not execute tests or touch any database",
+  "sources": {
+    "baseline": {
+      "count": 103,
+      "before_after_equal": true,
+      "current_source_matches": true,
+      "manifest_sha256": "1120B9D2B5C457F856BCD5F51ED9C88E0612E978AB4C7B76B4816640E1C6678F",
+      "changed_since_initial_build": [
+        "residential-monitor/src-tauri/src/bench/facade.rs"
+      ]
+    },
+    "candidate": {
+      "count": 108,
+      "before_after_equal": true,
+      "current_source_matches": true,
+      "manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462",
+      "changed_since_initial_build": [
+        "residential-monitor/src-tauri/src/bench/facade.rs",
+        "residential-monitor/src-tauri/src/c3/raw_fold.rs"
+      ]
+    }
+  },
+  "identities": {
+    "baseline-monitor-bench.exe": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\baseline-monitor-bench.exe",
+      "sha256": "06BAC94FD88E37DCD8971893BF79C91A05E9775CEED4A06AB7E2F10B690F3DD9",
+      "source_manifest_sha256": "1120B9D2B5C457F856BCD5F51ED9C88E0612E978AB4C7B76B4816640E1C6678F"
+    },
+    "candidate-monitor-bench.exe": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-bench.exe",
+      "sha256": "9604FBE6ED24C6DC4E40E556A6AD7F3338477582B223E15D20B795DDF73A7A5E",
+      "source_manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462"
+    },
+    "candidate-monitor-db.exe": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-db.exe",
+      "sha256": "8EE782EDE8F6F61997CCADC7476B48963A33410C36EB25DF2F03E4FB18F6BA13",
+      "source_manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462"
+    },
+    "candidate-library-tests.exe": {
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-library-tests.exe",
+      "sha256": "74ECF63AC02659AFF87AC5B6E2AE1264552E57630441E9337DB65450629BD638",
+      "source_manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462"
+    }
+  },
+  "receipts": [
+    {
+      "file": "candidate-retained-20260930/final-candidate-build.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "wall_seconds": 22.551588600000287
+    },
+    {
+      "file": "candidate-retained-20260930/final-fmt.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "wall_seconds": 0.6309522999999899
+    },
+    {
+      "file": "candidate-retained-20260930/final-just-ci.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "546",
+          "0",
+          "6"
+        ],
+        [
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "3",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0"
+        ]
+      ],
+      "wall_seconds": 80.43522250000024
+    },
+    {
+      "file": "candidate-retained-20260930/final-release-bench.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "12",
+          "0",
+          "1"
+        ]
+      ],
+      "wall_seconds": 4.016783299999588
+    },
+    {
+      "file": "candidate-retained-20260930/final-release-clippy.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "wall_seconds": 8.791378599999916
+    },
+    {
+      "file": "candidate-retained-20260930/final-release-raw-fold.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "7",
+          "0",
+          "1"
+        ]
+      ],
+      "wall_seconds": 1.0328155000006518
+    },
+    {
+      "file": "candidate-retained-20260930/final-release-service.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [
+        [
+          "53",
+          "0",
+          "3"
+        ]
+      ],
+      "wall_seconds": 12.285860299999513
+    },
+    {
+      "file": "candidate-retained-20260930/final-test-build.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "wall_seconds": 15.91631039999993
+    },
+    {
+      "file": "retained-smoke-20260930/baseline.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "wall_seconds": 13.30825520000053
+    },
+    {
+      "file": "retained-smoke-20260930/candidate.receipt.json",
+      "exit_code": 0,
+      "test_summaries": [],
+      "wall_seconds": 12.740385299999616
+    }
+  ],
+  "just_ci_steps": [
+    {
+      "argv": [
+        "powershell.exe",
+        "-NoLogo",
+        "-NoProfile",
+        "-Command",
+        "node scripts/sync-monitor-version.js --check"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "started_utc": "2026-09-30T15:23:14.331039+00:00",
+      "status": "finished",
+      "exit_code": 0,
+      "wall_seconds": 0.2408728999998857,
+      "finished_utc": "2026-09-30T15:23:14.572477+00:00"
+    },
+    {
+      "argv": [
+        "powershell.exe",
+        "-NoLogo",
+        "-NoProfile",
+        "-Command",
+        "npm --prefix residential-monitor ci"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "started_utc": "2026-09-30T15:23:14.621145+00:00",
+      "status": "finished",
+      "exit_code": 0,
+      "wall_seconds": 11.97410950000085,
+      "finished_utc": "2026-09-30T15:23:26.596041+00:00"
+    },
+    {
+      "argv": [
+        "powershell.exe",
+        "-NoLogo",
+        "-NoProfile",
+        "-Command",
+        "npm --prefix residential-monitor run check"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "started_utc": "2026-09-30T15:23:26.655010+00:00",
+      "status": "finished",
+      "exit_code": 0,
+      "wall_seconds": 14.62846300000001,
+      "finished_utc": "2026-09-30T15:23:41.284262+00:00"
+    },
+    {
+      "argv": [
+        "powershell.exe",
+        "-NoLogo",
+        "-NoProfile",
+        "-Command",
+        "cargo fmt --manifest-path residential-monitor/src-tauri/Cargo.toml --check"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "started_utc": "2026-09-30T15:23:41.338215+00:00",
+      "status": "finished",
+      "exit_code": 0,
+      "wall_seconds": 0.7968376999997417,
+      "finished_utc": "2026-09-30T15:23:42.135790+00:00"
+    },
+    {
+      "argv": [
+        "powershell.exe",
+        "-NoLogo",
+        "-NoProfile",
+        "-Command",
+        "cargo clippy --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace --all-targets -- -D warnings"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "started_utc": "2026-09-30T15:23:42.188900+00:00",
+      "status": "finished",
+      "exit_code": 0,
+      "wall_seconds": 8.456545399999413,
+      "finished_utc": "2026-09-30T15:23:50.646171+00:00"
+    },
+    {
+      "argv": [
+        "powershell.exe",
+        "-NoLogo",
+        "-NoProfile",
+        "-Command",
+        "cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "started_utc": "2026-09-30T15:23:50.702129+00:00",
+      "status": "finished",
+      "exit_code": 0,
+      "wall_seconds": 38.13742269999966,
+      "finished_utc": "2026-09-30T15:24:28.840307+00:00"
+    },
+    {
+      "argv": [
+        "powershell.exe",
+        "-NoLogo",
+        "-NoProfile",
+        "-Command",
+        "npm run check:secrets"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "started_utc": "2026-09-30T15:24:28.898935+00:00",
+      "status": "finished",
+      "exit_code": 0,
+      "wall_seconds": 0.8200375999995231,
+      "finished_utc": "2026-09-30T15:24:29.719881+00:00"
+    },
+    {
+      "argv": [
+        "powershell.exe",
+        "-NoLogo",
+        "-NoProfile",
+        "-Command",
+        "npm run ci"
+      ],
+      "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+      "started_utc": "2026-09-30T15:24:29.770270+00:00",
+      "status": "finished",
+      "exit_code": 0,
+      "wall_seconds": 4.88643890000003,
+      "finished_utc": "2026-09-30T15:24:34.657679+00:00"
+    }
+  ],
+  "smoke": {
+    "baseline": {
+      "exit_code": 0,
+      "inventories": {
+        "initial_files_and_pages": {
+          "journal_mode": "wal",
+          "synchronous": 2,
+          "schema_version": 4
+        },
+        "final_files_and_pages": {
+          "journal_mode": "wal",
+          "synchronous": 2,
+          "schema_version": 4
+        }
+      },
+      "options": {
+        "active": 8,
+        "archive": "complete",
+        "dir": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\retained-smoke-20260930\\baseline",
+        "duration_secs": 3,
+        "hz": 1,
+        "metadata_change_percent": 100,
+        "period_rule": false,
+        "query_every_frames": 1,
+        "seed": 20260919,
+        "source_revision": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+        "start_utc": 1800001800,
+        "virtual_time": false,
+        "warmup_secs": 0,
+        "workload": "counters"
+      },
+      "fixture_hash": "479a7ea719108533bfee8f8664b84209e786e8c1b229bd796666fc9e79e785eb",
+      "platform": "windows",
+      "local_utc_offset_seconds": -18000,
+      "boundary": "A8 3-second real-time instrumentation smoke; no formal or nonempty result claim"
+    },
+    "candidate": {
+      "exit_code": 0,
+      "inventories": {
+        "initial_files_and_pages": {
+          "journal_mode": "wal",
+          "synchronous": 2,
+          "schema_version": 5
+        },
+        "final_files_and_pages": {
+          "journal_mode": "wal",
+          "synchronous": 2,
+          "schema_version": 5
+        }
+      },
+      "options": {
+        "active": 8,
+        "archive": "complete",
+        "dir": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\retained-smoke-20260930\\candidate",
+        "duration_secs": 3,
+        "hz": 1,
+        "metadata_change_percent": 100,
+        "period_rule": false,
+        "query_every_frames": 1,
+        "seed": 20260919,
+        "source_revision": "manifest-sha256:860165f3183ac8bfaac2d74af6f29e793575a91a82b1bb23d86ee975be5c0462",
+        "start_utc": 1800001800,
+        "virtual_time": false,
+        "warmup_secs": 0,
+        "workload": "counters"
+      },
+      "fixture_hash": "479a7ea719108533bfee8f8664b84209e786e8c1b229bd796666fc9e79e785eb",
+      "platform": "windows",
+      "local_utc_offset_seconds": -18000,
+      "boundary": "A8 3-second real-time instrumentation smoke; no formal or nonempty result claim"
+    }
+  },
+  "retained_production_equals_lazy_snapshot": true,
+  "runner_sha256": "6c88acca5994c02266f262fbc185ebf9d09de1ab9ec96baa302993a0cbf381e9",
+  "formal_launch_review": "ready if errors are empty; exclusive execution remains implementation owner responsibility",
+  "limits": [
+    "formal replay has not been executed by this reviewer",
+    "F12 nonempty and all-application file attribution remain independent UNVERIFIED gates",
+    "A1000 NOT_RUN until original stage prerequisite is met; original size, 21 runs and 10-second requirement unchanged"
+  ],
+  "nonempty_proofs": [
+    {
+      "window": "minute",
+      "receipt": "retained-nonempty-20260930/minute.receipt.json",
+      "exit_code": 0,
+      "selected_test_counts": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "production_first_read": {
+        "connection_count": 250,
+        "data_version": 2592000,
+        "download": 11725,
+        "series_rows": 1,
+        "status": "ok",
+        "tier": "Raw",
+        "upload": 3497
+      },
+      "production_first_read_ms": 4.6001,
+      "cache_boundary": "previously read corpus; no page-cache eviction; one sample only"
+    },
+    {
+      "window": "30d",
+      "receipt": "retained-nonempty-20260930/30d.receipt.json",
+      "exit_code": 0,
+      "selected_test_counts": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "production_first_read": {
+        "connection_count": 2160000,
+        "data_version": 2592000,
+        "download": 507599545,
+        "series_rows": 720,
+        "status": "ok",
+        "tier": "Raw",
+        "upload": 151200035
+      },
+      "production_first_read_ms": 6735.2968,
+      "cache_boundary": "previously read corpus; no page-cache eviction; one sample only"
+    }
+  ],
+  "nonempty_reviewed_utc": "2026-09-30T15:31:28.594425+00:00"
+}

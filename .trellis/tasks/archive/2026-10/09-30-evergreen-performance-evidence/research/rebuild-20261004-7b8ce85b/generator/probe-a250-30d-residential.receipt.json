@@ -1,0 +1,59 @@
+{
+  "label": "probe-a250-30d-residential",
+  "argv": [
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\executables\\candidate-library-tests.exe",
+    "--exact",
+    "c3::raw_fold::tests::isolated_raw_fold_stage_proof",
+    "--ignored",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "environment_override": {
+    "RESIWATCH_RAW_FOLD_START": "1787184000",
+    "RESIWATCH_RAW_FOLD_END": "1789776000",
+    "RESIWATCH_RAW_FOLD_FILTER": "residential",
+    "RESIWATCH_RAW_FOLD_STAGE_DB": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\corpus-a250-30d\\monitor.sqlite3",
+    "RESIWATCH_RAW_FOLD_STAGE_OUT": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator\\probes\\a250-30d-residential.json"
+  },
+  "shell": false,
+  "started_utc": "2026-10-04T05:26:08.082858+00:00",
+  "status": "ENDED",
+  "native_exit": 0,
+  "pid": 44100,
+  "competing_load_at_start": [],
+  "disk_free_bytes_before": {
+    "C": 526133534720,
+    "D": 1158528282624
+  },
+  "ended_utc": "2026-10-04T05:26:14.724827+00:00",
+  "wall_seconds": 6.62347839999893,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator\\probe-a250-30d-residential.stdout.raw",
+      "bytes": 177,
+      "raw_sha256": "1B842408A204DCAED2380CA3ABF6AD4F0D22BFB8837637913644105B33BCA056",
+      "gzip_sha256": "D79770FD60DD1EBF2536CE82690678B90B81C9EFD9D9979CEAAAE8ED1A1CFF30",
+      "readable_sha256": "8B50E75BD7C01FC9C782FB7B6B11AD6F861AEFB1FB5664C4E052FC1AA906CEE1"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator\\probe-a250-30d-residential.stderr.raw",
+      "bytes": 0,
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  },
+  "peak_rss_bytes_sampled": 277143552,
+  "last_cpu_times_sampled": {
+    "user": 4.71875,
+    "system": 1.25,
+    "children_user": 0.0,
+    "children_system": 0.0
+  },
+  "disk_free_bytes_after": {
+    "C": 526133526528,
+    "D": 1158528270336
+  },
+  "sampling": "0.5 s psutil polling of the direct native process; not a complete peak proof"
+}

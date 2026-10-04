@@ -1,0 +1,5 @@
+{"file":"AGENTS.md","reason":"Project contract, boundaries, validation gates"}
+{"file":".trellis/spec/frontend/index.md","reason":"Pasteable extension package spec index"}
+{"file":".trellis/spec/frontend/hook-guidelines.md","reason":"Host control-plane contract to update"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Extension style, language split, test rules"}
+{"file":".trellis/tasks/09-30-verge-owned-field-writes/research/verge-discarded-keys-notice.md","reason":"Upstream discarded-keys mechanism evidence"}

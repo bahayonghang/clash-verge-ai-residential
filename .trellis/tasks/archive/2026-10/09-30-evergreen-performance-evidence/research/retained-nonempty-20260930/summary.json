@@ -1,0 +1,30 @@
+[
+  {
+    "window": "minute",
+    "pass": true,
+    "production_first_read_ms": 4.6001,
+    "production_first_read": {
+      "connection_count": 250,
+      "data_version": 2592000,
+      "download": 11725,
+      "series_rows": 1,
+      "status": "ok",
+      "tier": "Raw",
+      "upload": 3497
+    }
+  },
+  {
+    "window": "30d",
+    "pass": true,
+    "production_first_read_ms": 6735.2968,
+    "production_first_read": {
+      "connection_count": 2160000,
+      "data_version": 2592000,
+      "download": 507599545,
+      "series_rows": 720,
+      "status": "ok",
+      "tier": "Raw",
+      "upload": 151200035
+    }
+  }
+]

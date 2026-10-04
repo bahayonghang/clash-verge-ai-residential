@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "powershell.exe",
+    "-NoLogo",
+    "-NoProfile",
+    "-Command",
+    "npm --prefix residential-monitor run check"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:23:26.655010+00:00",
+  "status": "finished",
+  "exit_code": 0,
+  "wall_seconds": 14.62846300000001,
+  "finished_utc": "2026-09-30T15:23:41.284262+00:00"
+}

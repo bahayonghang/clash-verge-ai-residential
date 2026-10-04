@@ -1,0 +1,16 @@
+{
+  "baseline_source_commit": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+  "candidate_source_manifest_sha256": "F3D9D6FE6948EA41BAD1A020835891CE95D61AF521663B717D6B2C89FB0B72BC",
+  "source_file_count": 303,
+  "build_date_utc": "2026-09-24T07:34:18.733940+00:00",
+  "source_kind": "uncommitted raw_fold single minute scan; manifest covers residential-monitor Rust sources and frontend ts/tsx",
+  "product_gate": "just ci exit 0 after raw_fold; Rust library 541 passed, 4 ignored; capacity fixtures not yet measured",
+  "schema_checksum": "ledger-lifecycle-v5-layout3",
+  "desktop_execution": "not built or installed for this measurement",
+  "release_build_seconds": 39.13,
+  "monitor-bench_exe_sha256": "A706554BC208FC75D7B153EC8DB7E16893B2715A23F45174675D152788A39021",
+  "monitor-db_exe_sha256": "9B34FFB5DE835A5A9E8DACCCB3D3E915C6C438BD8FAE9511BA641C7B99EA34BA",
+  "data_root": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold",
+  "seed": 20260919,
+  "start_utc": 1787184000
+}

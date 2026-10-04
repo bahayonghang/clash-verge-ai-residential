@@ -1,0 +1,31 @@
+{
+  "argv": [
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-library-tests.exe",
+    "--exact",
+    "c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof",
+    "--ignored",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:28:39.697531+00:00",
+  "status": "finished",
+  "environment_overrides": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "exit_code": 0,
+  "finished_utc": "2026-09-30T15:28:53.214848+00:00",
+  "wall_seconds": 13.516406700000516,
+  "logs": {
+    "stdout": {
+      "raw_sha256": "41dc21653de7addd507da16293da8ede0c4d166c53c042931813f55abd078c50",
+      "gzip": "30d.stdout.raw.gz",
+      "readable": "30d.stdout.log"
+    },
+    "stderr": {
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzip": "30d.stderr.raw.gz",
+      "readable": "30d.stderr.log"
+    }
+  }
+}

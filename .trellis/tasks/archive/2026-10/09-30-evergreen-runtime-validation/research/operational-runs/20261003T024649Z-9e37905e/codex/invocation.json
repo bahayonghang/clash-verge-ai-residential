@@ -1,0 +1,26 @@
+{
+  "invocation_id": "20261003T024649Z-9e37905e/codex/parent",
+  "harness": "codex",
+  "phase": "parent",
+  "argv": [
+    "<HOME>\\AppData\\Local\\OpenAI\\Codex\\bin\\23f7d7f110b19ac3\\codex.exe",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "-c",
+    "approval_policy=\"never\"",
+    "--ephemeral",
+    "--json",
+    "<PROMPT_SHA256:1b2b60a530f98dfc92caf054dd0f4b1c45e286f210279c661ac2c9da695ae9c5>"
+  ],
+  "shell": false,
+  "timeout_seconds": 180,
+  "source_snapshot_id": "4be0cfb58c637129fefb99c750a5baed0fb0fb6378cdce86f6a0ee90a1877e4b",
+  "version_source": ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-bindings.json#codex_app_binary",
+  "recorded_version_output": "codex-cli 0.160.0",
+  "executable_sha256": "7d4588265a55adb1403f85d2e058b11dc971459842de84876c86ff02fb7771f2",
+  "prompt_sha256": "1b2b60a530f98dfc92caf054dd0f4b1c45e286f210279c661ac2c9da695ae9c5",
+  "child_preparation_basis": "NOT_APPLICABLE",
+  "basis_is_runtime_proof": false,
+  "protocol": "basic_parent_read_only_not_full_T06_acceptance"
+}

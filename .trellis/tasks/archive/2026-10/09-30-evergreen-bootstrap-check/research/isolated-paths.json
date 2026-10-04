@@ -1,0 +1,79 @@
+{
+  "base": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn",
+  "tool": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool",
+  "cache": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\npm-cache",
+  "candidate": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\candidate",
+  "npm_path": "C:\\home\\lyh\\.npm-global\\npm.ps1",
+  "expected_version": "0.7.0-beta.3",
+  "npm_args": [
+    "install",
+    "--prefix",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool",
+    "--cache",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\npm-cache",
+    "--userconfig",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\user.npmrc",
+    "--globalconfig",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\global.npmrc",
+    "--global=false",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund",
+    "--save-exact",
+    "--registry=https://registry.npmjs.org",
+    "@mindfoldhq/trellis@0.7.0-beta.3"
+  ],
+  "started_utc": "2026-09-30T13:18:34.001091+00:00",
+  "exit_code": 0,
+  "finished_utc": "2026-09-30T13:20:26.856873+00:00",
+  "attempts": [
+    {
+      "exit_code": 1,
+      "log": "isolated-install-attempt1.log",
+      "cause": "npm rejects the same path for both userconfig and globalconfig",
+      "args": [
+        "install",
+        "--prefix",
+        "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool",
+        "--cache",
+        "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\npm-cache",
+        "--userconfig",
+        "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\empty.npmrc",
+        "--globalconfig",
+        "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\empty.npmrc",
+        "--global=false",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund",
+        "--save-exact",
+        "--registry=https://registry.npmjs.org",
+        "@mindfoldhq/trellis@0.7.0-beta.3"
+      ],
+      "record_correction": "First-attempt argv restored from the executed command and attempt1 log; shared mutable list had overwritten config paths with retry values. Package acquisition was not repeated."
+    },
+    {
+      "exit_code": 0,
+      "log": "isolated-install-attempt2.log",
+      "started_utc": "2026-09-30T13:19:16.093450+00:00",
+      "finished_utc": "2026-09-30T13:20:26.856853+00:00",
+      "args": [
+        "install",
+        "--prefix",
+        "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool",
+        "--cache",
+        "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\npm-cache",
+        "--userconfig",
+        "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\user.npmrc",
+        "--globalconfig",
+        "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\global.npmrc",
+        "--global=false",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund",
+        "--save-exact",
+        "--registry=https://registry.npmjs.org",
+        "@mindfoldhq/trellis@0.7.0-beta.3"
+      ]
+    }
+  ]
+}

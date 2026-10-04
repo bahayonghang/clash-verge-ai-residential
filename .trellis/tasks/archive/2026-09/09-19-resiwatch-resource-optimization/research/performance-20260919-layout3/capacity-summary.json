@@ -1,0 +1,157 @@
+{
+  "corpora": [
+    {
+      "name": "corpus-a1000-30d",
+      "generation_wall_secs": 384.1059877,
+      "counts_match": true,
+      "rows": {
+        "chains": 25920000,
+        "minutes": 43200000,
+        "receipts": 2592000,
+        "sessions": 8640000
+      },
+      "files_and_pages": {
+        "active_page_bytes": 6124961792,
+        "db_bytes": 6124961792,
+        "freelist_count": 0,
+        "page_count": 1495352,
+        "page_size": 4096,
+        "reusable_page_bytes": 0,
+        "wal_bytes": 0
+      }
+    },
+    {
+      "name": "corpus-a250-30d",
+      "generation_wall_secs": 158.3003932,
+      "counts_match": true,
+      "rows": {
+        "chains": 6480000,
+        "minutes": 10800000,
+        "receipts": 2592000,
+        "sessions": 2160000
+      },
+      "files_and_pages": {
+        "active_page_bytes": 1697222656,
+        "db_bytes": 1697222656,
+        "freelist_count": 0,
+        "page_count": 414361,
+        "page_size": 4096,
+        "reusable_page_bytes": 0,
+        "wal_bytes": 0
+      }
+    },
+    {
+      "name": "corpus-a50-30d",
+      "generation_wall_secs": 67.2745793,
+      "counts_match": true,
+      "rows": {
+        "chains": 1296000,
+        "minutes": 2160000,
+        "receipts": 2592000,
+        "sessions": 432000
+      },
+      "files_and_pages": {
+        "active_page_bytes": 544940032,
+        "db_bytes": 544940032,
+        "freelist_count": 0,
+        "page_count": 133042,
+        "page_size": 4096,
+        "reusable_page_bytes": 0,
+        "wal_bytes": 0
+      }
+    }
+  ],
+  "queries": [
+    {
+      "average_active": 50,
+      "window": "30d",
+      "runs": 21,
+      "successful_runs": 21,
+      "first_reader_ms": 7307.0744,
+      "first_reader_exit": 0,
+      "repeated_success_p50_ms": 7436.3175,
+      "repeated_success_p95_ms": 8405.0353,
+      "repeated_success_max_ms": 8749.8181
+    },
+    {
+      "average_active": 50,
+      "window": "1d",
+      "runs": 21,
+      "successful_runs": 21,
+      "first_reader_ms": 300.5304,
+      "first_reader_exit": 0,
+      "repeated_success_p50_ms": 249.2715,
+      "repeated_success_p95_ms": 265.5975,
+      "repeated_success_max_ms": 274.0114
+    },
+    {
+      "average_active": 250,
+      "window": "30d",
+      "runs": 2,
+      "successful_runs": 0,
+      "first_reader_ms": 10116.0218,
+      "first_reader_exit": 7,
+      "repeated_success_p50_ms": null,
+      "repeated_success_p95_ms": null,
+      "repeated_success_max_ms": null
+    },
+    {
+      "average_active": 250,
+      "window": "1d",
+      "runs": 21,
+      "successful_runs": 21,
+      "first_reader_ms": 1286.9041,
+      "first_reader_exit": 0,
+      "repeated_success_p50_ms": 1265.2095,
+      "repeated_success_p95_ms": 1389.6637,
+      "repeated_success_max_ms": 1406.4358
+    },
+    {
+      "average_active": 1000,
+      "window": "30d",
+      "runs": 2,
+      "successful_runs": 0,
+      "first_reader_ms": 10033.9646,
+      "first_reader_exit": 7,
+      "repeated_success_p50_ms": null,
+      "repeated_success_p95_ms": null,
+      "repeated_success_max_ms": null
+    },
+    {
+      "average_active": 1000,
+      "window": "1d",
+      "runs": 21,
+      "successful_runs": 21,
+      "first_reader_ms": 5705.7428,
+      "first_reader_exit": 0,
+      "repeated_success_p50_ms": 5477.0993,
+      "repeated_success_p95_ms": 5744.8811,
+      "repeated_success_max_ms": 5851.7331
+    }
+  ],
+  "network_count_checks": [
+    {
+      "name": "network-a50-30d",
+      "exit_code": 0,
+      "connection_count": 324000.0,
+      "expected_connection_count": 324000
+    },
+    {
+      "name": "network-a250-30d",
+      "exit_code": 7,
+      "connection_count": null,
+      "expected_connection_count": 1620000
+    },
+    {
+      "name": "network-a1000-30d",
+      "exit_code": 7,
+      "connection_count": null,
+      "expected_connection_count": 6480000
+    }
+  ],
+  "boundaries": [
+    "Query timings include CLI startup; OS cache was not flushed.",
+    "Nonzero query exits remain failures, not zero counts.",
+    "Generation success does not establish retention, soak or total application memory acceptance."
+  ]
+}

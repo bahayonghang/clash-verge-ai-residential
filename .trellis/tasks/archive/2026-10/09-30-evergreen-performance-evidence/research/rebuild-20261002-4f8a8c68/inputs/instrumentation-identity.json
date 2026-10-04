@@ -1,0 +1,26 @@
+{
+  "outputs": {
+    "bench.rs": {
+      "bytes": 16564,
+      "sha256": "499F3B905DBA9E48C1D9840F4FC57803B03B3CDB6E3B3C2ECD40006684023EA8"
+    },
+    "bin/monitor-bench.rs": {
+      "bytes": 11870,
+      "sha256": "7BA08896AC884DD764B1AD954DC3B579CDB38ADADF272A77D8CC4422FE7A3BFC"
+    },
+    "bench/facade.rs": {
+      "bytes": 27527,
+      "sha256": "ED069D6B822732E3E8B91E1B3ED4A0C9941C676D5415DE35A220ED443009AB4A"
+    },
+    "bench/process.rs": {
+      "bytes": 3330,
+      "sha256": "83734ABF3F95C1BC7313EF9ACEB7BC20E6C5799D416C48CA3723BF9AA9E906EA"
+    },
+    "bench/write_vfs.rs": {
+      "bytes": 17391,
+      "sha256": "C3B5D8849E3EA206C036515D86E9E7D77E75399D037EFEBBEC15685D6E48DA7A"
+    }
+  },
+  "patch_sha256": "D72E229BC80B9EA1B2736EEF3A3A0B67E19AFAA75BF2934E7B53397DE7C0490C",
+  "production_or_cargo_changes": false
+}

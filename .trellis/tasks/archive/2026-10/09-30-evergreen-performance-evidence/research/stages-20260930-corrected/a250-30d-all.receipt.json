@@ -1,0 +1,34 @@
+{
+  "argv": [
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-library-tests.exe",
+    "--exact",
+    "c3::raw_fold::tests::isolated_raw_fold_stage_proof",
+    "--ignored",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "started_utc": "2026-09-30T14:25:28.584383+00:00",
+  "environment_overrides": {
+    "RESIWATCH_RAW_FOLD_STAGE_DB": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+    "RESIWATCH_RAW_FOLD_STAGE_OUT": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\stages-20260930-corrected\\a250-30d-all.json",
+    "RESIWATCH_RAW_FOLD_START": "1787184000",
+    "RESIWATCH_RAW_FOLD_END": "1789776000",
+    "RESIWATCH_RAW_FOLD_FILTER": "all"
+  },
+  "status": "finished",
+  "finished_utc": "2026-09-30T14:25:38.000868+00:00",
+  "wall_seconds": 9.415689100000009,
+  "exit_code": 0,
+  "logs": {
+    "stdout": {
+      "gzip": "a250-30d-all.stdout.raw.gz",
+      "raw_sha256": "45c3663d6503cfe653be64673238b6890d04a17897911823607d32c6fbb92a32",
+      "readable": "a250-30d-all.stdout.log"
+    },
+    "stderr": {
+      "gzip": "a250-30d-all.stderr.raw.gz",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "readable": "a250-30d-all.stderr.log"
+    }
+  }
+}

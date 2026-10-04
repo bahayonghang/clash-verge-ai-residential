@@ -1,0 +1,15 @@
+{
+  "capture_utc": "2026-09-30T13:07:45.899229+00:00",
+  "capture_phase": "After focused tests, just ci and docs-build; no T02 product edits after focused tests",
+  "head": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+  "files": {
+    "skills/residential-rule-tuning/SKILL.md": "b644d3db0a4947b4e01a7bcb341ec02d104c89cfcd43454229ca9485471dfcaa",
+    "skills/residential-rule-tuning/reference.md": "6b9eeb99396817ff9337b8710e842b7549ccc4763eba8e0b108fe8ed97ad85af",
+    "skills/residential-rule-tuning/scripts/build-inputs.js": "cfc32147e21b01dc766b5989a43648dabad7a22f01988c0fac6d518e72104cc1",
+    "docs/agents/residential-rule-tuning.md": "3755ecbf6ccf13a5f204a7424d90fa5d813639549a81f21b2fd83303abfe78c5",
+    "tests/install-agent-skills.test.js": "baf27e4a60bfcdb8bd1e661de9f8a60281bad6e6c6b2785bc003cdaab76d91f6",
+    "scripts/install-agent-skills.js": "557551d116b8696aa75658d3710e623c482e646a995ae8ebe98ec3a4e0767bd9"
+  },
+  "source_unchanged_since_delivery": true,
+  "tracked_worktree_diff_sha256": "3bd74d8390b40a1cdd86af3b2321a3d24aa722776181cf9fd55511ea3c8c24c8"
+}

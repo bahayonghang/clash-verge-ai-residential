@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "powershell.exe",
+    "-NoLogo",
+    "-NoProfile",
+    "-Command",
+    "node scripts/sync-monitor-version.js --check"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:13:58.754460+00:00",
+  "status": "finished",
+  "exit_code": 0,
+  "wall_seconds": 0.26153080000040063,
+  "finished_utc": "2026-09-30T15:13:59.016588+00:00"
+}

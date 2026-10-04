@@ -3,13 +3,15 @@
 [![CI](https://github.com/bahayonghang/clash-verge-ai-residential/actions/workflows/ci.yml/badge.svg)](https://github.com/bahayonghang/clash-verge-ai-residential/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Google Antigravity、Cursor 和 Grok Build 的核心 AI 请求送入住宅 SOCKS5 链路。插件市场、下载、YouTube、共享 Google 服务及其他非 AI 流量仍使用原 Profile。
+Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Google Antigravity、Cursor、Grok Build 的核心 AI 请求送入住宅 SOCKS5 链路。额外小站由 `routing.extra` 分类按需打开。插件市场、下载、YouTube、共享 Google 服务及其他非 AI 流量仍使用原 Profile。
 
 ```text
 本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
 ```
 
 当前版本：`v5.11.0`。
+
+**Unreleased**：新增默认开启的 `routing.anthropic_core`、`routing.gemini_api_core`、`routing.antigravity_core`；关闭核心开关会同时撤销其专属进程兜底，Claude 核心关闭还会撤销 Anthropic IP 回退。`routing.extra` 现为默认关闭的小站分类；`routing.extra_anyrouter` 默认打开，但只在 extra 打开时把 `anyrouter.top` 送入家宽，且不写住宅 DNS。实际节流收益需测量。已有 `AI-家宽` 组的额外节点来源或筛选配置会被拒绝；成功输出只保留家宽成员与允许的展示信息。详见 [配置](docs/configuration.md) 和 [变更记录](CHANGELOG.md)。
 
 ## 核心边界
 
@@ -22,6 +24,7 @@ Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Googl
 - Cursor Chat、Tab、Agent、Cloud Agent/Bugbot、授权/SSO 门户、Cloud Agent VM 和产品专属认证；`routing.cursor_core` 默认是 `true`。
 - Cursor 仓库索引主机 `repo[0-9]+.cursor.sh` 由独立开关 `routing.cursor_repository_indexing` 控制，默认是 `false`，回落原 Profile / 机场上游。本地 TOML 缺该字段时按 `false` 补全；显式设为 `true` 可恢复 v5.8.1 的 repo 家宽路由，无需删除字段。`repo42.cursor.sh` 由官方网络文档与本机 2026-08-17 日志共同确认；`repo[0-9]+.cursor.sh` 是本项目的前向兼容策略，不是 Cursor 官方通配合同。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`；Clash 域名规则无法在该主机上隔离索引，`api2` 仍由 `cursor_core` 控制。因此默认关闭不能宣称已把全部仓库上传排除出家宽。
 - Grok Build（xAI grok CLI）推理 API 与产品域，以及 `auth.x.ai` 认证与 `api.x.ai` 直连 API；`routing.grok_core` 默认是 `true`。
+- `routing.extra` 是小型 AI 站点分类，默认关闭。`routing.extra_anyrouter` 默认打开，但只在 extra 打开时把 `anyrouter.top` 送入家宽，且不写住宅 DNS。官方入口是 `https://anyrouter.top` 与 `/console`。
 
 家宽链路明确排除：
 
@@ -94,7 +97,7 @@ node scripts/sync-local-config.js
 1. 双击 **Global Extend Script**，粘贴生成的 `clash-verge-ai-residential.local.js` 全部内容并保存。
 2. 刷新当前 Profile。
 3. 检查生成配置中 `家宽-SOCKS5.dialer-proxy` 是否指向真实机场组。
-4. 用 Connections 验证目标 AI 请求命中 `AI-家宽`，插件市场、下载、YouTube 以及显式关闭的产品不命中。
+4. 用 Connections 验证启用的目标 AI 请求命中 `AI-家宽`；核对关闭类别及非 AI 流量交回原 Profile 后的实际出口，注意独立辅助开关与用户自定义规则仍可能路由到家宽。
 
 如果 Profile 已预置同名 `家宽-SOCKS5` 节点，可以让 TOML 保留 `xxx` 占位符，脚本会复用该节点的 endpoint 和凭据。无认证 SOCKS5 必须将 `username`、`password` 同时设为 `""`。
 
@@ -119,29 +122,29 @@ https://raw.githubusercontent.com/bahayonghang/clash-verge-ai-residential/main/c
 ## DNS 行为
 
 ```text
-AI 域名 DNS       -> AI-家宽 -> 家宽 SOCKS5
+启用的 exact/suffix AI 域名 DNS -> AI-家宽 -> 家宽 SOCKS5
 其他海外域名 DNS  -> 当前 Profile 的机场上游
 中国域名 DNS      -> 国内 DoH / DIRECT
 私有与局域网域名  -> system
 ```
 
-因此普通 DNS leak test 不一定显示住宅地区。项目保证的是 AI 请求及其域名解析路径一致，而不是让所有 DNS 流量占用住宅出口。威胁边界见 [`docs/dns-and-leak-model.md`](docs/dns-and-leak-model.md)。
+因此普通 DNS leak test 不一定显示住宅地区。配置为启用的 exact/suffix AI 域名指定住宅侧解析；区域 Vertex 与可选 Cursor 索引正则没有等价 DNS policy，本地真实查询可能使用默认非 AI DoH。实际 DNS/UDP 路径仍需宿主验证，详见 [`docs/dns-and-leak-model.md`](docs/dns-and-leak-model.md)。
 
 ## 本地验证
 
-需要 Node.js 18 或更高版本，无第三方依赖。快速运行全部标准测试：
+扩展脚本与根目录测试需要 Node.js 18 或更高版本。该表面无第三方依赖。快速运行根目录标准测试：
 
 ```bash
 npm test
 ```
 
-提交前运行完整门禁：
+提交前运行完整产品门禁。`just ci` 先运行监控端 `monitor-check`，再运行根目录 `npm run ci`。`just ci` 不等于单独的 `npm run ci`，也不构建文档：
 
 ```bash
 just ci
 ```
 
-也可直接使用 `npm run ci`，两者包含相同检查：
+仅检查扩展脚本与根目录测试时可使用 `npm run ci`：
 
 - JavaScript 语法检查。
 - 使用 Node.js 标准测试运行器执行路由、幂等、本地 TOML 渲染和安全扫描回归测试。
@@ -150,7 +153,19 @@ just ci
 - YouTube、Maps、Marketplace、下载、CDN、Mixpanel 和静态资源负向测试。
 - 多 Profile 解析、循环检测、DNS 收敛、托管规则替换与幂等测试。
 
-GitHub Actions 会在 Ubuntu 的 Node.js 18、20、22 和 Windows 的 Node.js 22 上运行同一门禁。分支保护应只依赖稳定命名的 `Required checks`，该检查仅在所有矩阵任务成功时通过。
+GitHub Actions 在 Ubuntu 的 Node.js 18、20、22 和 Windows 的 Node.js 22 上运行 `npm run ci`；另有 Windows 监控端 job（七条独立 pwsh 步骤，包含安装后的完整 npm 审计）和 Ubuntu Node.js 22 文档 job（依次独立运行 `npm --prefix docs ci`、`npm --prefix docs audit --include=dev --audit-level=high`、`npm --prefix docs run build`）。分支保护应只依赖稳定命名的 `Required checks`，该检查需要 `test`、`monitor` 和 `docs` 均成功。
+
+文档站需要 Node.js 22+。本地构建使用 `just docs-build`，不包含在 `just ci` 中。
+
+依赖、锁文件或审计门变更还须运行独立安全检查：
+
+```bash
+just dependency-audit
+```
+
+该命令不包含在 `just ci` 或 `just docs-build` 中。它使用 `--include=dev --audit-level=high` 审计 monitor 和 docs 的完整 npm 依赖（含开发依赖），以 `high` 为失败阈值，然后执行 `cargo audit --file residential-monitor/src-tauri/Cargo.lock`。显式 `--include=dev` 防止环境或 npm 配置中的 `omit=dev` 跳过开发依赖。需要 npm、Cargo、已安装的 `cargo-audit`，以及配置的 npm 注册表与 RustSec 公告数据库的网络访问。未经授权不自动全局安装工具。`npm ci` 安装成功不能替代独立审计。
+
+缺少工具或注册表、公告数据库、网络访问失败时，记录为检查受阻并保留退出码。漏洞发现另行记录；RustSec 的 unmaintained / unsound 警告保留独立分类及受影响 target。GitHub CI 的 npm 审计失败会阻断 `Required checks`；RustSec 审计仍由本地独立运行。Claude Code、Codex、Grok Build、Kimi Code 和 OMP 均遵守这些验收边界。
 
 自动化不能模拟 Clash Verge Rev JavaScript 引擎、Mihomo 内核或真实订阅 Profile。涉及宿主集成、DNS 或路由的变更仍须使用脱敏后的真实 Profile 手工验证；提交日志和截图前必须移除代理地址、凭据、订阅 URL 与未脱敏 Connections 记录。
 

@@ -8,7 +8,7 @@ module-level policy constants that describe the transformation.
 
 | State | Owner | Local pattern |
 |---|---|---|
-| Input/output configuration | Clash Verge Rev | `main(config, profileName)` mutates and returns `config` |
+| Input/output configuration | Clash Verge Rev | `main(config, profileName)` transforms a clone and leaves input unchanged |
 | Policy switches and domain tables | Root extension module | Public defaults are read during each run; ignored TOML can render scalar boolean overrides into a private script |
 | Derived rules, DNS, and groups | Builder functions | Recomputed from current input and policy on every invocation |
 | Local credentials and scalar overrides | Ignored TOML file | Read only by `scripts/sync-local-config.js` |
@@ -16,13 +16,13 @@ module-level policy constants that describe the transformation.
 
 ## Ownership And Updates
 
-Normalize missing top-level arrays at the start of `main`, validate before
-overwriting reserved names, and replace managed sections through builders:
+Clone editable sections at the start of `main`, validate before overwriting
+reserved names, and replace managed sections through builders:
 
 ```js
-if (!Array.isArray(config.proxies)) config.proxies = [];
-if (!Array.isArray(config["proxy-groups"])) config["proxy-groups"] = [];
-if (!Array.isArray(config.rules)) config.rules = [];
+const working = cloneConfigForEdit(config);
+validateReservedNameCollisions(working);
+// All subsequent transformations operate on working, not config.
 ```
 
 Nested builders use copies when merging user input. `buildDnsConfig` starts from
@@ -33,15 +33,34 @@ managed named item.
 Treat script-managed and user-managed state differently.
 `cleanExistingManagedRules` removes exact rules the current version can
 generate across enabled and disabled switch states, then preserves unknown
-input unchanged even when its target is `AI-家宽`. Retired rules are not kept in
-a hidden cleanup list: manually persisted older output is user-owned and must be
-removed at its subscription/Merge source. Never replace an ambiguous or
+input unchanged even when its target is `AI-家宽`. Explicit retired literals in
+the current `allPossible*` catalogs remain managed; older strings absent from
+those catalogs remain user-owned and must be removed at their source. Never replace an ambiguous or
 unexpected same-name object silently; validation must fail instead.
 
 The three v5.4 Cursor strings removed as redundant are concrete ownership
-fixtures: the current cleaner must preserve them, while current catalog output
-such as `DOMAIN-SUFFIX,api2.cursor.sh,AI-家宽` must be replaced when the switch
-is disabled.
+fixtures: the current cleaner must preserve them. Current catalog output and
+explicitly retained forms such as `DOMAIN-SUFFIX,api2.cursor.sh,AI-家宽` are
+cleaned even when their switch is disabled.
+
+### Core switches and reserved group ownership
+
+`anthropic_core`, `gemini_api_core`, and `antigravity_core` default to true.
+Active domain lists and exact/suffix DNS follow each switch. Dedicated process
+fallbacks also require the corresponding core; Cursor additionally requires its
+process switch. Anthropic CIDR fallback requires both anthropic_core and
+anthropic_ip_fallback. Authentication, auxiliary and global capture switches
+remain independent. Full possible-domain/process/IP cleanup never depends on
+the current active switch state.
+
+An existing `AI-家宽` group is managed only when it is a select with exactly
+`家宽-SOCKS5` as its explicit member and no keys outside
+`name/type/proxies/disable-udp/icon/hidden`. Extra sources, filters or alternate
+selection fields reject before input mutation. `buildAiGroup` constructs the
+canonical output and copies only icon/hidden, not the whole old group.
+Tests cover extra-key rejection, canonical reruns, display metadata and unchanged
+input. A thrown script can make the host reuse its original configuration; this
+ownership check does not enforce runtime traffic blocking.
 
 ## Idempotence
 
@@ -62,8 +81,8 @@ Consequences when evolving rule shapes:
   `allPossible*()` function even if the new switch defaults to `false`. Cleanup
   enumerates every rule the current version can generate, not the active
   default. Dropping the split catalog from `allPossible*()` leaves the previous
-  managed rule in the Profile. Retired exact/regex strings that the current
-  version no longer generates stay user-owned.
+  managed rule in the Profile. Retired exact/regex strings outside the current
+  full catalogs stay user-owned.
 - Never inject managed rules that embed a dynamically resolved name (such as the
   upstream group) — exact-string cleanup cannot enumerate past values and would
   either leak stale rules or force prefix matching that risks deleting
@@ -87,6 +106,6 @@ It never writes credentials back to the public template or TOML input.
   deduplication.
 - Do not drop a split catalog from `allPossible*()` because the new switch
   defaults to off. The cleaner must still see that rule string.
-- Do not reintroduce retired rules under a renamed cleanup-only migration list.
+- Do not add blanket historical migrations; preserve the explicit current catalogs.
 - Do not preserve unknown DNS policy paths when the strict mode deliberately
   removes alternate resolution routes.

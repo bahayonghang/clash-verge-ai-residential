@@ -1,0 +1,35 @@
+{
+  "date": "2026-09-30",
+  "checks": [
+    {
+      "file": ".trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\review.md",
+      "bytes": 30367,
+      "lines": 251
+    },
+    {
+      "file": ".trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\review-capacity-runner.md",
+      "bytes": 6578,
+      "lines": 61
+    },
+    {
+      "file": ".trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\review-formal-matrix.md",
+      "bytes": 13216,
+      "lines": 131
+    },
+    {
+      "file": ".trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\review-formal-matrix-validation.json",
+      "bytes": 26517,
+      "lines": 823
+    },
+    {
+      "file": ".trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\review-formal-matrix-attribution.json",
+      "bytes": 230970,
+      "lines": 7095
+    }
+  ],
+  "scoped_diff_check_exit": 0,
+  "scoped_diff_output": "",
+  "errors": [],
+  "scope": "Review documents and JSON only; no product checks or benchmark execution",
+  "helper_repair": "Initial link-check helper returned tuple values and stopped with AttributeError; replaced helper with literal Markdown link splitting and completed this check."
+}

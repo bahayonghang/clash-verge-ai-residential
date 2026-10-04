@@ -1,0 +1,7 @@
+{
+  "exec_session": 75053,
+  "exec_tool_exit": 0,
+  "driver_outer_exit": 0,
+  "capture_execute_native_exit": 0,
+  "meaning": "driver and native harness exits are separate; not runtime PASS"
+}

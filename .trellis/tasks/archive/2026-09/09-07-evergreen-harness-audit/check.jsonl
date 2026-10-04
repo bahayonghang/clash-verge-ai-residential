@@ -1,0 +1,5 @@
+{"file":".trellis/tasks/09-07-evergreen-harness-audit/research/project-map.md","reason":"验收：当前产品结构与边界"}
+{"file":".trellis/tasks/09-07-evergreen-harness-audit/research/harness-audit.md","reason":"五套工具第一方来源、实际配置、恢复步骤及动态证据边界"}
+{"file":".trellis/tasks/09-07-evergreen-harness-audit/research/local-baseline.md","reason":"验收：实际本地验证及失败"}
+{"file":".trellis/tasks/09-07-evergreen-harness-audit/research/ci-audit.md","reason":"验收：托管CI根因及远端证据"}
+{"file":".trellis/tasks/09-07-evergreen-harness-audit/research/ac4-writeback.md","reason":"验收：C1–C5 回写落点、适用工具与残留 UNVERIFIED"}

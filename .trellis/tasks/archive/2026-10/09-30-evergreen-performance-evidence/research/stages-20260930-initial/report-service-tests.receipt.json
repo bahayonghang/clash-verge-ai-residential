@@ -1,0 +1,27 @@
+{
+  "argv": [
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-library-tests.exe",
+    "c3::service::",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "started_utc": "2026-09-30T13:50:25.849376+00:00",
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "environment_overrides": {},
+  "status": "finished",
+  "finished_utc": "2026-09-30T13:50:38.031709+00:00",
+  "wall_seconds": 12.181736500002444,
+  "exit_code": 0,
+  "logs": {
+    "stdout": {
+      "gzip": "report-service-tests.stdout.raw.gz",
+      "raw_sha256": "031F7FDC2E9FDF38D708CC4D30C617B662800E80E960FDB00AB7D23B6E15FD50",
+      "readable": "report-service-tests.stdout.log"
+    },
+    "stderr": {
+      "gzip": "report-service-tests.stderr.raw.gz",
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "readable": "report-service-tests.stderr.log"
+    }
+  }
+}

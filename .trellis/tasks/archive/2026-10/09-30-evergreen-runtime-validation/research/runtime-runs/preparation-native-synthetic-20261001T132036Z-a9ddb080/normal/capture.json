@@ -1,0 +1,29 @@
+{
+  "started_utc": "2026-10-01T13:20:36.308766+00:00",
+  "ended_utc": "2026-10-01T13:20:36.352500+00:00",
+  "pid": 51416,
+  "exit_code": 0,
+  "capture_stop_reason": null,
+  "termination_requested": false,
+  "capture_representation": "normalized_redacted_events_not_original_bytes",
+  "stream_hash_scope": "captured_bytes_only_if_limit_hit",
+  "streams": {
+    "stdout": {
+      "bytes": 53,
+      "records": 1,
+      "sha256": "fb9efd5a27c8f0864bfc00845dbec131b0bf448954e8efdc0eb3df84a47174e9"
+    },
+    "stderr": {
+      "bytes": 0,
+      "records": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "redactions": [],
+  "sensitive_output_detected": false,
+  "events": 1,
+  "cross_stream_order": "receiver_observation_only",
+  "job_cleanup": "best_effort_owned_job; post_Popen_attach_race; no_permission_sandbox; no_absolute_no_orphan_claim",
+  "synthetic_only": true,
+  "clients_started": 0
+}

@@ -1,0 +1,11 @@
+   Compiling residential-monitor v0.3.0 (D:\Documents\Code\Github\clash-verge-ai-residential\residential-monitor\src-tauri)
+mbx[progress]: 15s elapsed; 0 hits, 0 misses, 1 bypassed, 0 not looked up; ~0s compiler work saved
+    Finished `release` profile [optimized] target(s) in 16.25s
+     Running unittests src\lib.rs (C:/Users/lyh/AppData/Local/Temp/resiwatch-t05-20260930-q1lnvpml/candidate-target\x86_64-pc-windows-msvc\release\deps\residential_monitor_lib-d2e33871bfe2d12d.exe)
+
+thread 'c3::raw_fold::tests::unreferenced_dictionary_values_do_not_enter_returned_pool' (12904) panicked at src\c3\raw_fold.rs:1142:13:
+未引用字典值驻留：unused-process
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+error: test failed, to rerun pass `--lib`
+mbx[cache]: 0 hits, 0 misses, 1 bypassed; 0 B downloaded, 0 B uploaded, 0 B stored locally
+mbx[savings]: worktrees come and go. their 66.9 GiB logical now goes with them.

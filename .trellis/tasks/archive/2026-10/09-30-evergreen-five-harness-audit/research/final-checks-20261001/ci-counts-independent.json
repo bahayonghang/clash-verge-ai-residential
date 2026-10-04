@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "verified_from": "owner gzip original stdout",
+  "counts": {
+    "frontend": 300,
+    "rust_unit": 546,
+    "rust_integration": 3,
+    "rust_ignored": 6,
+    "root_node": 203
+  },
+  "owner_just_ci_exit": 0,
+  "same_source_manifest": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+  "not_reexecuted": true
+}

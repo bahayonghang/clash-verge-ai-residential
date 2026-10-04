@@ -4,7 +4,7 @@ use crate::c4::notify::{NotificationSink, NotifyError, NotifyPayload};
 use crate::c4::schema::OUTBOX_SCAN_LIMIT;
 use crate::c4::types::{OutboxIntent, OutboxStatus};
 use crate::storage::{StorageCoordinator, StorageError};
-use rusqlite::{params, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension};
 use sha2::{Digest, Sha256};
 
 pub const LEASE_SECS: i64 = 30;
@@ -32,11 +32,11 @@ select outbox_id
 ";
 
 pub fn persist_intents(
-    coordinator: &StorageCoordinator,
+    connection: &Connection,
     intents: &[OutboxIntent],
 ) -> Result<(), StorageError> {
     for item in intents {
-        coordinator.connection().execute(
+        connection.execute(
             "insert or ignore into notification_outbox(
                 outbox_id, event_id, bundle_id, status, attempt, next_attempt_at,
                 lease_until, lease_token, error_class, error_summary, idempotency_key, created_utc
@@ -322,7 +322,7 @@ mod outbox_worker_tests {
 
     fn seed_pending(coordinator: &StorageCoordinator, id: &str, now: i64) {
         persist_intents(
-            coordinator,
+            coordinator.connection(),
             &[OutboxIntent {
                 outbox_id: id.into(),
                 event_id: format!("ev-{id}"),

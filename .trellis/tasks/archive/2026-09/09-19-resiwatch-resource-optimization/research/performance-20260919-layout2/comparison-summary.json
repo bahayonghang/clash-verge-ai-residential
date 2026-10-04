@@ -1,0 +1,45 @@
+{
+  "comparisons": [
+    {
+      "name": "probe",
+      "fixture_hash": "e4f93c4c583bec372f8e675e66e5004823987f6832bf1387c0a4f54e965004f1",
+      "virtual_time": true,
+      "cpu_seconds": [
+        7.390625,
+        1.125
+      ],
+      "cpu_reduction_percent": 84.77801268498943,
+      "sqlite_xwrite_bytes": [
+        23531752,
+        11090864
+      ],
+      "sqlite_xwrite_reduction_percent": 52.86851569742874,
+      "native_private_p95_bytes": [
+        9732096.0,
+        9359360.0
+      ],
+      "ingest_p95_ms": [
+        9.1365,
+        5.7361
+      ],
+      "ingest_max_ms": [
+        14.2284,
+        10.802000000000001
+      ],
+      "report_first_reader_p95_ms": [
+        0.0,
+        0.0
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    }
+  ],
+  "primary_three_rounds_complete": false,
+  "primary_cpu_reduction_percent": null,
+  "primary_sqlite_xwrite_reduction_percent": null,
+  "all_application_file_writes_gate": "UNVERIFIED: SQLite xWrite is only a subset",
+  "native_plus_webview_memory_gate": "UNVERIFIED: this harness has no WebView",
+  "collector_background_worker_gate": "UNVERIFIED: synchronous facade/archive driver"
+}

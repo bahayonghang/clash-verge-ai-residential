@@ -9,6 +9,7 @@ import { useBootstrap } from "./hooks/use-bootstrap";
 import { useMonitorStream } from "./hooks/use-monitor-stream";
 import { usePreferences } from "./hooks/use-preferences";
 import { useSidebarResize } from "./hooks/use-sidebar-resize";
+import { useWindowVisibility, WindowVisibilityContext } from "./hooks/use-window-visibility";
 import { t, type UiLocale } from "./i18n";
 import type { MonitorState } from "./ipc/reducer";
 import { healthOf } from "./lib/health";
@@ -63,6 +64,9 @@ export function App() {
   const [route, setRoute] = useState<RouteId>("overview");
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>(() => defaultTimeRange());
+  const visibility = useWindowVisibility(preferences.prefs.locale, () => {
+    if (autoRefresh) setTimeRange((current) => rollTimeRange(current));
+  });
   const [reportJump, setReportJump] = useState<ReportQuery | null>(null);
   const { displayWidth, ...resize } = useSidebarResize(
     preferences.prefs.sidebarWidth,
@@ -83,13 +87,13 @@ export function App() {
   }, [preferences.prefs.locale]);
 
   useEffect(() => {
-    if (!autoRefresh) {
+    if (!autoRefresh || !visibility.visible) {
       return;
     }
     return startRollingTimeRange(() => {
       setTimeRange((current) => rollTimeRange(current));
     });
-  }, [autoRefresh]);
+  }, [autoRefresh, visibility.visible]);
 
   if (!boot) {
     return (
@@ -109,67 +113,69 @@ export function App() {
   const recovery = boot.branch === "recovery-only";
   const session = stream.snapshot?.health.session ?? boot.overview.health.session;
   const health = healthOf(locale, session);
-  const errorZh = preferences.errorZh ?? stream.errorZh ?? bootError;
+  const errorZh = visibility.errorZh ?? preferences.errorZh ?? stream.errorZh ?? bootError;
 
   return (
-    <Shell
-      locale={locale}
-      route={route}
-      recovery={recovery}
-      healthSession={session}
-      healthLabel={health.title}
-      width={displayWidth}
-      onRouteChange={setRoute}
-      resize={resize}
-      errorZh={errorZh}
-      header={
-        <Header
-          locale={locale}
-          theme={preferences.prefs.theme}
-          font={preferences.prefs.font}
-          fontSize={preferences.prefs.fontSize}
-          density={preferences.prefs.density}
-          fonts={preferences.fonts}
-          fontsError={preferences.fontsError}
-          healthSession={session}
-          healthLabel={health.title}
-          healthAction={health.action}
-          autoRefresh={autoRefresh}
-          timeRange={timeRange}
-          onLocaleChange={(next) => void preferences.setLocale(next)}
-          onThemeChange={(next) => void preferences.setTheme(next)}
-          onFontChange={(next) => void preferences.setFont(next)}
-          onFontSizeChange={(next) => void preferences.setFontSize(next)}
-          onDensityChange={(next) => void preferences.setDensity(next)}
-          onAutoRefreshToggle={() => setAutoRefresh((current) => !current)}
-          onTimeRangeChange={(preset) => setTimeRange(timeRangeFromPreset(preset))}
-        />
-      }
-    >
-      {recovery ? (
-        <Suspense fallback={<PageFallback />}>
-          <RecoveryPage locale={locale} boot={boot} />
-        </Suspense>
-      ) : (
-        <Workspace
-          route={route}
-          locale={locale}
-          boot={boot}
-          stream={stream}
-          autoRefresh={autoRefresh}
-          timeRange={timeRange}
-          overview={stream.snapshot ?? boot.overview}
-          preferences={preferences}
-          reportJump={reportJump}
-          onRouteChange={setRoute}
-          onResubscribe={() => setResyncTick((current) => current + 1)}
-          onJumpReport={(query) => {
-            setReportJump(query);
-            setRoute("reports");
-          }}
-        />
-      )}
-    </Shell>
+    <WindowVisibilityContext value={visibility.visible}>
+      <Shell
+        locale={locale}
+        route={route}
+        recovery={recovery}
+        healthSession={session}
+        healthLabel={health.title}
+        width={displayWidth}
+        onRouteChange={setRoute}
+        resize={resize}
+        errorZh={errorZh}
+        header={
+          <Header
+            locale={locale}
+            theme={preferences.prefs.theme}
+            font={preferences.prefs.font}
+            fontSize={preferences.prefs.fontSize}
+            density={preferences.prefs.density}
+            fonts={preferences.fonts}
+            fontsError={preferences.fontsError}
+            healthSession={session}
+            healthLabel={health.title}
+            healthAction={health.action}
+            autoRefresh={autoRefresh}
+            timeRange={timeRange}
+            onLocaleChange={(next) => void preferences.setLocale(next)}
+            onThemeChange={(next) => void preferences.setTheme(next)}
+            onFontChange={(next) => void preferences.setFont(next)}
+            onFontSizeChange={(next) => void preferences.setFontSize(next)}
+            onDensityChange={(next) => void preferences.setDensity(next)}
+            onAutoRefreshToggle={() => setAutoRefresh((current) => !current)}
+            onTimeRangeChange={(preset) => setTimeRange(timeRangeFromPreset(preset))}
+          />
+        }
+      >
+        {recovery ? (
+          <Suspense fallback={<PageFallback />}>
+            <RecoveryPage locale={locale} boot={boot} />
+          </Suspense>
+        ) : (
+          <Workspace
+            route={route}
+            locale={locale}
+            boot={boot}
+            stream={stream}
+            autoRefresh={autoRefresh}
+            timeRange={timeRange}
+            overview={stream.snapshot ?? boot.overview}
+            preferences={preferences}
+            reportJump={reportJump}
+            onRouteChange={setRoute}
+            onResubscribe={() => setResyncTick((current) => current + 1)}
+            onJumpReport={(query) => {
+              setReportJump(query);
+              setRoute("reports");
+            }}
+          />
+        )}
+      </Shell>
+    </WindowVisibilityContext>
   );
 }
 

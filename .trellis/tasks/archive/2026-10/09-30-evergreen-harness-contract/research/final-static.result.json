@@ -1,0 +1,9 @@
+{
+  "command": "python .trellis/tasks/09-30-evergreen-harness-contract/research/final-static.py",
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T13:00:37.444166+00:00",
+  "finished_utc": "2026-09-30T13:00:37.942171+00:00",
+  "exit_code": 0,
+  "raw_sha256": "053a275d2eaffd31bdbcd8d14e368e6d4527d28232775811830af6d0be0274cd",
+  "readable_normalization": "ANSI removed; trailing line whitespace removed; LF"
+}

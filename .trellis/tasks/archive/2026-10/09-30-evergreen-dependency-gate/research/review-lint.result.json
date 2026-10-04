@@ -1,0 +1,7 @@
+{
+  "log": "review-lint.log",
+  "startedAt": "2026-09-30T07:38:15.2531365-05:00",
+  "command": "npm --prefix residential-monitor run lint",
+  "exitCode": 0,
+  "finishedAt": "2026-09-30T07:38:21.6037407-05:00"
+}

@@ -1,0 +1,8 @@
+
+running 2 tests
+test c3::raw_fold::tests::minute_set_layout_and_repeated_accumulation ... minute_set_bytes=96 option_i64_bytes=16
+ok
+test c3::raw_fold::tests::minute_set_matches_independent_set_for_repeats_and_bounds ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 550 filtered out; finished in 0.00s
+

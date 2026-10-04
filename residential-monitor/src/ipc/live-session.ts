@@ -1,5 +1,5 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
-import type { LiveConnectionView } from "../dto";
+import { decodeLiveRow, type LiveConnectionView } from "../dto";
 
 /** 与 C2 `LIST_PAGE_DEFAULT` 对齐。 */
 export const LIST_PAGE_DEFAULT = 200;
@@ -130,7 +130,7 @@ export function decodeLiveConnectionPage(value: unknown): LiveConnectionPage {
     throw new Error("连接页 summary 字段缺失");
   }
   return {
-    rows: value.rows as LiveConnectionView[],
+    rows: value.rows.map(decodeLiveRow),
     nextCursor: decodeCursor(value.nextCursor),
     matchedCount: value.matchedCount,
     sampleUtc: value.sampleUtc,
@@ -200,6 +200,26 @@ function isUnsignedInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
+export function decodeTraySummary(value: unknown): TraySummaryDto {
+  if (!isRecord(value)) {
+    throw new Error("TraySummary 无效");
+  }
+  if (!hasOwn(value, "collectorRunning") || typeof value.collectorRunning !== "boolean") {
+    throw new Error("TraySummary collectorRunning 无效");
+  }
+  if (!hasOwn(value, "health") || typeof value.health !== "string") {
+    throw new Error("TraySummary health 无效");
+  }
+  if (!hasOwn(value, "windowVisible") || typeof value.windowVisible !== "boolean") {
+    throw new Error("TraySummary windowVisible 无效");
+  }
+  return {
+    collectorRunning: value.collectorRunning,
+    health: value.health,
+    windowVisible: value.windowVisible
+  };
+}
+
 export async function fetchTraySummary(): Promise<TraySummaryDto> {
-  return invoke<TraySummaryDto>("tray_summary");
+  return decodeTraySummary(await invoke<unknown>("tray_summary"));
 }

@@ -1,0 +1,6 @@
+{
+  "driver_exit_code": 0,
+  "outer_exit_code": 0,
+  "observed_exec_session": 92994,
+  "observation": "CHECK_GO执行完成，工具返回exit_code=0；full gates未启动客户推理或重复nativeinit"
+}

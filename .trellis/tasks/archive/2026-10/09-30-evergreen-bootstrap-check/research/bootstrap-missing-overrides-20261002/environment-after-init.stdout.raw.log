@@ -1,0 +1,197 @@
+{
+  "ok": true,
+  "project": {
+    "root": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\candidate",
+    "versionPath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\candidate\\.trellis\\.version",
+    "expectedTrellisVersion": "0.7.0-beta.3",
+    "versionError": null,
+    "overrides": [
+      {
+        "path": ".codex/config.toml",
+        "present": true,
+        "sha256": "9f2d20e28f0bc9c886312eca3ad3bba41533ef4615aaaafe25e98152302267bb"
+      },
+      {
+        "path": ".kimi-code/skills/trellis-implement/SKILL.md",
+        "present": true,
+        "sha256": "fb1fa4c36fea58437d20f8a43f0028d1976333bc5bbb4487de1e9c32c48e6e8d"
+      },
+      {
+        "path": ".kimi-code/skills/trellis-check/SKILL.md",
+        "present": true,
+        "sha256": "882c7a2e5fe966de7511c30bab4d5409e7c9dcf2872ea48d1a8f14e6bc6f2bdb"
+      },
+      {
+        "path": ".kimi-code/skills/trellis-research/SKILL.md",
+        "present": true,
+        "sha256": "b5c0e7a7282d0b133e3700d2815f893e38adc89c817c61e49f7025c66b58a995"
+      }
+    ]
+  },
+  "tools": [
+    {
+      "tool": "claude",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\.local\\bin\\claude.exe",
+        "status": "available",
+        "version": "2.1.286",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "2.1.286 (Claude Code)\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    },
+    {
+      "tool": "codex",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\home\\lyh\\.npm-global\\codex.ps1",
+        "status": "available",
+        "version": "0.160.0",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "codex-cli 0.160.0\n",
+        "stderr": ""
+      },
+      "alternatives": [
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\codex.cmd",
+          "status": "available",
+          "version": "0.160.0",
+          "exitCode": 0,
+          "signal": null,
+          "error": null,
+          "stdout": "codex-cli 0.160.0\n",
+          "stderr": ""
+        },
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\codex",
+          "status": "missing",
+          "version": null,
+          "exitCode": null,
+          "signal": null,
+          "error": {
+            "code": "ENOENT",
+            "message": "spawnSync C:\\home\\lyh\\.npm-global\\codex ENOENT"
+          },
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "path": "C:\\Users\\lyh\\AppData\\Local\\OpenAI\\Codex\\bin\\a51e250fa15c740a\\codex.exe",
+          "status": "available",
+          "version": "0.159.2",
+          "exitCode": 0,
+          "signal": null,
+          "error": null,
+          "stdout": "codex-cli 0.159.2\n",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "tool": "grok",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\.grok\\bin\\grok.exe",
+        "status": "available",
+        "version": "1.0.46",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "grok 1.0.46 (2765805b9442)\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    },
+    {
+      "tool": "kimi",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\.kimi-code\\bin\\kimi.exe",
+        "status": "available",
+        "version": "2.0.0",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "2.0.0\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    },
+    {
+      "tool": "omp",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\home\\lyh\\.npm-global\\omp.ps1",
+        "status": "available",
+        "version": "18.4.10",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "omp/18.4.10\n",
+        "stderr": ""
+      },
+      "alternatives": [
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\omp.cmd",
+          "status": "available",
+          "version": "18.4.10",
+          "exitCode": 0,
+          "signal": null,
+          "error": null,
+          "stdout": "omp/18.4.10\n",
+          "stderr": ""
+        },
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\omp",
+          "status": "missing",
+          "version": null,
+          "exitCode": null,
+          "signal": null,
+          "error": {
+            "code": "ENOENT",
+            "message": "spawnSync C:\\home\\lyh\\.npm-global\\omp ENOENT"
+          },
+          "stdout": "",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "tool": "trellis",
+      "selection": "explicit",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\tool\\node_modules\\@mindfoldhq\\trellis\\bin\\trellis.js",
+        "status": "available",
+        "version": "0.7.0-beta.3",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "0.7.0-beta.3\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    }
+  ],
+  "bootstrap": {
+    "status": "READY",
+    "blockers": [],
+    "executesBootstrap": false
+  },
+  "permissions": {
+    "projectTrust": "UNVERIFIED",
+    "hooks": "UNVERIFIED",
+    "note": "版本命令不证明项目或 hook 获准；本检查不修改权限、信任或 PATH。"
+  }
+}

@@ -1,0 +1,434 @@
+{
+  "active": 50,
+  "database": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\corpus-a50-30d\\monitor.sqlite3",
+  "database_sha256_before": "e93a7807d2fd9157a95504ad3cce29954b68317f8d6e0d77c8eb249459ff28e3",
+  "database_bytes": 544940032,
+  "marker_sha256": "00C934B4E355E6A212AE13DE334EEEE418F8B57E45B54F1AD8C835BBFFE95765",
+  "started_utc": "2026-10-04T02:45:27.021092+00:00",
+  "read_only_uri": true,
+  "sqlite_version": "3.50.4",
+  "oracles": {
+    "host-30d": {
+      "sql": "select coalesce(nullif(s.host,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29786400,
+        29829600,
+        20
+      ],
+      "status": "PASS",
+      "expected_rows": null,
+      "rows": [
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-240.example.test",
+          37755,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-60.example.test",
+          37810,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-147.example.test",
+          37815,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-178.example.test",
+          37860,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-271.example.test",
+          37800,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-302.example.test",
+          37845,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-364.example.test",
+          37740,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-395.example.test",
+          37785,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-426.example.test",
+          37830,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-488.example.test",
+          37790,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-519.example.test",
+          37770,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-550.example.test",
+          37815,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-612.example.test",
+          37775,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-643.example.test",
+          37755,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-674.example.test",
+          37800,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-736.example.test",
+          37825,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-767.example.test",
+          37740,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-798.example.test",
+          37785,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "host-91.example.test",
+          37790,
+          127110,
+          540,
+          162000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-580.example.test",
+          37825,
+          127045,
+          540,
+          162000
+        ]
+      ],
+      "wall_seconds": 2.521797099999276,
+      "shape_ok": true,
+      "values_ok": true
+    },
+    "host-1d": {
+      "sql": "select coalesce(nullif(s.host,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29828160,
+        29829600,
+        20
+      ],
+      "status": "PASS",
+      "expected_rows": null,
+      "rows": [
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-240.example.test",
+          1245,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-60.example.test",
+          1275,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-147.example.test",
+          1260,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-178.example.test",
+          1320,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-271.example.test",
+          1240,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-302.example.test",
+          1300,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-364.example.test",
+          1225,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-395.example.test",
+          1220,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-426.example.test",
+          1280,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-488.example.test",
+          1270,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-519.example.test",
+          1200,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-550.example.test",
+          1260,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-612.example.test",
+          1250,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-643.example.test",
+          1245,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-674.example.test",
+          1240,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-736.example.test",
+          1295,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-767.example.test",
+          1225,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-798.example.test",
+          1220,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "host-91.example.test",
+          1270,
+          4440,
+          18,
+          5400
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-520.example.test",
+          1225,
+          4375,
+          18,
+          5400
+        ]
+      ],
+      "wall_seconds": 0.07915539999976318,
+      "shape_ok": true,
+      "values_ok": true
+    },
+    "network-30d": {
+      "sql": "select coalesce(nullif(d.value,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk left join dimension_dict d on d.dimension_kind='network' and d.dimension_id=a.network_id where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29786400,
+        29829600,
+        100
+      ],
+      "status": "PASS",
+      "expected_rows": null,
+      "rows": [
+        [
+          "network-3",
+          7560005,
+          25379955,
+          108000,
+          2592000
+        ],
+        [
+          "network-4",
+          7559985,
+          25379935,
+          108000,
+          2592000
+        ],
+        [
+          "network-2",
+          7560025,
+          25379820,
+          108000,
+          2592000
+        ]
+      ],
+      "wall_seconds": 2.6189514000006966,
+      "shape_ok": true,
+      "values_ok": true
+    }
+  },
+  "checks": {
+    "quick_check": {
+      "actual": [
+        [
+          "ok"
+        ]
+      ],
+      "expected": [
+        [
+          "ok"
+        ]
+      ]
+    },
+    "schema_version": {
+      "actual": [
+        5
+      ],
+      "expected": [
+        5
+      ]
+    },
+    "journal_mode": {
+      "actual": [
+        "wal"
+      ],
+      "expected": [
+        "wal"
+      ]
+    },
+    "migration_identity": {
+      "actual": [
+        "ledger-lifecycle-v5-layout3"
+      ],
+      "expected": [
+        "ledger-lifecycle-v5-layout3"
+      ]
+    },
+    "row_counts_expected": {
+      "actual": {
+        "minutes": 2160000,
+        "sessions": 432000,
+        "chains": 1296000,
+        "receipts": 2592000
+      },
+      "expected": {
+        "chains": 1296000,
+        "minutes": 2160000,
+        "receipts": 2592000,
+        "sessions": 432000
+      }
+    },
+    "row_counts_original": {
+      "actual": {
+        "minutes": 2160000,
+        "sessions": 432000,
+        "chains": 1296000,
+        "receipts": 2592000
+      },
+      "expected": {
+        "chains": 1296000,
+        "minutes": 2160000,
+        "receipts": 2592000,
+        "sessions": 432000
+      }
+    }
+  },
+  "counts": {
+    "minutes": 2160000,
+    "sessions": 432000,
+    "chains": 1296000,
+    "receipts": 2592000
+  },
+  "status": "PASS",
+  "database_sha256_after": "e93a7807d2fd9157a95504ad3cce29954b68317f8d6e0d77c8eb249459ff28e3",
+  "wal_bytes_after": 0,
+  "postflight_status": "PASS"
+}

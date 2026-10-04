@@ -1,0 +1,26 @@
+{
+  "before": ".trellis\\tasks\\09-19-resiwatch-resource-optimization\\research\\performance-20260919-layout3",
+  "after": ".trellis\\tasks\\09-19-resiwatch-resource-optimization\\research\\performance-20260919-layout3-query1",
+  "checks": [
+    {
+      "name": "query-a50-30d-0.json",
+      "equal_except_generated_utc": true
+    },
+    {
+      "name": "query-a50-1d-0.json",
+      "equal_except_generated_utc": true
+    },
+    {
+      "name": "query-a250-1d-0.json",
+      "equal_except_generated_utc": true
+    },
+    {
+      "name": "query-a1000-1d-0.json",
+      "equal_except_generated_utc": true
+    },
+    {
+      "name": "network-a50-30d.json",
+      "equal_except_generated_utc": true
+    }
+  ]
+}

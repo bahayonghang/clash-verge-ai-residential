@@ -1,0 +1,81 @@
+{
+  "observed_utc": "2026-10-01T13:25:42.064154+00:00",
+  "status": "FAIL",
+  "stage": "fixed_authorized_identity_and_fixture_paths",
+  "errors": [
+    "frozen candidate-monitor-db.exe missing",
+    "A50 synthetic production corpus marker missing",
+    "A50 synthetic production corpus database missing",
+    "A250 synthetic production corpus marker missing",
+    "A250 synthetic production corpus database missing"
+  ],
+  "runner": {
+    "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\run-retained-capacity.py",
+    "expected_sha256": "9FA8C225BEF9A9F7718676D7A5E2D00B1E174270784C99094ED5DCC2F8D9FAA4",
+    "actual_sha256": "9FA8C225BEF9A9F7718676D7A5E2D00B1E174270784C99094ED5DCC2F8D9FAA4",
+    "matches": true
+  },
+  "candidate_source": {
+    "manifest_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462",
+    "expected_sha256": "860165F3183AC8BFAAC2D74AF6F29E793575A91A82B1BB23D86EE975BE5C0462",
+    "before_after_equal": true,
+    "files": 108,
+    "current_mismatches": []
+  },
+  "candidate_executable": {
+    "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\executables\\candidate-retained-20260930\\candidate-monitor-db.exe",
+    "exists": false,
+    "expected_sha256": "8EE782EDE8F6F61997CCADC7476B48963A33410C36EB25DF2F03E4FB18F6BA13",
+    "actual_sha256": null
+  },
+  "fixtures": [
+    {
+      "active": 50,
+      "directory": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a50-30d",
+      "directory_exists": false,
+      "marker": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a50-30d\\production-corpus.json",
+      "marker_exists": false,
+      "expected_marker_sha256": "AA4A7ABD598F07C7D9BD0C29F7043C5C862DE7BABDC6DC8A59D552B1945C101B",
+      "marker_actual_sha256": null,
+      "database": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a50-30d\\monitor.sqlite3",
+      "database_exists": false,
+      "database_bytes": null,
+      "database_sha256": "NOT_READ: marker prerequisite missing",
+      "actual_row_counts": "NOT_READ: marker prerequisite missing",
+      "wal_exists": false,
+      "wal_bytes": null
+    },
+    {
+      "active": 250,
+      "directory": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d",
+      "directory_exists": false,
+      "marker": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\production-corpus.json",
+      "marker_exists": false,
+      "expected_marker_sha256": "667A21E9FBE3FCF100974411D8E714E1589907E6458902AFD50683CEE68A3D42",
+      "marker_actual_sha256": null,
+      "database": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+      "database_exists": false,
+      "database_bytes": null,
+      "database_sha256": "NOT_READ: marker prerequisite missing",
+      "actual_row_counts": "NOT_READ: marker prerequisite missing",
+      "wal_exists": false,
+      "wal_bytes": null
+    }
+  ],
+  "output_directory": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\retained-capacity-20260930",
+  "output_directory_exists": false,
+  "runner_hardcoded_output_unmodified": true,
+  "disk_free_bytes": {
+    "C": 526263181312,
+    "D": 1194720800768
+  },
+  "expected_native_invocations": 106,
+  "recorded_native_invocations": 0,
+  "driver_status": "NOT_STARTED",
+  "outer_status": "NOT_STARTED",
+  "A1000": "NOT_RUN: stage prerequisite unmet",
+  "cause": "原因未查明",
+  "database_reads": false,
+  "private_or_installed_database_reads": false,
+  "search_boundary": "Checked only fixed authorized generated fixture and retained executable paths. No alternative/private library search or regeneration."
+}

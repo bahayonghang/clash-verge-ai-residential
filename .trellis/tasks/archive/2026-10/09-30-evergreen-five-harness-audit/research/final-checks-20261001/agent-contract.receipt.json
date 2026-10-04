@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "scripts/check-agent-contract.js"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "status": "finished",
+  "started_utc": "2026-10-02T01:48:44.004759+00:00",
+  "scope": "approved final local checks; no repeated fulljustci/performance/runtime inference",
+  "pid": 47352,
+  "stdout_raw_sha256": "d98ed58f27e30fb037b2e95aabf2ee5cd855af4f28c4c1c0be885a793f2d0394",
+  "stderr_raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "exit_code": 0,
+  "finished_utc": "2026-10-02T01:48:44.081550+00:00",
+  "wall_seconds": 0.07679540000003726
+}

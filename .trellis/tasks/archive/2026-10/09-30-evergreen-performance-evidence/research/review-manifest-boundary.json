@@ -1,0 +1,72 @@
+{
+  "reviewed_utc": "2026-09-30T14:33:02.836365+00:00",
+  "scope": "Read dependency source and existing build outputs only; no rebuild or corpus access",
+  "excluded_manifest_paths": [
+    "residential-monitor/src-tauri/gen/schemas/acl-manifests.json",
+    "residential-monitor/src-tauri/gen/schemas/capabilities.json",
+    "residential-monitor/src-tauri/gen/schemas/desktop-schema.json",
+    "residential-monitor/src-tauri/gen/schemas/windows-schema.json"
+  ],
+  "classification": "Generated project schema/ACL outputs; upstream capabilities/default.json, Cargo.lock, Tauri config, and build.rs are captured by input manifests. Exclusion does not leave these four files as unrecorded product source inputs for the inspected build path.",
+  "evidence": {
+    "tauri-build-2.6.3/src/acl.rs": {
+      "ranges": [
+        "116-137",
+        "400-433"
+      ],
+      "reason": "Writes project ACL/capabilities outputs; parses ./capabilities/**/* as source.",
+      "sha256": "5B9CA6D0AB9BBA860D8ACC45FFF0BE38349598DEEDE0F8A002E8AB6ACAE4DD48"
+    },
+    "tauri-utils-2.9.3/src/acl/schema.rs": {
+      "ranges": [
+        "309-343"
+      ],
+      "reason": "Generates windows-schema.json and desktop-schema.json in gen/schemas.",
+      "sha256": "4B866969533084B2CE5A08C52F6F543F14006376D8854EBC6724D6E51A53AE92"
+    },
+    "tauri-utils-2.9.3/src/acl/capability.rs": {
+      "ranges": [
+        "285-312"
+      ],
+      "reason": "Deserializes capability JSON into typed value; project schema URI is not loaded by this parser.",
+      "sha256": "C462DAC16D29C2904D9CA649C36DBCB73FB49362D1D885078DF46054A945FBDF"
+    }
+  },
+  "build_outputs": [
+    {
+      "path": "C:/Users/lyh/AppData/Local/Temp/resiwatch-t05-20260930-q1lnvpml/baseline-target/x86_64-pc-windows-msvc/release/build/residential-monitor-5bc16b46ad16dcc7/output",
+      "sha256": "508828CFB76C79B12EF19D905F23DCFEC9E68375410B225BDDBA1522B4097200",
+      "capabilities_rerun": true,
+      "resource_compiler_version": "10.0.10011.16384"
+    },
+    {
+      "path": "C:/Users/lyh/AppData/Local/Temp/resiwatch-t05-20260930-q1lnvpml/baseline-target/x86_64-pc-windows-msvc/release/monitor-bench.d",
+      "sha256": "A46806EDEF9E184E43DD898A5DEF23D2A49997716E99D743D2CE6BEC4713E0C5",
+      "generated_schema_paths_in_depinfo": false,
+      "capabilities_in_depinfo": true
+    },
+    {
+      "path": "C:/Users/lyh/AppData/Local/Temp/resiwatch-t05-20260930-q1lnvpml/candidate-target/x86_64-pc-windows-msvc/release/build/residential-monitor-5bc16b46ad16dcc7/output",
+      "sha256": "02BA6EE3493A5619A18B5D8E72DE718A70834A0E317FD61F5821B68696A29FBC",
+      "capabilities_rerun": true,
+      "resource_compiler_version": "10.0.10011.16384"
+    },
+    {
+      "path": "C:/Users/lyh/AppData/Local/Temp/resiwatch-t05-20260930-q1lnvpml/candidate-target/x86_64-pc-windows-msvc/release/monitor-bench.d",
+      "sha256": "6261ECA9C975CC38BF34037BA91265C083D60E8B5ABD7F21E9F9493468496265",
+      "generated_schema_paths_in_depinfo": false,
+      "capabilities_in_depinfo": true
+    },
+    {
+      "path": "C:/Users/lyh/AppData/Local/Temp/resiwatch-t05-20260930-q1lnvpml/candidate-target/x86_64-pc-windows-msvc/release/monitor-db.d",
+      "sha256": "9CAAFAA5D85636D34385B6A3CF3425A5CB79191F66E6B39BC2D76F17454F6098",
+      "generated_schema_paths_in_depinfo": false,
+      "capabilities_in_depinfo": true
+    }
+  ],
+  "limits": [
+    "Does not claim bit-for-bit reproduction of historical executable.",
+    "Does not claim UI equivalence from copied dist.",
+    "Resource compiler output is available; exact linker/cl.exe binary versions were not captured in the original build receipt."
+  ]
+}

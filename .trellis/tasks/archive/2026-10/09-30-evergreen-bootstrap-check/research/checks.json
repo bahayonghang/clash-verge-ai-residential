@@ -1,0 +1,85 @@
+[
+  {
+    "command": "node --check scripts/check-harness-environment.js",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:15:57.429187+00:00",
+    "finished_utc": "2026-09-30T13:15:57.496679+00:00",
+    "log": "syntax.log"
+  },
+  {
+    "command": "node --test tests/check-harness-environment.test.js",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:15:57.497311+00:00",
+    "finished_utc": "2026-09-30T13:15:58.462639+00:00",
+    "log": "focused-tests.log"
+  },
+  {
+    "command": "node scripts/check-harness-environment.js --alternative codex=C:/Users/lyh/AppData/Local/OpenAI/Codex/bin/c6fe824d725f02d7/codex.exe",
+    "exit_code": 1,
+    "expected": "1; default PATH Codex failure and Trellis mismatch",
+    "started_utc": "2026-09-30T13:16:39.615272+00:00",
+    "finished_utc": "2026-09-30T13:16:46.190401+00:00",
+    "report": "environment-default.json"
+  },
+  {
+    "command": "npm ls --all --json --prefix C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\tool --cache C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\npm-cache --userconfig C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\user.npmrc --globalconfig C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-6leng8nn\\global.npmrc --global=false",
+    "exit_code": 0,
+    "report": "isolated-dependency-tree.json"
+  },
+  {
+    "command": "git check-ignore -q/-v for current and isolated candidate",
+    "exit_code": 0,
+    "report": "ignore-results.json"
+  },
+  {
+    "command": "node scripts/check-harness-environment.js",
+    "exit_code": 1,
+    "expected": "1; unchanged default PATH failure/mismatch",
+    "report": "environment-default-after-review.json",
+    "finished_utc": "2026-09-30T13:28:05.765599+00:00"
+  },
+  {
+    "command": "just ci",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:30:34.263788+00:00",
+    "finished_utc": "2026-09-30T13:31:40.457633+00:00",
+    "log": "just-ci.log",
+    "raw_log": "just-ci.log.gz",
+    "raw_log_sha256": "b9d79129c459cd17823535d75160c5d49b0de99f4a001f5d0123133b12196d1c",
+    "normalized_log_sha256": "2c32f31e0cff92a292e1bd2be8ce458916821c32b2de71097b74ae9c16024ab4"
+  },
+  {
+    "command": "just docs-build",
+    "exit_code": 0,
+    "started_utc": "2026-09-30T13:31:40.470630+00:00",
+    "finished_utc": "2026-09-30T13:31:42.644673+00:00",
+    "log": "docs-build.log",
+    "raw_log": "docs-build.log.gz",
+    "raw_log_sha256": "a6c90d8a4173e940129e7707e724e852fc88babfe289185722f0a90e848f8be1",
+    "normalized_log_sha256": "0dd6e7ae8290a0c84093be39a0684b2cd17730a4cc5f337afd2bd7a9d4f6e01a"
+  },
+  {
+    "command": "git diff --check",
+    "exit_code": 0,
+    "log": "final-diff-check.log",
+    "finished_utc": "2026-09-30T13:38:14.442776+00:00"
+  },
+  {
+    "command": "node scripts/install-agent-skills.js --check",
+    "exit_code": 0,
+    "log": "final-skill-check.log",
+    "finished_utc": "2026-09-30T13:38:14.528739+00:00"
+  },
+  {
+    "command": "node scripts/check-template-safety.js",
+    "exit_code": 0,
+    "log": "final-secrets.log",
+    "finished_utc": "2026-09-30T13:38:14.956588+00:00"
+  },
+  {
+    "command": "Verify final six source hashes and protected-file hashes; scan owned source/report whitespace",
+    "exit_code": 0,
+    "result": "All unchanged; no whitespace errors",
+    "finished_utc": "2026-09-30T13:38:14.959007+00:00"
+  }
+]

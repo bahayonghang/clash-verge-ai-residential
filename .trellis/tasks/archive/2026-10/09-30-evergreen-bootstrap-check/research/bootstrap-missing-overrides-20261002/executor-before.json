@@ -1,0 +1,26 @@
+{
+  "node": {
+    "path": "D:\\GreenSoftware\\node\\node.EXE",
+    "sha256": "e921fe5307e29bf6fd00000dd594356affd3a7b044e52720c7f10decbdc305b9"
+  },
+  "npm_cli": {
+    "path": "C:\\home\\lyh\\.npm-global\\node_modules\\npm\\bin\\npm-cli.js",
+    "sha256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
+  },
+  "lock": {
+    "sha256": "fd71957d4e2f20706bf8499f8cbe91e188acabb86fd94ff78febd06e94c4cfa7",
+    "nodes": 59
+  },
+  "npmrc": [
+    {
+      "present": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\user.npmrc"
+    },
+    {
+      "present": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\global.npmrc"
+    }
+  ]
+}

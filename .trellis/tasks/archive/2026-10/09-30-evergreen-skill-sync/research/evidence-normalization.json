@@ -1,0 +1,8 @@
+{
+  "before-diffs.diff": {
+    "raw": "before-diffs.diff.gz",
+    "raw_sha256": "1f9e199d24b76235ae17a7b4d87bfd7ee1aea349af2bc81b1ece64a2dd122cd3",
+    "normalized_sha256": "198b4a761a8531fcc2641a0145201901e25768e4a3d6342bca49f21ca128e883",
+    "normalization": "Only strip line-end whitespace; raw unified diff remains in gzip"
+  }
+}

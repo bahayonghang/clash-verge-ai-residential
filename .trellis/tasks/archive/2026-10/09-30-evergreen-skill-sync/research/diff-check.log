@@ -1,0 +1,16 @@
+warning: in the working copy of '.codex/config.toml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/workflows/ci.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.kimi-code/skills/trellis-check/SKILL.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.trellis/spec/frontend/index.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.trellis/spec/frontend/quality-guidelines.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.trellis/spec/residential-monitor/frontend/index.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.trellis/workflow.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'AGENTS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/agents/harnesses.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/agents/residential-rule-tuning.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'justfile', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'residential-monitor/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'skills/residential-rule-tuning/SKILL.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/install-agent-skills.test.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/sync-monitor-version.test.js', LF will be replaced by CRLF the next time Git touches it

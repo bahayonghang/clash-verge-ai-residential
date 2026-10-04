@@ -1,0 +1,14 @@
+
+running 8 tests
+test c3::raw_fold::tests::fold_matches_grouped_sql_oracle ... ok
+test c3::raw_fold::tests::isolated_raw_fold_stage_proof ... ignored, 只读隔离库；分别记录会话投影和分钟扫描耗时，不改变生产 deadline
+test c3::raw_fold::tests::minute_set_layout_and_repeated_accumulation ... minute_set_bytes=112 option_i64_bytes=16
+ok
+test c3::raw_fold::tests::minute_set_matches_independent_set_for_repeats_and_bounds ... ok
+test c3::raw_fold::tests::projection_predicate_matches_membership_sql ... ok
+test c3::raw_fold::tests::repeated_projection_values_preserve_fallbacks_missingness_and_exit_keys ... ok
+test c3::raw_fold::tests::unreferenced_dictionary_values_do_not_enter_returned_pool ... ok
+test c3::raw_fold::tests::window_scoped_projection_matches_oracle_and_keeps_cross_window_sessions ... ok
+
+test result: ok. 7 passed; 0 failed; 1 ignored; 0 measured; 544 filtered out; finished in 0.71s
+

@@ -26,3 +26,15 @@ React 19 + Tailwind v4 + Vite 桌面壳。`components/**` 不得直接 `invoke`�
 - `npm --prefix residential-monitor test`
 - `npm --prefix residential-monitor run build`
 - 关于页不得把未签名候选标成 `signed`。删除部分失败不得显示「已全部删除」。
+
+## Toolchain
+
+- Dependency/lockfile or audit-gate changes require `just dependency-audit` in addition to `just ci` and `just docs-build`. The audit recipe checks full monitor/docs npm dependencies, including dev dependencies, with `--include=dev --audit-level=high`, then runs `cargo audit --file residential-monitor/src-tauri/Cargo.lock`. Explicit `--include=dev` overrides development-dependency omission from environment or npm configuration. A successful `npm ci` does not satisfy the audit gate.
+- The audit requires npm, Cargo, an already installed `cargo-audit`, and access to the configured npm registry and RustSec database. Missing tools and network/database failures block verification; record them separately from vulnerability findings. Keep RustSec unmaintained/unsound warnings and target scope explicit. Do not install tools globally without authorization.
+- CI runs monitor/docs npm audits as independent steps after installation. Keep each Windows native command in a separate `pwsh` step, and preserve the `Required checks` aggregation of `test`, `monitor`, and `docs`. RustSec remains an independent local check. Apply these rules in Claude Code, Codex, Grok Build, Kimi Code, and OMP.
+- Fix vulnerable transitive packages within the reviewed semver ranges. Preserve unrelated lock nodes, direct dependency ranges, lint rules, and product code. Do not use `npm audit fix --force`. Run the CI/audit failure-propagation tests in `tests/sync-monitor-version.test.js` after gate changes.
+
+- Vite 8 的 `minify: "esbuild"` 需要把 `esbuild`（peer `^0.27 || ^0.28`）装成 **dev** 依赖。禁止写入 `dependencies`。源码不得 `import "esbuild"`。
+- npm 12 默认不跑 install scripts。`package.json` 的 `allowScripts` 只钉精确版本，例如 `esbuild@0.28.2: true`。存在 `allowScripts` 时用户 `.npmrc` 的 `allow-scripts` 被忽略。禁止 name-only `esbuild: true`。
+- `eslint-plugin-react-hooks` 用 `reactHooks.configs.flat.recommended`。允许关掉的只有 `react-hooks/set-state-in-effect` 与 `react-hooks/refs`（Tauri hook 的 effect `setState` 与 render 期 latest-ref）。不要关掉整个 recommended。
+- 当前 peer 阻断：ESLint 10 被 `eslint-plugin-react@7.37.5` 挡住；TypeScript 7 被 `typescript-eslint` 的 `typescript <6.1.0` 挡住；`@vitejs/plugin-react` 留 5.x（5.x 已声明 vite 8）。

@@ -1,0 +1,27 @@
+{
+  "codex_toml_semantics_equal_head": true,
+  "workflow_tag_sequence_equal_head": true,
+  "unchanged_files": [
+    "CLAUDE.md",
+    ".kimi-code/skills/trellis-implement/SKILL.md",
+    ".kimi-code/skills/trellis-research/SKILL.md",
+    "residential-monitor/src-tauri/src/storage_lifecycle.rs",
+    ".trellis/.template-hashes.json"
+  ],
+  "sha256": {
+    "AGENTS.md": "f602d7e74cada3cd9c6d617dad36cbc1a90d90c19b92bd5ccb40d9794b557bb9",
+    "CLAUDE.md": "c0a67ce322c8394a7e34c9ccbe03addce4cf40a900134638cd04e94fd7669236",
+    ".trellis/workflow.md": "2540200a69777534fdc1632c38fa8caf247278d4de654a5c5c47269cbc1dcc0f",
+    ".trellis/spec/frontend/index.md": "77af6d9b2a8926a40900f094c7bdea82a20281ff26466ff918c7ff3527da59b6",
+    ".trellis/spec/frontend/quality-guidelines.md": "f011c915a694b9db17b8b51fd75dc315aa106a19e16d41d4177fe122237ed641",
+    "docs/agents/harnesses.md": "bd3d388074c390cce3deec7f7a1bf8cec41c554f0b182267f778233b7644a436",
+    "skills/residential-rule-tuning/SKILL.md": "94d4b2977b9bb3aa9f126a82682a63a152ee33602d181a917c46e1a3e273c19a",
+    ".codex/config.toml": "0696030d4c8d9b33fb1286081146207114106e26f74bd2b9a0308b56d3212035",
+    ".kimi-code/skills/trellis-check/SKILL.md": "43536cc2e41e119634e85848c67acbadc582e6fe84ab195a6a8645f8e97fd273",
+    ".kimi-code/skills/trellis-implement/SKILL.md": "61013b2aaef14b1da347553da645f5343f73ae17c8ec9a2cb0ad3fdc44cc444c",
+    ".kimi-code/skills/trellis-research/SKILL.md": "646f070f6ed7598bccc91a0275ed1f3fa78783c043db5ff16caab587b0cbbb61",
+    "scripts/check-agent-contract.js": "11678494247230237b07d1dbbac4b2d533d2f978215d4d2c20991ff3a0056330",
+    "tests/check-agent-contract.test.js": "6311590d32d3350e13c0002e24b2a4f6382ac751469a195ef7c2583f41a75edd",
+    "package.json": "2170ad4b502494449eca631f314649fb9c562663ff11c8d5d98e1a15fcdbf259"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "status": "PASSED_GENERATOR_PREFLIGHT; GENERATION_NOT_RUN",
+  "observed_utc": "2026-10-04T05:41:26.554751+00:00",
+  "executable_sha256": {
+    "baseline-monitor-bench.exe": "AB26881AF77948371D3A6E300682FE6773887FFF10B410DA795D87C5FBDE8076",
+    "candidate-monitor-bench.exe": "6C166E4C4E3C33461C2E47119230A53DDBD4DAF750AAA2A22000D38C24D8107F",
+    "candidate-monitor-db.exe": "9467B215E9B200FCD8C65FFFCB4776D93BB73BCAC2B65AAAEA3722E7875AD85E",
+    "candidate-library-tests.exe": "D3FCB4C5C9B50824DC0A020896954335DE34E8FC6B66705B384CA24201ECCE0A"
+  },
+  "disk_free_bytes": {
+    "C": 524084178944,
+    "D": 1154143043584
+  },
+  "competing_load": [],
+  "generator_sha256": "43042AE7C2940A0A10D4EBF81F696CE825DDCECC09CBE8A1685D6CE954ACEBF8",
+  "competing_load_policy": "Recorded only; generation wall time is not a formal gate. User processes are not stopped.",
+  "fixed_arguments": {
+    "days": 30,
+    "seed": 20260919,
+    "start_utc": 1787184000,
+    "expected_end_utc": 1789776000
+  }
+}

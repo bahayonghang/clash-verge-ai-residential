@@ -1,0 +1,32 @@
+{
+  "name": "npm-ci-attempt1",
+  "argv": [
+    "D:\\GreenSoftware\\node\\node.EXE",
+    "C:\\home\\lyh\\.npm-global\\node_modules\\npm\\bin\\npm-cli.js",
+    "ci",
+    "--prefix",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\tool",
+    "--cache",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\npm-cache",
+    "--userconfig",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\user.npmrc",
+    "--globalconfig",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\global.npmrc",
+    "--global=false",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund",
+    "--registry=https://registry.npmjs.org"
+  ],
+  "cwd": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\tool",
+  "started_utc": "2026-10-02T14:14:43.799967+00:00",
+  "native_exit_code": 0,
+  "timed_out": false,
+  "pid": 56036,
+  "finished_utc": "2026-10-02T14:14:54.817988+00:00",
+  "wall_seconds": 11.018060199996398,
+  "stdout": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\bootstrap-missing-overrides-20261002\\npm-ci-attempt1.stdout.raw.log",
+  "stderr": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-bootstrap-check\\research\\bootstrap-missing-overrides-20261002\\npm-ci-attempt1.stderr.raw.log",
+  "stdout_sha256": "9a6781db5d19507f15e2639cec1a622bc79142ef1092f53558d5750d91d7d96b",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

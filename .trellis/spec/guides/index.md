@@ -37,6 +37,7 @@ These guides help you **ask the right questions before coding**.
 - [ ] You are adding an event kind, JSONL record, RPC payload, or config field
 - [ ] UI / command code starts casting raw payload fields directly
 - [ ] Real-time summary or Top 1 is derived from a truncated `rows` page instead of the query snapshot `summary`
+- [ ] You add an `AppFacade` write path (report, targets, alerts, backup) without a Recovery-only `recovery_only` test
 
 → Read [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md)
 
@@ -46,6 +47,9 @@ These guides help you **ask the right questions before coding**.
 - [ ] Clash `DOMAIN` / `DOMAIN-SUFFIX` match host/SNI only. A path such as `/backend-api/codex/responses` cannot be split from other paths on the same host.
 - [ ] Values removed from activation must stay in `allPossible*` so old rules and DNS keys are cleaned.
 - [ ] Do not retire `daily-cloudcode-pa.googleapis.com`. Antigravity `language_server` uses it as `--cloud_code_endpoint`. A missing official firewall line is not evidence that the host is unused.
+- [ ] Routing rules and residential `nameserver-policy` can be decoupled. Extra sites use `EXTRA_SITES`; `residentialDns: false` means inject `DOMAIN-SUFFIX` / `DOMAIN` only.
+- [ ] New domains need a real TLS handshake from the intended DNS vantage, not only a host string. CDN/GeoDNS (for example ESA) can pick a broken edge on residential DoH while airport-upstream DoH works.
+- [ ] `routing.extra` is a category gate. Site switches are separate flat keys such as `routing.extra_anyrouter`.
 
 → Product contract: [docs/routing-scope.md](../../../docs/routing-scope.md)
 

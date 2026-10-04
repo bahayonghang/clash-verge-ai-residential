@@ -37,12 +37,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -55,12 +55,12 @@ jobs:
     timeout-minutes: 40
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
 
@@ -69,26 +69,71 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: residential-monitor fast gate
+      - name: Check monitor version alignment
+        run: node scripts/sync-monitor-version.js --check
+
+      - name: Install monitor frontend dependencies
         shell: pwsh
-        run: |
-          npm --prefix residential-monitor ci
-          npm --prefix residential-monitor run check
-          cargo fmt --manifest-path residential-monitor/src-tauri/Cargo.toml --check
-          cargo clippy --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace --all-targets -- -D warnings
-          cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace
-          npm run check:secrets
+        run: npm --prefix residential-monitor ci
+
+      - name: Audit monitor frontend dependencies
+        shell: pwsh
+        run: npm --prefix residential-monitor audit --include=dev --audit-level=high
+
+      - name: Check monitor frontend
+        shell: pwsh
+        run: npm --prefix residential-monitor run check
+
+      - name: Check Rust formatting
+        shell: pwsh
+        run: cargo fmt --manifest-path residential-monitor/src-tauri/Cargo.toml --check
+
+      - name: Lint Rust workspace
+        shell: pwsh
+        run: cargo clippy --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace --all-targets -- -D warnings
+
+      - name: Test Rust workspace
+        shell: pwsh
+        run: cargo test --manifest-path residential-monitor/src-tauri/Cargo.toml --workspace
+
+      - name: Scan public template secrets
+        shell: pwsh
+        run: npm run check:secrets
+
+  docs:
+    name: Ubuntu / docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install docs dependencies
+        run: npm --prefix docs ci
+
+      - name: Audit docs dependencies
+        run: npm --prefix docs audit --include=dev --audit-level=high
+
+      - name: Build docs
+        run: npm --prefix docs run build
 
   required-checks:
     name: Required checks
-    needs: [test, monitor]
+    needs: [test, monitor, docs]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Verify all test jobs passed
         run: |
-          if [ "${{ needs.test.result }}" != "success" ] || [ "${{ needs.monitor.result }}" != "success" ]; then
+          if [ "${{ needs.test.result }}" != "success" ] || [ "${{ needs.monitor.result }}" != "success" ] || [ "${{ needs.docs.result }}" != "success" ]; then
             echo "One or more required jobs did not pass."
             exit 1
           fi

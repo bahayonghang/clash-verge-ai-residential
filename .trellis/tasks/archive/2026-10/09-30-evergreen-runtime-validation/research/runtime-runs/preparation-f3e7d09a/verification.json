@@ -1,0 +1,92 @@
+{
+  "synthetic_only": true,
+  "clients_started": 0,
+  "candidate_frozen": false,
+  "checks": [
+    {
+      "name": "claude_parent_single_prompt_argv",
+      "pass": true
+    },
+    {
+      "name": "claude_child_single_prompt_argv",
+      "pass": true
+    },
+    {
+      "name": "codex_parent_single_prompt_argv",
+      "pass": true
+    },
+    {
+      "name": "codex_child_single_prompt_argv",
+      "pass": true
+    },
+    {
+      "name": "grok_parent_single_prompt_argv",
+      "pass": true
+    },
+    {
+      "name": "grok_child_single_prompt_argv",
+      "pass": true
+    },
+    {
+      "name": "kimi_parent_single_prompt_argv",
+      "pass": true
+    },
+    {
+      "name": "kimi_child_single_prompt_argv",
+      "pass": true
+    },
+    {
+      "name": "omp_parent_single_prompt_argv",
+      "pass": true
+    },
+    {
+      "name": "omp_child_single_prompt_argv",
+      "pass": true
+    },
+    {
+      "name": "omp_child_normal_route",
+      "pass": true
+    },
+    {
+      "name": "go_guard_before_process",
+      "pass": true
+    },
+    {
+      "name": "normal_reason",
+      "pass": true
+    },
+    {
+      "name": "normal_exit",
+      "pass": true
+    },
+    {
+      "name": "auth_reason",
+      "pass": true
+    },
+    {
+      "name": "auth_exit",
+      "pass": true
+    },
+    {
+      "name": "timeout_reason",
+      "pass": true
+    }
+  ],
+  "capture_cases": [
+    {
+      "case": "normal",
+      "exit_code": 0,
+      "stop_reason": null
+    },
+    {
+      "case": "auth",
+      "exit_code": 7,
+      "stop_reason": "CLIENT_REPORTED_BLOCKER"
+    },
+    {
+      "case": "timeout",
+      "exit_code": 0,
+      "stop_reason": "TIMEOUT"
+    }
+  ]
+}

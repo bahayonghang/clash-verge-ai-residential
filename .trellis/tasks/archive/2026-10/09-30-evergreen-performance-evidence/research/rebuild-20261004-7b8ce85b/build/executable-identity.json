@@ -1,0 +1,158 @@
+{
+  "baseline-monitor-bench.exe": {
+    "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\baseline\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+    "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\executables\\baseline-monitor-bench.exe",
+    "bytes": 5818368,
+    "sha256": "21D1B420B52B53E178262B970F5105DB0AC5E677E27392A152908EEC52D0341F",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///D:/Documents/Code/Github/clash-verge-ai-residential/bench-data/t05-rebuild-20261004-7b8ce85b/sources/baseline/residential-monitor/src-tauri#residential-monitor@0.3.0",
+      "manifest_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\sources\\baseline\\residential-monitor\\src-tauri\\Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "monitor-bench",
+        "src_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\sources\\baseline\\residential-monitor\\src-tauri\\src\\bin\\monitor-bench.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [],
+      "filenames": [
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\baseline\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\baseline\\x86_64-pc-windows-msvc\\release\\monitor_bench.pdb"
+      ],
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\baseline\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+      "fresh": false
+    }
+  },
+  "candidate-monitor-bench.exe": {
+    "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+    "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\executables\\candidate-monitor-bench.exe",
+    "bytes": 6329344,
+    "sha256": "9A8E7359F96DD24989F2BC439C296CE72F2C2BA9CAFD3D12908BA33CCD598B04",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///D:/Documents/Code/Github/clash-verge-ai-residential/bench-data/t05-rebuild-20261004-7b8ce85b/sources/candidate/residential-monitor/src-tauri#residential-monitor@0.3.0",
+      "manifest_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\sources\\candidate\\residential-monitor\\src-tauri\\Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "monitor-bench",
+        "src_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\sources\\candidate\\residential-monitor\\src-tauri\\src\\bin\\monitor-bench.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [],
+      "filenames": [
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor_bench.pdb"
+      ],
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-bench.exe",
+      "fresh": false
+    }
+  },
+  "candidate-monitor-db.exe": {
+    "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+    "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\executables\\candidate-monitor-db.exe",
+    "bytes": 5162496,
+    "sha256": "F2734C734015ECB5C38E916921A28859A8237D132423476A03126039415EAA76",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///D:/Documents/Code/Github/clash-verge-ai-residential/bench-data/t05-rebuild-20261004-7b8ce85b/sources/candidate/residential-monitor/src-tauri#residential-monitor@0.3.0",
+      "manifest_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\sources\\candidate\\residential-monitor\\src-tauri\\Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "monitor-db",
+        "src_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\sources\\candidate\\residential-monitor\\src-tauri\\src\\bin\\monitor-db.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [],
+      "filenames": [
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor_db.pdb"
+      ],
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\monitor-db.exe",
+      "fresh": false
+    }
+  },
+  "candidate-library-tests.exe": {
+    "source": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+    "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\executables\\candidate-library-tests.exe",
+    "bytes": 12968448,
+    "sha256": "83EDD78C4A7012AD1AD97F9B681B1A45886584FBAF1EB6852768499206E659BD",
+    "compiler_artifact": {
+      "reason": "compiler-artifact",
+      "package_id": "path+file:///D:/Documents/Code/Github/clash-verge-ai-residential/bench-data/t05-rebuild-20261004-7b8ce85b/sources/candidate/residential-monitor/src-tauri#residential-monitor@0.3.0",
+      "manifest_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\sources\\candidate\\residential-monitor\\src-tauri\\Cargo.toml",
+      "target": {
+        "kind": [
+          "rlib"
+        ],
+        "crate_types": [
+          "rlib"
+        ],
+        "name": "residential_monitor_lib",
+        "src_path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\sources\\candidate\\residential-monitor\\src-tauri\\src\\lib.rs",
+        "edition": "2021",
+        "doc": true,
+        "doctest": true,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": true
+      },
+      "features": [],
+      "filenames": [
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+        "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.pdb"
+      ],
+      "executable": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\targets\\candidate\\x86_64-pc-windows-msvc\\release\\deps\\residential_monitor_lib-d2e33871bfe2d12d.exe",
+      "fresh": false
+    }
+  }
+}

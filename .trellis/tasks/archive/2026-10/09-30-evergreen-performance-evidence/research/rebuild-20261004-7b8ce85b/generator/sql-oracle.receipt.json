@@ -1,0 +1,64 @@
+{
+  "label": "sql-oracle",
+  "argv": [
+    "C:\\Program Files\\Python314\\python.exe",
+    "-B",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\oracle\\read-corpus-oracle.py",
+    "--a50-db",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\corpus-a50-30d\\monitor.sqlite3",
+    "--a50-db-sha256",
+    "C846A8A12C9C60EA29B170028430A8885F47E98F8AD8A5C0D89A859774781065",
+    "--a50-marker-sha256",
+    "A8EABE597B4119205E5FD3F3D9B479AA322439994CC07145F99F3C93D091B96A",
+    "--a250-db",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\corpus-a250-30d\\monitor.sqlite3",
+    "--a250-db-sha256",
+    "B6E024FCB505E1FCA41DBC8FE186C0480DCF63FC0104D6D754CB197D74CF733B",
+    "--a250-marker-sha256",
+    "03BFDA2A56CF662159AE4D2E6ABDA0A08383124CB44AA0743D9D48CB94B71C96",
+    "--output-dir",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\oracle\\run-20261004"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "environment_override": {},
+  "shell": false,
+  "started_utc": "2026-10-04T05:24:50.112215+00:00",
+  "status": "ENDED",
+  "native_exit": 0,
+  "pid": 43432,
+  "competing_load_at_start": [],
+  "disk_free_bytes_before": {
+    "C": 526147031040,
+    "D": 1158529044480
+  },
+  "ended_utc": "2026-10-04T05:25:43.684572+00:00",
+  "wall_seconds": 53.554040899998654,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator\\sql-oracle.stdout.raw",
+      "bytes": 0,
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator\\sql-oracle.stderr.raw",
+      "bytes": 0,
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  },
+  "peak_rss_bytes_sampled": 37593088,
+  "last_cpu_times_sampled": {
+    "user": 33.921875,
+    "system": 18.53125,
+    "children_user": 0.0,
+    "children_system": 0.0
+  },
+  "disk_free_bytes_after": {
+    "C": 526134018048,
+    "D": 1158528323584
+  },
+  "sampling": "0.5 s psutil polling of the direct native process; not a complete peak proof"
+}

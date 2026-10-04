@@ -1,0 +1,19 @@
+{
+  "ok": false,
+  "status": "BLOCKED",
+  "root": "relative ; & $() candidate",
+  "entry": "C:\\literal & entry.js",
+  "errors": [
+    "--root 必须为绝对路径"
+  ],
+  "version": null,
+  "init": null,
+  "contractBefore": null,
+  "contractAfter": null,
+  "overrides": [],
+  "publicFiles": [],
+  "assets": [],
+  "preservation": "NOT_RUN",
+  "boundary": "仅初始化与本地合同；原生角色、hook、权限、hosted 与产品运行仍需独立验证。"
+}
+error: recipe `bootstrap-harnesses` failed with exit code 1

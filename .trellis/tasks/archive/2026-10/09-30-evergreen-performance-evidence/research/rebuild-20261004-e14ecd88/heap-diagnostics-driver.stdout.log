@@ -1,0 +1,12 @@
+{"finished": "a1000-unchanged-r1-baseline", "exit_code": 0, "private_p95": 10862592.0}
+{"finished": "a1000-unchanged-r1-candidate", "exit_code": 0, "private_p95": 12689408.0}
+{"finished": "a1000-unchanged-r2-baseline", "exit_code": 0, "private_p95": 11157504.0}
+{"finished": "a1000-unchanged-r2-candidate", "exit_code": 0, "private_p95": 12513280.0}
+{"finished": "a1000-unchanged-r3-baseline", "exit_code": 0, "private_p95": 11186176.0}
+{"finished": "a1000-unchanged-r3-candidate", "exit_code": 0, "private_p95": 12591104.0}
+{"finished": "a1000-metadata-r1-baseline", "exit_code": 0, "private_p95": 11669504.0}
+{"finished": "a1000-metadata-r1-candidate", "exit_code": 0, "private_p95": 13275136.0}
+{"finished": "a1000-metadata-r2-baseline", "exit_code": 3221225794, "private_p95": null}
+{"finished": "a1000-metadata-r2-candidate", "exit_code": 3221225794, "private_p95": null}
+{"finished": "a1000-metadata-r3-baseline", "exit_code": 3221225794, "private_p95": null}
+{"finished": "a1000-metadata-r3-candidate", "exit_code": 3221225794, "private_p95": null}

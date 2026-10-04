@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/residential-monitor/backend/index.md", "reason": "Quality Check cargo fmt/clippy/test after new tests."}
+{"file": ".trellis/spec/residential-monitor/backend/modules-and-errors.md", "reason": "Recovery and loopback contracts the new tests must not weaken."}
+{"file": ".trellis/spec/residential-monitor/storage/sqlite-contract.md", "reason": "Transaction rollback assertions must match writer contract."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Do not add tautological tests; just ci remains the gate."}
+{"file": ".trellis/tasks/09-03-test-coverage-gaps/research/coverage-audit.md", "reason": "Out-of-scope list: no coverage-tool chase, no UI chrome tests."}

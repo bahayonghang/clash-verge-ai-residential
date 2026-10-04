@@ -1,0 +1,1974 @@
+{
+  "revision": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+  "path": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\archives\\baseline-c278bb7b-residential-monitor.tar",
+  "bytes": 5109760,
+  "sha256": "87684724D5E5B1B3A18C0212CD594CA05F9454EDD6C28582CD879270F9749EB7",
+  "members": [
+    {
+      "path": "residential-monitor",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/.gitignore",
+      "size": 106,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/README.md",
+      "size": 1608,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/docs/alerts.md",
+      "size": 507,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/backup-restore.md",
+      "size": 528,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/controller.md",
+      "size": 676,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/coverage.md",
+      "size": 471,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/data-directory.md",
+      "size": 2292,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/first-run.md",
+      "size": 1540,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/install.md",
+      "size": 2846,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/known-limits.md",
+      "size": 1264,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/notifications.md",
+      "size": 925,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/privacy.md",
+      "size": 712,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/release-checklist.md",
+      "size": 1221,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/reporting.md",
+      "size": 5481,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/troubleshooting.md",
+      "size": 1242,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/docs/upgrade-uninstall.md",
+      "size": 1840,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/eslint.config.js",
+      "size": 838,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/index.html",
+      "size": 977,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/package-lock.json",
+      "size": 291013,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/package.json",
+      "size": 1837,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/postcss.config.mjs",
+      "size": 99,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/scripts",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/scripts/build-icons.mjs",
+      "size": 1733,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/scripts/check-icons.mjs",
+      "size": 4551,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/Cargo.lock",
+      "size": 144038,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/Cargo.toml",
+      "size": 1873,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/build.rs",
+      "size": 1659,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/capabilities",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/capabilities/default.json",
+      "size": 422,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/gen",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/gen/schemas",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/gen/schemas/acl-manifests.json",
+      "size": 76406,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/gen/schemas/capabilities.json",
+      "size": 337,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/gen/schemas/desktop-schema.json",
+      "size": 136188,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/gen/schemas/windows-schema.json",
+      "size": 136188,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/128x128.png",
+      "size": 17538,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/128x128@2x.png",
+      "size": 52361,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/32x32.png",
+      "size": 1883,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/icon-source.png",
+      "size": 334405,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/icon-source.png.json",
+      "size": 386,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/icon.ico",
+      "size": 66119,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/icon.png",
+      "size": 153389,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/icon.png.json",
+      "size": 301,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/tray-collecting.png",
+      "size": 144252,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/tray-collecting.png.json",
+      "size": 299,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/tray-connecting.png",
+      "size": 145731,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/tray-connecting.png.json",
+      "size": 298,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/tray-fault.png",
+      "size": 145233,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/tray-fault.png.json",
+      "size": 292,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/tray-paused.png",
+      "size": 145507,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/icons/tray-paused.png.json",
+      "size": 295,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/installer.nsh",
+      "size": 1738,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/accounting.rs",
+      "size": 35183,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/app_log.rs",
+      "size": 12539,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/bench.rs",
+      "size": 16356,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/bin",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/bin/monitor-bench.rs",
+      "size": 9580,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/bin/monitor-db.rs",
+      "size": 105,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c0_contract.rs",
+      "size": 3398,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/close.rs",
+      "size": 3255,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/collector.rs",
+      "size": 13496,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/contract.rs",
+      "size": 819,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/desktop.rs",
+      "size": 14851,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/dialog.rs",
+      "size": 1059,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/facade.rs",
+      "size": 137904,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/hub.rs",
+      "size": 28959,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/mod.rs",
+      "size": 271,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/query.rs",
+      "size": 30374,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/settings.rs",
+      "size": 15525,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/shell.rs",
+      "size": 12923,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c2/subscriptions.rs",
+      "size": 5822,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/archive.rs",
+      "size": 43696,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/backup.rs",
+      "size": 11376,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/export.rs",
+      "size": 20367,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/mod.rs",
+      "size": 1899,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/query.rs",
+      "size": 46256,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/retention.rs",
+      "size": 56010,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/rule_name.rs",
+      "size": 6044,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/schema.rs",
+      "size": 6110,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/service.rs",
+      "size": 83218,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/share.rs",
+      "size": 12693,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/snapshot.rs",
+      "size": 12020,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/space.rs",
+      "size": 2016,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c3/sql.rs",
+      "size": 34727,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c4",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c4/diagnose.rs",
+      "size": 5840,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c4/engine.rs",
+      "size": 41909,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c4/mod.rs",
+      "size": 1063,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c4/notify.rs",
+      "size": 8485,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c4/outbox.rs",
+      "size": 15399,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c4/period.rs",
+      "size": 11703,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c4/schema.rs",
+      "size": 4541,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c4/store.rs",
+      "size": 15148,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c4/types.rs",
+      "size": 11616,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c5",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c5/about.rs",
+      "size": 1742,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c5/baseline.rs",
+      "size": 4328,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c5/concurrent.rs",
+      "size": 5242,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c5/fault.rs",
+      "size": 7084,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c5/mod.rs",
+      "size": 773,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c5/purge.rs",
+      "size": 7977,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c5/soak.rs",
+      "size": 2544,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c5/supply.rs",
+      "size": 4015,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/c5/vacuum.rs",
+      "size": 2380,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/candidate_schema.rs",
+      "size": 12315,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/controller.rs",
+      "size": 18926,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/credential.rs",
+      "size": 10781,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/data_dir.rs",
+      "size": 11177,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/dbcli",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/dbcli/audit.rs",
+      "size": 29010,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/dbcli/envelope.rs",
+      "size": 4148,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/dbcli/maint.rs",
+      "size": 16385,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/dbcli/mod.rs",
+      "size": 28649,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/dbcli/patterns.rs",
+      "size": 6862,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/dbcli/render.rs",
+      "size": 6021,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/dbcli/resolve.rs",
+      "size": 3956,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/dimension_rank_table_layout.rs",
+      "size": 5053,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/evidence.rs",
+      "size": 3843,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/i18n.rs",
+      "size": 24150,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/identity.rs",
+      "size": 1407,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/lib.rs",
+      "size": 60963,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/live.rs",
+      "size": 2614,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/live_table_layout.rs",
+      "size": 6077,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/main.rs",
+      "size": 123,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/redact.rs",
+      "size": 715,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/residential.rs",
+      "size": 3578,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/session.rs",
+      "size": 9167,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/session_host.rs",
+      "size": 3164,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/sqlite_probe.rs",
+      "size": 8323,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/storage.rs",
+      "size": 80812,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/theme.rs",
+      "size": 9790,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/transport.rs",
+      "size": 17163,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/src/workload.rs",
+      "size": 5221,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/tauri.conf.json",
+      "size": 1092,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src-tauri/tests",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src-tauri/tests/kill_gate.rs",
+      "size": 2942,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/app.tsx",
+      "size": 9610,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/alerts.jpg",
+      "size": 59648,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/alerts.jpg.json",
+      "size": 250,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/chain.svg",
+      "size": 335,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/host.svg",
+      "size": 321,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/live.jpg",
+      "size": 68666,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/live.jpg.json",
+      "size": 270,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/mark-app.png",
+      "size": 334405,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/mark-app.png.json",
+      "size": 177,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/overview.jpg",
+      "size": 69950,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/overview.jpg.json",
+      "size": 334,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/process.svg",
+      "size": 353,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/reports.jpg",
+      "size": 68630,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/reports.jpg.json",
+      "size": 258,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/residential.svg",
+      "size": 265,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/rule.svg",
+      "size": 359,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/settings.jpg",
+      "size": 109015,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/assets/icons/settings.jpg.json",
+      "size": 239,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/charts",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/charts/chart-hover.test.tsx",
+      "size": 1913,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/charts/chart-hover.tsx",
+      "size": 2111,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/charts/rank-bar.tsx",
+      "size": 4203,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/charts/share-donut.test.tsx",
+      "size": 553,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/charts/share-donut.tsx",
+      "size": 3147,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/charts/trend-area.test.tsx",
+      "size": 921,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/charts/trend-area.tsx",
+      "size": 7887,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/common/appearance-menu.tsx",
+      "size": 3624,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/col-resizer.tsx",
+      "size": 5198,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/data-table.test.tsx",
+      "size": 1622,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/data-table.tsx",
+      "size": 1854,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/language-switcher.tsx",
+      "size": 1146,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/overview-card.tsx",
+      "size": 1278,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/sortable-th.tsx",
+      "size": 1585,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/stat-card.tsx",
+      "size": 2118,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/status-dot.tsx",
+      "size": 1478,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/theme-toggle.tsx",
+      "size": 1229,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/time-range-picker.tsx",
+      "size": 1914,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/top-list-item.test.tsx",
+      "size": 604,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/common/top-list-item.tsx",
+      "size": 2388,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/features/alerts",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/features/alerts/center-list.test.tsx",
+      "size": 2038,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/alerts/center-list.tsx",
+      "size": 4730,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/alerts/diagnostics-panel.tsx",
+      "size": 4835,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/alerts/evidence-panel.tsx",
+      "size": 1598,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/alerts/index.tsx",
+      "size": 3061,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/alerts/notify-panel.tsx",
+      "size": 1584,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/alerts/rule-editor.tsx",
+      "size": 6441,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/alerts/rule-list.tsx",
+      "size": 1200,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension/attribution-quality-note.tsx",
+      "size": 1039,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension/capability-note.tsx",
+      "size": 765,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension/dimension-page.test.tsx",
+      "size": 1322,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension/dimension-page.tsx",
+      "size": 5016,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension/drilldown-panel.test.tsx",
+      "size": 5571,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension/drilldown-panel.tsx",
+      "size": 4346,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension/rank-bar-card.test.tsx",
+      "size": 5201,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension/rank-bar-card.tsx",
+      "size": 3812,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension/rank-table.test.tsx",
+      "size": 13994,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/dimension/rank-table.tsx",
+      "size": 11850,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/form-styles.ts",
+      "size": 261,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/ipc-boundary.test.ts",
+      "size": 838,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/close-marks.test.ts",
+      "size": 1211,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/close-marks.ts",
+      "size": 795,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/column-menu.tsx",
+      "size": 2238,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/column-resizer.test.ts",
+      "size": 1364,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/column-resizer.tsx",
+      "size": 1508,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/connection-table.test.ts",
+      "size": 3068,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/connection-table.tsx",
+      "size": 7474,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/empty-state.test.tsx",
+      "size": 1697,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/empty-state.tsx",
+      "size": 1788,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/filter-chip.tsx",
+      "size": 1505,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/filter-editor.tsx",
+      "size": 4799,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/filter-workspace.test.tsx",
+      "size": 2125,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/filter-workspace.tsx",
+      "size": 6120,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/hotspot-cards.test.tsx",
+      "size": 2690,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/hotspot-cards.tsx",
+      "size": 4381,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/index.test.tsx",
+      "size": 1225,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/index.tsx",
+      "size": 11499,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/live/live-constraints.test.ts",
+      "size": 2428,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/overview",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/features/overview/caliber-card.tsx",
+      "size": 3871,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/overview/caliber-grid.test.tsx",
+      "size": 4429,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/overview/caliber-grid.tsx",
+      "size": 3408,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/overview/category-table.tsx",
+      "size": 1851,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/overview/index.test.tsx",
+      "size": 719,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/overview/index.tsx",
+      "size": 3137,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/overview/top-columns.tsx",
+      "size": 6996,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/overview/trend-card.tsx",
+      "size": 3590,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/recovery",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/features/recovery/index.tsx",
+      "size": 2808,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/recovery/unavailable.tsx",
+      "size": 568,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/archive-list.tsx",
+      "size": 4362,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/capability-panel.tsx",
+      "size": 2143,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/coverage-panel.tsx",
+      "size": 2286,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/export-panel.tsx",
+      "size": 3582,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/index.tsx",
+      "size": 5292,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/inspect-context.test.ts",
+      "size": 939,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/inspect-context.tsx",
+      "size": 4230,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/query-form.tsx",
+      "size": 3844,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/ranking-table.test.tsx",
+      "size": 2512,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/ranking-table.tsx",
+      "size": 3816,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/share-donut-card.tsx",
+      "size": 4422,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/totals-row.tsx",
+      "size": 3076,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/reports/trend-card.tsx",
+      "size": 3455,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/aggregate-model.test.ts",
+      "size": 5840,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/aggregate-model.ts",
+      "size": 2309,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/aggregate-section.test.tsx",
+      "size": 3069,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/aggregate-section.tsx",
+      "size": 11524,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/caliber-note.tsx",
+      "size": 453,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/index.test.tsx",
+      "size": 3788,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/index.tsx",
+      "size": 2052,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/monitor-section.tsx",
+      "size": 8559,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/report-section.test.ts",
+      "size": 1791,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/report-section.tsx",
+      "size": 8663,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/share-readout.tsx",
+      "size": 4401,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/target-empty.tsx",
+      "size": 735,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/trend-table.test.tsx",
+      "size": 1906,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/residential/trend-table.tsx",
+      "size": 2319,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/about-section.test.ts",
+      "size": 716,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/about-section.tsx",
+      "size": 4398,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/appearance-section.tsx",
+      "size": 5720,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/autostart-boundary.test.ts",
+      "size": 1592,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/connection-section.tsx",
+      "size": 8472,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/danger-section.test.tsx",
+      "size": 1003,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/danger-section.tsx",
+      "size": 2494,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/data-section.tsx",
+      "size": 3346,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/font-picker.test.ts",
+      "size": 714,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/font-picker.tsx",
+      "size": 3765,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/index.tsx",
+      "size": 7927,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/operation-progress.tsx",
+      "size": 1004,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/startup-section.test.tsx",
+      "size": 5004,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/features/settings/startup-section.tsx",
+      "size": 6447,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/layout",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/layout/header.tsx",
+      "size": 3912,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/layout/recovery-pane.tsx",
+      "size": 1851,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/layout/shell-resize-handle.test.tsx",
+      "size": 1135,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/layout/shell.tsx",
+      "size": 1775,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/layout/sidebar.test.tsx",
+      "size": 3329,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/layout/sidebar.tsx",
+      "size": 8946,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/badge.tsx",
+      "size": 963,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/button.tsx",
+      "size": 1806,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/card.tsx",
+      "size": 1365,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/dropdown-menu.tsx",
+      "size": 2545,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/input.tsx",
+      "size": 837,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/popover.tsx",
+      "size": 1328,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/scroll-area.tsx",
+      "size": 1552,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/select.tsx",
+      "size": 5115,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/separator.tsx",
+      "size": 723,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/skeleton.tsx",
+      "size": 298,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/switch.tsx",
+      "size": 1047,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/table.tsx",
+      "size": 2255,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/tabs.tsx",
+      "size": 1632,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/components/ui/tooltip.tsx",
+      "size": 1356,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/dimension-rank-table-layout.test.ts",
+      "size": 2386,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/dimension-rank-table-layout.ts",
+      "size": 3004,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/dto.test.ts",
+      "size": 13275,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/dto.ts",
+      "size": 47211,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/format/live-filter-units.test.ts",
+      "size": 1370,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/live-filter-units.ts",
+      "size": 2711,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/live-hotspot.test.ts",
+      "size": 3433,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/live-hotspot.ts",
+      "size": 3243,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/live-row.test.ts",
+      "size": 2136,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/live-row.ts",
+      "size": 2763,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/overview.test.ts",
+      "size": 1047,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/overview.ts",
+      "size": 576,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/rank.test.ts",
+      "size": 1867,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/rank.ts",
+      "size": 3767,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/report-inspect.test.ts",
+      "size": 2690,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/report-inspect.ts",
+      "size": 2574,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/report-view.test.ts",
+      "size": 6334,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/report-view.ts",
+      "size": 5352,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/format/units.ts",
+      "size": 903,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/hooks/autostart-request.test.ts",
+      "size": 4483,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/autostart-request.ts",
+      "size": 3812,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-alerts.ts",
+      "size": 9852,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-bootstrap.test.ts",
+      "size": 1621,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-bootstrap.ts",
+      "size": 7488,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-dimension-rank-table-layout.ts",
+      "size": 1829,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-live-page.test.ts",
+      "size": 7656,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-live-page.ts",
+      "size": 10415,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-monitor-stream.ts",
+      "size": 3524,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-preferences.ts",
+      "size": 6356,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-report-archive.test.ts",
+      "size": 3314,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-report-archive.ts",
+      "size": 19892,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-report-sort.test.ts",
+      "size": 3604,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-report.test.ts",
+      "size": 6314,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-report.ts",
+      "size": 6996,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-residential-share.test.ts",
+      "size": 3115,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-residential-share.ts",
+      "size": 4097,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-settings.test.ts",
+      "size": 3244,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-settings.ts",
+      "size": 23702,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-sidebar-resize.test.ts",
+      "size": 1262,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/hooks/use-sidebar-resize.ts",
+      "size": 4923,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/i18n",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/i18n/en.ts",
+      "size": 39573,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/i18n/index.test.ts",
+      "size": 1348,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/i18n/index.ts",
+      "size": 1167,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/i18n/zh.ts",
+      "size": 37442,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/ipc/decoder.test.ts",
+      "size": 5031,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc/decoder.ts",
+      "size": 8587,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc/live-empty.test.ts",
+      "size": 2886,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc/live-empty.ts",
+      "size": 2727,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc/live-session.test.ts",
+      "size": 6107,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc/live-session.ts",
+      "size": 6956,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc/reducer.test.ts",
+      "size": 4998,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc/reducer.ts",
+      "size": 3665,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc/routes.test.ts",
+      "size": 1812,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc/secret-field.test.ts",
+      "size": 937,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/ipc/secret-field.ts",
+      "size": 2410,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/lib",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/lib/health.ts",
+      "size": 696,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/lib/no-remote-assets.test.ts",
+      "size": 2129,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/lib/time-range.test.ts",
+      "size": 2961,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/lib/time-range.ts",
+      "size": 1579,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/lib/utils.ts",
+      "size": 1071,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/live-filter-workspace.test.ts",
+      "size": 3068,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/live-filter-workspace.ts",
+      "size": 2331,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/live-table-layout.test.ts",
+      "size": 3222,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/live-table-layout.ts",
+      "size": 4961,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/live-table-sort.test.ts",
+      "size": 1003,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/live-table-sort.ts",
+      "size": 980,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/main.tsx",
+      "size": 433,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/nav-icons.ts",
+      "size": 1402,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/nav-tints.test.ts",
+      "size": 595,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/nav-tints.ts",
+      "size": 632,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/rank-sort.test.ts",
+      "size": 1370,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/rank-sort.ts",
+      "size": 1012,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/shell-width.test.ts",
+      "size": 984,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/shell-width.ts",
+      "size": 918,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/styles",
+      "size": 0,
+      "type": "directory"
+    },
+    {
+      "path": "residential-monitor/src/styles/globals.css",
+      "size": 11470,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/theme.test.ts",
+      "size": 2137,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/theme.ts",
+      "size": 3078,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/src/vite-env.d.ts",
+      "size": 302,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/tsconfig.json",
+      "size": 537,
+      "type": "file"
+    },
+    {
+      "path": "residential-monitor/vite.config.ts",
+      "size": 1558,
+      "type": "file"
+    }
+  ],
+  "extract_method": "validated regular files/directories; exclusive writes; no links; confined to fresh baseline"
+}

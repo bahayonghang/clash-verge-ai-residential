@@ -1,0 +1,597 @@
+{
+  "active": 250,
+  "database": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261002-4f8a8c68\\corpus-a250-30d\\monitor.sqlite3",
+  "database_sha256_before": "da44a49a3701025f1aa321471a5c6ab1fc066126c451d26cf865d2d6ddd7e900",
+  "database_bytes": 1697222656,
+  "marker_sha256": "EFB0A47974D37DCBCEE0F744F2A85FE8B0239484262BF82BCCB79BD5B055730D",
+  "started_utc": "2026-10-04T02:46:13.211767+00:00",
+  "read_only_uri": true,
+  "sqlite_version": "3.50.4",
+  "oracles": {
+    "host-30d": {
+      "sql": "select coalesce(nullif(s.host,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29786400,
+        29829600,
+        20
+      ],
+      "status": "PASS",
+      "expected_rows": [
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+          188990,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-800.example.test",
+          189005,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-211.example.test",
+          189020,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-242.example.test",
+          189050,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-304.example.test",
+          188980,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-31.example.test",
+          188970,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-335.example.test",
+          189010,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-366.example.test",
+          189040,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-428.example.test",
+          188970,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-459.example.test",
+          189000,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-490.example.test",
+          189030,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-552.example.test",
+          188960,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-583.example.test",
+          188990,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-614.example.test",
+          189020,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-62.example.test",
+          189000,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-676.example.test",
+          188950,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-707.example.test",
+          188980,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-738.example.test",
+          189010,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-520.example.test",
+          188950,
+          634620,
+          2700,
+          810000
+        ],
+        [
+          "host-148.example.test",
+          188980,
+          634620,
+          2700,
+          810000
+        ]
+      ],
+      "rows": [
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+          188990,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-800.example.test",
+          189005,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-211.example.test",
+          189020,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-242.example.test",
+          189050,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-304.example.test",
+          188980,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-31.example.test",
+          188970,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-335.example.test",
+          189010,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-366.example.test",
+          189040,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-428.example.test",
+          188970,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-459.example.test",
+          189000,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-490.example.test",
+          189030,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-552.example.test",
+          188960,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-583.example.test",
+          188990,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-614.example.test",
+          189020,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-62.example.test",
+          189000,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-676.example.test",
+          188950,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-707.example.test",
+          188980,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-738.example.test",
+          189010,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-520.example.test",
+          188950,
+          634620,
+          2700,
+          810000
+        ],
+        [
+          "host-148.example.test",
+          188980,
+          634620,
+          2700,
+          810000
+        ]
+      ],
+      "wall_seconds": 13.35097709999991,
+      "shape_ok": true,
+      "values_ok": true
+    },
+    "host-1d": {
+      "sql": "select coalesce(nullif(s.host,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29828160,
+        29829600,
+        20
+      ],
+      "status": "PASS",
+      "expected_rows": null,
+      "rows": [
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+          6285,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-800.example.test",
+          6305,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-211.example.test",
+          6325,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-242.example.test",
+          6300,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-304.example.test",
+          6315,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-31.example.test",
+          6280,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-335.example.test",
+          6290,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-366.example.test",
+          6330,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-428.example.test",
+          6280,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-459.example.test",
+          6320,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-490.example.test",
+          6295,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-552.example.test",
+          6310,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-583.example.test",
+          6285,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-614.example.test",
+          6325,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-62.example.test",
+          6320,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-676.example.test",
+          6275,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-707.example.test",
+          6315,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "host-738.example.test",
+          6290,
+          21285,
+          90,
+          27000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-460.example.test",
+          6315,
+          21270,
+          90,
+          27000
+        ],
+        [
+          "host-150.example.test",
+          6305,
+          21270,
+          90,
+          27000
+        ]
+      ],
+      "wall_seconds": 0.3989284999997835,
+      "shape_ok": true,
+      "values_ok": true
+    },
+    "network-30d": {
+      "sql": "select coalesce(nullif(d.value,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk left join dimension_dict d on d.dimension_kind='network' and d.dimension_id=a.network_id where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29786400,
+        29829600,
+        100
+      ],
+      "status": "PASS",
+      "expected_rows": [
+        [
+          "network-4",
+          37800005,
+          126899930,
+          540000,
+          2592000
+        ],
+        [
+          "network-3",
+          37799975,
+          126899875,
+          540000,
+          2592000
+        ],
+        [
+          "network-2",
+          37800010,
+          126899820,
+          540000,
+          2592000
+        ]
+      ],
+      "rows": [
+        [
+          "network-4",
+          37800005,
+          126899930,
+          540000,
+          2592000
+        ],
+        [
+          "network-3",
+          37799975,
+          126899875,
+          540000,
+          2592000
+        ],
+        [
+          "network-2",
+          37800010,
+          126899820,
+          540000,
+          2592000
+        ]
+      ],
+      "wall_seconds": 11.511563399999432,
+      "shape_ok": true,
+      "values_ok": true
+    }
+  },
+  "checks": {
+    "quick_check": {
+      "actual": [
+        [
+          "ok"
+        ]
+      ],
+      "expected": [
+        [
+          "ok"
+        ]
+      ]
+    },
+    "schema_version": {
+      "actual": [
+        5
+      ],
+      "expected": [
+        5
+      ]
+    },
+    "journal_mode": {
+      "actual": [
+        "wal"
+      ],
+      "expected": [
+        "wal"
+      ]
+    },
+    "migration_identity": {
+      "actual": [
+        "ledger-lifecycle-v5-layout3"
+      ],
+      "expected": [
+        "ledger-lifecycle-v5-layout3"
+      ]
+    },
+    "row_counts_expected": {
+      "actual": {
+        "minutes": 10800000,
+        "sessions": 2160000,
+        "chains": 6480000,
+        "receipts": 2592000
+      },
+      "expected": {
+        "chains": 6480000,
+        "minutes": 10800000,
+        "receipts": 2592000,
+        "sessions": 2160000
+      }
+    },
+    "row_counts_original": {
+      "actual": {
+        "minutes": 10800000,
+        "sessions": 2160000,
+        "chains": 6480000,
+        "receipts": 2592000
+      },
+      "expected": {
+        "chains": 6480000,
+        "minutes": 10800000,
+        "receipts": 2592000,
+        "sessions": 2160000
+      }
+    }
+  },
+  "counts": {
+    "minutes": 10800000,
+    "sessions": 2160000,
+    "chains": 6480000,
+    "receipts": 2592000
+  },
+  "status": "PASS",
+  "database_sha256_after": "da44a49a3701025f1aa321471a5c6ab1fc066126c451d26cf865d2d6ddd7e900",
+  "wal_bytes_after": 0,
+  "postflight_status": "PASS"
+}

@@ -1,0 +1,38 @@
+{
+  "argv": [
+    "cargo",
+    "+1.98.0",
+    "build",
+    "--locked",
+    "--release",
+    "--target",
+    "x86_64-pc-windows-msvc",
+    "--manifest-path",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-approved-baseline-20260930-50086853fbcc43bea6015946489e3006\\source\\residential-monitor\\src-tauri\\Cargo.toml",
+    "--target-dir",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\baseline-target",
+    "--bin",
+    "monitor-bench"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:15:12.189195+00:00",
+  "status": "finished",
+  "environment_overrides": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "exit_code": 0,
+  "finished_utc": "2026-09-30T15:15:43.080663+00:00",
+  "wall_seconds": 30.890631099999155,
+  "logs": {
+    "stdout": {
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzip": "final-baseline-build.stdout.raw.gz",
+      "readable": "final-baseline-build.stdout.log"
+    },
+    "stderr": {
+      "raw_sha256": "c2e45023674a6d99a4336fca34d7831dfcfa8e9e3c6dfd922dd234fe1b5f3594",
+      "gzip": "final-baseline-build.stderr.raw.gz",
+      "readable": "final-baseline-build.stderr.log"
+    }
+  }
+}

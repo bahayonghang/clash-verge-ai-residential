@@ -1,0 +1,154 @@
+--- raw_fold-before.rs
++++ residential-monitor/src-tauri/src/c3/raw_fold.rs
+@@ -87,36 +87,10 @@
+ }
+ 
+ struct Dict {
+-    process: HashMap<i64, DictValue>,
+-    network: HashMap<i64, DictValue>,
+-    category: HashMap<i64, DictValue>,
+-    rule: HashMap<i64, DictValue>,
+-}
+-
+-struct DictValue {
+-    value: String,
+-    interned: Option<u32>,
+-}
+-
+-impl DictValue {
+-    fn intern(&mut self, pool: &mut Pool, empty_identity: Option<u32>) -> u32 {
+-        if let Some(identity) = self.interned {
+-            return identity;
+-        }
+-        let identity = if self.value.is_empty() {
+-            empty_identity.unwrap_or_else(|| pool.intern(""))
+-        } else {
+-            pool.intern(&self.value)
+-        };
+-        self.interned = Some(identity);
+-        identity
+-    }
+-}
+-
+-#[derive(Clone, Copy)]
+-struct ChainIdentities {
+-    chain: Option<u32>,
+-    rule_override: Option<u32>,
++    process: HashMap<i64, String>,
++    network: HashMap<i64, String>,
++    category: HashMap<i64, String>,
++    rule: HashMap<i64, String>,
+ }
+ 
+ pub(crate) struct FoldedRaw {
+@@ -142,11 +116,9 @@
+     let residential_only = query.filters.category.as_deref() == Some(RESIDENTIAL_ACCOUNTING_FILTER);
+     let span = end_min.saturating_sub(start_min);
+     let window_scoped = span <= WINDOW_SCOPED_PROJECTION_MAX_MINUTES;
++    let dict = load_dict(connection)?;
+     let mut pool = Pool::new();
+     let unknown = pool.intern(UNKNOWN_IDENTITY);
+-    let direct = pool.intern("DIRECT");
+-    let mut dict = load_dict(connection)?;
+-    let mut chains: HashMap<u32, ChainIdentities> = HashMap::new();
+     let mut sessions = HashMap::new();
+     let sql = raw_session_projection_sql(residential_only, window_scoped);
+     let mut statement = connection.prepare(&sql).map_err(map_sqlite)?;
+@@ -179,31 +151,27 @@
+                 }
+             }
+         };
+-        let (process_identity, process_missing) =
+-            identity_from_dict(&mut pool, unknown, process_id, &mut dict.process);
+-        let (network_identity, network_missing) =
+-            identity_from_dict(&mut pool, unknown, network_id, &mut dict.network);
+-        let (category_identity, category_missing) =
+-            identity_from_dict(&mut pool, unknown, category_id, &mut dict.category);
+-        let derived = chain_key.map(|id| {
+-            *chains.entry(id).or_insert_with(|| {
+-                let chain = chain_identity(Some(pool.get(id))).map(|value| pool.intern(&value));
+-                let rule_override =
+-                    last_chain_hop(Some(pool.get(id))).map(|value| pool.intern(&value));
+-                ChainIdentities {
+-                    chain,
+-                    rule_override,
+-                }
+-            })
+-        });
+-        let rule_identity = derived
+-            .and_then(|value| value.rule_override)
+-            .or_else(|| {
+-                let value = dict.rule.get_mut(&rule_id?)?;
+-                Some(value.intern(&mut pool, None))
+-            })
+-            .unwrap_or(direct);
+-        let chain_identity = derived.and_then(|value| value.chain);
++        let (process_identity, process_missing) = identity_from_dict(
++            &mut pool,
++            unknown,
++            process_id,
++            dict.process.get(&process_id.unwrap_or(i64::MIN)),
++        );
++        let (network_identity, network_missing) = identity_from_dict(
++            &mut pool,
++            unknown,
++            network_id,
++            dict.network.get(&network_id.unwrap_or(i64::MIN)),
++        );
++        let (category_identity, category_missing) = identity_from_dict(
++            &mut pool,
++            unknown,
++            category_id,
++            dict.category.get(&category_id.unwrap_or(i64::MIN)),
++        );
++        let chain_text = chain_key.map(|id| pool.get(id).to_string());
++        let rule_identity = pool.intern(&rule_name(&dict, rule_id, chain_text.as_deref()));
++        let chain_identity = chain_identity(chain_text.as_deref()).map(|value| pool.intern(&value));
+         let slot = u32::try_from(sessions.len())
+             .map_err(|_| ReportError::Failed("session projection overflow"))?;
+         sessions.insert(
+@@ -780,11 +748,25 @@
+     pool: &mut Pool,
+     unknown: u32,
+     id: Option<i64>,
+-    values: &mut HashMap<i64, DictValue>,
++    value: Option<&String>,
+ ) -> (u32, bool) {
+-    id.and_then(|id| values.get_mut(&id))
+-        .map(|value| (value.intern(pool, Some(unknown)), false))
+-        .unwrap_or((unknown, true))
++    if id.is_none() {
++        return (unknown, true);
++    }
++    match value {
++        None => (unknown, true),
++        Some(value) if value.is_empty() => (unknown, false),
++        Some(value) => (pool.intern(value), false),
++    }
++}
++
++fn rule_name(dict: &Dict, rule_id: Option<i64>, chain_key: Option<&str>) -> String {
++    if let Some(hop) = last_chain_hop(chain_key) {
++        return hop;
++    }
++    rule_id
++        .and_then(|id| dict.rule.get(&id).cloned())
++        .unwrap_or_else(|| "DIRECT".to_string())
+ }
+ 
+ fn load_dict(connection: &Connection) -> Result<Dict, ReportError> {
+@@ -815,13 +797,7 @@
+             "rule" => &mut dict.rule,
+             _ => continue,
+         };
+-        slot.insert(
+-            id,
+-            DictValue {
+-                value,
+-                interned: None,
+-            },
+-        );
++        slot.insert(id, value);
+     }
+     Ok(dict)
+ }

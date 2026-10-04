@@ -1,0 +1,7 @@
+{
+  "exitCode": 0,
+  "command": "npm --prefix residential-monitor ci",
+  "log": "monitor-ci.log",
+  "finishedAt": "2026-09-30T07:27:36.8961317-05:00",
+  "startedAt": "2026-09-30T07:27:22.9842622-05:00"
+}

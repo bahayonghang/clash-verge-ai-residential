@@ -1,0 +1,83 @@
+{
+  "previous_state": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261002-4f8a8c68\\state.json",
+  "previous_state_sha256": "F53BCF2C81CE7BA6FCA38A4E477BCF8FC76E4A0005E18838B995F9B8CC5A0B02",
+  "changed": {
+    "residential-monitor/src-tauri/src/bench.rs": {
+      "previous": {
+        "bytes": 16580,
+        "sha256": "B65BCD0B854BAE926AFADCE5CF7DE097517CBC7D2EDF1BE025C625FF9A4FF204"
+      },
+      "current": {
+        "bytes": 16594,
+        "sha256": "121CB2C506C54A0CDCAB6A5B6890A265D6CC9B4B7C964EC66B4BAA2D87A37F98"
+      }
+    },
+    "residential-monitor/src-tauri/src/bench/facade.rs": {
+      "previous": {
+        "bytes": 27527,
+        "sha256": "ED069D6B822732E3E8B91E1B3ED4A0C9941C676D5415DE35A220ED443009AB4A"
+      },
+      "current": {
+        "bytes": 30454,
+        "sha256": "B95DDC76B4AF6A26A5A2ED82A0B070A141117B480B8E6C30454ED267AC339460"
+      }
+    },
+    "residential-monitor/src-tauri/src/bench/heap.rs": {
+      "previous": null,
+      "current": {
+        "bytes": 3494,
+        "sha256": "9677F4822CA67DD7615C9CF3A51693136A1A8E09255A87EF5A40386CF0771EA6"
+      }
+    },
+    "residential-monitor/src-tauri/src/bin/monitor-bench.rs": {
+      "previous": {
+        "bytes": 13680,
+        "sha256": "1589AFE4164162CBB08C5EAC15358FF7472662138600E28F18FF809262C76EA2"
+      },
+      "current": {
+        "bytes": 13846,
+        "sha256": "2E181437144CA02DE6112A338B1E15C1ABEE6296FE79C5FEFB45E3148A98A1F8"
+      }
+    },
+    "residential-monitor/src-tauri/src/c3/retention_day.rs": {
+      "previous": {
+        "bytes": 46270,
+        "sha256": "B5B89484C8D4DF88791321B3777CDB1513425EC5886B7C8FC0FCB529586AED50"
+      },
+      "current": {
+        "bytes": 55154,
+        "sha256": "3C8EDA7D7D81D74283E44E198B8CF03E6FDBC33EE9344F243D4B51B3CF9B12D3"
+      }
+    },
+    "residential-monitor/src-tauri/src/c3/schema.rs": {
+      "previous": {
+        "bytes": 15651,
+        "sha256": "C6265C710FF8CFF941B437CC4376ED3A1B42E34E2C7F4CC9F14FFA297D41BD65"
+      },
+      "current": {
+        "bytes": 15751,
+        "sha256": "958DE605E9901ED925F7147227FC8392D3832A0137F728FE33F9430E6C627873"
+      }
+    },
+    "residential-monitor/src-tauri/src/storage.rs": {
+      "previous": {
+        "bytes": 111648,
+        "sha256": "A7099546F66AF36BC00E4CDE5CEA68212DAF6607FBB017AD2FA8CEF225C454C1"
+      },
+      "current": {
+        "bytes": 115446,
+        "sha256": "A1D2DE441A9603A010693FCB083B13B8725B88A6ED2184886DC7C01D9DDC44FD"
+      }
+    }
+  },
+  "approved_scope": [
+    "residential-monitor/src-tauri/src/bench.rs",
+    "residential-monitor/src-tauri/src/bench/facade.rs",
+    "residential-monitor/src-tauri/src/bench/heap.rs",
+    "residential-monitor/src-tauri/src/bin/monitor-bench.rs",
+    "residential-monitor/src-tauri/src/c0_contract.rs",
+    "residential-monitor/src-tauri/src/c3/retention_day.rs",
+    "residential-monitor/src-tauri/src/c3/schema.rs",
+    "residential-monitor/src-tauri/src/storage.rs"
+  ]
+}

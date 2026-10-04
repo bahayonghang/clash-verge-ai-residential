@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "回归与所有权"}
+{"file": ".trellis/tasks/09-07-js-routing-egress-optimization/research/routing-analysis.md", "reason": "问题证据和最小范围"}
+{"file": ".trellis/tasks/09-07-js-routing-egress-optimization/research/validation.md", "reason": "行为矩阵及现场证据边界"}

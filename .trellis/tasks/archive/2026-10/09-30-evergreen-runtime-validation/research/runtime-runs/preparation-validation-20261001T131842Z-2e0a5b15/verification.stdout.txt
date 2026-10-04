@@ -1,0 +1,372 @@
+{
+  "synthetic_only": true,
+  "clients_started": 0,
+  "real_worktree_snapshots": 0,
+  "capture_sha256": "392b2f4c211c03f0bb9479dcbb5e6804660a8b3a82f31c618ef814d28036cf27",
+  "checks": [
+    {
+      "case": "private_path:fixture.local.toml",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.toml.bak",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.toml.backup20260930",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.toml.2026-09-30",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.toml (1)",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.toml - Copy",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.toml~",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.toml.tar.gz",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.js",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.js.bak-20260930T120000Z",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.js.bak-20260930.gz",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.js.zip",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.yaml",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.yaml.old",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.yml.save",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.yml.7z",
+      "pass": true
+    },
+    {
+      "case": "private_path:FIXTURE.LOCAL.TOML.BAK",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.sqlite3",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.sqlite3.bak",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.sqlite3.gz",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.sqlite3-wal.bak.gz",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.sqlite3-shm.old",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.sqlite-journal.zip",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.db.backup.20260930",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.db3.xz",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.s3db.zst",
+      "pass": true
+    },
+    {
+      "case": "private_path:auth.json.bak",
+      "pass": true
+    },
+    {
+      "case": "private_path:.credentials.json.tar.gz",
+      "pass": true
+    },
+    {
+      "case": "private_path:credentials.yaml.old",
+      "pass": true
+    },
+    {
+      "case": "private_path:token.json.zip",
+      "pass": true
+    },
+    {
+      "case": "private_path:api-key.txt.backup",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.key.bak",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.p12.gz",
+      "pass": true
+    },
+    {
+      "case": "private_path:id_ed25519.old",
+      "pass": true
+    },
+    {
+      "case": "private_path:.git-credentials.bak",
+      "pass": true
+    },
+    {
+      "case": "private_path:.npmrc.gz",
+      "pass": true
+    },
+    {
+      "case": "private_path:history.jsonl.zip",
+      "pass": true
+    },
+    {
+      "case": "private_path:.env.local.bak.gz",
+      "pass": true
+    },
+    {
+      "case": "private_path:clash-verge-ai-residential.local.toml.example",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.yaml.example",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.yml.example",
+      "pass": true
+    },
+    {
+      "case": "private_path:fixture.local.js.example",
+      "pass": true
+    },
+    {
+      "case": "private_path:tests/fixture.local.js.test.js",
+      "pass": true
+    },
+    {
+      "case": "private_path:types/credentials.json.ts",
+      "pass": true
+    },
+    {
+      "case": "private_path:src/auth.rs",
+      "pass": true
+    },
+    {
+      "case": "private_path:src/sqlite3.rs",
+      "pass": true
+    },
+    {
+      "case": "private_path:scripts/build-inputs.js",
+      "pass": true
+    },
+    {
+      "case": "private_path:scripts/check-local-toml.js",
+      "pass": true
+    },
+    {
+      "case": "private_path:id_ed25519.pub",
+      "pass": true
+    },
+    {
+      "case": "private_path:auth.json.example",
+      "pass": true
+    },
+    {
+      "case": "ordinary_language:authorization=never",
+      "pass": true
+    },
+    {
+      "case": "ordinary_language:approval_policy=never",
+      "pass": true
+    },
+    {
+      "case": "ordinary_language:普通授权范围与权限说明",
+      "pass": true
+    },
+    {
+      "case": "synthetic_auth_header",
+      "pass": true
+    },
+    {
+      "case": "synthetic_auth_header",
+      "pass": true
+    },
+    {
+      "case": "single_prompt:parent:claude",
+      "pass": true
+    },
+    {
+      "case": "no_model_override:parent:claude",
+      "pass": true
+    },
+    {
+      "case": "single_prompt:parent:codex",
+      "pass": true
+    },
+    {
+      "case": "no_model_override:parent:codex",
+      "pass": true
+    },
+    {
+      "case": "single_prompt:parent:grok",
+      "pass": true
+    },
+    {
+      "case": "no_model_override:parent:grok",
+      "pass": true
+    },
+    {
+      "case": "single_prompt:parent:kimi",
+      "pass": true
+    },
+    {
+      "case": "no_model_override:parent:kimi",
+      "pass": true
+    },
+    {
+      "case": "single_prompt:parent:omp",
+      "pass": true
+    },
+    {
+      "case": "no_model_override:parent:omp",
+      "pass": true
+    },
+    {
+      "case": "single_prompt:child:claude",
+      "pass": true
+    },
+    {
+      "case": "no_model_override:child:claude",
+      "pass": true
+    },
+    {
+      "case": "single_prompt:child:codex",
+      "pass": true
+    },
+    {
+      "case": "no_model_override:child:codex",
+      "pass": true
+    },
+    {
+      "case": "single_prompt:child:grok",
+      "pass": true
+    },
+    {
+      "case": "no_model_override:child:grok",
+      "pass": true
+    },
+    {
+      "case": "single_prompt:child:kimi",
+      "pass": true
+    },
+    {
+      "case": "no_model_override:child:kimi",
+      "pass": true
+    },
+    {
+      "case": "single_prompt:child:omp",
+      "pass": true
+    },
+    {
+      "case": "no_model_override:child:omp",
+      "pass": true
+    },
+    {
+      "case": "missing_codex_one_batch",
+      "pass": true
+    },
+    {
+      "case": "missing_codex_five_independent_receipts",
+      "pass": true
+    },
+    {
+      "case": "missing_codex_only_expected_launches",
+      "pass": true
+    },
+    {
+      "case": "missing_codex_blocked_states",
+      "pass": true
+    },
+    {
+      "case": "changed_codex_one_batch",
+      "pass": true
+    },
+    {
+      "case": "changed_codex_five_independent_receipts",
+      "pass": true
+    },
+    {
+      "case": "changed_codex_only_expected_launches",
+      "pass": true
+    },
+    {
+      "case": "changed_codex_blocked_states",
+      "pass": true
+    },
+    {
+      "case": "missing_omp_dependency_one_batch",
+      "pass": true
+    },
+    {
+      "case": "missing_omp_dependency_five_independent_receipts",
+      "pass": true
+    },
+    {
+      "case": "missing_omp_dependency_only_expected_launches",
+      "pass": true
+    },
+    {
+      "case": "missing_omp_dependency_blocked_states",
+      "pass": true
+    },
+    {
+      "case": "unverified_codex_one_batch",
+      "pass": true
+    },
+    {
+      "case": "unverified_codex_five_independent_receipts",
+      "pass": true
+    },
+    {
+      "case": "unverified_codex_only_expected_launches",
+      "pass": true
+    },
+    {
+      "case": "unverified_codex_blocked_states",
+      "pass": true
+    }
+  ]
+}

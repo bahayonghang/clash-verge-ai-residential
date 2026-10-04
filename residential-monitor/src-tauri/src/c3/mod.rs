@@ -6,6 +6,7 @@ pub mod archive;
 pub mod backup;
 pub mod export;
 pub mod query;
+pub mod raw_fold;
 pub mod retention;
 pub mod rule_name;
 pub mod schema;
@@ -26,7 +27,7 @@ pub use query::{
     RAW_RETAIN_DAYS_DEFAULT, RAW_RETAIN_DAYS_MAX, REPORT_DEADLINE_MS, TOKEN_TTL_SECS,
 };
 pub use retention::RetentionService;
-pub use service::{run_uncached, ReportService};
+pub use service::{poll_interrupt, run_uncached, ReportService};
 pub use share::{query_residential_share, query_residential_share_on, ResidentialShare};
 pub use snapshot::ReportSnapshotStore;
 pub use space::SpaceBudget;

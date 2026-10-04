@@ -1,0 +1,12 @@
+{
+  "candidate_source_manifest_sha256": "6B37EA0ADE0CB1DE151D0C32E1B6ED06E9F25578BED26E4709649883D8A27CE3",
+  "candidate_retention_test_exe_sha256": "CDC6701F08CE90F8F8C8E3540617D361A7D83E039490310AF946C0CD04C5819C",
+  "schema_checksum": "ledger-lifecycle-v5-layout3",
+  "product_source": "same as cleanup1; only bench/corpus.rs driver retry/evidence changed",
+  "product_gate": "cleanup1 full just ci passed; retry harness 3 focused tests passed and1ignored; finalgate pending",
+  "release_test_build_seconds": 19.54,
+  "fixture_provenance": "../performance-20260919-cleanup1/a250-resume-provenance.json",
+  "retry_boundary": "only production-classified deadline/busy, not cancelled, writer autocommit, each attempt consumes original max_chunks",
+  "wall_time_scope": "accelerated fixture driver, not production60s error-backoff throughput",
+  "build_utc": "2026-09-19T13:07:30.5782096Z"
+}

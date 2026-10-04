@@ -1,0 +1,36 @@
+{
+  "status": "finished",
+  "powershell_pid": 42104,
+  "started_utc": "2026-10-01T12:38:03.2952328Z",
+  "command": "& .trellis/tasks/09-30-evergreen-performance-evidence/research/run-primary-recovery-20261001.ps1",
+  "wrapper_argv": [
+    "C:\\Program Files\\Python314\\python.exe",
+    "-X",
+    "utf8",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\run-live-recorded.py",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\formal-primary-recovery-20261001.driver.json",
+    "C:\\Program Files\\Python314\\python.exe",
+    "-X",
+    "utf8",
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\run-formal-replay.py",
+    "--candidate-directory",
+    "candidate-retained-20260930",
+    "--output-directory",
+    "formal-primary-recovery-20261001",
+    "--set",
+    "primary"
+  ],
+  "observed_outer_exit_code": 1,
+  "finished_utc": "2026-10-01T13:12:18.0090474Z",
+  "wall_seconds": 2054.7138146,
+  "wrapper_exit_code": 3,
+  "intended_outer_exit_code": 3,
+  "outer_exit_observation": {
+    "tool": "functions.exec -> tools.write_stdin",
+    "session_id": 58219,
+    "chunk_id": "69c01d",
+    "exit_code": 1,
+    "observed_utc": "2026-10-01T13:14:40.926468+00:00"
+  },
+  "exit_discrepancy": "原因未查明；wrapper及预定外层exit为3，执行工具实际报告外层exit为1。独立保留。"
+}

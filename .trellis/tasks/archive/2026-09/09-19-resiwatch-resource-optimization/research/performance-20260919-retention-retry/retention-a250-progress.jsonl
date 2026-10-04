@@ -1,0 +1,3 @@
+{"observed_utc": "2026-09-19T13:09:37.144779+00:00", "job": null, "page_count": 414454, "freelist_count": 70915, "db_bytes": 1697603584, "wal_bytes": 8141152}
+{"observed_utc": "2026-09-19T13:09:58.165448+00:00", "job": null, "cleanup_cursors": {"receipt_cleanup_cursor": "0", "session_cleanup_cursor": "873000"}, "page_count": 414454, "freelist_count": 70915, "db_bytes": 1697603584, "wal_bytes": 8141152}
+{"observed_utc": "2026-09-19T13:11:38.129321+00:00", "job": null, "cleanup_cursors": {"receipt_cleanup_cursor": "0", "session_cleanup_cursor": "381000"}, "page_count": 414454, "freelist_count": 70915, "db_bytes": 1697603584, "wal_bytes": 8141152}

@@ -1,0 +1,115 @@
+{
+  "comparisons": [
+    {
+      "name": "metadata-a1000",
+      "fixture_hash": "d996698b5a1c60564c2b3affd0e9845b75440eb862f942a0eb5df9343d2bd40e",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.953125,
+        1.015625
+      ],
+      "cpu_reduction_percent": -6.557377049180335,
+      "sqlite_xwrite_bytes": [
+        7880872,
+        9280712
+      ],
+      "sqlite_xwrite_reduction_percent": -17.762501408473575,
+      "native_private_p95_bytes": [
+        11075584.0,
+        13201408.0
+      ],
+      "ingest_p95_ms": [
+        28.6268,
+        31.421200000000002
+      ],
+      "ingest_max_ms": [
+        34.6234,
+        33.259
+      ],
+      "report_first_reader_p95_ms": [
+        1.2554,
+        1.3878
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "metadata-a250",
+      "fixture_hash": "2ac3520c826064ec990044729e4f184bcbae4f9ce38e16aa90a1507c295dc8a6",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.421875,
+        0.46875
+      ],
+      "cpu_reduction_percent": -11.111111111111116,
+      "sqlite_xwrite_bytes": [
+        3145360,
+        3441712
+      ],
+      "sqlite_xwrite_reduction_percent": -9.421878576697097,
+      "native_private_p95_bytes": [
+        7544832.0,
+        7995392.0
+      ],
+      "ingest_p95_ms": [
+        11.0253,
+        14.0672
+      ],
+      "ingest_max_ms": [
+        12.664299999999999,
+        14.3237
+      ],
+      "report_first_reader_p95_ms": [
+        1.2789,
+        1.4755
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "metadata-a50",
+      "fixture_hash": "f05498752ce3081cc0c3167eec023eeb26fefb53c1a7abfc5787489b7a3d4b38",
+      "virtual_time": false,
+      "cpu_seconds": [
+        0.453125,
+        0.015625
+      ],
+      "cpu_reduction_percent": 96.55172413793103,
+      "sqlite_xwrite_bytes": [
+        1483200,
+        1730400
+      ],
+      "sqlite_xwrite_reduction_percent": -16.666666666666675,
+      "native_private_p95_bytes": [
+        5918720.0,
+        5910528.0
+      ],
+      "ingest_p95_ms": [
+        10.077300000000001,
+        9.3507
+      ],
+      "ingest_max_ms": [
+        11.1418,
+        10.0031
+      ],
+      "report_first_reader_p95_ms": [
+        1.1789,
+        1.4909999999999999
+      ],
+      "frame_budget_overruns": [
+        0,
+        0
+      ]
+    }
+  ],
+  "primary_three_rounds_complete": false,
+  "primary_cpu_reduction_percent": null,
+  "primary_sqlite_xwrite_reduction_percent": null,
+  "all_application_file_writes_gate": "UNVERIFIED: SQLite xWrite is only a subset",
+  "native_plus_webview_memory_gate": "UNVERIFIED: this harness has no WebView",
+  "collector_background_worker_gate": "UNVERIFIED: synchronous facade/archive driver"
+}

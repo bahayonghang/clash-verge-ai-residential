@@ -1,0 +1,41 @@
+{
+  "argv": [
+    "cargo",
+    "+1.98.0",
+    "clippy",
+    "--locked",
+    "--release",
+    "--target",
+    "x86_64-pc-windows-msvc",
+    "--manifest-path",
+    "residential-monitor/src-tauri/Cargo.toml",
+    "--target-dir",
+    "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-t05-20260930-q1lnvpml\\candidate-target",
+    "--workspace",
+    "--all-targets",
+    "--",
+    "-D",
+    "warnings"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "started_utc": "2026-09-30T15:13:51.110105+00:00",
+  "status": "finished",
+  "environment_overrides": {
+    "RUSTUP_AUTO_INSTALL": "0"
+  },
+  "exit_code": 0,
+  "finished_utc": "2026-09-30T15:13:58.570550+00:00",
+  "wall_seconds": 7.459724800000004,
+  "logs": {
+    "stdout": {
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzip": "final-release-clippy.stdout.raw.gz",
+      "readable": "final-release-clippy.stdout.log"
+    },
+    "stderr": {
+      "raw_sha256": "6700049c11122243ef5f7d42c21d0d08ef7f20dfa9f04be268cfc17c5f69e668",
+      "gzip": "final-release-clippy.stderr.raw.gz",
+      "readable": "final-release-clippy.stderr.log"
+    }
+  }
+}

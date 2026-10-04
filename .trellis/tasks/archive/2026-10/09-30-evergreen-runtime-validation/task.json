@@ -1,0 +1,89 @@
+{
+  "id": "evergreen-runtime-validation",
+  "name": "evergreen-runtime-validation",
+  "title": "常青审查 T06：补齐五工具与当前提交运行证据",
+  "description": "补齐当前候选版本在五工具中的实际规则加载、阶段控制和委派证据，区分本地与 hosted 验收。",
+  "status": "completed",
+  "dev_type": null,
+  "scope": "harness-audit",
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-09-30",
+  "completedAt": "2026-10-04",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "09-30-evergreen-five-harness-audit",
+  "relatedFiles": [
+    "docs/agents/harnesses.md",
+    ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture-operational.py",
+    ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-kimi-acp.py",
+    ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-parent-prompt.txt",
+    ".trellis/tasks/09-30-evergreen-runtime-validation/research/operational-verification.py"
+  ],
+  "notes": "用户于 2026-09-30 批准项目内实施。按父任务顺序执行；提交、归档、远端操作、全局配置和真实私有数据操作仍不在授权内。",
+  "meta": {
+    "audit_item": "T06",
+    "approval": "approved-project-scope",
+    "source_sha": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+    "approval_date": "2026-09-30",
+    "approval_text": "批准实施",
+    "verification_runs": [
+      {
+        "run_id": "runtime-evidence-20261002",
+        "recorded_utc": "2026-10-02T14:09:04.782453+00:00",
+        "runtime_status": "CLOSED_NO_FURTHER_CLIENTS",
+        "acceptance_status": "INCOMPLETE; NO_RUNTIME_PASS",
+        "source_snapshot_id": "9a31d79c85465e3213e6f364f670ebac4a45911897e385c74e5909a740778cf9",
+        "head_is_baseline_only": "d3a25b4164343f5cbeab8a51efe1a1d3974cdf4a",
+        "snapshot_retired_after_runtime_release": true,
+        "parent_attempts": 5,
+        "child_attempts": 2,
+        "child_routes_not_run": [
+          "claude: API400 same-route BLOCKED",
+          "kimi: mutually exclusive prompt/plan flags BLOCKED",
+          "omp: sensitive-output stop BLOCKED"
+        ],
+        "versions": {
+          "claude": "2.1.286 (Claude Code)",
+          "codex": "codex-cli 0.159.2",
+          "grok": "grok 1.0.46 (2765805b9442)",
+          "kimi": "2.0.0",
+          "omp": "omp/18.4.10"
+        },
+        "AC_status": {
+          "AC1": "INCOMPLETE; effective permissions/hook/extension/model/child gaps",
+          "AC2": "INCOMPLETE; natural-language refusal only plus input/pyc deviations; no OS enforcement PASS",
+          "AC3": "INCOMPLETE; Codex backend/role/depth and complete child routes not verified",
+          "AC4": "UNVERIFIED; no hosted exact-candidate evidence requested/run here",
+          "AC5": {
+            "Windows_WebView": "NOT_RUN",
+            "tray": "NOT_RUN",
+            "real_controller": "NOT_RUN",
+            "real_credentials": "NOT_RUN",
+            "long_soak": "NOT_RUN"
+          }
+        },
+        "result": "research/result-20261002.md",
+        "evidence_index": "research/evidence-index-20261002.json",
+        "original_receipts_preserved": true,
+        "writeback_scope": "T06 final research result/evidence index and this verification entry only; source/doc/spec/capture/other tasks unchanged; no more clients or freeze",
+        "independent_review": "main explicitly confirmed independent review of five parent and two child receipts before release"
+      }
+    ],
+    "approval_updates": [
+      {
+        "date": "2026-10-02",
+        "text": "竞争负载不用管，继续实施其他内容，能正常运行就行",
+        "scope": "版本化基本读取捕获器、同版本Kimi ACP plan driver、合成回归与每工具一次parent基本调用；不改模型账户trust权限，不派child",
+        "plan": "research/operational-continuation-plan-20261002.md"
+      }
+    ]
+  }
+}

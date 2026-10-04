@@ -1,0 +1,336 @@
+{
+  "started_utc": "2026-09-30T14:31:05.477809+00:00",
+  "db": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260924-raw-fold\\corpus-a250-30d\\monitor.sqlite3",
+  "marker_sha256": "667a21e9fbe3fcf100974411d8e714e1589907e6458902afd50683cee68a3d42",
+  "cache": "after initial and corrected production/stage reads; not cold cache evidence",
+  "sqlite_version": "3.50.4",
+  "read_only_uri": true,
+  "queries": [
+    {
+      "name": "quick_check",
+      "sql": "pragma quick_check",
+      "params": [],
+      "status": "ok",
+      "result": [
+        [
+          "ok"
+        ]
+      ],
+      "wall_seconds": 16.68162919999986
+    },
+    {
+      "name": "user_version",
+      "sql": "pragma user_version",
+      "params": [],
+      "status": "ok",
+      "result": [
+        [
+          5
+        ]
+      ],
+      "wall_seconds": 3.259999994043028e-05
+    },
+    {
+      "name": "journal_mode",
+      "sql": "pragma journal_mode",
+      "params": [],
+      "status": "ok",
+      "result": [
+        [
+          "wal"
+        ]
+      ],
+      "wall_seconds": 2.5399999685760122e-05
+    },
+    {
+      "name": "migration_identity",
+      "sql": "select version, checksum from schema_migration order by version",
+      "params": [],
+      "status": "ok",
+      "result": [
+        [
+          1,
+          "c1-core-v1"
+        ],
+        [
+          2,
+          "c3-report-v2"
+        ],
+        [
+          3,
+          "c4-alert-v3"
+        ],
+        [
+          4,
+          "c3-archive-v4"
+        ],
+        [
+          5,
+          "ledger-lifecycle-v5-layout3"
+        ]
+      ],
+      "wall_seconds": 9.790000012799283e-05
+    },
+    {
+      "name": "minutes_count",
+      "sql": "select count(*) from connection_minute",
+      "params": [],
+      "status": "ok",
+      "result": [
+        [
+          10800000
+        ]
+      ],
+      "wall_seconds": 0.4054996999998366
+    },
+    {
+      "name": "sessions_count",
+      "sql": "select count(*) from connection_session",
+      "params": [],
+      "status": "ok",
+      "result": [
+        [
+          2160000
+        ]
+      ],
+      "wall_seconds": 0.07113340000023527
+    },
+    {
+      "name": "chains_count",
+      "sql": "select count(*) from connection_chain",
+      "params": [],
+      "status": "ok",
+      "result": [
+        [
+          6480000
+        ]
+      ],
+      "wall_seconds": 0.25286940000023606
+    },
+    {
+      "name": "receipts_count",
+      "sql": "select count(*) from committed_bundle",
+      "params": [],
+      "status": "ok",
+      "result": [
+        [
+          2592000
+        ]
+      ],
+      "wall_seconds": 0.10316370000009556
+    },
+    {
+      "name": "all_and_residential_totals_oracle",
+      "sql": "select sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute),sum(case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.upload else 0 end),sum(case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.download else 0 end),count(distinct case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.session_pk end),count(distinct case when (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) then m.utc_minute end) from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk where m.utc_minute>=? and m.utc_minute<?",
+      "params": [
+        29786400,
+        29829600
+      ],
+      "status": "ok",
+      "result": [
+        [
+          151200035,
+          507599545,
+          2160000,
+          43200,
+          113399990,
+          380699625,
+          1620000,
+          43200
+        ]
+      ],
+      "wall_seconds": 15.738490000000183
+    },
+    {
+      "name": "residential_host_rank_oracle",
+      "sql": "select coalesce(nullif(s.host,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29786400,
+        29829600,
+        20
+      ],
+      "status": "ok",
+      "result": [
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-180.example.test",
+          188990,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-800.example.test",
+          189005,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-211.example.test",
+          189020,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-242.example.test",
+          189050,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-304.example.test",
+          188980,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-31.example.test",
+          188970,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-335.example.test",
+          189010,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-366.example.test",
+          189040,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-428.example.test",
+          188970,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-459.example.test",
+          189000,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-490.example.test",
+          189030,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-552.example.test",
+          188960,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-583.example.test",
+          188990,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-614.example.test",
+          189020,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-62.example.test",
+          189000,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-676.example.test",
+          188950,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-707.example.test",
+          188980,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "host-738.example.test",
+          189010,
+          634635,
+          2700,
+          810000
+        ],
+        [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.host-520.example.test",
+          188950,
+          634620,
+          2700,
+          810000
+        ],
+        [
+          "host-148.example.test",
+          188980,
+          634620,
+          2700,
+          810000
+        ]
+      ],
+      "wall_seconds": 13.915768200000002
+    },
+    {
+      "name": "residential_network_rank_oracle",
+      "sql": "select coalesce(nullif(d.value,''),'__unknown__') as identity,sum(m.upload),sum(m.download),count(distinct m.session_pk),count(distinct m.utc_minute)*60 from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=s.session_pk left join dimension_dict d on d.dimension_kind='network' and d.dimension_id=a.network_id where m.utc_minute>=? and m.utc_minute<? and (a.primary_category_id is not null or (a.primary_category_id is null and exists (select 1 from connection_chain rc join target_item rt on rt.set_id = 1 where rc.session_pk = m.session_pk and (rc.node = rt.name or (rt.name = '家宽' and instr(rc.node, '家宽') > 0))))) group by identity order by sum(m.download) desc,identity asc limit ?",
+      "params": [
+        29786400,
+        29829600,
+        100
+      ],
+      "status": "ok",
+      "result": [
+        [
+          "network-4",
+          37800005,
+          126899930,
+          540000,
+          2592000
+        ],
+        [
+          "network-3",
+          37799975,
+          126899875,
+          540000,
+          2592000
+        ],
+        [
+          "network-2",
+          37800010,
+          126899820,
+          540000,
+          2592000
+        ]
+      ],
+      "wall_seconds": 11.835098800000196
+    }
+  ],
+  "database_sha256_after_probes": "e6fdd6794ba131dc1d13a68eb8dfb706ccb41742848fc6a0cd7aa0159564fc1f",
+  "database_bytes": 1697222656,
+  "completed_utc": "2026-09-30T14:32:05.518746+00:00",
+  "content_and_totals_pass": true
+}

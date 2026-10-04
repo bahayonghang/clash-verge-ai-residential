@@ -4,7 +4,7 @@ description: >
   用 ResiWatch 历史库证据收窄 AI-家宽 路由范围，减少不必要的家宽流量。
   Use when 减少家宽流量, 关掉长期无命中的路由开关, 判断域名规则是否还该走家宽,
   从本机 monitor.sqlite3 读 host 排名/份额/死规则/越界流量,
-  改 clash-verge-ai-residential.local.toml 的 routing.*,
+  为 clash-verge-ai-residential.local.toml 的 routing.* 形成调整建议,
   评估公开模板域名清单是否该收窄, 或运行 /residential-rule-tuning;
   also for 家宽规则优化, ResiWatch audit/rank/share, monitor-db, dead rules, and uncovered hosts.
   Exclude 改桌面端 UI, 解除 AUTO_DELETE_ENABLED, 把观测量当成运营商账单,
@@ -23,13 +23,21 @@ metadata:
 
 用 ResiWatch 历史库证据收窄 `AI-家宽` 路由范围，减少不必要的家宽流量。
 
+## 分发
+
+源库：仓库内 `skills/residential-rule-tuning/`。适用工具：Claude Code、Codex、Grok Build、Kimi Code、OMP，以及 `.agents` / `.cursor` 共享目录。项目级副本位于 `.agents`、`.claude`、`.codex`、`.cursor`、`.omp`、`.grok`、`.kimi-code` 的 `skills/residential-rule-tuning/`，被 gitignore，干净 clone 默认没有；用 `just install-skills` 或 `node scripts/install-agent-skills.js` 写入已存在的平台根。干净 clone 需 `--create` 或先建平台根。
+
+修改源文件后，先运行 `node --test tests/install-agent-skills.test.js`，再对获准交付的实际目录运行 `just install-skills --check`。审查每项差异及额外用户文件后，才可在获批范围内用 `--force` 备份覆盖；不运行 `install-all`。随后确认目标数量、逐文件内容和备份，重跑 `--check`，再安装一次并确认写入数为 0。流程见 `docs/agents/residential-rule-tuning.md`。
+
+临时七目标 fixture 只验证安装器和生成器；实际副本一致只验证本次投递；客户端发现与执行须另有运行记录。零目标时 `--check=0` 不证明 skill 已交付。
+
 ## 触发条件
 
 在以下情况使用本 skill：
 
 - 用户要减少家宽流量、关掉长期无命中的路由开关，或判断某条域名规则是否还该走家宽
 - 需要从本机 `monitor.sqlite3` 读家宽 host 排名、份额、死规则或越界流量
-- 准备改 `clash-verge-ai-residential.local.toml` 的 `routing.*`，或评估公开模板域名清单是否该收窄
+- 准备为 `clash-verge-ai-residential.local.toml` 的 `routing.*` 形成调整建议，或评估公开模板域名清单是否该收窄
 
 不要用本 skill 去改桌面端 UI、解除 `AUTO_DELETE_ENABLED`，或把观测量当成运营商账单。
 
@@ -46,7 +54,9 @@ node skills/residential-rule-tuning/scripts/build-inputs.js <out-dir>
 - `rules.json`：`buildInjectedRules()` 的完整模式清单，是模式全集
 - `switches.json`：显式 `supported` / `unsupported` 两个清单
 
-生成器对照 `scripts/sync-local-config.js` 的 `routing` 表做完整性检查：受支持键数 + 不支持清单长度必须等于该表开关总数（21）。检查失败时非零退出，不得把缺失开关写成 0。
+生成器对照 `scripts/sync-local-config.js` 的 `routing` 表做完整性检查：受支持键数 + 不支持清单长度必须等于该表开关总数（26 = 13 supported + 13 unsupported）。检查失败时非零退出，不得把缺失开关写成 0。
+
+Unreleased 新增的 `anthropic_core`、`gemini_api_core`、`antigravity_core` 默认开启，域名分别归属对应 supported 开关。`extra` 是分类总开关、无独立 host，落入 unsupported；`extra_anyrouter` 映射 `anyrouter.top`。关闭 core 也撤销其专属进程兜底，关闭 `anthropic_core` 还撤销 Anthropic IP 回退；认证、辅助和全局捕获开关仍独立。生成器读取公开模板，不代表真实本地 TOML 或运行配置；host 模式归属不等于开关的因果流量贡献，IP/进程回退不能按域名映射冒充数值。
 
 贴到 issue、PR 或对话记录前，用 `--redact` 重跑 CLI。默认输出不脱敏，因为判读需要真实 host。
 
@@ -72,12 +82,15 @@ node skills/residential-rule-tuning/scripts/build-inputs.js <out-dir>
 
 ## 改动落点
 
-- **个人调优**：改本地 `clash-verge-ai-residential.local.toml` 的 `routing.*`，然后 `just render-local`。不要手改 `*.local.js`。
+- **个人调优**：默认只输出 `routing.*` 的调整建议、证据和预期影响，由用户应用到 `clash-verge-ai-residential.local.toml`，再按授权运行 `just render-local`。agent 默认不得手改本地 TOML；例外必须由用户明确授权，并限定本次修改范围。调用本 skill 或创建任务不构成例外授权。不要手改 `*.local.js`。
 - **公开模板域名清单**：需要官方出处或脱敏 Connections 证据，加 negative test，并通过 `just ci`。
+
+共享授权规则以根 `AGENTS.md` 为准，适用于 Claude Code、Codex、Grok Build、Kimi Code、OMP。只读审查仅记录发现；获批实施后的 self-fix 仍须限制在任务与文件范围内，不得扩大授权或降低验收标准。
 
 ## 禁止项
 
 - 不改 `*.local.js` 生成物
+- 未获得用户明确例外授权时，不手改 `*.local.toml`
 - 不把真实凭据写进公开模板（`HOME_PROXY_TEMPLATE` 保持 `"xxx"` / `""`）
 - 不新增宽泛 provider 后缀、marketplace/CDN、遥测域名
 - 不把未知写成 0，不把 `rank` 当全量审计

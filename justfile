@@ -17,6 +17,25 @@ help:
 ci: monitor-check
     npm run ci
 
+# 独立依赖审计：需要 npm 注册表、RustSec 数据库网络访问及已安装的 cargo-audit。
+# npm 包含开发依赖并以 high 为失败阈值；网络/工具失败须单独分类，不得当作审计通过。
+dependency-audit:
+    npm --prefix residential-monitor audit --include=dev --audit-level=high
+    npm --prefix docs audit --include=dev --audit-level=high
+    cargo audit --file residential-monitor/src-tauri/Cargo.lock
+
+# 只读入口与版本诊断。独立于 CI；失败不会安装工具或执行 bootstrap。
+check-harness-environment:
+    node scripts/check-harness-environment.js
+
+# 仅初始化显式隔离候选；Node 脚本 recipe 以 argv 接收路径，不经 shell 拼接。
+[script("node")]
+[positional-arguments]
+bootstrap-harnesses root entry:
+    const path = require("node:path");
+    const { main } = require(path.resolve("scripts/bootstrap-harnesses.js"));
+    process.exitCode = main([process.execPath, "bootstrap-harnesses", "--root", process.argv[2], "--entry", process.argv[3]]);
+
 # 本地 VitePress 文档站。需要 Node.js 22+，依赖在 docs/package.json。
 docs-dev:
     npm --prefix docs run dev
@@ -107,3 +126,7 @@ render-local:
 
 # 向后兼容旧命令；请使用 render-local，它更准确地表示单向生成行为。
 sync: render-local
+
+# 单向渲染副本：local copy.toml -> local copy.js。源 TOML 必须已存在。
+sync-copy:
+    @node scripts/sync-local-config.js 'clash-verge-ai-residential.local copy.toml' 'clash-verge-ai-residential.local copy.js'

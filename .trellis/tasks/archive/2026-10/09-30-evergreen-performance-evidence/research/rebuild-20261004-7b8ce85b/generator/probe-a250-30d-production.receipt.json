@@ -1,0 +1,58 @@
+{
+  "label": "probe-a250-30d-production",
+  "argv": [
+    "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\executables\\candidate-library-tests.exe",
+    "--exact",
+    "c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof",
+    "--ignored",
+    "--nocapture",
+    "--test-threads=1"
+  ],
+  "cwd": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential",
+  "environment_override": {
+    "RESIWATCH_NONEMPTY_STAGE_START": "1787184000",
+    "RESIWATCH_NONEMPTY_STAGE_END": "1789776000",
+    "RESIWATCH_NONEMPTY_STAGE_DB": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\bench-data\\t05-rebuild-20261004-7b8ce85b\\corpus-a250-30d\\monitor.sqlite3",
+    "RESIWATCH_NONEMPTY_STAGE_OUT": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator\\probes\\a250-30d-production.json"
+  },
+  "shell": false,
+  "started_utc": "2026-10-04T05:25:44.873105+00:00",
+  "status": "ENDED",
+  "native_exit": 0,
+  "pid": 49160,
+  "competing_load_at_start": [],
+  "disk_free_bytes_before": {
+    "C": 526134009856,
+    "D": 1158528303104
+  },
+  "ended_utc": "2026-10-04T05:26:00.001168+00:00",
+  "wall_seconds": 15.110276400000657,
+  "logs": {
+    "stdout": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator\\probe-a250-30d-production.stdout.raw",
+      "bytes": 200,
+      "raw_sha256": "ADE23E6FCFED1C4F791B799DFE0077F3C7291066F2B034AED541CFD30FE86CC4",
+      "gzip_sha256": "8D2AF6B7381651AEDA2FB751C6F7D1B8A429E751C1EBBFC2C3CA5B026E23AF68",
+      "readable_sha256": "8776E058BD0DC4DB794012CBC508A4028FD7462EDF6188E8697708965BCCC14E"
+    },
+    "stderr": {
+      "raw": "D:\\Documents\\Code\\Github\\clash-verge-ai-residential\\.trellis\\tasks\\09-30-evergreen-performance-evidence\\research\\rebuild-20261004-7b8ce85b\\generator\\probe-a250-30d-production.stderr.raw",
+      "bytes": 0,
+      "raw_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+      "gzip_sha256": "9CEFFB7310338057CFE71A4AE1E2C98D2C485D81CDEF906532A801F457A38D64",
+      "readable_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  },
+  "peak_rss_bytes_sampled": 512380928,
+  "last_cpu_times_sampled": {
+    "user": 11.359375,
+    "system": 3.0625,
+    "children_user": 0.0,
+    "children_system": 0.0
+  },
+  "disk_free_bytes_after": {
+    "C": 526133923840,
+    "D": 1158528290816
+  },
+  "sampling": "0.5 s psutil polling of the direct native process; not a complete peak proof"
+}

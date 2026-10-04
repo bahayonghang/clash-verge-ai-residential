@@ -2,53 +2,11 @@
 
 /**
  * Clash Verge Rev 全局扩展脚本
- * Claude / ChatGPT / Gemini / Google Antigravity / Cursor / Grok Build 核心家宽链路 · v5.11.0
+ *
+ * 将明确收录的 AI 产品流量经当前 Profile 的机场上游送入住宅 SOCKS5 链路。
  *
  * 数据路径：
  *   本机 -> 当前 Profile 的机场代理组/节点 -> 家宽 SOCKS5 -> AI 服务
- *
- * v5.11.0 重点：
- *   - 新增独立的 OpenAI 第一方认证与网页静态资源开关，公开默认均关闭。
- *   - 认证只覆盖 auth.openai.com 后缀与 auth0.openai.com 精确主机；
- *     oaistatic.com 由独立开关控制，不扩大到整个 openai.com。
- *
- * v5.10.1 重点：
- *   - 恢复 daily-cloudcode-pa.googleapis.com。Antigravity language_server 把
- *     --cloud_code_endpoint 设为该主机；v5.10.0 误判为无出处预发布端点。
- *
- * v5.10.0 重点：
- *   - 5 条无会话证据或官方遥测主机退出激活，仍留在 allPossible* 供升级清理。
- *   - api2 / authenticate / adminportal42 / antigravity.google 收窄为精确主机；
- *     api.x.ai 改为后缀以覆盖区域与 mTLS 端点。
- *   - 新增 routing.grok_web_assets 与 routing.vertex_ai_endpoints，默认开启。
- *
- * v5.9.0 重点：
- *   - 仓库索引主机 repo[0-9]+.cursor.sh 从 Cursor 核心目录拆出；
- *     routing.cursor_repository_indexing 默认关闭，不再消耗家宽。
- *   - Cursor Chat/Tab/Agent/认证/Cloud Agent 仍由 routing.cursor_core 控制（默认开启）。
- *
- * v5.8.1 重点：
- *   - 大订阅 outbound 索引，避免按叶子全表扫描；UDP 叶子警告改为一条汇总。
- *
- * v5.8 重点：
- *   - 按官方 help.openai.com/9247338 以 exact 补齐五个 chat.openai.com 家族主机；
- *     不注入 DOMAIN-SUFFIX,chat.openai.com。
- *
- * v5.7 重点：
- *   - 域名对齐官方网络文档：补 Claude MCP 代理与资产代理、Grok 认证与 API 域；
- *     api.openai.com 从 exact 提升为 suffix，覆盖 Codex 的 us./eu. 数据驻留前缀。
- *   - 上游代理组中的保留名引用被移除时输出 warn，递归链清理不再静默。
- *   - 记录 Clash Verge Rev 权威字段（tun/ipv6）对脚本改写的覆盖行为并提示。
- *
- * v5.6 重点：
- *   - Cursor 核心路由默认开启；补充授权端点、SSO 管理门户与 Cloud Agent VM 域。
- *   - 新增 Grok Build（xAI grok CLI）核心域与 routing.grok_core 开关，默认开启。
- *   - 默认只让 AI 产品核心、模型推理、代码补全、Agent、索引与产品专属认证流量走家宽。
- *   - 不注入插件市场、CDN、更新下载、广告、统计、通用 Google 静态资源等共享域名。
- *   - 默认关闭进程级兜底、共享遥测、通用 STUN/TURN、公共 DoH/DoT 劫持。
- *   - AI 域名 DNS 经家宽；其他域名 DNS 经当前 Profile 的机场上游，不再默认占用家宽。
- *   - 保留多 Profile 上游解析、递归链防护、严格配置校验与幂等重建。
- *   - 只清理当前版本可生成的托管规则；未知用户规则始终保留。
  *
  * 运行环境：Clash Verge Rev 的 JavaScript 扩展脚本环境。
  * 入口签名：main(config, profileName)
@@ -139,6 +97,15 @@ const ROUTE_OPENAI_SHARED_DEPENDENCIES = false;
 // ChatGPT 产品、OpenAI 模型 API 与用户上传/生成内容；默认走家宽，可在本地 TOML 关闭。
 const ROUTE_OPENAI_CORE = true;
 
+// Claude 产品、Anthropic API 与产品代理；同时约束其专属进程和 IP 兜底。
+const ROUTE_ANTHROPIC_CORE = true;
+
+// Gemini Developer API；与 Gemini Web、Vertex AI 及 Antigravity 独立。
+const ROUTE_GEMINI_API_CORE = true;
+
+// Antigravity / Gemini Code Assist 核心端点；同时约束 Antigravity 进程兜底。
+const ROUTE_ANTIGRAVITY_CORE = true;
+
 // OpenAI 第一方登录主机；默认保留在机场出口，按需与核心流量统一到家宽。
 const ROUTE_OPENAI_AUTH = false;
 
@@ -176,6 +143,12 @@ const ROUTE_GROK_CORE = true;
 // code.grok.com 精确主机；api.x.ai 后缀仍由 grok_core 注入。
 const ROUTE_GROK_WEB_ASSETS = true;
 
+// extra 分类总开关。默认关闭；打开后仍需各站点开关才会注入规则。
+const ROUTE_EXTRA = false;
+
+// AnyRouter（anyrouter.top）。仅在 extra 分类打开时生效；不写住宅 DNS。
+const ROUTE_EXTRA_ANYROUTER = true;
+
 // Cursor 进程会访问插件市场、GitHub、npm、MCP 和用户后端；默认不做进程级全量代理。
 const ROUTE_CURSOR_PROCESS_FALLBACK = false;
 
@@ -185,7 +158,7 @@ const ROUTE_CLAUDE_CODE_AUXILIARY = false;
 // 全局进程兜底会扩大作用域，严格 AI-only 模式默认关闭。
 const ENABLE_AI_PROCESS_FALLBACK = false;
 
-// 使用 Anthropic 官方入站网段兜底，覆盖域名嗅探失败或直连 IP 的情况。
+// 仅在 anthropic_core 开启时使用官方入站网段兜底，覆盖嗅探失败或直连 IP。
 const ENABLE_ANTHROPIC_IP_FALLBACK = true;
 
 // 通用 STUN/TURN 基础设施会被大量非 AI 应用复用，默认完全不注入。
@@ -203,9 +176,11 @@ const PRESERVE_UNMANAGED_NAMESERVER_POLICY = false;
 // 域名嗅探用于补偿纯 IP 连接和 DNS 映射缺失；采用保守的全局 override-destination=false。
 const ENABLE_DOMAIN_SNIFFER = true;
 
-// 仅当用户已经启用 TUN 时补齐 DNS 劫持，不擅自开启 TUN。
+// 已启用 TUN 时检查 dns-hijack 是否含 any:53 与 tcp://any:53，缺少时输出 warn。
+// 只检查不写入：tun 由 Verge 设置页管理，脚本写入会被还原并触发丢弃提示。
 const HARDEN_EXISTING_TUN_DNS_HIJACK = true;
 
+// 检查已启用 TUN 的 strict-route 是否开启，未开启时输出 warn；不写入。
 // Windows strict-route 可降低多宿主 DNS 泄漏，但可能影响虚拟机或特殊路由。
 const ENABLE_TUN_STRICT_ROUTE = false;
 
@@ -216,7 +191,7 @@ const WARN_ON_REACHABLE_UDP_DISABLED = true;
 // 2. AI 域名清单
 // ============================================================
 
-const CORE_SUFFIX_DOMAINS = [
+const ANTHROPIC_CORE_SUFFIX_DOMAINS = [
   // Claude Web / Desktop / generated content
   "claude.ai",
   "claude.com",
@@ -230,7 +205,7 @@ const RETIRED_CORE_SUFFIX_DOMAINS = [
   "claudemcpclient.com"
 ];
 
-// ChatGPT 产品域；开关关闭后 GPT 流量改走机场，不再进家宽。
+// ChatGPT 产品域；关闭时撤销本脚本的核心捕获，剩余请求交回原 Profile。
 const OPENAI_CORE_SUFFIX_DOMAINS = [
   // ChatGPT Web / user-uploaded and generated content；通用静态 CDN 不走家宽
   "chatgpt.com",
@@ -241,22 +216,27 @@ const OPENAI_CORE_SUFFIX_DOMAINS = [
   "api.openai.com"
 ];
 
-const CORE_EXACT_DOMAINS = [
+const ANTHROPIC_CORE_EXACT_DOMAINS = [
   // 第一方模型 API；避免 anthropic.com 宽泛后缀。
   "api.anthropic.com",
 
   // 官方网络文档列出的产品功能域（code.claude.com/docs network-config）：
   // claude.ai MCP connector 代理与桌面/网页资产代理（官方警告缺失会导致白屏）。
   "mcp-proxy.anthropic.com",
-  "assets-proxy.anthropic.com",
+  "assets-proxy.anthropic.com"
+];
 
-  // Antigravity / Gemini Code Assist / Gemini Developer API
+const GEMINI_API_CORE_EXACT_DOMAINS = [
+  "generativelanguage.googleapis.com"
+];
+
+const ANTIGRAVITY_CORE_EXACT_DOMAINS = [
+  // Antigravity / Gemini Code Assist
   "cloudcode-pa.googleapis.com",
   // Antigravity language_server 的 --cloud_code_endpoint；本机 Connections
   // 与 TLS 握手失败证明该主机承载 Agent 会话，不是遥测。
   "daily-cloudcode-pa.googleapis.com",
   "cloudaicompanion.googleapis.com",
-  "generativelanguage.googleapis.com",
 
   // Google Antigravity 产品域；v5.10 从 suffix 收窄为 exact。
   "antigravity.google"
@@ -380,6 +360,23 @@ const GROK_STRICT_EXACT_DOMAINS = [
 const GROK_EXACT_DOMAINS = [
   "auth.x.ai"
 ];
+
+// extra 站点登记表。分类与站点开关同时打开才注入规则。
+// residentialDns: false 表示只走业务路由，不写住宅 DoH。
+const EXTRA_SITES = [
+  {
+    id: "anyrouter",
+    constant: "ROUTE_EXTRA_ANYROUTER",
+    suffixDomains: ["anyrouter.top"],
+    exactDomains: [],
+    residentialDns: false
+  }
+];
+
+// extra 站点开关名到当前布尔值，供登记表按 constant 查找。
+const EXTRA_SITE_SWITCHES = {
+  ROUTE_EXTRA_ANYROUTER
+};
 
 const OPENAI_SHARED_SUFFIX_DOMAINS = [
   "ct.sendgrid.net",
@@ -536,10 +533,10 @@ function buildUpstreamDoh(upstreamName) {
   ).trim();
 
   if (!target) {
-    throw new Error(`[${AI_GROUP}] 无法为非 AI DNS 构造机场上游`);
+    fail(`[${AI_GROUP}] 无法为非 AI DNS 构造机场上游`);
   }
   if (/[#&]/.test(target)) {
-    throw new Error(`[${AI_GROUP}] 非 AI DNS 上游名称“${target}”不能包含 # 或 &`);
+    fail(`[${AI_GROUP}] 非 AI DNS 上游名称“${target}”不能包含 # 或 &`);
   }
 
   return NON_AI_DOH_ENDPOINTS.map(
@@ -578,6 +575,40 @@ function isPlainObject(value) {
 
 function cloneObject(value) {
   return isPlainObject(value) ? { ...value } : {};
+}
+
+function cloneConfigForEdit(config) {
+  const proxies = Array.isArray(config.proxies) ? config.proxies : [];
+  const groups = Array.isArray(config["proxy-groups"]) ? config["proxy-groups"] : [];
+  const rules = Array.isArray(config.rules) ? config.rules : [];
+  const dns = isPlainObject(config.dns) ? config.dns : {};
+
+  const working = {
+    ...config,
+    proxies: [...proxies],
+    "proxy-groups": groups.map((group) => {
+      if (!isPlainObject(group)) return group;
+      return {
+        ...group,
+        proxies: Array.isArray(group.proxies) ? [...group.proxies] : group.proxies
+      };
+    }),
+    rules: [...rules],
+    dns: { ...dns }
+  };
+
+  if (isPlainObject(config.tun)) {
+    working.tun = { ...config.tun };
+    if (Array.isArray(config.tun["dns-hijack"])) {
+      working.tun["dns-hijack"] = [...config.tun["dns-hijack"]];
+    }
+  }
+
+  if (isPlainObject(config.sniffer)) {
+    working.sniffer = { ...config.sniffer };
+  }
+
+  return working;
 }
 
 function uniqueStrings(items) {
@@ -696,6 +727,14 @@ function formatAvailableOutbounds(config) {
   return names.length > 30 ? `${shown}……（共 ${names.length} 个）` : shown;
 }
 
+function fail(message) {
+  if (typeof console !== "undefined" && typeof console.error === "function") {
+    console.error(message);
+  }
+  const error = new Error(message);
+  throw error;
+}
+
 function warn(message) {
   if (typeof console !== "undefined" && typeof console.warn === "function") {
     console.warn(message);
@@ -717,21 +756,21 @@ function validateReservedNameCollisions(config) {
   const groups = Array.isArray(config["proxy-groups"]) ? config["proxy-groups"] : [];
 
   if (countNamedItems(proxies, HOME_PROXY_NAME) > 1) {
-    throw new Error(`[${AI_GROUP}] 存在多个同名代理节点“${HOME_PROXY_NAME}”，无法确定要更新哪一个`);
+    fail(`[${AI_GROUP}] 存在多个同名代理节点“${HOME_PROXY_NAME}”，无法确定要更新哪一个`);
   }
   if (countNamedItems(groups, AI_GROUP) > 1) {
-    throw new Error(`[${AI_GROUP}] 存在多个同名代理组“${AI_GROUP}”，无法安全更新`);
+    fail(`[${AI_GROUP}] 存在多个同名代理组“${AI_GROUP}”，无法安全更新`);
   }
   if (findNamedItem(groups, HOME_PROXY_NAME)) {
-    throw new Error(`[${AI_GROUP}] 保留名称“${HOME_PROXY_NAME}”已被代理组占用`);
+    fail(`[${AI_GROUP}] 保留名称“${HOME_PROXY_NAME}”已被代理组占用`);
   }
   if (findNamedItem(proxies, AI_GROUP)) {
-    throw new Error(`[${AI_GROUP}] 保留名称“${AI_GROUP}”已被代理节点占用`);
+    fail(`[${AI_GROUP}] 保留名称“${AI_GROUP}”已被代理节点占用`);
   }
 
   const existingHome = findNamedItem(proxies, HOME_PROXY_NAME);
   if (existingHome && String(existingHome.type || "").toLowerCase() !== "socks5") {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] 同名“${HOME_PROXY_NAME}”节点类型为 ${existingHome.type || "<未设置>"}，` +
       "为避免覆盖用户节点，脚本拒绝继续"
     );
@@ -748,9 +787,17 @@ function validateReservedNameCollisions(config) {
       proxiesInGroup[0] === HOME_PROXY_NAME;
 
     if (!isManagedShape) {
-      throw new Error(
+      fail(
         `[${AI_GROUP}] 已存在非脚本管理的同名代理组“${AI_GROUP}”。` +
         "请重命名该组，或确认其类型为 select 且仅包含 家宽-SOCKS5"
+      );
+    }
+    const allowedFields = ["name", "type", "proxies", "disable-udp", "icon", "hidden"];
+    const extraFields = Object.keys(existingAiGroup).filter((key) => !allowedFields.includes(key));
+    if (extraFields.length > 0) {
+      fail(
+        `[${AI_GROUP}] 已存在非脚本管理的同名代理组“${AI_GROUP}”，额外字段：${extraFields.join("、")}。` +
+        "请重命名该组，或移除额外字段；家宽组仅允许单一家宽节点及 icon/hidden 展示字段"
       );
     }
   }
@@ -763,7 +810,7 @@ function requireOutboundIndex(outboundIndex) {
     !(outboundIndex.groups instanceof Map) ||
     !(outboundIndex.proxies instanceof Map)
   ) {
-    throw new Error(`[${AI_GROUP}] findOutbound 需要 outbound 索引`);
+    fail(`[${AI_GROUP}] findOutbound 需要 outbound 索引`);
   }
 }
 
@@ -797,7 +844,7 @@ function findOutbound(outboundIndex, name) {
   const proxyCount = proxyEntry ? proxyEntry.count : 0;
 
   if (groupCount > 1 || proxyCount > 1 || (groupCount === 1 && proxyCount === 1)) {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] outbound 名称“${name}”存在歧义（同名组/节点或重复定义），` +
       "无法安全用于 dialer-proxy"
     );
@@ -828,7 +875,7 @@ function profileOverrideCandidates(profileName) {
     return toStringArray(PROFILE_UPSTREAM_OVERRIDES[matchingKeys[0]]);
   }
   if (matchingKeys.length > 1) {
-    throw new Error(`[${AI_GROUP}] Profile 覆盖配置存在归一化重名：${matchingKeys.join(" / ")}`);
+    fail(`[${AI_GROUP}] Profile 覆盖配置存在归一化重名：${matchingKeys.join(" / ")}`);
   }
 
   return [];
@@ -854,7 +901,7 @@ function resolveCandidate(config, candidate, outboundIndex) {
     return normalizedMatches[0];
   }
   if (normalizedMatches.length > 1) {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] 候选“${candidate}”归一化后匹配多个 outbound：` +
       normalizedMatches.join(" / ")
     );
@@ -938,7 +985,7 @@ function resolveUpstreamName(config, profileName, outboundIndex) {
     : "";
   const finalText = finalTarget ? `；最终规则目标：${finalTarget}` : "";
 
-  throw new Error(
+  fail(
     `[${AI_GROUP}] 找不到可用 dialer-proxy${profileText}。` +
     `候选：${globalCandidates.join(" / ")}${finalText}；` +
     `当前 outbound：${formatAvailableOutbounds(config)}。` +
@@ -975,7 +1022,7 @@ function buildHomeProxy(config, upstreamName) {
       (field) => isPlaceholder(HOME_PROXY_TEMPLATE[field]) && existing[field] === undefined
     );
     if (unresolvedCredentials.length > 0) {
-      throw new Error(
+      fail(
         `[${AI_GROUP}] 家宽 SOCKS5 ${unresolvedCredentials.join("/")} 仍是占位值 xxx；` +
         "无认证时请显式改为空字符串"
       );
@@ -1002,25 +1049,25 @@ function buildHomeProxy(config, upstreamName) {
 
 function validateHomeProxy(homeProxy) {
   if (!homeProxy.server || isPlaceholder(homeProxy.server)) {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] 家宽 SOCKS5 server 未配置。` +
       `请修改 HOME_PROXY_TEMPLATE，或在当前 Profile 中预置同名“${HOME_PROXY_NAME}”节点。`
     );
   }
   if (!Number.isInteger(homeProxy.port) || homeProxy.port < 1 || homeProxy.port > 65535) {
-    throw new Error(`[${AI_GROUP}] 家宽 SOCKS5 port 必须是 1-65535 的整数`);
+    fail(`[${AI_GROUP}] 家宽 SOCKS5 port 必须是 1-65535 的整数`);
   }
   if (isPlaceholder(homeProxy.username) || isPlaceholder(homeProxy.password)) {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] 家宽 SOCKS5 用户名/密码仍是占位值 xxx；` +
       "无认证时请改为空字符串"
     );
   }
   if (homeProxy.udp !== true) {
-    throw new Error(`[${AI_GROUP}] 家宽 SOCKS5 udp 必须为 true`);
+    fail(`[${AI_GROUP}] 家宽 SOCKS5 udp 必须为 true`);
   }
   if (isForbiddenUpstreamName(homeProxy["dialer-proxy"])) {
-    throw new Error(
+    fail(
       `[${AI_GROUP}] dialer-proxy“${homeProxy["dialer-proxy"]}”会导致直连、拒绝或递归链`
     );
   }
@@ -1089,7 +1136,7 @@ function buildGroupMap(config) {
   for (const group of groups) {
     if (!group || typeof group.name !== "string" || group.name.length === 0) continue;
     if (map.has(group.name)) {
-      throw new Error(`[${AI_GROUP}] 存在重复代理组名称“${group.name}”`);
+      fail(`[${AI_GROUP}] 存在重复代理组名称“${group.name}”`);
     }
     map.set(group.name, group);
   }
@@ -1113,7 +1160,7 @@ function hardenReachableUpstreamGraph(config, upstreamName, outboundIndex) {
     if (visiting.has(groupName)) {
       const start = stack.indexOf(groupName);
       const cycle = [...stack.slice(start), groupName];
-      throw new Error(`[${AI_GROUP}] 上游代理组存在循环依赖：${cycle.join(" -> ")}`);
+      fail(`[${AI_GROUP}] 上游代理组存在循环依赖：${cycle.join(" -> ")}`);
     }
     if (visited.has(groupName)) return;
 
@@ -1125,14 +1172,14 @@ function hardenReachableUpstreamGraph(config, upstreamName, outboundIndex) {
     appendHomeProxyExcludeFilter(group);
 
     if (group["disable-udp"] === true) {
-      throw new Error(
+      fail(
         `[${AI_GROUP}] 可达上游代理组“${groupName}”显式禁用了 UDP（路径：${stack.join(" -> ")}）`
       );
     }
 
     const children = Array.isArray(group.proxies) ? group.proxies : [];
     if (children.length === 0 && !groupHasAlternativeSource(group)) {
-      throw new Error(
+      fail(
         `[${AI_GROUP}] 上游代理组“${groupName}”在移除递归引用后没有可用节点来源`
       );
     }
@@ -1180,17 +1227,17 @@ function validateTopLevelUpstream(config, upstreamName, outboundIndex) {
   requireOutboundIndex(outboundIndex);
   const outbound = findOutbound(outboundIndex, upstreamName);
   if (!outbound) {
-    throw new Error(`[${AI_GROUP}] 上游“${upstreamName}”不存在`);
+    fail(`[${AI_GROUP}] 上游“${upstreamName}”不存在`);
   }
 
   if (outbound.kind === "group") {
     const group = outbound.value;
     if (group["disable-udp"] === true) {
-      throw new Error(`[${AI_GROUP}] 上游代理组“${upstreamName}”显式禁用了 UDP`);
+      fail(`[${AI_GROUP}] 上游代理组“${upstreamName}”显式禁用了 UDP`);
     }
     const explicit = Array.isArray(group.proxies) ? group.proxies : [];
     if (explicit.length === 0 && !groupHasAlternativeSource(group)) {
-      throw new Error(`[${AI_GROUP}] 上游代理组“${upstreamName}”没有可用节点来源`);
+      fail(`[${AI_GROUP}] 上游代理组“${upstreamName}”没有可用节点来源`);
     }
     return;
   }
@@ -1198,10 +1245,10 @@ function validateTopLevelUpstream(config, upstreamName, outboundIndex) {
   const proxy = outbound.value;
   const proxyType = String(proxy.type || "").toLowerCase();
   if (proxyType === "direct" || proxyType === "reject") {
-    throw new Error(`[${AI_GROUP}] 上游“${upstreamName}”不是机场代理节点`);
+    fail(`[${AI_GROUP}] 上游“${upstreamName}”不是机场代理节点`);
   }
   if (proxy.udp === false) {
-    throw new Error(`[${AI_GROUP}] 上游节点“${upstreamName}”显式关闭了 UDP`);
+    fail(`[${AI_GROUP}] 上游节点“${upstreamName}”显式关闭了 UDP`);
   }
 }
 
@@ -1221,15 +1268,96 @@ function grokActiveExactDomains() {
   return [...GROK_EXACT_DOMAINS, ...GROK_STRICT_EXACT_DOMAINS];
 }
 
+function extraSiteEnabled(site) {
+  if (!ROUTE_EXTRA) return false;
+  if (!site || typeof site.constant !== "string") {
+    fail(`[${AI_GROUP}] extra 站点缺少开关名`);
+  }
+  if (!Object.prototype.hasOwnProperty.call(EXTRA_SITE_SWITCHES, site.constant)) {
+    fail(`[${AI_GROUP}] 未知 extra 站点开关：${site.constant}`);
+  }
+  return EXTRA_SITE_SWITCHES[site.constant] === true;
+}
+
+function extraSiteDomainList(fieldName) {
+  const domains = [];
+  for (const site of EXTRA_SITES) {
+    const values = site[fieldName];
+    if (!Array.isArray(values)) continue;
+    for (const domain of values) {
+      if (typeof domain === "string" && domain.length > 0) domains.push(domain);
+    }
+  }
+  return uniqueStrings(domains);
+}
+
+function allPossibleExtraSuffixDomains() {
+  return extraSiteDomainList("suffixDomains");
+}
+
+function allPossibleExtraExactDomains() {
+  return extraSiteDomainList("exactDomains");
+}
+
+function extraSuffixDomains() {
+  return allPossibleExtraSuffixDomains();
+}
+
+function activeExtraSites() {
+  return EXTRA_SITES.filter((site) => extraSiteEnabled(site));
+}
+
+function activeExtraSuffixDomains() {
+  return uniqueStrings(
+    activeExtraSites().flatMap((site) =>
+      Array.isArray(site.suffixDomains) ? site.suffixDomains : []
+    )
+  );
+}
+
+function activeExtraExactDomains() {
+  return uniqueStrings(
+    activeExtraSites().flatMap((site) =>
+      Array.isArray(site.exactDomains) ? site.exactDomains : []
+    )
+  );
+}
+
+function extraResidentialDnsExemptDomains() {
+  const suffixes = new Set();
+  const exact = new Set();
+  for (const site of EXTRA_SITES) {
+    if (site.residentialDns !== false) continue;
+    for (const domain of Array.isArray(site.suffixDomains) ? site.suffixDomains : []) {
+      if (typeof domain === "string" && domain.length > 0) suffixes.add(domain);
+    }
+    for (const domain of Array.isArray(site.exactDomains) ? site.exactDomains : []) {
+      if (typeof domain === "string" && domain.length > 0) exact.add(domain);
+    }
+  }
+  return { suffixes, exact };
+}
+
+function residentialDnsSuffixSet() {
+  const exempt = extraResidentialDnsExemptDomains().suffixes;
+  return new Set(activeSuffixDomains().filter((domain) => !exempt.has(domain)));
+}
+
+function residentialDnsExactSet() {
+  const exempt = extraResidentialDnsExemptDomains().exact;
+  return new Set(activeExactDomains().filter((domain) => !exempt.has(domain)));
+}
+
 function activeSuffixDomains() {
   return uniqueStrings([
-    ...CORE_SUFFIX_DOMAINS,
+    ...(ROUTE_ANTHROPIC_CORE ? ANTHROPIC_CORE_SUFFIX_DOMAINS : []),
     ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_SUFFIX_DOMAINS : []),
     ...(ROUTE_OPENAI_AUTH ? OPENAI_AUTH_SUFFIX_DOMAINS : []),
     ...(ROUTE_OPENAI_WEB_ASSETS ? OPENAI_WEB_ASSET_SUFFIX_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_SUFFIX_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_SUFFIX_DOMAINS : []),
     ...grokActiveSuffixDomains(),
+    ...activeExtraSuffixDomains(),
     ...(ROUTE_OPENAI_SHARED_DEPENDENCIES ? OPENAI_SHARED_SUFFIX_DOMAINS : []),
     ...(ROUTE_CLAUDE_SHARED_DEPENDENCIES ? CLAUDE_SHARED_SUFFIX_DOMAINS : []),
     ...(ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY
@@ -1240,13 +1368,16 @@ function activeSuffixDomains() {
 
 function activeExactDomains() {
   return uniqueStrings([
-    ...CORE_EXACT_DOMAINS,
+    ...(ROUTE_ANTHROPIC_CORE ? ANTHROPIC_CORE_EXACT_DOMAINS : []),
+    ...(ROUTE_GEMINI_API_CORE ? GEMINI_API_CORE_EXACT_DOMAINS : []),
+    ...(ROUTE_ANTIGRAVITY_CORE ? ANTIGRAVITY_CORE_EXACT_DOMAINS : []),
     ...(ROUTE_OPENAI_CORE ? OPENAI_CORE_EXACT_DOMAINS : []),
     ...(ROUTE_OPENAI_AUTH ? OPENAI_AUTH_EXACT_DOMAINS : []),
     ...(ROUTE_GEMINI_WEB_CORE ? GEMINI_WEB_EXACT_DOMAINS : []),
     ...(ROUTE_VERTEX_AI_ENDPOINTS ? VERTEX_AI_EXACT_DOMAINS : []),
     ...(ROUTE_CURSOR_CORE ? CURSOR_EXACT_DOMAINS : []),
     ...grokActiveExactDomains(),
+    ...activeExtraExactDomains(),
     ...(ROUTE_OPENAI_SHARED_DEPENDENCIES ? OPENAI_SHARED_EXACT_DOMAINS : []),
     ...(ROUTE_CLAUDE_SHARED_DEPENDENCIES ? CLAUDE_SHARED_EXACT_DOMAINS : []),
     ...(ROUTE_ANTIGRAVITY_GOOGLE_AUTH ? ANTIGRAVITY_GOOGLE_AUTH_DOMAINS : []),
@@ -1269,7 +1400,7 @@ function activeDomainRegexes() {
 
 function allPossibleSuffixDomains() {
   return uniqueStrings([
-    ...CORE_SUFFIX_DOMAINS,
+    ...ANTHROPIC_CORE_SUFFIX_DOMAINS,
     ...RETIRED_CORE_SUFFIX_DOMAINS,
     ...OPENAI_CORE_SUFFIX_DOMAINS,
     ...OPENAI_AUTH_SUFFIX_DOMAINS,
@@ -1283,6 +1414,7 @@ function allPossibleSuffixDomains() {
     "authenticate.cursor.sh",
     "antigravity.google",
     ...GROK_SUFFIX_DOMAINS,
+    ...allPossibleExtraSuffixDomains(),
     ...OPENAI_SHARED_SUFFIX_DOMAINS,
     ...CLAUDE_SHARED_SUFFIX_DOMAINS,
     ...ANTIGRAVITY_UPDATE_AND_TELEMETRY_SUFFIX_DOMAINS,
@@ -1292,7 +1424,9 @@ function allPossibleSuffixDomains() {
 
 function allPossibleExactDomains() {
   return uniqueStrings([
-    ...CORE_EXACT_DOMAINS,
+    ...ANTHROPIC_CORE_EXACT_DOMAINS,
+    ...GEMINI_API_CORE_EXACT_DOMAINS,
+    ...ANTIGRAVITY_CORE_EXACT_DOMAINS,
     ...RETIRED_CORE_EXACT_DOMAINS,
     ...OPENAI_CORE_EXACT_DOMAINS,
     ...OPENAI_AUTH_EXACT_DOMAINS,
@@ -1305,6 +1439,7 @@ function allPossibleExactDomains() {
     ...GROK_STRICT_EXACT_DOMAINS,
     // v5.10 将 api.x.ai 改为 suffix；保留 exact 以便清理旧规则。
     "api.x.ai",
+    ...allPossibleExtraExactDomains(),
     ...OPENAI_SHARED_EXACT_DOMAINS,
     ...CLAUDE_SHARED_EXACT_DOMAINS,
     ...ANTIGRAVITY_GOOGLE_AUTH_DOMAINS,
@@ -1353,16 +1488,24 @@ function buildDomainRules(targetGroup) {
   ]);
 }
 
-function buildCoreAiProcessRules(targetGroup) {
+function buildAntigravityProcessRules(targetGroup) {
   return [
     // Antigravity 主进程与安装目录内的 language_server 等子进程
     `PROCESS-NAME-REGEX,(?i)^antigravity(?:[ _-]ide)?(?:\\.exe)?$,${targetGroup}`,
-    `PROCESS-PATH-REGEX,(?i).*[/\\\\]antigravity(?:[ _-]ide)?[/\\\\].*,${targetGroup}`,
+    `PROCESS-PATH-REGEX,(?i).*[/\\\\]antigravity(?:[ _-]ide)?[/\\\\].*,${targetGroup}`
+  ];
+}
 
+function buildOpenAiProcessRules(targetGroup) {
+  return [
     // ChatGPT 桌面端、Electron Helper、Codex/OpenAI CLI
     `PROCESS-NAME-REGEX,(?i)^(?:chatgpt(?: helper.*)?|codex|openai)(?:\\.exe)?$,${targetGroup}`,
-    `PROCESS-PATH-REGEX,(?i).*[/\\\\](?:chatgpt|codex|openai)(?:[ _-][^/\\\\]+)?[/\\\\].*,${targetGroup}`,
+    `PROCESS-PATH-REGEX,(?i).*[/\\\\](?:chatgpt|codex|openai)(?:[ _-][^/\\\\]+)?[/\\\\].*,${targetGroup}`
+  ];
+}
 
+function buildAnthropicProcessRules(targetGroup) {
+  return [
     // Claude Desktop / Claude Code
     `PROCESS-NAME-REGEX,(?i)^(?:claude(?: desktop)?|claude-code)(?:\\.exe)?$,${targetGroup}`,
     `PROCESS-PATH-REGEX,(?i).*[/\\\\](?:claude|claude-code)(?:[ _-][^/\\\\]+)?[/\\\\].*,${targetGroup}`
@@ -1378,7 +1521,9 @@ function buildCursorProcessRules(targetGroup) {
 
 function buildAllProcessRules(targetGroup) {
   return uniqueStrings([
-    ...buildCoreAiProcessRules(targetGroup),
+    ...buildAntigravityProcessRules(targetGroup),
+    ...buildOpenAiProcessRules(targetGroup),
+    ...buildAnthropicProcessRules(targetGroup),
     ...buildCursorProcessRules(targetGroup)
   ]);
 }
@@ -1386,13 +1531,15 @@ function buildAllProcessRules(targetGroup) {
 function buildProcessRules(targetGroup) {
   if (!ENABLE_AI_PROCESS_FALLBACK) return [];
   return uniqueStrings([
-    ...buildCoreAiProcessRules(targetGroup),
-    ...(ROUTE_CURSOR_PROCESS_FALLBACK ? buildCursorProcessRules(targetGroup) : [])
+    ...(ROUTE_ANTIGRAVITY_CORE ? buildAntigravityProcessRules(targetGroup) : []),
+    ...(ROUTE_OPENAI_CORE ? buildOpenAiProcessRules(targetGroup) : []),
+    ...(ROUTE_ANTHROPIC_CORE ? buildAnthropicProcessRules(targetGroup) : []),
+    ...(ROUTE_CURSOR_CORE && ROUTE_CURSOR_PROCESS_FALLBACK ? buildCursorProcessRules(targetGroup) : [])
   ]);
 }
 
 function buildAnthropicIpRules(targetGroup) {
-  if (!ENABLE_ANTHROPIC_IP_FALLBACK) return [];
+  if (!ROUTE_ANTHROPIC_CORE || !ENABLE_ANTHROPIC_IP_FALLBACK) return [];
   return ANTHROPIC_INBOUND_IP_RULE_TEMPLATES.map(
     (template) => template.replace("{GROUP}", targetGroup)
   );
@@ -1514,10 +1661,11 @@ function buildNameserverPolicy(existingPolicy) {
   for (const key of PRIVATE_DNS_POLICY_KEYS) policy[key] = PRIVATE_DNS;
 
   // 具体 AI / 公共 DoH 域名优先于宽泛 geosite。
-  for (const domain of activeSuffixDomains()) {
+  // extra 站点可只走业务路由、不写住宅 DoH。
+  for (const domain of residentialDnsSuffixSet()) {
     policy[`+.${domain}`] = RESIDENTIAL_DOH;
   }
-  for (const domain of activeExactDomains()) {
+  for (const domain of residentialDnsExactSet()) {
     policy[domain] = RESIDENTIAL_DOH;
   }
   if (ROUTE_PUBLIC_ENCRYPTED_DNS) {
@@ -1600,7 +1748,7 @@ function upsertNamedItem(items, item) {
     if (result[index] && result[index].name === item.name) indexes.push(index);
   }
   if (indexes.length > 1) {
-    throw new Error(`[${AI_GROUP}] 无法 upsert 重复名称“${item.name}”`);
+    fail(`[${AI_GROUP}] 无法 upsert 重复名称“${item.name}”`);
   }
   if (indexes.length === 1) result[indexes[0]] = item;
   else result.unshift(item);
@@ -1609,32 +1757,52 @@ function upsertNamedItem(items, item) {
 
 function buildAiGroup(config) {
   const existing = findNamedItem(config["proxy-groups"], AI_GROUP) || {};
-  return {
-    ...existing,
+  const group = {
     name: AI_GROUP,
     type: "select",
     proxies: [HOME_PROXY_NAME],
     "disable-udp": false
   };
+  for (const key of ["icon", "hidden"]) {
+    if (Object.prototype.hasOwnProperty.call(existing, key)) group[key] = existing[key];
+  }
+  return group;
 }
 
-function hardenTun(config) {
-  // 新版 Clash Verge Rev 在全局脚本执行后会按“权威字段”把 tun/ipv6 还原为
-  // 应用设置页的值，此函数的改动在这类宿主上无效；TUN 的 dns-hijack 与
-  // IPv6 开关需在 Verge 设置页配置。保留实现以兼容旧版宿主。
-  if (!HARDEN_EXISTING_TUN_DNS_HIJACK) return;
-  if (!isPlainObject(config.tun) || config.tun.enable !== true) return;
+function checkHostOwnedFields(config) {
+  // Clash Verge Rev 设置页管理 tun 与顶层 ipv6：脚本执行后宿主按设置页还原，
+  // v2.5.5 起还会弹出“扩展写入的值已被丢弃”提示。此函数只读取并告警，不写入。
+  if (
+    HARDEN_EXISTING_TUN_DNS_HIJACK &&
+    isPlainObject(config.tun) &&
+    config.tun.enable === true
+  ) {
+    const current = Array.isArray(config.tun["dns-hijack"])
+      ? config.tun["dns-hijack"]
+      : [];
+    const missing = ["any:53", "tcp://any:53"].filter(
+      (entry) => !current.includes(entry)
+    );
+    if (missing.length > 0) {
+      warn(
+        `[${AI_GROUP}] TUN 的 dns-hijack 缺少 ${missing.join("、")}；` +
+        "请在 Verge 设置 → TUN 设置 → DNS 劫持中添加。"
+      );
+    }
+    if (ENABLE_TUN_STRICT_ROUTE && config.tun["strict-route"] !== true) {
+      warn(
+        `[${AI_GROUP}] TUN 的 strict-route 未开启；` +
+        "请在 Verge 设置 → TUN 设置中开启严格路由。"
+      );
+    }
+  }
 
-  const current = Array.isArray(config.tun["dns-hijack"])
-    ? config.tun["dns-hijack"]
-    : [];
-  config.tun["dns-hijack"] = uniqueStrings([
-    ...current,
-    "any:53",
-    "tcp://any:53"
-  ]);
-
-  if (ENABLE_TUN_STRICT_ROUTE) config.tun["strict-route"] = true;
+  if (config.ipv6 === true) {
+    warn(
+      `[${AI_GROUP}] Mihomo IPv6 已开启；AI 流量可能经 IPv6 绕过家宽链路，` +
+      "请在 Verge 设置页关闭 IPv6。"
+    );
+  }
 }
 
 function mergeSniffProtocol(existingProtocol, defaultPorts, overrideDestination) {
@@ -1682,64 +1850,58 @@ function ensureProcessLookup(config) {
 // ============================================================
 
 function main(config, profileName) {
-  if (!config || typeof config !== "object") return config;
+  if (!isPlainObject(config)) {
+    fail(`[${AI_GROUP}] 配置对象无效，拒绝执行`);
+  }
 
-  if (!Array.isArray(config.proxies)) config.proxies = [];
-  if (!Array.isArray(config["proxy-groups"])) config["proxy-groups"] = [];
-  if (!Array.isArray(config.rules)) config.rules = [];
+  const working = cloneConfigForEdit(config);
 
   // 1. 在任何覆盖前检查保留名称，防止静默破坏用户配置。
-  validateReservedNameCollisions(config);
+  validateReservedNameCollisions(working);
 
   // 2. 为当前 Profile 动态解析一个真实存在的上游名称。
-  const outboundIndex = buildOutboundIndex(config);
-  const upstreamName = resolveUpstreamName(config, profileName, outboundIndex);
+  const outboundIndex = buildOutboundIndex(working);
+  const upstreamName = resolveUpstreamName(working, profileName, outboundIndex);
 
   // 3. 防止 include-all / 嵌套组把家宽节点重新纳入上游，形成递归链。
-  hardenAllIncludeAllGroups(config["proxy-groups"]);
-  hardenReachableUpstreamGraph(config, upstreamName, outboundIndex);
-  validateTopLevelUpstream(config, upstreamName, outboundIndex);
+  hardenAllIncludeAllGroups(working["proxy-groups"]);
+  hardenReachableUpstreamGraph(working, upstreamName, outboundIndex);
+  validateTopLevelUpstream(working, upstreamName, outboundIndex);
 
   // 4. 构建家宽 SOCKS5，dialer-proxy 始终是单一、已解析名称。
-  const homeProxy = buildHomeProxy(config, upstreamName);
+  const homeProxy = buildHomeProxy(working, upstreamName);
   validateHomeProxy(homeProxy);
-  config.proxies = upsertNamedItem(config.proxies, homeProxy);
+  working.proxies = upsertNamedItem(working.proxies, homeProxy);
 
   // 5. 注入统一 AI 出口组；不提供 DIRECT 回退，故障时 fail closed。
-  config["proxy-groups"] = upsertNamedItem(
-    config["proxy-groups"],
-    buildAiGroup(config)
+  working["proxy-groups"] = upsertNamedItem(
+    working["proxy-groups"],
+    buildAiGroup(working)
   );
 
   // 6. 精确清理当前版本管理的规则；未知自定义规则原样保留。
-  const existingRules = cleanExistingManagedRules(config.rules);
-  config.rules = dedupeRuleEntries([
+  const existingRules = cleanExistingManagedRules(working.rules);
+  working.rules = dedupeRuleEntries([
     ...buildInjectedRules(),
     ...existingRules
   ]);
 
   // 7. 重建严格 DNS 路径。
-  config.dns = buildDnsConfig(config.dns, upstreamName);
+  working.dns = buildDnsConfig(working.dns, upstreamName);
 
-  // 8. 加固已启用的 TUN 与域名嗅探。查找进程写顶层 always；进程路由默认关闭。
-  hardenTun(config);
-  hardenSniffer(config);
-  ensureProcessLookup(config);
+  // 8. 加固域名嗅探。查找进程写顶层 always；进程路由默认关闭。
+  hardenSniffer(working);
+  ensureProcessLookup(working);
 
-  // 9. 统一关闭 Mihomo IPv6；操作系统层仍需由 TUN/系统路由约束。
-  // 新版 Clash Verge Rev 会把 ipv6 还原为应用设置值（见 hardenTun 注释）。
-  config.ipv6 = false;
+  // 9. 只检查 Verge 设置页管理的 tun 与 ipv6，不安全时 warn；不写入这些字段。
+  checkHostOwnedFields(working);
 
   info(
     `[${AI_GROUP} v${SCRIPT_VERSION}] Profile“${profileName || "<未命名>"}”` +
     `：dialer-proxy -> ${upstreamName}`
   );
-  info(
-    `[${AI_GROUP}] 提示：新版 Clash Verge Rev 会在脚本执行后还原 tun/ipv6 ` +
-    "等权威字段；TUN 的 dns-hijack 与 IPv6 开关请在 Verge 设置页配置。"
-  );
 
-  return config;
+  return working;
 }
 
 // Node.js 单元测试导出；Clash Verge 环境不存在 module，不受影响。
@@ -1754,6 +1916,12 @@ if (typeof module !== "undefined" && module.exports) {
     buildInjectedRules,
     buildNameserverPolicy,
     cleanExistingManagedRules,
+    activeExtraSuffixDomains,
+    activeExtraExactDomains,
+    allPossibleExtraSuffixDomains,
+    allPossibleExtraExactDomains,
+    residentialDnsSuffixSet,
+    extraSuffixDomains,
     constants: {
       SCRIPT_VERSION,
       AI_GROUP,
@@ -1767,6 +1935,13 @@ if (typeof module !== "undefined" && module.exports) {
       PRIVATE_DNS,
       PRESERVE_UNMANAGED_NAMESERVER_POLICY,
       ROUTE_OPENAI_CORE,
+      ROUTE_ANTHROPIC_CORE,
+      ROUTE_GEMINI_API_CORE,
+      ROUTE_ANTIGRAVITY_CORE,
+      ANTHROPIC_CORE_SUFFIX_DOMAINS,
+      ANTHROPIC_CORE_EXACT_DOMAINS,
+      GEMINI_API_CORE_EXACT_DOMAINS,
+      ANTIGRAVITY_CORE_EXACT_DOMAINS,
       ROUTE_OPENAI_AUTH,
       ROUTE_OPENAI_WEB_ASSETS,
       OPENAI_CORE_SUFFIX_DOMAINS,
@@ -1780,6 +1955,8 @@ if (typeof module !== "undefined" && module.exports) {
       ROUTE_CURSOR_REPOSITORY_INDEXING,
       ROUTE_GROK_CORE,
       ROUTE_GROK_WEB_ASSETS,
+      ROUTE_EXTRA,
+      ROUTE_EXTRA_ANYROUTER,
       ROUTE_CURSOR_PROCESS_FALLBACK,
       GEMINI_WEB_SUFFIX_DOMAINS,
       GEMINI_WEB_EXACT_DOMAINS,
@@ -1791,6 +1968,11 @@ if (typeof module !== "undefined" && module.exports) {
       GROK_SUFFIX_DOMAINS,
       GROK_STRICT_EXACT_DOMAINS,
       GROK_EXACT_DOMAINS,
+      EXTRA_SITES,
+      EXTRA_SITE_SWITCHES,
+      get EXTRA_SUFFIX_DOMAINS() {
+        return allPossibleExtraSuffixDomains();
+      },
       RETIRED_CORE_SUFFIX_DOMAINS,
       RETIRED_CORE_EXACT_DOMAINS,
       RETIRED_DOMAIN_REGEXES

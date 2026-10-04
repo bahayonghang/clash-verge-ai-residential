@@ -1,0 +1,15 @@
+{
+  "synthetic_only": true,
+  "clients_started": 0,
+  "argv": [
+    "python",
+    ".trellis/tasks/09-30-evergreen-runtime-validation/research/runtime-capture-verification.py"
+  ],
+  "started_utc": "2026-10-01T13:18:42.506062+00:00",
+  "ended_utc": "2026-10-01T13:18:43.013131+00:00",
+  "exit_code": 0,
+  "stdout_sha256": "a7b9fb4fd281b07dceae7541ef2db256efa08874ee3d5bcceb60dc8818aa0c7b",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "verifier_sha256": "1e33d36a0f017dfe71c412c4ddb7b08376975440307b201b6f77b089b8b25a2c",
+  "capture_sha256": "392b2f4c211c03f0bb9479dcbb5e6804660a8b3a82f31c618ef814d28036cf27"
+}

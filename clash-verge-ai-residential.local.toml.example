@@ -15,6 +15,14 @@ dialer-proxy = "🚀节点选择"
 # 家宽的流量范围，默认均为关闭。
 [routing]
 
+# Claude 产品、Anthropic API 与产品代理；关闭后也撤销其专属进程及 IP 兜底。
+# 各 core 只撤销对应托管捕获，剩余请求交回原 Profile；辅助/认证开关仍独立。
+anthropic_core = true
+# Gemini Developer API，与 Gemini Web、Vertex AI 及 Antigravity 独立。
+gemini_api_core = true
+# Antigravity / Gemini Code Assist 核心端点；关闭后也撤销 Antigravity 进程兜底。
+antigravity_core = true
+
 # OpenAI / ChatGPT 的核心产品流量：ChatGPT 网页、模型 API 及用户上传、生成内容。
 openai_core = true
 # OpenAI 第一方登录：auth.openai.com（含 setup 子域）与 auth0.openai.com。
@@ -54,15 +62,20 @@ grok_core = true
 # code.grok.com 精确主机；api.x.ai 后缀不受影响。
 grok_web_assets = true
 
+# extra 是小站分类总开关，默认关闭。打开后仍需各站点开关。
+extra = false
+# AnyRouter。仅在 extra = true 时生效；不写住宅 DNS。
+extra_anyrouter = true
+
 # 进程级兜底：按 Cursor 进程名代理其插件市场、GitHub、npm、MCP 和用户后端等
-# 全部连接。只有同时开启 ai_process_fallback 时此项才生效，通常不建议开启。
+# 全部连接。须同时开启 ai_process_fallback 与 cursor_core，通常不建议开启。
 cursor_process_fallback = false
 # Claude Code 的辅助流量：安装、更新、文档和包管理；不包括核心推理流量。
 claude_code_auxiliary = false
-# 为已知 AI 进程添加进程名匹配规则的总开关。会扩大代理范围。
+# 为核心开关已开启的已知 AI 服务添加进程名匹配规则的总开关。会扩大代理范围。
 # 查找进程由脚本写到配置顶层 find-process-mode: always，与本开关无关。
 ai_process_fallback = false
-# Anthropic 官方入站 IP 网段兜底：覆盖域名嗅探失败或应用直接连接 IP 的情形。
+# Anthropic 官方入站 IP 网段兜底：须开启 anthropic_core，覆盖嗅探失败或直连 IP。
 anthropic_ip_fallback = true
 
 # 通用实时通信基础设施：共享 STUN/TURN 服务可能被非 AI 应用复用。
@@ -74,7 +87,7 @@ global_realtime_ports = false
 # 扩大到非 AI DNS 流量。
 public_encrypted_dns = false
 
-# 运行时行为开关：控制上游代理选择、DNS 策略、域名嗅探及已有 TUN 的加固方式。
+# 运行时行为开关：控制上游代理选择、DNS 策略、域名嗅探及已有 TUN 的检查方式。
 [runtime]
 
 # 未找到候选上游时，允许采用当前 Profile 最后一条 MATCH/FINAL 规则指定的目标。
@@ -90,10 +103,12 @@ preserve_unmanaged_nameserver_policy = false
 # 启用域名嗅探和 DNS 映射，用于补偿纯 IP 连接或 DNS 映射缺失；不会覆盖目标地址。
 enable_domain_sniffer = true
 
-# 仅在原 Profile 已启用 TUN 时补充 DNS 劫持规则，不会自行开启 TUN。
+# TUN 已启用时检查 dns-hijack 是否含 any:53 与 tcp://any:53，缺少时输出 warn。
+# 只检查并告警，不写入：tun 由 Verge 设置页管理，请在 TUN 设置 → DNS 劫持中添加。
 harden_existing_tun_dns_hijack = true
-# 为现有 TUN 启用 strict-route。可降低 Windows 多网卡环境的 DNS 泄漏，但可能影响
-# 虚拟机、局域网或特殊路由；仅在 harden_existing_tun_dns_hijack = true 时生效。
+# TUN 已启用时检查 strict-route 是否开启，未开启时输出 warn；不写入。strict-route
+# 可降低 Windows 多网卡环境的 DNS 泄漏，但可能影响虚拟机、局域网或特殊路由；
+# 仅在 harden_existing_tun_dns_hijack = true 时检查。
 enable_tun_strict_route = false
 
 # 若可达的代理组或节点显式关闭 UDP，则输出警告；顶层上游关闭 UDP 会直接拒绝配置。

@@ -1,0 +1,166 @@
+{
+  "observed_utc": "2026-10-02T15:31:34.886487+00:00",
+  "generator_failure": {
+    "status": "STOPPED_FIRST_FAILURE",
+    "error_type": "KeyError",
+    "error": "'upload'",
+    "cause": "generator.py probe check read production['upload'] after production status=error; driver-side KeyError, not a native failure"
+  },
+  "probes": {
+    "a250-minute-production": {
+      "checks": {
+        "native_exit_0": true,
+        "exactly_one_test_passed": true,
+        "production_status_ok": true,
+        "tier_raw": true,
+        "nonempty": true,
+        "deadline_ms_le_10000": true
+      },
+      "status": "PASS_DIAGNOSTIC",
+      "production_first_read": {
+        "connection_count": 250,
+        "data_version": 2592000,
+        "download": 11725,
+        "series_rows": 1,
+        "status": "ok",
+        "tier": "Raw",
+        "upload": 3497
+      },
+      "production_first_read_ms": 9.583400000000001,
+      "raw_query_ms": 3.897,
+      "competing_load_at_start": [
+        {
+          "pid": 7984,
+          "name": "pwsh.exe",
+          "cmdline_head": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -NoLogo -NoProfile -NonInteractive -File D:\\Documents\\Code\\Rust\\Exp\\ferrots\\runs\\p2-development\\p2-v4-20261002\\executor-2"
+        },
+        {
+          "pid": 41208,
+          "name": "python.exe",
+          "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe -c import argparse, json, sys, os\nfrom pathlib import Path\npath, seed = sys.argv[1:3"
+        },
+        {
+          "pid": 45168,
+          "name": "python.exe",
+          "cmdline_head": "C:\\Users\\lyh\\scoop\\persist\\uv\\python\\versions\\cpython-3.12-windows-x86_64-none\\python.exe D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\run_itransformer.py"
+        },
+        {
+          "pid": 45552,
+          "name": "python.exe",
+          "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe tools/validation/p2_acceptance.py ett-reference --suite runs/p2-acceptance/20261002-"
+        },
+        {
+          "pid": 48028,
+          "name": "pwsh.exe",
+          "cmdline_head": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -File D:\\Documents\\Code\\Rust\\Exp\\ferrots\\runs\\p2-development\\p2-v4"
+        },
+        {
+          "pid": 51228,
+          "name": "bash.exe",
+          "cmdline_head": "C:\\Program Files\\Git\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790950182404-qo53pm.sh 2>/dev/null || true && export TEMP='C:\\Us"
+        },
+        {
+          "pid": 51844,
+          "name": "python.exe",
+          "cmdline_head": "C:\\Users\\lyh\\scoop\\persist\\uv\\python\\versions\\cpython-3.12-windows-x86_64-none\\python.exe -c import argparse, json, sys, os\nfrom pathlib import Path\npath, seed "
+        },
+        {
+          "pid": 52584,
+          "name": "bash.exe",
+          "cmdline_head": "C:\\Program Files\\Git\\bin\\..\\usr\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790950182404-qo53pm.sh 2>/dev/null || true && export "
+        },
+        {
+          "pid": 61036,
+          "name": "python.exe",
+          "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\run_itransformer.py --seed 2021 -"
+        }
+      ]
+    },
+    "a250-30d-production": {
+      "checks": {
+        "native_exit_0": true,
+        "exactly_one_test_passed": true,
+        "production_status_ok": false,
+        "tier_raw": false,
+        "nonempty": false,
+        "deadline_ms_le_10000": false,
+        "totals_match_oracle": false,
+        "series_rows_720": false,
+        "stage_connection_count_matches_oracle": true
+      },
+      "status": "FAIL_DIAGNOSTIC",
+      "production_first_read": {
+        "error": "DeadlineExceeded(\"report query\")",
+        "status": "error"
+      },
+      "production_first_read_ms": 10035.869999999999,
+      "raw_query_ms": 13016.4438,
+      "competing_load_at_start": [
+        {
+          "pid": 7984,
+          "name": "pwsh.exe",
+          "cmdline_head": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -NoLogo -NoProfile -NonInteractive -File D:\\Documents\\Code\\Rust\\Exp\\ferrots\\runs\\p2-development\\p2-v4-20261002\\executor-2"
+        },
+        {
+          "pid": 41208,
+          "name": "python.exe",
+          "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe -c import argparse, json, sys, os\nfrom pathlib import Path\npath, seed = sys.argv[1:3"
+        },
+        {
+          "pid": 45168,
+          "name": "python.exe",
+          "cmdline_head": "C:\\Users\\lyh\\scoop\\persist\\uv\\python\\versions\\cpython-3.12-windows-x86_64-none\\python.exe D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\run_itransformer.py"
+        },
+        {
+          "pid": 45552,
+          "name": "python.exe",
+          "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe tools/validation/p2_acceptance.py ett-reference --suite runs/p2-acceptance/20261002-"
+        },
+        {
+          "pid": 48028,
+          "name": "pwsh.exe",
+          "cmdline_head": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -File D:\\Documents\\Code\\Rust\\Exp\\ferrots\\runs\\p2-development\\p2-v4"
+        },
+        {
+          "pid": 51228,
+          "name": "bash.exe",
+          "cmdline_head": "C:\\Program Files\\Git\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790950182404-qo53pm.sh 2>/dev/null || true && export TEMP='C:\\Us"
+        },
+        {
+          "pid": 51844,
+          "name": "python.exe",
+          "cmdline_head": "C:\\Users\\lyh\\scoop\\persist\\uv\\python\\versions\\cpython-3.12-windows-x86_64-none\\python.exe -c import argparse, json, sys, os\nfrom pathlib import Path\npath, seed "
+        },
+        {
+          "pid": 52584,
+          "name": "bash.exe",
+          "cmdline_head": "C:\\Program Files\\Git\\bin\\..\\usr\\bin\\bash.exe -c source /c/Users/lyh/.claude/shell-snapshots/snapshot-bash-1790950182404-qo53pm.sh 2>/dev/null || true && export "
+        },
+        {
+          "pid": 61036,
+          "name": "python.exe",
+          "cmdline_head": "D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\.venv\\Scripts\\python.exe D:\\Documents\\Code\\Rust\\Exp\\ferrots\\tools\\reference\\run_itransformer.py --seed 2021 -"
+        }
+      ]
+    }
+  },
+  "db_after": {
+    "50": {
+      "db_sha256": "E93A7807D2FD9157A95504AD3CCE29954B68317F8D6E0D77C8EB249459FF28E3",
+      "sidecars": {
+        "-wal": 0,
+        "-shm": 32768
+      }
+    },
+    "250": {
+      "db_sha256": "DA44A49A3701025F1AA321471A5C6AB1FC066126C451D26CF865D2D6DDD7E900",
+      "sidecars": {
+        "-wal": 0,
+        "-shm": 32768
+      }
+    }
+  },
+  "raw_fold_probes": "NOT_RUN by generator; run later with quiet-probes",
+  "boundary": "Diagnostic only. Competing ferrots CUDA load was present; pages cached by generation/hash/oracle. Does not replace or close any formal gate.",
+  "completion_sha256": "ECDEC6DF5821886A0C0DFC9016A4A86433A2F2B315E332C573F641A693DCB9FD"
+}

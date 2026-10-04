@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "node",
+    "--test",
+    "tests/bootstrap-harnesses.test.js",
+    "tests/check-harness-environment.test.js",
+    "tests/check-agent-contract.test.js"
+  ],
+  "shell": false,
+  "started_utc": "2026-10-03T02:36:04.266204+00:00",
+  "ended_utc": "2026-10-03T02:36:07.886491+00:00",
+  "native_exit_code": 0,
+  "stdout_sha256": "8ce8569a4eeef9dae2dd76de3e6ef957120a32982838d9114640ddb2389d4b6c",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

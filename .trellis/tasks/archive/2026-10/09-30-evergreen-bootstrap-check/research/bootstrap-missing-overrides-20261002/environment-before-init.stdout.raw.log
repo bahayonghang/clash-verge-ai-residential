@@ -1,0 +1,197 @@
+{
+  "ok": true,
+  "project": {
+    "root": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\candidate",
+    "versionPath": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\candidate\\.trellis\\.version",
+    "expectedTrellisVersion": "0.7.0-beta.3",
+    "versionError": null,
+    "overrides": [
+      {
+        "path": ".codex/config.toml",
+        "present": false,
+        "error": "ENOENT: no such file or directory, open 'C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\candidate\\.codex\\config.toml'"
+      },
+      {
+        "path": ".kimi-code/skills/trellis-implement/SKILL.md",
+        "present": false,
+        "error": "ENOENT: no such file or directory, open 'C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\candidate\\.kimi-code\\skills\\trellis-implement\\SKILL.md'"
+      },
+      {
+        "path": ".kimi-code/skills/trellis-check/SKILL.md",
+        "present": false,
+        "error": "ENOENT: no such file or directory, open 'C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\candidate\\.kimi-code\\skills\\trellis-check\\SKILL.md'"
+      },
+      {
+        "path": ".kimi-code/skills/trellis-research/SKILL.md",
+        "present": false,
+        "error": "ENOENT: no such file or directory, open 'C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\candidate\\.kimi-code\\skills\\trellis-research\\SKILL.md'"
+      }
+    ]
+  },
+  "tools": [
+    {
+      "tool": "claude",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\.local\\bin\\claude.exe",
+        "status": "available",
+        "version": "2.1.286",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "2.1.286 (Claude Code)\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    },
+    {
+      "tool": "codex",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\home\\lyh\\.npm-global\\codex.ps1",
+        "status": "available",
+        "version": "0.160.0",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "codex-cli 0.160.0\n",
+        "stderr": ""
+      },
+      "alternatives": [
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\codex.cmd",
+          "status": "available",
+          "version": "0.160.0",
+          "exitCode": 0,
+          "signal": null,
+          "error": null,
+          "stdout": "codex-cli 0.160.0\n",
+          "stderr": ""
+        },
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\codex",
+          "status": "missing",
+          "version": null,
+          "exitCode": null,
+          "signal": null,
+          "error": {
+            "code": "ENOENT",
+            "message": "spawnSync C:\\home\\lyh\\.npm-global\\codex ENOENT"
+          },
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "path": "C:\\Users\\lyh\\AppData\\Local\\OpenAI\\Codex\\bin\\a51e250fa15c740a\\codex.exe",
+          "status": "available",
+          "version": "0.159.2",
+          "exitCode": 0,
+          "signal": null,
+          "error": null,
+          "stdout": "codex-cli 0.159.2\n",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "tool": "grok",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\.grok\\bin\\grok.exe",
+        "status": "available",
+        "version": "1.0.46",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "grok 1.0.46 (2765805b9442)\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    },
+    {
+      "tool": "kimi",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\.kimi-code\\bin\\kimi.exe",
+        "status": "available",
+        "version": "2.0.0",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "2.0.0\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    },
+    {
+      "tool": "omp",
+      "selection": "discovered",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\home\\lyh\\.npm-global\\omp.ps1",
+        "status": "available",
+        "version": "18.4.10",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "omp/18.4.10\n",
+        "stderr": ""
+      },
+      "alternatives": [
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\omp.cmd",
+          "status": "available",
+          "version": "18.4.10",
+          "exitCode": 0,
+          "signal": null,
+          "error": null,
+          "stdout": "omp/18.4.10\n",
+          "stderr": ""
+        },
+        {
+          "path": "C:\\home\\lyh\\.npm-global\\omp",
+          "status": "missing",
+          "version": null,
+          "exitCode": null,
+          "signal": null,
+          "error": {
+            "code": "ENOENT",
+            "message": "spawnSync C:\\home\\lyh\\.npm-global\\omp ENOENT"
+          },
+          "stdout": "",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "tool": "trellis",
+      "selection": "explicit",
+      "discoveryError": null,
+      "selected": {
+        "path": "C:\\Users\\lyh\\AppData\\Local\\Temp\\trellis-t04-missing-overrides-20261002-q7twazn_\\tool\\node_modules\\@mindfoldhq\\trellis\\bin\\trellis.js",
+        "status": "available",
+        "version": "0.7.0-beta.3",
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "0.7.0-beta.3\n",
+        "stderr": ""
+      },
+      "alternatives": []
+    }
+  ],
+  "bootstrap": {
+    "status": "READY",
+    "blockers": [],
+    "executesBootstrap": false
+  },
+  "permissions": {
+    "projectTrust": "UNVERIFIED",
+    "hooks": "UNVERIFIED",
+    "note": "版本命令不证明项目或 hook 获准；本检查不修改权限、信任或 PATH。"
+  }
+}

@@ -1,0 +1,1213 @@
+{
+  "all_application_file_write_bytes": null,
+  "commits": 30,
+  "executable_sha256": "11c2542bc2c9f98a4b7517e67215e76884d8c01d25d64ae7faf478571bf7633e",
+  "final_files_and_pages": {
+    "active_page_bytes": 2809856,
+    "archive_failed": 0,
+    "archive_ok": 1116,
+    "archive_spool_present_bytes": 0,
+    "db_bytes": 2670592,
+    "freelist_count": 0,
+    "page_count": 686,
+    "page_size": 4096,
+    "reusable_page_bytes": 0,
+    "schema_version": 4,
+    "shm_bytes": 32768,
+    "spool_present_bytes": 0,
+    "wal_bytes": 4148872
+  },
+  "fixture_hash": "b7cd70678accfa7d26b098e43426256d1c607a216e6f841e1b7eaa6d9f0e1602",
+  "frame_budget_overruns": 0,
+  "frames": 30,
+  "initial_files_and_pages": {
+    "active_page_bytes": 2809856,
+    "archive_failed": 0,
+    "archive_ok": 1116,
+    "archive_spool_present_bytes": 0,
+    "db_bytes": 2670592,
+    "freelist_count": 0,
+    "page_count": 686,
+    "page_size": 4096,
+    "reusable_page_bytes": 0,
+    "schema_version": 4,
+    "shm_bytes": 32768,
+    "spool_present_bytes": 0,
+    "wal_bytes": 4148872
+  },
+  "kind": "isolated-real-facade",
+  "latency": {
+    "archive_tick": {
+      "count": 30,
+      "max_ms": 15.105699999999999,
+      "p50_ms": 12.0807,
+      "p95_ms": 12.969,
+      "p99_ms": 13.2973
+    },
+    "facade_ingest_including_durable_commit": {
+      "count": 30,
+      "max_ms": 10.1057,
+      "p50_ms": 4.4434000000000005,
+      "p95_ms": 9.883700000000001,
+      "p99_ms": 9.9837
+    },
+    "live_query": {
+      "count": 6,
+      "max_ms": 0.0669,
+      "p50_ms": 0.0591,
+      "p95_ms": 0.0621,
+      "p99_ms": 0.0621
+    },
+    "report_first_reader": {
+      "count": 6,
+      "max_ms": 1.5154999999999998,
+      "p50_ms": 1.2941,
+      "p95_ms": 1.3768,
+      "p99_ms": 1.3768
+    },
+    "report_repeated_reader": {
+      "count": 6,
+      "max_ms": 1.1264,
+      "p50_ms": 0.9882999999999998,
+      "p95_ms": 1.008,
+      "p99_ms": 1.008
+    },
+    "whole_tick": {
+      "count": 30,
+      "max_ms": 23.915,
+      "p50_ms": 16.9514,
+      "p95_ms": 22.522199999999998,
+      "p99_ms": 23.0205
+    }
+  },
+  "limits": [
+    "仅当前原生基准进程；没有 HTTP、Tauri 事件或 WebView，窗口为后台模拟状态。",
+    "CPU/I/O/内存不含初始化、warmup、结果 JSON 写出及最终统计查询；采样开销包含在测量内。",
+    "SQLite xWrite 只统计隔离目录内成功请求字节，不含 mmap/shm、spool、日志、系统缓存与物理设备写放大。",
+    "process I/O 为 OS 当前进程计数，不能替代文件归属；spool 瞬时写入需要独立回归或文件跟踪。",
+    "report first/repeated 每次均打开新 reader；未驱逐 OS page cache，不能宣称物理冷读。",
+    "ingest 延迟包含 accounting、告警与提交；不是单独 SQLite commit 耗时。",
+    "串行驱动没有 collector 输入队列；schedule_lag 不是实际队列深度。",
+    "归档齐全 fixture 使用空历史的持久化结果；本回放不代替完整30天容量库或安装态 soak。",
+    "failed 档案场景由隔离库 BEFORE INSERT 触发器拒绝持久化，非真实磁盘故障。"
+  ],
+  "local_utc_offset_seconds": 28800,
+  "measured_wall_secs": 30.0004353,
+  "native_after": {
+    "cpu_seconds": 7.9375,
+    "handles": 116,
+    "io_read_bytes": 545125568,
+    "io_write_bytes": 35319876,
+    "io_write_operations": 16408,
+    "private_bytes": 5861376,
+    "working_set_bytes": 15654912
+  },
+  "native_before": {
+    "cpu_seconds": 7.703125,
+    "handles": 116,
+    "io_read_bytes": 403988496,
+    "io_write_bytes": 34083876,
+    "io_write_operations": 15808,
+    "private_bytes": 5701632,
+    "working_set_bytes": 15290368
+  },
+  "native_cpu_seconds": 0.234375,
+  "native_private_bytes": {
+    "max": 5861376.0,
+    "p95": 5861376.0,
+    "samples": 30
+  },
+  "native_process_io_read_bytes": 141137072,
+  "native_process_io_write_bytes": 1236000,
+  "native_process_io_write_operations": 600,
+  "native_working_set_bytes": {
+    "max": 15654912.0,
+    "p95": 15634432.0,
+    "samples": 30
+  },
+  "options": {
+    "active": 50,
+    "archive": "complete",
+    "dir": "C:\\Users\\lyh\\AppData\\Local\\Temp\\resiwatch-resource-measure-20260920-aux-series\\matrix-a50-counters-baseline",
+    "duration_secs": 30,
+    "hz": 1,
+    "metadata_change_percent": 100,
+    "period_rule": false,
+    "query_every_frames": 5,
+    "seed": 20260919,
+    "source_revision": "c278bb7b56603001e32e353d2ee589dccef0bfe9",
+    "start_utc": 1800001800,
+    "virtual_time": false,
+    "warmup_secs": 5,
+    "workload": "counters"
+  },
+  "platform": "windows",
+  "process_id": 7244,
+  "samples": [
+    {
+      "active_tokens": 0,
+      "frame": 1,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.703125,
+        "handles": 116,
+        "io_read_bytes": 408674320,
+        "io_write_bytes": 34125076,
+        "io_write_operations": 15828,
+        "private_bytes": 5558272,
+        "working_set_bytes": 15085568
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001806,
+      "wal_bytes": 4148872,
+      "wall_secs": 0.0153459
+    },
+    {
+      "active_tokens": 0,
+      "frame": 2,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.71875,
+        "handles": 116,
+        "io_read_bytes": 413364240,
+        "io_write_bytes": 34166276,
+        "io_write_operations": 15848,
+        "private_bytes": 5701632,
+        "working_set_bytes": 15298560
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001807,
+      "wal_bytes": 4148872,
+      "wall_secs": 1.0225901
+    },
+    {
+      "active_tokens": 0,
+      "frame": 3,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.71875,
+        "handles": 116,
+        "io_read_bytes": 418054160,
+        "io_write_bytes": 34207476,
+        "io_write_operations": 15868,
+        "private_bytes": 5558272,
+        "working_set_bytes": 15126528
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001808,
+      "wal_bytes": 4148872,
+      "wall_secs": 2.0161075
+    },
+    {
+      "active_tokens": 0,
+      "frame": 4,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.71875,
+        "handles": 116,
+        "io_read_bytes": 422744080,
+        "io_write_bytes": 34248676,
+        "io_write_operations": 15888,
+        "private_bytes": 5701632,
+        "working_set_bytes": 15327232
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001809,
+      "wal_bytes": 4148872,
+      "wall_secs": 3.0164797
+    },
+    {
+      "active_tokens": 0,
+      "frame": 5,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.734375,
+        "handles": 116,
+        "io_read_bytes": 427507928,
+        "io_write_bytes": 34289876,
+        "io_write_operations": 15908,
+        "private_bytes": 5287936,
+        "working_set_bytes": 15101952
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001810,
+      "wal_bytes": 4148872,
+      "wall_secs": 4.0187424
+    },
+    {
+      "active_tokens": 0,
+      "frame": 6,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.734375,
+        "handles": 116,
+        "io_read_bytes": 432197848,
+        "io_write_bytes": 34331076,
+        "io_write_operations": 15928,
+        "private_bytes": 5701632,
+        "working_set_bytes": 15368192
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001811,
+      "wal_bytes": 4148872,
+      "wall_secs": 5.0165113
+    },
+    {
+      "active_tokens": 0,
+      "frame": 7,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.734375,
+        "handles": 116,
+        "io_read_bytes": 436887768,
+        "io_write_bytes": 34372276,
+        "io_write_operations": 15948,
+        "private_bytes": 5701632,
+        "working_set_bytes": 15454208
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001812,
+      "wal_bytes": 4148872,
+      "wall_secs": 6.0163813
+    },
+    {
+      "active_tokens": 0,
+      "frame": 8,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.75,
+        "handles": 116,
+        "io_read_bytes": 441577688,
+        "io_write_bytes": 34413476,
+        "io_write_operations": 15968,
+        "private_bytes": 5701632,
+        "working_set_bytes": 15486976
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001813,
+      "wal_bytes": 4148872,
+      "wall_secs": 7.0173694
+    },
+    {
+      "active_tokens": 0,
+      "frame": 9,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.75,
+        "handles": 116,
+        "io_read_bytes": 446267608,
+        "io_write_bytes": 34454676,
+        "io_write_operations": 15988,
+        "private_bytes": 5701632,
+        "working_set_bytes": 15486976
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001814,
+      "wal_bytes": 4148872,
+      "wall_secs": 8.0164747
+    },
+    {
+      "active_tokens": 0,
+      "frame": 10,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.75,
+        "handles": 116,
+        "io_read_bytes": 451031456,
+        "io_write_bytes": 34495876,
+        "io_write_operations": 16008,
+        "private_bytes": 5701632,
+        "working_set_bytes": 15491072
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001815,
+      "wal_bytes": 4148872,
+      "wall_secs": 9.0182953
+    },
+    {
+      "active_tokens": 0,
+      "frame": 11,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.765625,
+        "handles": 116,
+        "io_read_bytes": 455721376,
+        "io_write_bytes": 34537076,
+        "io_write_operations": 16028,
+        "private_bytes": 5701632,
+        "working_set_bytes": 15491072
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001816,
+      "wal_bytes": 4148872,
+      "wall_secs": 10.016158
+    },
+    {
+      "active_tokens": 0,
+      "frame": 12,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.765625,
+        "handles": 116,
+        "io_read_bytes": 460411296,
+        "io_write_bytes": 34578276,
+        "io_write_operations": 16048,
+        "private_bytes": 5820416,
+        "working_set_bytes": 15609856
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001817,
+      "wal_bytes": 4148872,
+      "wall_secs": 11.0224656
+    },
+    {
+      "active_tokens": 0,
+      "frame": 13,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.78125,
+        "handles": 116,
+        "io_read_bytes": 465101216,
+        "io_write_bytes": 34619476,
+        "io_write_operations": 16068,
+        "private_bytes": 5820416,
+        "working_set_bytes": 15609856
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001818,
+      "wal_bytes": 4148872,
+      "wall_secs": 12.0167298
+    },
+    {
+      "active_tokens": 0,
+      "frame": 14,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.78125,
+        "handles": 116,
+        "io_read_bytes": 469791136,
+        "io_write_bytes": 34660676,
+        "io_write_operations": 16088,
+        "private_bytes": 5820416,
+        "working_set_bytes": 15634432
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001819,
+      "wal_bytes": 4148872,
+      "wall_secs": 13.0172904
+    },
+    {
+      "active_tokens": 0,
+      "frame": 15,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.796875,
+        "handles": 116,
+        "io_read_bytes": 474554984,
+        "io_write_bytes": 34701876,
+        "io_write_operations": 16108,
+        "private_bytes": 5820416,
+        "working_set_bytes": 15634432
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001820,
+      "wal_bytes": 4148872,
+      "wall_secs": 14.0195715
+    },
+    {
+      "active_tokens": 0,
+      "frame": 16,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.8125,
+        "handles": 116,
+        "io_read_bytes": 479244904,
+        "io_write_bytes": 34743076,
+        "io_write_operations": 16128,
+        "private_bytes": 5701632,
+        "working_set_bytes": 15355904
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001821,
+      "wal_bytes": 4148872,
+      "wall_secs": 15.0218511
+    },
+    {
+      "active_tokens": 0,
+      "frame": 17,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.828125,
+        "handles": 116,
+        "io_read_bytes": 483934824,
+        "io_write_bytes": 34784276,
+        "io_write_operations": 16148,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15544320
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001822,
+      "wal_bytes": 4148872,
+      "wall_secs": 16.0172622
+    },
+    {
+      "active_tokens": 0,
+      "frame": 18,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.84375,
+        "handles": 116,
+        "io_read_bytes": 488624744,
+        "io_write_bytes": 34825476,
+        "io_write_operations": 16168,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15450112
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001823,
+      "wal_bytes": 4148872,
+      "wall_secs": 17.0221944
+    },
+    {
+      "active_tokens": 0,
+      "frame": 19,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.84375,
+        "handles": 116,
+        "io_read_bytes": 493314664,
+        "io_write_bytes": 34866676,
+        "io_write_operations": 16188,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15548416
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001824,
+      "wal_bytes": 4148872,
+      "wall_secs": 18.0170179
+    },
+    {
+      "active_tokens": 0,
+      "frame": 20,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.859375,
+        "handles": 116,
+        "io_read_bytes": 498078512,
+        "io_write_bytes": 34907876,
+        "io_write_operations": 16208,
+        "private_bytes": 5853184,
+        "working_set_bytes": 15466496
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001825,
+      "wal_bytes": 4148872,
+      "wall_secs": 19.0188545
+    },
+    {
+      "active_tokens": 0,
+      "frame": 21,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.875,
+        "handles": 116,
+        "io_read_bytes": 502768432,
+        "io_write_bytes": 34949076,
+        "io_write_operations": 16228,
+        "private_bytes": 5623808,
+        "working_set_bytes": 15400960
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001826,
+      "wal_bytes": 4148872,
+      "wall_secs": 20.0232822
+    },
+    {
+      "active_tokens": 0,
+      "frame": 22,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.875,
+        "handles": 116,
+        "io_read_bytes": 507458352,
+        "io_write_bytes": 34990276,
+        "io_write_operations": 16248,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15548416
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001827,
+      "wal_bytes": 4148872,
+      "wall_secs": 21.0170416
+    },
+    {
+      "active_tokens": 0,
+      "frame": 23,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.875,
+        "handles": 116,
+        "io_read_bytes": 512148272,
+        "io_write_bytes": 35031476,
+        "io_write_operations": 16268,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15548416
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001828,
+      "wal_bytes": 4148872,
+      "wall_secs": 22.0179067
+    },
+    {
+      "active_tokens": 0,
+      "frame": 24,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.875,
+        "handles": 116,
+        "io_read_bytes": 516838192,
+        "io_write_bytes": 35072676,
+        "io_write_operations": 16288,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15495168
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001829,
+      "wal_bytes": 4148872,
+      "wall_secs": 23.0168042
+    },
+    {
+      "active_tokens": 0,
+      "frame": 25,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.890625,
+        "handles": 116,
+        "io_read_bytes": 521602040,
+        "io_write_bytes": 35113876,
+        "io_write_operations": 16308,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15515648
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001830,
+      "wal_bytes": 4148872,
+      "wall_secs": 24.0241406
+    },
+    {
+      "active_tokens": 0,
+      "frame": 26,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.90625,
+        "handles": 116,
+        "io_read_bytes": 526291960,
+        "io_write_bytes": 35155076,
+        "io_write_operations": 16328,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15433728
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001831,
+      "wal_bytes": 4148872,
+      "wall_secs": 25.0217092
+    },
+    {
+      "active_tokens": 0,
+      "frame": 27,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.90625,
+        "handles": 116,
+        "io_read_bytes": 530981880,
+        "io_write_bytes": 35196276,
+        "io_write_operations": 16348,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15523840
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001832,
+      "wal_bytes": 4148872,
+      "wall_secs": 26.0165906
+    },
+    {
+      "active_tokens": 0,
+      "frame": 28,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.90625,
+        "handles": 116,
+        "io_read_bytes": 535671800,
+        "io_write_bytes": 35237476,
+        "io_write_operations": 16368,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15589376
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001833,
+      "wal_bytes": 4148872,
+      "wall_secs": 27.0165507
+    },
+    {
+      "active_tokens": 0,
+      "frame": 29,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.921875,
+        "handles": 116,
+        "io_read_bytes": 540361720,
+        "io_write_bytes": 35278676,
+        "io_write_operations": 16388,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15654912
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001834,
+      "wal_bytes": 4148872,
+      "wall_secs": 28.0198449
+    },
+    {
+      "active_tokens": 0,
+      "frame": 30,
+      "live_rows": 50,
+      "native": {
+        "cpu_seconds": 7.9375,
+        "handles": 116,
+        "io_read_bytes": 545125568,
+        "io_write_bytes": 35319876,
+        "io_write_operations": 16408,
+        "private_bytes": 5861376,
+        "working_set_bytes": 15654912
+      },
+      "token_bytes": 0,
+      "virtual_utc": 1800001835,
+      "wal_bytes": 4148872,
+      "wall_secs": 29.0198248
+    }
+  ],
+  "schedule_lag_frames_max": 0,
+  "schema_version": 1,
+  "simulated_secs": 30,
+  "spool_write_bytes": null,
+  "sqlite_application_file_write_bytes": 1236000,
+  "sqlite_xwrite": {
+    "db_bytes": 0,
+    "failed_calls": 0,
+    "other_sqlite_file_bytes": 0,
+    "successful_calls": 600,
+    "wal_bytes": 1236000
+  },
+  "synchronous": "FULL",
+  "tables_and_indexes": {
+    "dbstat_available": true,
+    "objects": [
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "alert_event",
+        "rows": 0,
+        "table": "alert_event"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 585.1428571428571,
+        "kind": "table",
+        "name": "alert_instance",
+        "rows": 7,
+        "table": "alert_instance"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "alert_instance_active_uniq",
+        "rows": null,
+        "table": "alert_instance"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "alert_instance_identity",
+        "rows": null,
+        "table": "alert_instance"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 585.1428571428571,
+        "kind": "table",
+        "name": "alert_rule",
+        "rows": 7,
+        "table": "alert_rule"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "backup_manifest",
+        "rows": 0,
+        "table": "backup_manifest"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 4096.0,
+        "kind": "table",
+        "name": "bundle_epoch",
+        "rows": 1,
+        "table": "bundle_epoch"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 113.77777777777777,
+        "kind": "table",
+        "name": "committed_bundle",
+        "rows": 36,
+        "table": "committed_bundle"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 40.96,
+        "kind": "table",
+        "name": "connection_chain",
+        "rows": 100,
+        "table": "connection_chain"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 81.92,
+        "kind": "table",
+        "name": "connection_minute",
+        "rows": 50,
+        "table": "connection_minute"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 81.92,
+        "kind": "table",
+        "name": "connection_session",
+        "rows": 50,
+        "table": "connection_session"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 81.92,
+        "kind": "table",
+        "name": "connection_session_attr",
+        "rows": 50,
+        "table": "connection_session_attr"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "connection_session_identity",
+        "rows": null,
+        "table": "connection_session"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 4096.0,
+        "kind": "table",
+        "name": "controller_epoch",
+        "rows": 1,
+        "table": "controller_epoch"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "coverage_daily",
+        "rows": 0,
+        "table": "coverage_daily"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "coverage_interval",
+        "rows": 0,
+        "table": "coverage_interval"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 4096.0,
+        "kind": "table",
+        "name": "data_version",
+        "rows": 1,
+        "table": "data_version"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 70.62068965517241,
+        "kind": "table",
+        "name": "dimension_dict",
+        "rows": 58,
+        "table": "dimension_dict"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "dimension_dict_value",
+        "rows": null,
+        "table": "dimension_dict"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_alert_event_retention",
+        "rows": null,
+        "table": "alert_event"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_alert_instance_center",
+        "rows": null,
+        "table": "alert_instance"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_connection_minute_utc",
+        "rows": null,
+        "table": "connection_minute"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_connection_session_started",
+        "rows": null,
+        "table": "connection_session"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_daily_core_day",
+        "rows": null,
+        "table": "traffic_daily_core"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_daily_dim_lookup",
+        "rows": null,
+        "table": "traffic_daily_dimension"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_hourly_dim_lookup",
+        "rows": null,
+        "table": "traffic_hourly_dimension"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_outbox_due",
+        "rows": null,
+        "table": "notification_outbox"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_outbox_lease",
+        "rows": null,
+        "table": "notification_outbox"
+      },
+      {
+        "bytes": 28672,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_report_archive_kind_start",
+        "rows": null,
+        "table": "report_archive"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "idx_session_attr_host",
+        "rows": null,
+        "table": "connection_session_attr"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "machine_setting",
+        "rows": 0,
+        "table": "machine_setting"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "notification_outbox",
+        "rows": 0,
+        "table": "notification_outbox"
+      },
+      {
+        "bytes": 2297856,
+        "bytes_per_row": 2059.010752688172,
+        "kind": "table",
+        "name": "report_archive",
+        "rows": 1116,
+        "table": "report_archive"
+      },
+      {
+        "bytes": 176128,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "report_archive_period_uniq",
+        "rows": null,
+        "table": "report_archive"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "report_snapshot_meta",
+        "rows": 0,
+        "table": "report_snapshot_meta"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "retention_state",
+        "rows": 0,
+        "table": "retention_state"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 1024.0,
+        "kind": "table",
+        "name": "retention_watermark",
+        "rows": 4,
+        "table": "retention_watermark"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 1024.0,
+        "kind": "table",
+        "name": "schema_migration",
+        "rows": 4,
+        "table": "schema_migration"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_alert_event_1",
+        "rows": null,
+        "table": "alert_event"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_alert_event_2",
+        "rows": null,
+        "table": "alert_event"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_alert_instance_1",
+        "rows": null,
+        "table": "alert_instance"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_alert_rule_1",
+        "rows": null,
+        "table": "alert_rule"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_committed_bundle_1",
+        "rows": null,
+        "table": "committed_bundle"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_connection_chain_1",
+        "rows": null,
+        "table": "connection_chain"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_connection_minute_1",
+        "rows": null,
+        "table": "connection_minute"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_dimension_dict_1",
+        "rows": null,
+        "table": "dimension_dict"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_machine_setting_1",
+        "rows": null,
+        "table": "machine_setting"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_notification_outbox_1",
+        "rows": null,
+        "table": "notification_outbox"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_notification_outbox_2",
+        "rows": null,
+        "table": "notification_outbox"
+      },
+      {
+        "bytes": 53248,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_report_archive_1",
+        "rows": null,
+        "table": "report_archive"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_report_snapshot_meta_1",
+        "rows": null,
+        "table": "report_snapshot_meta"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_retention_state_1",
+        "rows": null,
+        "table": "retention_state"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_retention_watermark_1",
+        "rows": null,
+        "table": "retention_watermark"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_target_item_1",
+        "rows": null,
+        "table": "target_item"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_traffic_daily_core_1",
+        "rows": null,
+        "table": "traffic_daily_core"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_traffic_daily_dimension_1",
+        "rows": null,
+        "table": "traffic_daily_dimension"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "index",
+        "name": "sqlite_autoindex_traffic_hourly_dimension_1",
+        "rows": null,
+        "table": "traffic_hourly_dimension"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 4096.0,
+        "kind": "table",
+        "name": "target_item",
+        "rows": 1,
+        "table": "target_item"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": 4096.0,
+        "kind": "table",
+        "name": "target_set",
+        "rows": 1,
+        "table": "target_set"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "traffic_daily_core",
+        "rows": 0,
+        "table": "traffic_daily_core"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "traffic_daily_dimension",
+        "rows": 0,
+        "table": "traffic_daily_dimension"
+      },
+      {
+        "bytes": 4096,
+        "bytes_per_row": null,
+        "kind": "table",
+        "name": "traffic_hourly_dimension",
+        "rows": 0,
+        "table": "traffic_hourly_dimension"
+      }
+    ]
+  },
+  "traffic": {
+    "conserved": true,
+    "expected_added_download": 67650,
+    "expected_added_upload": 21270,
+    "final_download": 78925,
+    "final_upload": 24815,
+    "initial_download": 11275,
+    "initial_upload": 3545
+  },
+  "warmup_wall_secs": 5.0002571,
+  "writer_rows_changed": 9300
+}

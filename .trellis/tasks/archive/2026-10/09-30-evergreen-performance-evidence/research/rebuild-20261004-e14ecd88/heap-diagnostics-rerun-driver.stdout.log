@@ -1,0 +1,12 @@
+{"finished": "a1000-unchanged-r1-baseline", "exit_code": 0, "private_p95": 11202560.0}
+{"finished": "a1000-unchanged-r1-candidate", "exit_code": 0, "private_p95": 12615680.0}
+{"finished": "a1000-unchanged-r2-baseline", "exit_code": 0, "private_p95": 10702848.0}
+{"finished": "a1000-unchanged-r2-candidate", "exit_code": 0, "private_p95": 12611584.0}
+{"finished": "a1000-unchanged-r3-baseline", "exit_code": 0, "private_p95": 10346496.0}
+{"finished": "a1000-unchanged-r3-candidate", "exit_code": 0, "private_p95": 12369920.0}
+{"finished": "a1000-metadata-r1-baseline", "exit_code": 0, "private_p95": 11464704.0}
+{"finished": "a1000-metadata-r1-candidate", "exit_code": 0, "private_p95": 12955648.0}
+{"finished": "a1000-metadata-r2-baseline", "exit_code": 0, "private_p95": 11579392.0}
+{"finished": "a1000-metadata-r2-candidate", "exit_code": 0, "private_p95": 12627968.0}
+{"finished": "a1000-metadata-r3-baseline", "exit_code": 0, "private_p95": 11571200.0}
+{"finished": "a1000-metadata-r3-candidate", "exit_code": 0, "private_p95": 13348864.0}

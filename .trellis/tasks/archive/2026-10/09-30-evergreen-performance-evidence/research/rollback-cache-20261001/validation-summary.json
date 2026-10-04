@@ -1,0 +1,99 @@
+{
+  "completed_utc": "2026-10-02T01:46:45.874292+00:00",
+  "status": "PASS_LOCAL_PRODUCT_CHECKS",
+  "source_manifest_before_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+  "source_manifest_after_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+  "source_files": 108,
+  "before_after_source_equal": true,
+  "raw_fold_sha256": "4D6E8FEB88B142E09F8E62D60BAF20BAC970F11CB8D8E9108B08CFFBF717E6AA",
+  "scope": "Only raw_fold.rs three approved production regions and task research",
+  "rollback_diff_vs_retained": {
+    "added": 45,
+    "removed": 69
+  },
+  "production_matches_contract_restored_snapshot": true,
+  "tests_section_unchanged": true,
+  "process_only_missing_filter_preserved": true,
+  "checks": [
+    {
+      "check": "rust-fmt",
+      "exit_code": 0,
+      "source_manifest_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+      "raw_log_hashes_match": true
+    },
+    {
+      "check": "raw-fold-tests",
+      "exit_code": 0,
+      "source_manifest_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+      "raw_log_hashes_match": true
+    },
+    {
+      "check": "report-service-tests",
+      "exit_code": 0,
+      "source_manifest_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+      "raw_log_hashes_match": true
+    },
+    {
+      "check": "rust-clippy",
+      "exit_code": 0,
+      "source_manifest_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+      "raw_log_hashes_match": true
+    },
+    {
+      "check": "just-ci",
+      "exit_code": 0,
+      "source_manifest_sha256": "8EE21DEACDFE15166BC97A92D78E24445EF26AC90D4813FB30EB368C180996CA",
+      "raw_log_hashes_match": true
+    }
+  ],
+  "counts": {
+    "raw_targeted": {
+      "passed": 7,
+      "failed": 0,
+      "ignored": 1
+    },
+    "service_targeted": {
+      "passed": 53,
+      "failed": 0,
+      "ignored": 3
+    },
+    "just_ci_frontend": {
+      "passed": 300,
+      "failed": 0
+    },
+    "just_ci_rust_unit": {
+      "passed": 546,
+      "failed": 0,
+      "ignored": 6
+    },
+    "just_ci_rust_integration": {
+      "passed": 3,
+      "failed": 0
+    },
+    "just_ci_root_node": {
+      "passed": 203,
+      "failed": 0
+    }
+  },
+  "git_diff_check_exit_code": 0,
+  "native_evidence_files_unchanged": 195,
+  "changed_native_evidence": [],
+  "debug_test_executable_identities": {
+    "residential-monitor/src-tauri/target/debug/deps/residential_monitor_lib-8c9211dd5db70bc1.exe": {
+      "bytes": 23505408,
+      "sha256": "414FE661C4073D709F086687DF1613342400F949465639B2224D4EE3613C6A56",
+      "boundary": "local debug tests only; not frozen performance executable"
+    },
+    "residential-monitor/src-tauri/target/debug/deps/kill_gate-d8d4530fdfc38390.exe": {
+      "bytes": 3548672,
+      "sha256": "F221BB7119B30B082537818311BDCBD781682BB2F57921EFBCD9B9CBE3CBA0A7",
+      "boundary": "local debug tests only; not frozen performance executable"
+    }
+  },
+  "capacity": "BLOCKED 0/106; original preflight retained; missing assets not restored/rebuilt",
+  "limits": [
+    "Old retained matrix/primary/performance results do not apply to this changed source or a new executable.",
+    "No capacity, release build, installed desktop, physical cold-cache, hosted CI, or fresh-client evidence.",
+    "Docs and independent final review remain owned by main/reviewer."
+  ]
+}

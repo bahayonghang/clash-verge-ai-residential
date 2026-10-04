@@ -1,0 +1,9 @@
+Active task: .trellis/tasks/09-30-evergreen-runtime-validation
+
+Run one basic parent-only read. Read AGENTS.md and CONTEXT.md from the repository root through actual read tools. Decode text as UTF-8. If an already permitted read-only PowerShell tool is needed, use Get-Content -LiteralPath with -Encoding utf8. Do not request another tool or more permission.
+
+Do not delegate, write any file, create a plan artifact, run task.py start, run tests, install, build, query external services, resume a session, or read private files. Do not change accounts, models, configuration, trust, or permissions. The synthetic scenario has no approval for product edits. The actual T06 task permits only this basic read.
+
+Return exactly three short ASCII lines. The first line starts AGENTS= and names the full local product gate and the separate docs gate found in AGENTS.md. The second starts CONTEXT= and names the storage field for the accounting category and its exact node-name condition found in CONTEXT.md. The third is STATUS=BASIC_READ_ONLY when both actual reads succeeded. If a read is unavailable, use UNKNOWN for the missing facts and STATUS=BLOCKED. Do not claim a read from prompt text alone. Do not print secrets, authentication data, or private paths.
+
+This protocol covers basic reads only. Model identity, hook execution, native child lifecycle, permission enforcement, and full T06 acceptance remain separate evidence.
