@@ -48,7 +48,7 @@ impl WriteSample {
 struct ProxyVfs {
     base: ffi::sqlite3_vfs,
     original: *mut ffi::sqlite3_vfs,
-    root: String,
+    roots: Vec<String>,
     counters: Arc<Counters>,
 }
 
@@ -69,8 +69,8 @@ pub struct WriteVfs {
 impl WriteVfs {
     pub fn install(root: &Path) -> Result<Self, String> {
         let lock = BENCH_LOCK.lock().map_err(|_| "基准 VFS 锁中毒")?;
-        let root = root.canonicalize().map_err(|e| e.to_string())?;
-        let root = normalize_path(&root.to_string_lossy());
+        // canonicalize 会把 Windows 8.3 短路径展开成长路径。SQLite xOpen 收到的是打开时的原路径。
+        let roots = normalized_forms(root)?;
         let name = CString::new("resiwatch-isolated-bench").map_err(|e| e.to_string())?;
         // SAFETY: SQLite 已知默认 VFS；复制其回调，仅替换 xOpen，注册期保持 Box/CString 地址稳定。
         unsafe {
@@ -81,7 +81,7 @@ impl WriteVfs {
             let mut vfs = Box::new(ProxyVfs {
                 base: std::ptr::read(original),
                 original,
-                root,
+                roots,
                 counters: Arc::new(Counters::default()),
             });
             vfs.base.zName = name.as_ptr();
@@ -154,6 +154,24 @@ fn normalize_path(path: &str) -> String {
     }
 }
 
+fn normalized_forms(path: &Path) -> Result<Vec<String>, String> {
+    let mut forms = vec![normalize_path(&path.to_string_lossy())];
+    let canonical = path.canonicalize().map_err(|error| error.to_string())?;
+    let canonical = normalize_path(&canonical.to_string_lossy());
+    if !forms.iter().any(|item| item == &canonical) {
+        forms.push(canonical);
+    }
+    Ok(forms)
+}
+
+fn under_root(roots: &[String], path: &str) -> bool {
+    let path = normalize_path(path);
+    roots.iter().any(|root| {
+        path.strip_prefix(root)
+            .is_some_and(|suffix| suffix.starts_with('/'))
+    })
+}
+
 // 所有 VFS 回调都传原 VFS 指针；不依赖宿主回调对 pAppData 或扩展布局的假设。
 macro_rules! delegate_vfs {
     ($name:ident, $field:ident, ($($arg:ident: $ty:ty),*) -> $ret:ty) => {
@@ -196,11 +214,8 @@ unsafe extern "C" fn open(
     if (*inner).pMethods.is_null() {
         return code;
     }
-    let counted = !name.is_null() && {
-        let path = normalize_path(&CStr::from_ptr(name).to_string_lossy());
-        path.strip_prefix(&proxy.root)
-            .is_some_and(|suffix| suffix.starts_with('/'))
-    };
+    let counted =
+        !name.is_null() && under_root(&proxy.roots, &CStr::from_ptr(name).to_string_lossy());
     let counters = if counted {
         Arc::into_raw(proxy.counters.clone())
     } else {
@@ -431,6 +446,30 @@ mod tests {
             assert_eq!(counters.wal.load(Ordering::Relaxed), 14);
             assert_eq!(counters.writes.load(Ordering::Relaxed), 1);
         }
+    }
+
+    #[test]
+    fn counts_both_spellings_of_the_same_directory() {
+        let roots = vec![
+            "c:/users/runner~1/appdata/local/temp/case".to_string(),
+            "c:/users/runneradmin/appdata/local/temp/case".to_string(),
+        ];
+        assert!(under_root(
+            &roots,
+            "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\case\\monitor.sqlite3-wal"
+        ));
+        assert!(under_root(
+            &roots,
+            "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\case\\monitor.sqlite3"
+        ));
+        assert!(!under_root(
+            &roots,
+            "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\other\\monitor.sqlite3"
+        ));
+        assert!(!under_root(
+            &roots,
+            "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\case-extra\\monitor.sqlite3"
+        ));
     }
 
     #[test]
