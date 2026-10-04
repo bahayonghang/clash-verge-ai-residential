@@ -8,7 +8,7 @@
 - **项目配置**：本仓库当前文件与本项目的路由选择。
 - **运行证据**：本机客户端在新会话中实际发现并执行。静态文件存在不能代替新会话握手。
 
-本机版本快照（审查日 2026-09-30，见 `.trellis/tasks/09-30-evergreen-five-harness-audit/research/audit.md`）：Claude Code `2.1.285`，应用内 Codex CLI `0.159.2`，Grok Build `1.0.45`，Kimi Code `2.0.0`，OMP `18.4.4`。项目 Trellis 模板为 `0.7.0-beta.3`；PATH 中的 CLI 为 `0.6.17`，尚不满足本页 bootstrap 前提。PATH 首位 Codex npm 包装器缺少 Windows 可选二进制，应用内入口可运行。版本发现不能替代新会话执行。历史审查在 `.trellis/tasks/archive/2026-09/09-07-evergreen-harness-audit/research/harness-audit.md`。
+本机版本快照（审查日 2026-09-30，见 `.trellis/tasks/archive/2026-10/09-30-evergreen-five-harness-audit/research/audit.md`）：Claude Code `2.1.285`，应用内 Codex CLI `0.159.2`，Grok Build `1.0.45`，Kimi Code `2.0.0`，OMP `18.4.4`。项目 Trellis 模板为 `0.7.0-beta.3`；PATH 中的 CLI 为 `0.6.17`，尚不满足本页 bootstrap 前提。PATH 首位 Codex npm 包装器缺少 Windows 可选二进制，应用内入口可运行。版本发现不能替代新会话执行。历史审查在 `.trellis/tasks/archive/2026-09/09-07-evergreen-harness-audit/research/harness-audit.md`。
 
 从**仓库根**启动客户端。Codex 的 `.codex/hooks.json` 命令使用仓库相对路径；从子目录启动时 hook 可能无法解析。
 

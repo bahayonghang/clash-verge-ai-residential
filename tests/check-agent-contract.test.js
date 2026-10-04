@@ -48,7 +48,7 @@ function fixture(t, crlf = false) {
     ".trellis/scripts/get_context.py",
     ".trellis/scripts/task.py",
     ".trellis/scripts/common/workflow_phase.py",
-    ".trellis/tasks/09-30-evergreen-five-harness-audit/research/audit.md",
+    ".trellis/tasks/archive/2026-10/09-30-evergreen-five-harness-audit/research/audit.md",
     ".trellis/tasks/archive/2026-09/09-07-evergreen-harness-audit/research/harness-audit.md"
   ]) {
     fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });

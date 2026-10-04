@@ -39,7 +39,7 @@ const PUBLIC_FILES = [
   ".trellis/spec/residential-monitor/index.md",
   ".trellis/spec/residential-monitor/storage/index.md",
   ".trellis/spec/residential-monitor/storage/sqlite-contract.md",
-  ".trellis/tasks/09-30-evergreen-five-harness-audit/research/audit.md",
+  ".trellis/tasks/archive/2026-10/09-30-evergreen-five-harness-audit/research/audit.md",
   ".trellis/tasks/archive/2026-09/09-07-evergreen-harness-audit/research/harness-audit.md",
   ".trellis/workflow.md", "AGENTS.md", "CLAUDE.md", "CONTEXT.md",
   "docs/agents/harnesses.md", "docs/agents/residential-rule-tuning.md", "justfile", "package.json",
