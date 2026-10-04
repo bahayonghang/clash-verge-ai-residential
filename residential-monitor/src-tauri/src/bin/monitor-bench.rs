@@ -3,6 +3,7 @@ use residential_monitor_lib::bench::corpus::{generate_corpus, retain_corpus};
 use residential_monitor_lib::bench::facade::{
     replay_facade, ArchiveScenario, FacadeOptions, FacadeWorkload,
 };
+use residential_monitor_lib::bench::heap::{enable_from_env, CountingAlloc};
 use residential_monitor_lib::bench::{
     analyze_all, binding_evidence, compare_batches, generate_profile, replay_c1, replay_peak,
     verify_design_db,
@@ -13,6 +14,9 @@ use residential_monitor_lib::transport::profiles;
 use residential_monitor_lib::workload::WorkloadSpec;
 use std::path::PathBuf;
 use std::time::Duration;
+
+#[global_allocator]
+static GLOBAL: CountingAlloc = CountingAlloc;
 
 #[derive(Parser)]
 #[command(name = "monitor-bench", about = "C0 性能与能力基准入口")]
@@ -173,6 +177,7 @@ enum Commands {
 }
 
 fn main() {
+    enable_from_env();
     let cli = Cli::parse();
     match cli.command {
         Commands::GenerateCorpus {

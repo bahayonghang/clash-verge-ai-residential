@@ -5,7 +5,9 @@ pub const C3_MIGRATION_CHECKSUM: &str = "c3-report-v2";
 pub const C3_ARCHIVE_SCHEMA_VERSION: i32 = 4;
 pub const C3_ARCHIVE_MIGRATION_CHECKSUM: &str = "c3-archive-v4";
 pub const LEDGER_LIFECYCLE_SCHEMA_VERSION: i32 = 5;
-pub const LEDGER_LIFECYCLE_MIGRATION_CHECKSUM: &str = "ledger-lifecycle-v5-layout3";
+pub const LEDGER_LIFECYCLE_MIGRATION_CHECKSUM: &str = "ledger-lifecycle-v5-layout4";
+/// layout3 仅出现在 dev 构建：两个 chain 表达式索引在 chain 变化时多写页，migrate 原地换成复合索引。
+pub const LEDGER_LIFECYCLE_LAYOUT3_CHECKSUM: &str = "ledger-lifecycle-v5-layout3";
 
 // 旧收据时间保持 NULL；retired_utc 是 owner 观察到退役的时间，不是提交时间。
 pub const LEDGER_LIFECYCLE_DDL: &str = "
@@ -33,8 +35,7 @@ create index idx_session_attr_process on connection_session_attr(process_id);
 create index idx_session_attr_rule on connection_session_attr(rule_id);
 create index idx_session_attr_network on connection_session_attr(network_id);
 create index idx_session_attr_category on connection_session_attr(primary_category_id);
-create index idx_session_attr_chain_identity on connection_session_attr(chain_identity(chain_key));
-create index idx_session_attr_rule_group on connection_session_attr(last_chain_hop(chain_key),rule_id);
+create index idx_session_attr_chain_rule on connection_session_attr(chain_key,rule_id);
 create index idx_hourly_dimension_identity on traffic_hourly_dimension(dimension_kind,dimension_id);
 create index idx_daily_dimension_identity on traffic_daily_dimension(dimension_kind,dimension_id);
 create index idx_hourly_category on traffic_hourly_dimension(category_id);

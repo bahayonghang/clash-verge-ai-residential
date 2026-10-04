@@ -5,7 +5,8 @@ use crate::c3::query::ReportError;
 use crate::c3::schema::{
     C3_ARCHIVE_DDL, C3_ARCHIVE_MIGRATION_CHECKSUM, C3_ARCHIVE_SCHEMA_VERSION, C3_DDL,
     C3_MIGRATION_CHECKSUM, C3_SCHEMA_VERSION, LEDGER_LIFECYCLE_DDL,
-    LEDGER_LIFECYCLE_MIGRATION_CHECKSUM, LEDGER_LIFECYCLE_SCHEMA_VERSION,
+    LEDGER_LIFECYCLE_LAYOUT3_CHECKSUM, LEDGER_LIFECYCLE_MIGRATION_CHECKSUM,
+    LEDGER_LIFECYCLE_SCHEMA_VERSION,
 };
 use crate::c3::sql::UNKNOWN_IDENTITY;
 use crate::c4::schema::{C4_DDL, C4_MIGRATION_CHECKSUM, C4_SCHEMA_VERSION};
@@ -129,6 +130,7 @@ pub fn migrate(path: &Path) -> Result<Connection, StorageError> {
         C3_ARCHIVE_MIGRATION_CHECKSUM,
         user_version,
     )?;
+    upgrade_ledger_layout3(&connection, user_version)?;
     verify_checksum(
         &connection,
         LEDGER_LIFECYCLE_SCHEMA_VERSION,
@@ -273,6 +275,37 @@ pub fn migrate(path: &Path) -> Result<Connection, StorageError> {
         transaction.commit()?;
     }
     Ok(connection)
+}
+
+fn upgrade_ledger_layout3(connection: &Connection, user_version: i32) -> Result<(), StorageError> {
+    if user_version < LEDGER_LIFECYCLE_SCHEMA_VERSION {
+        return Ok(());
+    }
+    let checksum: Option<String> = connection
+        .query_row(
+            "select checksum from schema_migration where version = ?1",
+            [LEDGER_LIFECYCLE_SCHEMA_VERSION],
+            |row| row.get(0),
+        )
+        .optional()?;
+    if checksum.as_deref() != Some(LEDGER_LIFECYCLE_LAYOUT3_CHECKSUM) {
+        return Ok(());
+    }
+    let transaction = connection.unchecked_transaction()?;
+    transaction.execute_batch(
+        "drop index if exists idx_session_attr_chain_identity;
+        drop index if exists idx_session_attr_rule_group;
+        create index if not exists idx_session_attr_chain_rule on connection_session_attr(chain_key,rule_id);",
+    )?;
+    transaction.execute(
+        "update schema_migration set checksum = ?1 where version = ?2",
+        params![
+            LEDGER_LIFECYCLE_MIGRATION_CHECKSUM,
+            LEDGER_LIFECYCLE_SCHEMA_VERSION
+        ],
+    )?;
+    transaction.commit()?;
+    Ok(())
 }
 
 fn verify_checksum(
@@ -1293,8 +1326,7 @@ fn legacy_v4_fixture(path: &Path) -> Connection {
         drop index idx_session_attr_rule;
         drop index idx_session_attr_network;
         drop index idx_session_attr_category;
-        drop index idx_session_attr_chain_identity;
-        drop index idx_session_attr_rule_group;
+        drop index idx_session_attr_chain_rule;
         drop index idx_hourly_dimension_identity;
         drop index idx_daily_dimension_identity;
         drop index idx_hourly_category;
@@ -2039,6 +2071,72 @@ mod storage_watermark_tests {
             })
             .expect("c2");
         assert_eq!(coordinator.watermark().expect("wm"), 2);
+    }
+}
+
+#[cfg(test)]
+mod chain_index_layout_tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    fn attr_indexes(connection: &Connection) -> Vec<String> {
+        connection
+            .prepare("select name from sqlite_master where type='index' and tbl_name='connection_session_attr' order by name")
+            .unwrap()
+            .query_map([], |r| r.get(0))
+            .unwrap()
+            .collect::<Result<_, _>>()
+            .unwrap()
+    }
+
+    #[test]
+    fn layout3_upgrades_in_place_to_composite_chain_index() {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("layout3.sqlite3");
+        {
+            let connection = migrate(&path).unwrap();
+            assert!(attr_indexes(&connection).contains(&"idx_session_attr_chain_rule".to_string()));
+            connection
+                .execute_batch(
+                    "drop index idx_session_attr_chain_rule;
+                    create index idx_session_attr_chain_identity on connection_session_attr(chain_identity(chain_key));
+                    create index idx_session_attr_rule_group on connection_session_attr(last_chain_hop(chain_key),rule_id);",
+                )
+                .unwrap();
+            connection
+                .execute(
+                    "update schema_migration set checksum=?1 where version=?2",
+                    params![
+                        LEDGER_LIFECYCLE_LAYOUT3_CHECKSUM,
+                        LEDGER_LIFECYCLE_SCHEMA_VERSION
+                    ],
+                )
+                .unwrap();
+        }
+        {
+            let connection = migrate(&path).unwrap();
+            let names = attr_indexes(&connection);
+            assert!(names.contains(&"idx_session_attr_chain_rule".to_string()));
+            assert!(!names
+                .iter()
+                .any(|name| name == "idx_session_attr_chain_identity"
+                    || name == "idx_session_attr_rule_group"));
+            let checksum: String = connection
+                .query_row(
+                    "select checksum from schema_migration where version=?1",
+                    [LEDGER_LIFECYCLE_SCHEMA_VERSION],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(checksum, LEDGER_LIFECYCLE_MIGRATION_CHECKSUM);
+            connection
+                .execute(
+                    "update schema_migration set checksum='ledger-lifecycle-v5-layout2' where version=?1",
+                    [LEDGER_LIFECYCLE_SCHEMA_VERSION],
+                )
+                .unwrap();
+        }
+        assert!(migrate(&path).is_err(), "其他旧布局仍拒绝");
     }
 }
 

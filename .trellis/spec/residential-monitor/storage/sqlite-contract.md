@@ -14,7 +14,7 @@ PRAGMA foreign_keys = ON;
 - Online Backup 必须分页。不得复制热库文件并丢掉 WAL。
 - 未来 schema 或 checksum mismatch 必须 fail closed。
 - `busy_timeout` 由 C0 测量后冻结，不能超过 durable commit SLO 仍称为健康。
-- SQLite `user_version`：C1 = 1 / checksum `c1-core-v1`；C3 = 2 / checksum `c3-report-v2`；C4 = 3 / checksum `c4-alert-v3`；C3 档案 = 4 / checksum `c3-archive-v4`；账本生命周期 = 5 / checksum `ledger-lifecycle-v5-layout3`。不得改写已发布 migration 文本。`C3_DDL` 不得出现 `report_archive`。
+- SQLite `user_version`：C1 = 1 / checksum `c1-core-v1`；C3 = 2 / checksum `c3-report-v2`；C4 = 3 / checksum `c4-alert-v3`；C3 档案 = 4 / checksum `c3-archive-v4`；账本生命周期 = 5 / checksum `ledger-lifecycle-v5-layout4`。layout3 只出现在 dev 构建，`migrate` 原地删除 `idx_session_attr_chain_identity` 与 `idx_session_attr_rule_group`，创建 `idx_session_attr_chain_rule(chain_key,rule_id)`，再把 checksum 改为 layout4；其它 v5 checksum 仍拒绝。不得改写已发布 migration 文本。`C3_DDL` 不得出现 `report_archive`。
 - C3 追加表：`dimension_dict`、`connection_session_attr`、`traffic_hourly_dimension`、`traffic_daily_dimension`、`traffic_daily_core`、`coverage_daily`、`retention_state`、`retention_watermark`、`report_snapshot_meta`。
 - C3 档案表（v4 `C3_ARCHIVE_DDL`）：`report_archive`。过期删除只针对该表，与 `AUTO_DELETE_ENABLED` 无关。`kind` 合法值 `hour` / `day` / `manual`。hour 按 `range_end_utc` 保留 30 天；day 按 `range_end_utc` 保留 13 个月；manual 按 `generated_utc` 保留 7 天。写入 `manual` 不升 schema、不改已发布 DDL。
 - `ReportSnapshotStore`：未过期 `query_fingerprint` 复用 token 并续 TTL。满 `MAX_ACTIVE_TOKENS=8` 或总字节超 `MAX_SPOOL_BYTES` 时按 `last_access_utc` 淘汰后再插入。单 token 超 `MAX_TOKEN_BYTES` 仍 `quota_exceeded`。`TOKEN_TTL_SECS` 保持 600。
@@ -206,7 +206,9 @@ The `deleted` day state seals query/write behavior before bounded physical row d
 
 Coverage source paging and auxiliary cleanup advance durable source cursors, with query plans that enforce ordered bounded scans. Coverage-only days and remaining cleanup batches must continue without requiring a dimensional row. Raw/detail retention keeps the existing 30-day default/90-day maximum, dimensions and raw coverage keep 396 days, and low-cardinality daily core/coverage remain long-term. DELETE produces reusable pages; VACUUM remains explicit and separate.
 
-Auxiliary cleanup cursors use `-1` for a dirty sweep that must restart, positive rowids for a bounded sweep in progress, and `0` only for a completed sweep since its last invalidation. Final raw/prune completion and session reference removal invalidate the relevant cursor in the same transaction. A cursor wrap before the last reference disappears is not proof of completion. The facade and isolated capacity driver re-read pending auxiliary work after ledger cleanup, because that later step can invalidate the earlier retention result. Disabled deletion must not create a fast retry loop from a persisted dirty cursor.
+Auxiliary cleanup cursors use `-1` for a dirty sweep that must restart, positive rowids for a bounded sweep in progress, and `0` only for a completed sweep since its last invalidation. Final raw/prune completion and session reference removal invalidate the relevant cursor in the same transaction. A cursor wrap before the last reference disappears is not proof of completion. The facade and isolated capacity driver re-read pending auxiliary work after ledger cleanup, because that later step can invalidate the earlier retention result. Disabled deletion must not create a fast retry loop from a persisted dirty cursor. The dictionary and coverage sweeps run as one round: a sweep that reaches `0` stays at `0` and does not restart while the other cursor is nonzero, and both restart together only when both are `0`. Restarting one sweep alone lets sweeps with different page counts (for example 9 and 6 pages) reach `0` in different chunks forever, so pending auxiliary work never clears.
+
+The `chain` and `rule_group` dictionary reference check must not scan `connection_session_attr`. Each dictionary page enumerates distinct `chain_key` values once through `idx_session_attr_chain_rule` with `chain_key > ? order by chain_key limit 1`, and distinct `rule_id` values under each key that has no last hop. Each enumeration prepares its statements once. Rust `chain_identity` and `last_chain_hop` then decide references. The cost grows with the number of distinct `chain_key` values, not with the attr row count. The result must equal the three original `exists` predicates, including the `DIRECT` fallback when `rule_id` is NULL. A dangling `rule_id` does not reference `DIRECT`, as in the original predicates. No other index may reference `chain_key`, because the writer changes `chain_key` and each extra index adds pages to every commit.
 
 ### 4. Validation & Error Matrix
 
@@ -226,10 +228,67 @@ Good: many bounded chunks finish one exact day, then delete its detail in bounde
 
 ### 6. Tests Required
 
-Exercise cross-hour sessions, per-dimension/category byte and count conservation, coverage overlap/gaps, restart at each destructive boundary, mode/gate changes, output corruption between publication/audit/coverage/confirmation, invalidation recovery, coverage-only cleanup, multi-page dictionary pruning across days, post-ledger reference removal with protected keys, bundled SQLite query plans and physical fixture integrity. Full 30-day capacity and installed soak remain separate evidence from focused regressions.
+Exercise cross-hour sessions, per-dimension/category byte and count conservation, coverage overlap/gaps, restart at each destructive boundary, mode/gate changes, output corruption between publication/audit/coverage/confirmation, invalidation recovery, coverage-only cleanup, multi-page dictionary pruning across days, chain/rule_group reference equality with the legacy `exists` predicates under an operation budget, layout3 in-place upgrade, post-ledger reference removal with protected keys, dictionary and coverage sweeps with different page counts and offset cursors finishing in one round, bundled SQLite query plans and physical fixture integrity. Full 30-day capacity and installed soak remain separate evidence from focused regressions.
 
 ### 7. Wrong vs Correct
 
 Wrong: delete each raw hour as soon as its hourly sums match, then sum hourly distinct counts for the day.
 
 Correct: retain every raw hour until daily exact membership and actual published aggregates are confirmed, then resume bounded deletion using that frozen evidence.
+
+## Scenario: Raw projection identity and probe evidence
+
+### 1. Scope / Trigger
+
+Apply these contracts when changing `c3/raw_fold.rs` or interpreting isolated report probes. These contracts apply to Claude Code, Codex, Grok Build, Kimi Code, and OMP. A strong model reviews identity semantics, SQL equivalence, measurement boundaries, and acceptance. A lower-cost model may execute a fixed fixture or organize receipts without changing the oracle or gate.
+
+### 2. Signatures
+
+- `load_sessions` constructs one `SessionIndex` for the reader snapshot. `resolve_id` resolves the requested dictionary kind.
+- `c3::raw_fold::tests::isolated_raw_fold_stage_proof` uses `RESIWATCH_RAW_FOLD_STAGE_DB/OUT`, `RESIWATCH_RAW_FOLD_START/END`, and `RESIWATCH_RAW_FOLD_FILTER`. The output kind is `raw-fold-stage-proof`.
+- `c3::service::raw_stage_probe_tests::isolated_nonempty_report_stage_proof` uses `RESIWATCH_NONEMPTY_STAGE_DB/OUT/START/END`. The output kind is `nonempty-minute-report-stages`.
+- Invoke an isolated test executable with `--list` before selecting the exact test with `--ignored --exact --nocapture`. Record the executable SHA256 and original exit code.
+- `isolated-real-facade` records actual writer `journal_mode` and numeric `synchronous` in `initial_files_and_pages` and `final_files_and_pages`. Its top-level `synchronous` label maps the final observed value.
+
+### 3. Contracts
+
+Only Host and Process have the existing special missing-identity filter. Network uses dictionary-value equality, including the literal `__unknown__`. Do not interpret that literal as a request for missing Network metadata. Preserve the grouped SQL predicate as the independent oracle.
+
+Process, Network, and Category distinguish an existing empty dictionary value from a missing or dangling ID. An empty value can display the unknown identity while remaining present for attribution. Rule preserves an existing empty value; only a missing Rule falls back to `DIRECT`. Dictionary IDs remain scoped by kind.
+
+Derive chain identity and the optional last-hop override from the complete raw chain key. Resolve the final Rule fallback for each session. Preserve the original chain key for exit selection and its lexical tie break. A `node>` chain has identity `node` but no Rule override; a nonblank `>` key remains available for exit selection. A projection must not retain pool text solely because an unreferenced dictionary entry exists. Any future cache must preserve these contracts. Predefined constants and text referenced by an actual projected identity can share a pool entry.
+
+A probe passes execution validation only with exactly one passed test, zero failed tests, zero ignored selected tests, the expected JSON kind, and the requested window and filter. A successful test process can still contain a failed production report. Inspect `production_first_read.status`, `production_first_read_ms`, and the independent output oracle before recording production success. Diagnostic work after a failed production call does not erase the failure.
+
+Record database reads before each sample. Hashing, copying, integrity checks, SQL validation, and stage probes can populate the page cache. Samples after those reads cannot establish an unprimed first read or physical cold-cache result. Preserve the 3120-minute projection boundary, the whole-report deadline, cancellation, WAL/FULL, schema, and `AUTO_DELETE_ENABLED=false`.
+
+Read benchmark PRAGMAs on the original writer connection. The initial inventory precedes CPU/VFS measurement; the final inventory follows the ending samples. Both inventories must report `journal_mode=wal` and `synchronous=2`. Apply the same observation code to baseline and candidate. A hardcoded label or a newly opened connection cannot establish the measured writer configuration.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+| --- | --- |
+| Network filter is `__unknown__` without a matching dictionary row | No matching sessions |
+| Same raw chain, different session Rule values | Each session retains its own Rule fallback |
+| Equal exit download, different complete raw keys | Original key ascending resolves the tie |
+| Dictionary value has no projected session reference | No pool allocation retained solely because the dictionary entry exists; no false Host/Rule/Chain match |
+| Exact test name selects zero tests | Failed execution validation, even with exit 0 |
+| Production JSON reports `DeadlineExceeded` | Production FAIL; preserve the receipt |
+| Writer configuration differs at either inventory | Measurement configuration fails validation |
+| SQLite write bytes exist but all-application write bytes are null | Application-file-write gate remains unverified |
+
+### 5. Good/Base/Bad Cases
+
+Good: reproduce a semantic mismatch against the unchanged SQL oracle, repair the existing contract, and measure the optimization separately. Base: record one exact probe with matching identity and output. Bad: use test-process exit 0, a warm-cache sample, or SQLite-only writes to close a broader production gate.
+
+### 6. Tests Required
+
+Retain `repeated_projection_values_preserve_fallbacks_missingness_and_exit_keys`, `unreferenced_dictionary_values_do_not_enter_returned_pool`, the grouped SQL equivalence tests, cross-window session tests, and the service cancellation/deadline and exit tests. Assert totals, distinct counts, attribution, series, rank ordering, `primary_exit`, and `exit_mixed`. Test empty, NULL, dangling, and same-number cross-kind dictionary entries.
+
+Complete capacity, same-window baseline/candidate matrix, real-time primary runs, and installed soak remain separate gates. Keep the required 30-day sizes, 21-query repetitions, seeds, thresholds, and cache conditions. Record failures and unrun controls separately; focused regression success does not complete these gates.
+
+### 7. Wrong vs Correct
+
+Wrong: apply the Process missing-value branch to every dictionary kind, or accept a zero-test process as a report result.
+
+Correct: restrict the missing-value branch to Process, use literal Network equality, and validate both the selected test and the production JSON before assigning a status.

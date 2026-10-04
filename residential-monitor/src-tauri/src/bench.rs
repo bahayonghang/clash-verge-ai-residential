@@ -14,6 +14,7 @@ use std::time::{Duration, Instant};
 
 pub mod corpus;
 pub mod facade;
+pub mod heap;
 mod process;
 mod write_vfs;
 

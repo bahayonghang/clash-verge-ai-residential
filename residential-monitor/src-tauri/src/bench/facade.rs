@@ -1,7 +1,7 @@
 //! 真实门面提交与生产档案 tick 的可复现隔离基准。
 //! 不连接控制器、不启动 WebView、不访问安装目录，不把虚拟时间当作 soak。
 
-use super::{process, write_vfs::WriteVfs};
+use super::{heap, process, write_vfs::WriteVfs};
 use crate::c2::desktop::InstanceClaim;
 use crate::c2::facade::AppFacade;
 use crate::c2::query::ConnectionQuery;
@@ -87,6 +87,74 @@ fn text_error(error: impl std::fmt::Display) -> String {
     error.to_string()
 }
 
+const HEAP_PHASES: [&str; 7] = [
+    "snapshot",
+    "ingest",
+    "archive",
+    "live_query",
+    "report_first_reader",
+    "report_repeated_reader",
+    "sample",
+];
+
+/// 测量窗口内各阶段的堆峰值增量。仅在 monitor-bench 以 `RESIWATCH_BENCH_HEAP=1` 启动时记录。
+struct HeapPhases {
+    start: Option<heap::Mark>,
+    rust: Vec<Vec<f64>>,
+    sqlite: Vec<Vec<f64>>,
+    rust_window: i64,
+    sqlite_window: i64,
+}
+
+impl HeapPhases {
+    fn new() -> Self {
+        Self {
+            start: heap::enabled().then(heap::mark),
+            rust: vec![Vec::new(); HEAP_PHASES.len()],
+            sqlite: vec![Vec::new(); HEAP_PHASES.len()],
+            rust_window: 0,
+            sqlite_window: 0,
+        }
+    }
+
+    fn begin(&self) -> Option<heap::Mark> {
+        self.start.map(|_| heap::mark())
+    }
+
+    fn end(&mut self, phase: usize, mark: Option<heap::Mark>) {
+        let (Some(start), Some(mark)) = (self.start, mark) else {
+            return;
+        };
+        let (rust, sqlite) = heap::peak_since(mark);
+        self.rust[phase].push(rust as f64);
+        self.sqlite[phase].push(sqlite as f64);
+        self.rust_window = self.rust_window.max((mark.rust - start.rust) as i64 + rust);
+        self.sqlite_window = self.sqlite_window.max(mark.sqlite - start.sqlite + sqlite);
+    }
+
+    fn report(self) -> Value {
+        if self.start.is_none() {
+            return Value::Null;
+        }
+        let stats = |values: &[f64]| {
+            let l = latency(values.to_vec());
+            json!({"count": l.count, "p50": l.p50_ms, "p95": l.p95_ms, "max": l.max_ms})
+        };
+        let phases = |series: &[Vec<f64>]| {
+            HEAP_PHASES
+                .iter()
+                .zip(series)
+                .map(|(name, values)| (name.to_string(), stats(values)))
+                .collect::<serde_json::Map<_, _>>()
+        };
+        json!({
+            "unit": "bytes above phase start",
+            "rust": phases(&self.rust), "sqlite": phases(&self.sqlite),
+            "rust_window_peak": self.rust_window, "sqlite_window_peak": self.sqlite_window
+        })
+    }
+}
+
 /// 要求空输出目录；意外指定已有数据目录时直接拒绝，绝不删除旧库。
 ///
 /// # Safety
@@ -158,23 +226,31 @@ pub unsafe fn replay_facade(options: &FacadeOptions) -> Result<Value, String> {
     let mut samples = Vec::new();
     let mut overruns = 0_u64;
     let mut max_lag_frames = 0_u64;
+    let mut heap_phases = HeapPhases::new();
     for measured in 1..=frames {
         let frame = warmup_frames + measured;
         let tick_started = Instant::now();
+        let mark = heap_phases.begin();
         let input = snapshot(options, frame);
+        heap_phases.end(0, mark);
         let ingest_started = Instant::now();
+        let mark = heap_phases.begin();
         ingest_input(
             &state,
             input,
             utc_at(options, frame),
             mono_at(options, frame),
         )?;
+        heap_phases.end(1, mark);
         ingest_times.push(elapsed_ms(ingest_started));
         let archive_started = Instant::now();
+        let mark = heap_phases.begin();
         crate::archive_tick_at(&state, utc_at(options, frame));
+        heap_phases.end(2, mark);
         archive_times.push(elapsed_ms(archive_started));
         if options.query_every_frames > 0 && measured % u64::from(options.query_every_frames) == 0 {
             let live_started = Instant::now();
+            let mark = heap_phases.begin();
             let page = state
                 .lock()
                 .map_err(text_error)?
@@ -182,6 +258,8 @@ pub unsafe fn replay_facade(options: &FacadeOptions) -> Result<Value, String> {
             if page.matched_count != options.active {
                 return Err("实时查询活动数不守恒".into());
             }
+            drop(page);
+            heap_phases.end(3, mark);
             live_query_times.push(elapsed_ms(live_started));
             let query = default_auto_report_query(
                 Granularity::Hour,
@@ -192,6 +270,7 @@ pub unsafe fn replay_facade(options: &FacadeOptions) -> Result<Value, String> {
             let cancel = Arc::new(AtomicBool::new(false));
             for repeated in [false, true] {
                 let start = Instant::now();
+                let mark = heap_phases.begin();
                 let report = run_uncached(
                     &db_path,
                     query.clone(),
@@ -204,6 +283,8 @@ pub unsafe fn replay_facade(options: &FacadeOptions) -> Result<Value, String> {
                 if report.totals.upload < 0 || report.totals.download < 0 {
                     return Err("报告总量非法".into());
                 }
+                drop(report);
+                heap_phases.end(if repeated { 5 } else { 4 }, mark);
                 let ms = elapsed_ms(start);
                 if repeated {
                     query_warm_times.push(ms);
@@ -224,6 +305,7 @@ pub unsafe fn replay_facade(options: &FacadeOptions) -> Result<Value, String> {
                 max_lag_frames.max((lag.as_secs_f64() / budget.as_secs_f64()).ceil() as u64);
         }
         if measured % u64::from(options.hz) == 0 || measured == frames {
+            let mark = heap_phases.begin();
             let guard = state.lock().map_err(text_error)?;
             samples.push(json!({
                 "frame": measured, "wall_secs": wall.elapsed().as_secs_f64(),
@@ -232,6 +314,8 @@ pub unsafe fn replay_facade(options: &FacadeOptions) -> Result<Value, String> {
                 "active_tokens": guard.snapshots.active_count(), "token_bytes": guard.snapshots.total_bytes(),
                 "live_rows": guard.hub.rows().len()
             }));
+            drop(guard);
+            heap_phases.end(6, mark);
         }
         pace(wall, measured, budget, options.virtual_time);
     }
@@ -255,6 +339,13 @@ pub unsafe fn replay_facade(options: &FacadeOptions) -> Result<Value, String> {
         ));
     }
     let final_inventory = inventory(&state, &options.dir)?;
+    let synchronous = match final_inventory["synchronous"].as_u64() {
+        Some(0) => "OFF",
+        Some(1) => "NORMAL",
+        Some(2) => "FULL",
+        Some(3) => "EXTRA",
+        _ => "UNKNOWN",
+    };
     let tables = table_inventory(&state)?;
     let executable = std::env::current_exe().map_err(text_error)?;
     let executable_sha256 = hex::encode(Sha256::digest(
@@ -281,7 +372,7 @@ pub unsafe fn replay_facade(options: &FacadeOptions) -> Result<Value, String> {
         "fixture_hash": fixture_hash, "executable_sha256": executable_sha256,
         "process_id": std::process::id(), "platform": std::env::consts::OS,
         "local_utc_offset_seconds": chrono::Local::now().offset().local_minus_utc(),
-        "synchronous": "FULL", "warmup_wall_secs": warmup_wall_secs,
+        "synchronous": synchronous, "warmup_wall_secs": warmup_wall_secs,
         "measured_wall_secs": wall_secs, "simulated_secs": options.duration_secs, "frames": frames,
         "commits": final_sequence - initial_sequence, "writer_rows_changed": rows_changed,
         "traffic": { "initial_upload": initial_totals.0, "initial_download": initial_totals.1,
@@ -304,6 +395,7 @@ pub unsafe fn replay_facade(options: &FacadeOptions) -> Result<Value, String> {
         "frame_budget_overruns": overruns, "schedule_lag_frames_max": max_lag_frames,
         "initial_files_and_pages": initial, "final_files_and_pages": final_inventory,
         "tables_and_indexes": tables, "samples": samples,
+        "heap_phases": heap_phases.report(),
         "limits": [
             "仅当前原生基准进程；没有 HTTP、Tauri 事件或 WebView，窗口为后台模拟状态。",
             "CPU/I/O/内存不含初始化、warmup、结果 JSON 写出及最终统计查询；采样开销包含在测量内。",
@@ -535,7 +627,9 @@ fn inventory(state: &Mutex<AppFacade>, dir: &Path) -> Result<Value, String> {
         "reusable_page_bytes": freelist * page_size, "active_page_bytes": (page_count-freelist)*page_size,
         "archive_ok": c.query_row("select count(*) from report_archive where status='ok'", [], |r| r.get::<_, i64>(0)).map_err(text_error)?,
         "archive_failed": c.query_row("select count(*) from report_archive where status='failed'", [], |r| r.get::<_, i64>(0)).map_err(text_error)?,
-        "schema_version": pragma("user_version")?
+        "schema_version": pragma("user_version")?,
+        "journal_mode": c.query_row("pragma journal_mode", [], |r| r.get::<_, String>(0)).map_err(text_error)?,
+        "synchronous": pragma("synchronous")?
     }))
 }
 
@@ -620,6 +714,11 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         // SAFETY: 此测试在独立子进程执行，只有本测试打开 SQLite。
         let report = unsafe { replay_facade(&options(dir.path())) }.unwrap();
+        for inventory in ["initial_files_and_pages", "final_files_and_pages"] {
+            assert_eq!(report[inventory]["journal_mode"], "wal");
+            assert_eq!(report[inventory]["synchronous"], 2);
+        }
+        assert_eq!(report["synchronous"], "FULL");
         assert_eq!(report["commits"], 3);
         assert_eq!(report["traffic"]["conserved"], true);
         assert!(report["sqlite_xwrite"]["wal_bytes"].as_u64().unwrap() > 0);
@@ -630,6 +729,8 @@ mod tests {
                 > 0
         );
         assert_eq!(report["latency"]["report_repeated_reader"]["count"], 3);
+        // 测试进程未注册 CountingAlloc，堆阶段字段必须为 null。
+        assert!(report["heap_phases"].is_null());
         assert!(unsafe { replay_facade(&options(dir.path())) }.is_err());
     }
     #[test]

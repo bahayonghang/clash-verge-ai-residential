@@ -700,7 +700,7 @@ fn resolve_id(
     let Some(value) = value else {
         return Ok(IdFilter::Any);
     };
-    if value == UNKNOWN_IDENTITY {
+    if value == UNKNOWN_IDENTITY && kind == "process" {
         return Ok(IdFilter::Missing);
     }
     match lookup_dimension_id(connection, kind, value)? {
@@ -831,6 +831,84 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
+    fn minute_set_matches_independent_set_for_repeats_and_bounds() {
+        for (start, end) in [
+            (0, 1),
+            (-65, 66),
+            (i64::MIN, i64::MIN + 2),
+            (i64::MAX - 1, i64::MAX),
+            (7, 7),
+        ] {
+            let mut dense = MinuteSet::new(start, end).expect("window");
+            let mut sparse = MinuteSet::sparse();
+            let mut dense_oracle = HashSet::new();
+            let mut sparse_oracle = HashSet::new();
+            // 原集合接受已分配 word 的 padding 位；生产 SQL 仍按窗口筛选。
+            let capacity = ((i128::from(end) - i128::from(start) + 63) / 64) * 64;
+            for minute in [
+                start,
+                start,
+                start.saturating_add(1),
+                start,
+                i64::MIN,
+                i64::MIN,
+                i64::MAX,
+                i64::MAX,
+                start,
+                end,
+                end,
+                -1,
+                -2,
+                -1,
+                start.saturating_add(63),
+                start.saturating_add(64),
+                start.saturating_sub(1),
+                start,
+            ] {
+                let offset = i128::from(minute) - i128::from(start);
+                if offset >= 0
+                    && offset <= i128::from(i64::MAX)
+                    && usize::try_from(offset).is_ok()
+                    && offset < capacity
+                {
+                    dense_oracle.insert(minute);
+                }
+                sparse_oracle.insert(minute);
+                dense.insert(minute);
+                sparse.insert(minute);
+                assert_eq!(
+                    dense.count,
+                    dense_oracle.len() as i64,
+                    "{start}..{end}: {minute}"
+                );
+                assert_eq!(sparse.count, sparse_oracle.len() as i64);
+            }
+        }
+        assert!(MinuteSet::new(1, 0).is_err());
+        assert!(MinuteSet::new(i64::MIN, i64::MAX).is_err());
+    }
+
+    #[test]
+    fn minute_set_layout_and_repeated_accumulation() {
+        println!(
+            "minute_set_bytes={} option_i64_bytes={}",
+            std::mem::size_of::<MinuteSet>(),
+            std::mem::size_of::<Option<i64>>()
+        );
+        for mut acc in [Acc::new(-1, 2).expect("window"), Acc::bucket()] {
+            for (minute, upload, download) in [(-1, 0, 0), (-1, 2, 3), (1, 5, 7), (-1, 11, 13)] {
+                acc.add_bytes(minute, upload, download).expect("bytes");
+                acc.note_session();
+            }
+            let totals = acc.totals();
+            assert_eq!(totals.upload, 18);
+            assert_eq!(totals.download, 23);
+            assert_eq!(totals.connection_count, 4);
+            assert_eq!(totals.active_duration_sec, 120);
+        }
+    }
+
+    #[test]
     fn projection_predicate_matches_membership_sql() {
         let sql = raw_session_projection_sql(false, false);
         let expected = RESIDENTIAL_RAW_MEMBERSHIP_SQL.replace("m.session_pk", "s.session_pk");
@@ -944,6 +1022,229 @@ mod tests {
             };
             let folded = fold_window(connection, &query, &index, -122, 71).expect("grouping");
             assert_sql_match(connection, &query, &folded, -122, 71);
+        }
+    }
+
+    #[test]
+    fn repeated_projection_values_preserve_fallbacks_missingness_and_exit_keys() {
+        let dir = tempdir().expect("dir");
+        let coordinator =
+            StorageCoordinator::open(&dir.path().join("projection.sqlite3")).expect("open");
+        let connection = coordinator.connection();
+        connection
+            .execute_batch(
+                "insert into dimension_dict(dimension_kind, dimension_id, value) values
+                    ('process', 1, 'app'), ('process', 2, ''),
+                    ('network', 1, 'udp'), ('network', 2, ''),
+                    ('category', 1, 'home'), ('category', 2, ''),
+                    ('rule', 1, 'REJECT'), ('rule', 2, ''), ('rule', 3, 'ALLOW');",
+            )
+            .expect("dictionary");
+        let rows = [
+            (1, "a", Some("DIRECT"), Some(1), Some(1)),
+            (2, "a", Some("DIRECT"), Some(2), Some(2)),
+            (3, "b", Some("node>"), Some(1), Some(9)),
+            (4, "b", Some("node>"), Some(2), None),
+            (5, "c", Some(">"), Some(3), Some(1)),
+            (6, "c", Some(">"), None, None),
+            (7, "d", Some(" hop > exit "), Some(1), Some(1)),
+            (8, "d", Some("hop>exit"), Some(3), Some(1)),
+            (9, "e", Some("   "), Some(1), Some(1)),
+            (10, "e", None, None, None),
+            (11, "f", Some("UNIQUE"), Some(9), Some(9)),
+            (12, "f", Some("UNIQUE"), Some(3), Some(1)),
+            (13, "g", Some("left > right"), Some(2), Some(1)),
+            (1_000_003, "g", Some("left > right"), Some(3), Some(1)),
+        ];
+        for (pk, host, chain, rule, dimension) in rows {
+            connection
+                .execute(
+                    "insert into connection_session(session_pk, epoch_id, connection_id, started_utc, host) values (?1, 1, ?2, -120, ?3)",
+                    params![pk, format!("c{pk}"), host],
+                )
+                .expect("session");
+            connection
+                .execute(
+                    "insert into connection_session_attr(session_pk, process_id, network_id, primary_category_id, rule_id, chain_key, policy_version, started_utc) values (?1, ?2, ?2, ?2, ?3, ?4, 1, -120)",
+                    params![pk, dimension, rule, chain],
+                )
+                .expect("attributes");
+            for minute in [-1, 61] {
+                connection
+                    .execute(
+                        "insert into connection_minute(utc_minute, session_pk, upload, download) values (?1, ?2, 1, 10)",
+                        params![minute, pk],
+                    )
+                    .expect("minute");
+            }
+        }
+        let mut query = ReportQuery {
+            range_start_utc: -120,
+            range_end_utc: 121 * 60,
+            granularity: Granularity::Hour,
+            ..ReportQuery::default()
+        };
+        let index = load_sessions(connection, &query, -2, 121).expect("projection");
+        for (pk, missing) in [(2, false), (3, true), (4, true)] {
+            let fact = index.get(pk).expect("projected row");
+            assert_eq!(fact.process_missing, missing);
+            assert_eq!(fact.network_missing, missing);
+            assert_eq!(fact.category_missing, missing);
+            assert_eq!(fact.process_identity, index.unknown);
+            assert_eq!(fact.network_identity, index.unknown);
+            assert_eq!(fact.category_identity, index.unknown);
+        }
+        let first = index.get(1).expect("first");
+        assert_eq!(index.pool.get(first.process_identity), "app");
+        assert_eq!(index.pool.get(first.network_identity), "udp");
+        assert_eq!(index.pool.get(first.category_identity), "home");
+        for (pk, rule) in [
+            (1, "REJECT"),
+            (2, ""),
+            (3, "REJECT"),
+            (4, ""),
+            (5, "ALLOW"),
+            (6, "DIRECT"),
+            (11, "DIRECT"),
+            (12, "ALLOW"),
+            (13, "right"),
+            (1_000_003, "right"),
+        ] {
+            assert_eq!(index.pool.get(index.get(pk).unwrap().rule_identity), rule);
+        }
+        assert_eq!(
+            index
+                .pool
+                .get(index.get(3).unwrap().chain_identity.unwrap()),
+            "node"
+        );
+        assert!(index.get(5).unwrap().chain_identity.is_none());
+        assert_eq!(
+            index.pool.get(index.get(5).unwrap().chain_key.unwrap()),
+            ">"
+        );
+        let mut filters = vec![ReportFilters::default()];
+        for value in [UNKNOWN_IDENTITY, ""] {
+            filters.push(ReportFilters {
+                process: Some(value.into()),
+                ..ReportFilters::default()
+            });
+            filters.push(ReportFilters {
+                network: Some(value.into()),
+                ..ReportFilters::default()
+            });
+        }
+        filters.push(ReportFilters {
+            category: Some("".into()),
+            ..ReportFilters::default()
+        });
+        for value in ["", "DIRECT", "REJECT", "right"] {
+            filters.push(ReportFilters {
+                rule: Some(value.into()),
+                ..ReportFilters::default()
+            });
+        }
+        for value in ["DIRECT", "node", "exit"] {
+            filters.push(ReportFilters {
+                chain: Some(value.into()),
+                ..ReportFilters::default()
+            });
+        }
+        for grouping in [
+            DimensionKind::Host,
+            DimensionKind::Process,
+            DimensionKind::Network,
+            DimensionKind::Category,
+            DimensionKind::Rule,
+            DimensionKind::Chain,
+        ] {
+            query.grouping = grouping;
+            for filter in &filters {
+                query.filters = filter.clone();
+                let folded = fold_window(connection, &query, &index, -2, 121).expect("fold");
+                assert_sql_match(connection, &query, &folded, -2, 121);
+            }
+        }
+        query.grouping = DimensionKind::Host;
+        query.filters = ReportFilters::default();
+        let folded = fold_window(connection, &query, &index, -2, 121).expect("host exits");
+        for row in &folded.rankings {
+            let mut statement = connection.prepare(
+                "select a.chain_key, sum(m.download) from connection_minute m join connection_session s on s.session_pk=m.session_pk left join connection_session_attr a on a.session_pk=m.session_pk where m.utc_minute>=?1 and m.utc_minute<?2 and s.host=?3 and a.chain_key is not null and trim(a.chain_key)<>'' group by a.chain_key order by sum(m.download) desc, a.chain_key asc",
+            ).expect("exit oracle");
+            let exits = statement
+                .query_map(params![-2, 121, row.identity], |row| {
+                    row.get::<_, String>(0)
+                })
+                .expect("exit rows")
+                .collect::<Result<Vec<_>, _>>()
+                .expect("exit values");
+            assert_eq!(row.primary_exit, exits.first().cloned(), "{}", row.identity);
+            assert_eq!(row.exit_mixed, exits.len() > 1, "{}", row.identity);
+        }
+        let spaced = folded
+            .rankings
+            .iter()
+            .find(|row| row.identity == "d")
+            .unwrap();
+        assert_eq!(spaced.primary_exit.as_deref(), Some(" hop > exit "));
+        assert!(spaced.exit_mixed);
+    }
+
+    #[test]
+    fn unreferenced_dictionary_values_do_not_enter_returned_pool() {
+        let dir = tempdir().expect("dir");
+        let coordinator =
+            StorageCoordinator::open(&dir.path().join("unused.sqlite3")).expect("open");
+        let connection = coordinator.connection();
+        connection.execute_batch(
+            "insert into dimension_dict(dimension_kind, dimension_id, value) values
+                ('process', 1, 'app'), ('process', 9, 'unused-process'),
+                ('network', 1, 'udp'), ('network', 9, 'unused-network'),
+                ('category', 1, 'home'), ('category', 9, 'unused-category'),
+                ('rule', 1, 'REJECT'), ('rule', 9, 'unused-rule');
+             insert into connection_session(session_pk, epoch_id, connection_id, started_utc, host)
+                values (1, 1, 'one', 0, 'used.example');
+             insert into connection_session_attr(session_pk, process_id, network_id, primary_category_id, rule_id, chain_key, policy_version, started_utc)
+                values (1, 1, 1, 1, 1, 'DIRECT', 1, 0);
+             insert into connection_minute(utc_minute, session_pk, upload, download) values (0, 1, 3, 7);",
+        ).expect("fixture");
+        let mut query = ReportQuery {
+            range_start_utc: 0,
+            range_end_utc: 60,
+            ..ReportQuery::default()
+        };
+        let index = load_sessions(connection, &query, 0, 1).expect("projection");
+        assert_eq!(index.len(), 1);
+        for value in [
+            "unused-process",
+            "unused-network",
+            "unused-category",
+            "unused-rule",
+        ] {
+            assert!(
+                !index.pool.ids.contains_key(value),
+                "未引用字典值驻留：{value}"
+            );
+            for filters in [
+                ReportFilters {
+                    host: Some(value.into()),
+                    ..ReportFilters::default()
+                },
+                ReportFilters {
+                    rule: Some(value.into()),
+                    ..ReportFilters::default()
+                },
+                ReportFilters {
+                    chain: Some(value.into()),
+                    ..ReportFilters::default()
+                },
+            ] {
+                query.filters = filters;
+                let folded = fold_window(connection, &query, &index, 0, 1).expect("fold");
+                assert_eq!(folded.totals.connection_count, 0);
+                assert_sql_match(connection, &query, &folded, 0, 1);
+            }
         }
     }
 

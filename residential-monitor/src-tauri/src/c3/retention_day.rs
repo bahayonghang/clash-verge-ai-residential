@@ -181,10 +181,16 @@ pub(super) fn auxiliary_cleanup_pending(connection: &Connection) -> Result<bool,
 }
 
 /// 游标约束扫描的源行数；未命中任何可删对象的页也会前进。
+/// 两个扫描同一轮开始；先结束的一方停在 0 等另一方，两者都为 0 才一起开始下一轮。
+/// 否则页数不同的两个周期可能永远不会同时归零，辅助清理持续调度。
 fn cleanup_expired(connection: &Connection, _day: i64, now: i64) -> Result<bool, ReportError> {
     let cutoff = (now - DIMENSION_RETAIN_DAYS * DAY).div_euclid(DAY) * DAY;
     let coverage_cursor = cleanup_cursor(connection, "coverage_cleanup_cursor")?;
-    let intervals = {
+    let dictionary_cursor = cleanup_cursor(connection, "dictionary_cleanup_cursor")?;
+    let new_round = coverage_cursor == 0 && dictionary_cursor == 0;
+    let intervals = if !new_round && coverage_cursor == 0 {
+        Vec::new()
+    } else {
         let mut statement=connection.prepare("select interval_id,started_utc,ended_utc from coverage_interval where interval_id>?1 order by interval_id limit 128").map_err(sql_error)?;
         let rows = statement
             .query_map([coverage_cursor], |r| {
@@ -218,8 +224,9 @@ fn cleanup_expired(connection: &Connection, _day: i64, now: i64) -> Result<bool,
             0
         },
     )?;
-    let dictionary_cursor = cleanup_cursor(connection, "dictionary_cleanup_cursor")?;
-    let dictionaries = {
+    let dictionaries = if !new_round && dictionary_cursor == 0 {
+        Vec::new()
+    } else {
         let mut statement=connection.prepare("select rowid,dimension_kind,dimension_id,value from dimension_dict where rowid>?1 order by rowid limit 128").map_err(sql_error)?;
         let rows = statement
             .query_map([dictionary_cursor], |r| {
@@ -233,8 +240,9 @@ fn cleanup_expired(connection: &Connection, _day: i64, now: i64) -> Result<bool,
             .map_err(sql_error)?;
         rows.collect::<Result<Vec<_>, _>>().map_err(sql_error)?
     };
+    let mut chain_refs = None;
     for (rowid, kind, id, value) in &dictionaries {
-        if !dictionary_referenced(connection, kind, *id, value)? {
+        if !dictionary_referenced(connection, kind, *id, value, &mut chain_refs)? {
             connection
                 .execute("delete from dimension_dict where rowid=?1", [rowid])
                 .map_err(sql_error)?;
@@ -273,11 +281,110 @@ fn save_cleanup_cursor(
     }
     Ok(())
 }
+/// raw attr 中出现过的 chain / rule_group 引用。经 `idx_session_attr_chain_rule` 逐键跳跃枚举，
+/// 成本随 distinct 键数增长，不随 attr 行数增长。
+#[derive(Default)]
+struct ChainReferences {
+    chains: std::collections::HashSet<String>,
+    hops: std::collections::HashSet<String>,
+    hopless_rules: std::collections::HashSet<i64>,
+    hopless_null_rule: bool,
+}
+
+/// hop 为空的 chain_key 下判定 rule_group 回退所用的三条查询；每次枚举只准备一次。
+struct HoplessQueries<'c> {
+    null_rule: rusqlite::Statement<'c>,
+    first_rule: rusqlite::Statement<'c>,
+    next_rule: rusqlite::Statement<'c>,
+}
+
+fn hopless_queries<'c>(
+    connection: &'c Connection,
+    key_clause: &str,
+) -> Result<HoplessQueries<'c>, ReportError> {
+    let prepare = |sql: String| connection.prepare(&sql).map_err(sql_error);
+    Ok(HoplessQueries {
+        null_rule: prepare(format!("select exists(select 1 from connection_session_attr where {key_clause} and rule_id is null)"))?,
+        first_rule: prepare(format!("select rule_id from connection_session_attr where {key_clause} and rule_id is not null order by rule_id limit 1"))?,
+        next_rule: prepare(format!("select rule_id from connection_session_attr where {key_clause} and rule_id > ?2 order by rule_id limit 1"))?,
+    })
+}
+
+fn chain_references(connection: &Connection) -> Result<ChainReferences, ReportError> {
+    let mut refs = ChainReferences::default();
+    let mut keys: Vec<Option<String>> = Vec::new();
+    let has_null: bool = connection
+        .query_row(
+            "select exists(select 1 from connection_session_attr where chain_key is null)",
+            [],
+            |r| r.get(0),
+        )
+        .map_err(sql_error)?;
+    if has_null {
+        keys.push(None);
+    }
+    let mut next_key = connection
+        .prepare("select chain_key from connection_session_attr where chain_key > ?1 order by chain_key limit 1")
+        .map_err(sql_error)?;
+    let mut next: Option<String> = connection
+        .query_row(
+            "select chain_key from connection_session_attr where chain_key is not null order by chain_key limit 1",
+            [],
+            |r| r.get(0),
+        )
+        .optional()
+        .map_err(sql_error)?;
+    while let Some(key) = next {
+        next = next_key
+            .query_row([&key], |r| r.get(0))
+            .optional()
+            .map_err(sql_error)?;
+        keys.push(Some(key));
+    }
+    let mut keyed = hopless_queries(connection, "chain_key = ?1")?;
+    let mut null_keyed = hopless_queries(connection, "chain_key is null and ?1 is null")?;
+    for key in &keys {
+        if let Some(identity) = crate::c3::rule_name::chain_identity(key.as_deref()) {
+            refs.chains.insert(identity);
+        }
+        if let Some(hop) = crate::c3::rule_name::last_chain_hop(key.as_deref()) {
+            refs.hops.insert(hop);
+            continue;
+        }
+        // hop 为空时 rule_group 回退到 rule，再回退到 DIRECT。
+        let queries = if key.is_some() {
+            &mut keyed
+        } else {
+            &mut null_keyed
+        };
+        let null_rule: bool = queries
+            .null_rule
+            .query_row([key], |r| r.get(0))
+            .map_err(sql_error)?;
+        refs.hopless_null_rule |= null_rule;
+        let mut rule: Option<i64> = queries
+            .first_rule
+            .query_row([key], |r| r.get(0))
+            .optional()
+            .map_err(sql_error)?;
+        while let Some(current) = rule {
+            refs.hopless_rules.insert(current);
+            rule = queries
+                .next_rule
+                .query_row(params![key, current], |r| r.get(0))
+                .optional()
+                .map_err(sql_error)?;
+        }
+    }
+    Ok(refs)
+}
+
 fn dictionary_referenced(
     connection: &Connection,
     kind: &str,
     id: i64,
     value: &str,
+    chain_refs: &mut Option<ChainReferences>,
 ) -> Result<bool, ReportError> {
     let derived:bool=connection.query_row("select exists(select 1 from traffic_hourly_dimension where dimension_kind=?1 and dimension_id=?2)
         or exists(select 1 from traffic_daily_dimension where dimension_kind=?1 and dimension_id=?2)",params![kind,id],|r|r.get(0)).map_err(sql_error)?;
@@ -316,13 +423,28 @@ fn dictionary_referenced(
         }
         return Ok(false);
     }
-    match kind {
-        "chain"=>connection.query_row("select exists(select 1 from connection_session_attr where chain_identity(chain_key)=?1)",[value],|r|r.get(0)).map_err(sql_error),
-        "rule_group"=>connection.query_row("select exists(select 1 from connection_session_attr where last_chain_hop(chain_key)=?1)
-            or exists(select 1 from connection_session_attr where last_chain_hop(chain_key) is null and rule_id=(select dimension_id from dimension_dict where dimension_kind='rule' and value=?1))
-            or (?1='DIRECT' and exists(select 1 from connection_session_attr where last_chain_hop(chain_key) is null and rule_id is null))",[value],|r|r.get(0)).map_err(sql_error),
-        _=>Ok(true),
+    if kind != "chain" && kind != "rule_group" {
+        return Ok(true);
     }
+    if chain_refs.is_none() {
+        *chain_refs = Some(chain_references(connection)?);
+    }
+    let refs = chain_refs.as_ref().expect("chain refs");
+    if kind == "chain" {
+        return Ok(refs.chains.contains(value));
+    }
+    if refs.hops.contains(value) || (value == "DIRECT" && refs.hopless_null_rule) {
+        return Ok(true);
+    }
+    let rule_id: Option<i64> = connection
+        .query_row(
+            "select dimension_id from dimension_dict where dimension_kind='rule' and value=?1",
+            [value],
+            |r| r.get(0),
+        )
+        .optional()
+        .map_err(sql_error)?;
+    Ok(rule_id.is_some_and(|rule_id| refs.hopless_rules.contains(&rule_id)))
 }
 
 #[cfg(test)]
@@ -1216,5 +1338,188 @@ mod tests {
             106
         );
         assert_eq!(scalar(&db, "select count(*) from connection_minute"), 1);
+    }
+
+    fn legacy_chain_referenced(connection: &Connection, kind: &str, value: &str) -> bool {
+        let sql = if kind == "chain" {
+            "select exists(select 1 from connection_session_attr where chain_identity(chain_key)=?1)"
+        } else {
+            "select exists(select 1 from connection_session_attr where last_chain_hop(chain_key)=?1)
+            or exists(select 1 from connection_session_attr where last_chain_hop(chain_key) is null and rule_id=(select dimension_id from dimension_dict where dimension_kind='rule' and value=?1))
+            or (?1='DIRECT' and exists(select 1 from connection_session_attr where last_chain_hop(chain_key) is null and rule_id is null))"
+        };
+        connection
+            .query_row(sql, [value], |r| r.get(0))
+            .expect("旧语义")
+    }
+
+    #[test]
+    fn chain_dictionary_references_match_exists_semantics_without_attr_scan() {
+        let dir = tempdir().expect("目录");
+        let db = StorageCoordinator::open(&dir.path().join("chain-refs.sqlite3")).expect("打开");
+        let connection = db.connection();
+        connection
+            .execute_batch(
+                "insert into dimension_dict values
+                ('rule',1,'DOMAIN'),('rule',2,'MATCH'),('rule',3,'GEOIP'),
+                ('chain',1,'b'),('chain',2,'home'),('chain',3,'DIRECT'),('chain',4,'gone'),('chain',5,'y'),
+                ('rule_group',1,'b'),('rule_group',2,'DOMAIN'),('rule_group',3,'MATCH'),('rule_group',4,'GEOIP'),
+                ('rule_group',5,'DIRECT'),('rule_group',6,'y'),('rule_group',7,'home'),('rule_group',8,'gone');",
+            )
+            .expect("字典");
+        let rows: [(Option<&str>, Option<i64>); 11] = [
+            (Some("a>b"), Some(3)),
+            (Some("home"), Some(1)),
+            (Some("home"), None),
+            (None, Some(2)),
+            (Some(" x > y "), None),
+            (Some("a>"), Some(1)),
+            (Some(""), None),
+            (Some("DIRECT"), Some(9)),
+            (Some("   "), Some(2)),
+            (Some(">"), Some(3)),
+            (Some("home"), Some(2)),
+        ];
+        for (index, (chain, rule)) in rows.iter().enumerate() {
+            connection
+                .execute(
+                    "insert into connection_session_attr(session_pk,chain_key,rule_id,started_utc) values (?1,?2,?3,0)",
+                    params![index as i64 + 1, chain, rule],
+                )
+                .expect("attr");
+        }
+        connection
+            .execute_batch(
+                "with recursive seq(n) as (values(100) union all select n+1 from seq where n<20099)
+                insert into connection_session_attr(session_pk,chain_key,rule_id,started_utc)
+                select n,'a>b',3,0 from seq;
+                with recursive seq(n) as (values(30000) union all select n+1 from seq where n<49999)
+                insert into connection_session_attr(session_pk,chain_key,rule_id,started_utc)
+                select n,'DIRECT',n%3+1,0 from seq;",
+            )
+            .expect("重复键");
+        let entries: Vec<(String, i64, String)> = connection
+            .prepare("select dimension_kind,dimension_id,value from dimension_dict where dimension_kind in ('chain','rule_group') order by rowid")
+            .expect("prepare")
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
+            .expect("map")
+            .collect::<Result<_, _>>()
+            .expect("rows");
+        for remove_null_rules in [false, true] {
+            if remove_null_rules {
+                connection
+                    .execute(
+                        "delete from connection_session_attr where rule_id is null",
+                        [],
+                    )
+                    .expect("删除空 rule");
+            }
+            let operations = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let counter = Arc::clone(&operations);
+            connection
+                .progress_handler(
+                    1,
+                    Some(move || {
+                        counter.fetch_add(1, Ordering::SeqCst);
+                        false
+                    }),
+                )
+                .expect("计数");
+            let refs = chain_references(connection).expect("枚举");
+            connection
+                .progress_handler(0, None::<fn() -> bool>)
+                .expect("停止计数");
+            assert!(
+                operations.load(Ordering::SeqCst) < 5000,
+                "枚举不应扫描 attr 全表"
+            );
+            let mut cached = Some(refs);
+            for (kind, id, value) in &entries {
+                assert_eq!(
+                    dictionary_referenced(connection, kind, *id, value, &mut cached)
+                        .expect("新判定"),
+                    legacy_chain_referenced(connection, kind, value),
+                    "{kind}={value} remove_null_rules={remove_null_rules}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn auxiliary_sweeps_with_different_page_counts_finish_together() {
+        let dir = tempdir().expect("目录");
+        let mut db =
+            StorageCoordinator::open(&dir.path().join("auxiliary-phase.sqlite3")).expect("打开");
+        let now = 400 * DAY;
+        // 与 A50/A250 语料相同：字典 1085 行（9 页）、覆盖区间 720 行（6 页），都不可删除。
+        db.connection()
+            .execute_batch(
+                "with recursive ids(n) as(values(1) union all select n+1 from ids where n<1085)
+                 insert into dimension_dict select 'host',n,'host-'||n from ids;
+                 insert into connection_session(session_pk,epoch_id,connection_id,started_utc,host)
+                 select dimension_id,1,'session-'||dimension_id,0,value from dimension_dict;
+                 insert into connection_session_attr(session_pk,host_id,policy_version,started_utc,ended_utc)
+                 select session_pk,session_pk,1,0,1 from connection_session;",
+            )
+            .expect("受引用字典");
+        for i in 0..720_i64 {
+            db.connection().execute("insert into coverage_interval(kind,reason,started_utc,ended_utc) values ('covered','test',?1,?2)",
+                params![now - 10 * DAY + i * 60, now - 10 * DAY + i * 60 + 30]).expect("近期区间");
+        }
+        // 会话删除只把字典游标置 -1；覆盖游标停在第 1 页后，相位差 mod 3 不为 0。
+        save_cleanup_cursor(db.connection(), "dictionary_cleanup_cursor", -1).expect("字典游标");
+        save_cleanup_cursor(db.connection(), "coverage_cleanup_cursor", 128).expect("覆盖游标");
+        let cancel = Arc::new(AtomicBool::new(false));
+        let mut finished_at = None;
+        for index in 1..=20 {
+            let chunk = run_chunk(
+                &mut db,
+                now,
+                30,
+                RetentionMode::DeleteEnabled,
+                &SpaceBudget::unlimited(),
+                &cancel,
+                true,
+            )
+            .expect("辅助清理块");
+            assert_eq!(chunk.day_utc, None);
+            let coverage =
+                cleanup_cursor(db.connection(), "coverage_cleanup_cursor").expect("覆盖");
+            let dictionary =
+                cleanup_cursor(db.connection(), "dictionary_cleanup_cursor").expect("字典");
+            if index > 5 && index < 9 {
+                assert_eq!(coverage, 0, "先结束的覆盖扫描等待字典扫描结束");
+                assert_ne!(dictionary, 0);
+            }
+            if !chunk.more_pending
+                && !RetentionService::auxiliary_cleanup_pending(db.connection()).expect("复核")
+            {
+                finished_at = Some(index);
+                break;
+            }
+        }
+        assert_eq!(finished_at, Some(9), "两个扫描在字典第 9 页后同时结束");
+        assert_eq!(scalar(&db, "select count(*) from dimension_dict"), 1085);
+        assert_eq!(scalar(&db, "select count(*) from coverage_interval"), 720);
+
+        // 两者都结束后，下一块同时开始新一轮。
+        run_chunk(
+            &mut db,
+            now,
+            30,
+            RetentionMode::DeleteEnabled,
+            &SpaceBudget::unlimited(),
+            &cancel,
+            true,
+        )
+        .expect("新一轮");
+        assert_eq!(
+            cleanup_cursor(db.connection(), "dictionary_cleanup_cursor").expect("字典"),
+            128
+        );
+        assert_eq!(
+            cleanup_cursor(db.connection(), "coverage_cleanup_cursor").expect("覆盖"),
+            128
+        );
     }
 }
