@@ -75,6 +75,66 @@ groups retain their behavior. Test both top-level and nested rejection,
 ordinary fallback preservation, unchanged input and repeated execution.
 Host fallback after a script error remains outside this validation contract.
 
+## Scenario: Regex residential DNS
+
+### 1. Scope / Trigger
+
+Existing Vertex and Cursor indexing regexes need residential DNS without wider
+Google or Cursor suffixes. Reuse `activeDomainRegexes()` and its existing gates.
+
+### 2. Signatures
+
+`main(config, profileName)` returns a cloned configuration with a reserved
+`rule-providers["AI-家宽-DNS-REGEX"]` and
+`dns["nameserver-policy"]["rule-set:AI-家宽-DNS-REGEX"]` when regexes are active.
+`buildNameserverPolicy(existingPolicy)` exposes the policy keys for tests;
+validate provider references through the complete `main` output.
+
+### 3. Contracts
+
+The provider is local `type: inline`, `behavior: classical`. Its payload contains
+only `DOMAIN-REGEX,<pattern>` entries derived from active patterns. The DNS
+policy uses `RESIDENTIAL_DOH`. No remote URL, subscription, new switch or business
+rule is added. Insert the policy before broad geosite entries. Keep private,
+bootstrap, non-AI and extra-site DNS exemptions unchanged.
+
+Recognize previous managed providers from the full known pattern catalog,
+independent of current switches. Require the canonical fields and a unique,
+nonempty known payload. Clone the provider map before changes; preserve unknown
+providers. When all regexes are off, remove the managed provider and policy.
+Do not leave an empty provider map solely for managed output.
+
+### 4. Validation & Error Matrix
+
+A non-object provider map, a noncanonical same-name provider, or a user rule/other
+policy reference to the reserved provider must fail without changing input.
+Check nested logical rules, sub-rules, multi-provider policy keys,
+`dns.fake-ip-filter`, `sniffer.skip-domain` and `sniffer.force-domain` for the
+reserved name. The canonical managed DNS policy reference is allowed on rerun.
+Do not delete a provider while leaving a user reference unresolved.
+
+### 5. Good / Base / Bad Cases
+
+Base: Vertex on and indexing off produce only the Vertex pattern. Good: each
+switch controls its own pattern through on/off/on and repeated `main` calls.
+Bad: use `+.googleapis.com`, `+.cursor.sh`, a raw regex key, or a wildcard inside
+a DNS label as a substitute for the provider.
+
+### 6. Tests Required
+
+Test four switch combinations, positive and negative hosts, canonical provider
+ownership, user-reference rejection, stale policy cleanup with unmanaged-policy
+preservation on/off, unchanged input and renderer output. Preserve the historical
+v5.11 fixture; declare only the approved DNS delta explicitly. Test a real
+Mihomo process with fresh DNS queries and observed proxy hops. Loopback fixtures
+prove matching and chain selection, not public DoH TLS or a supplier's egress.
+
+### 7. Wrong vs Correct
+
+Wrong: infer real DNS routing from a fake-IP response or generated object alone.
+Correct: record the tested core version and actual resolver/proxy observations;
+keep untested production DNS/UDP behavior explicit.
+
 ## Idempotence
 
 Running `main` twice on the same object must not add duplicate proxies, groups,

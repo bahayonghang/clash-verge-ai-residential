@@ -167,8 +167,13 @@ commit rather than the edited implementation. Only the contiguous AI domain-rule
 block may be sorted; private, IP, process and original Profile rule order remains
 significant. Normalize DNS object keys, never resolver-array order. Also test
 core on/off/on, full old-rule cleanup and the dedicated process/IP gate matrix.
-Regex-only routes have no equivalent nameserver-policy; do not widen Google or
-Cursor suffixes to satisfy a DNS assertion, or claim real host behavior from Node tests.
+The existing regex routes also use the reserved inline/classical DNS provider
+`AI-家宽-DNS-REGEX`. Keep the historical fixture unchanged and declare the exact
+DNS policy addition in the default-projection test; assert provider contents
+separately. Test Vertex/Cursor gating, cleanup, ownership and negative host
+matches. Never widen Google/Cursor suffixes, use raw regex DNS keys, or infer
+real host behavior from Node tests. Record actual core DNS/proxy observations;
+loopback fixtures do not establish public DoH TLS or production UDP behavior.
 
 ## Scenario: Isolated Harness Bootstrap
 

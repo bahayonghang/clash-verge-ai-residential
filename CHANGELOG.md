@@ -23,7 +23,7 @@
 - 更新日志统一改为简体中文，并精简扩展脚本文件头中与本文件重复的历史版本记录。
 - Claude、OpenAI、Antigravity 和 Cursor 的专用进程回退现在要求启用各自对应的核心开关。Anthropic IP 回退也要求启用 `routing.anthropic_core`。认证、辅助、资产和全局捕获开关仍保持独立；核心流量被禁用后会回到原始 Profile 规则，而不是被强制送往机场出口。
 - 现有的 `AI-家宽` 组只接受规范的单一家宽成员，以及 `name`、`type`、`proxies`、`disable-udp`、`icon` 和 `hidden` 字段。额外的提供方来源、过滤器和替代选择字段会被拒绝，且不会修改输入；输出仅保留受支持的展示元数据。配置被拒绝并不保证运行时流量一定会被阻断，因为脚本出错后，宿主可能保留其原始配置。
-- 记录了现有 DNS 策略针对区域 Vertex 和可选 Cursor 索引正则路由的例外情况。未引入宽泛的域名后缀或新的解析器提供方；实际 DNS/UDP 路径和流量节省仍需运行时证据验证。
+- 为既有区域 Vertex 与可选 Cursor 索引正则补齐住宅 DNS 策略。专用本地 `inline/classical` 规则集与业务正则使用同一开关和模式，不扩大 Google/Cursor 后缀，不引入远程规则源；关闭开关会清理托管规则集与策略。同名非托管配置或用户规则引用保留名称时拒绝生成，且不修改输入。隔离内核验证不替代真实住宅服务商、公网 DoH 和 UDP 路径验证。
 - ResiWatch 工具链：`typescript-eslint` 8.69.0、`@types/react-dom` 19.2.5，以及兼容范围内的 `cargo update`（`hyper` 1.11.1、`tauri-plugin-dialog` 2.7.3、`tauri-plugin-notification` 2.4.0）。GitHub Actions 的 `checkout` 和 `setup-node` 升级至 v7。破坏性升级包括：`lucide-react` 1.39.0、`sha2` 0.11、`rand` 0.10、`tokio-tungstenite` 0.30、`eslint-plugin-react-hooks` 7.1.1（扁平配置 `recommended`；`set-state-in-effect` 和 `refs` 仍关闭）、TypeScript 6.0.3、Vitest 4.1.11、Vite 8.2.2，以及 `@vitejs/plugin-react` 5.x 和作为可选压缩对等依赖的 `esbuild` 0.28。根目录的 `package.json` 仍保持零第三方依赖，且 `engines.node >=18`。本轮仍不引入 ESLint 10、TypeScript 7 和 plugin-react 6。
 - 即使 `routing.ai_process_fallback` 为 `false`，扩展脚本也会写入顶层 `find-process-mode: always`。除非该开关已启用，否则仍不会注入 `PROCESS-NAME` / `PROCESS-PATH` 规则。Clash Verge 中嵌套在 `profile:` 下的值无法传递到内核。
 - 使用 React + Tailwind 桌面 UI 替换了原生 TypeScript + Catppuccin 壳。导航包含十个路由。概览、实时连接以及主机/规则/链路/进程页面已随新壳提供。已移除 `src/main.ts` 和 `src/styles.css`。

@@ -27,6 +27,8 @@
 const SCRIPT_VERSION = "5.11.0";
 const AI_GROUP = "AI-家宽";
 const HOME_PROXY_NAME = "家宽-SOCKS5";
+const AI_DNS_RULE_PROVIDER = "AI-家宽-DNS-REGEX";
+const AI_DNS_POLICY_KEY = `rule-set:${AI_DNS_RULE_PROVIDER}`;
 
 // ============================================================
 // 1. 用户配置
@@ -1640,8 +1642,80 @@ function cleanExistingManagedRules(rules) {
 // 12. DNS 构建
 // ============================================================
 
+function validateRegexDnsProviderOwnership(config) {
+  const providers = config["rule-providers"];
+  if (providers !== undefined && !isPlainObject(providers)) {
+    fail(`[${AI_GROUP}] rule-providers 必须是对象，拒绝覆盖已有配置`);
+  }
+  if (providers && Object.prototype.hasOwnProperty.call(providers, AI_DNS_RULE_PROVIDER)) {
+    const existing = providers[AI_DNS_RULE_PROVIDER];
+    const allowedPayload = new Set(
+      allPossibleDomainRegexes().map((pattern) => `DOMAIN-REGEX,${pattern}`)
+    );
+    const managed = isPlainObject(existing) &&
+      Object.keys(existing).length === 3 &&
+      Object.keys(existing).every((key) => ["type", "behavior", "payload"].includes(key)) &&
+      existing.type === "inline" && existing.behavior === "classical" &&
+      Array.isArray(existing.payload) && existing.payload.length > 0 &&
+      uniqueStrings(existing.payload).length === existing.payload.length &&
+      existing.payload.every((rule) => allowedPayload.has(rule));
+    if (!managed) {
+      fail(`[${AI_GROUP}] 保留规则集“${AI_DNS_RULE_PROVIDER}”存在非托管配置，请重命名该规则集`);
+    }
+  }
+
+  const ruleLists = [config.rules];
+  if (isPlainObject(config["sub-rules"])) {
+    ruleLists.push(...Object.values(config["sub-rules"]));
+  }
+  for (const rules of ruleLists) {
+    for (const rule of Array.isArray(rules) ? rules : []) {
+      if (typeof rule !== "string") continue;
+      const references = rule.matchAll(/(?:^|[,(])\s*RULE-SET\s*,\s*([^,()]+)(?=,|\)|$)/gi);
+      for (const match of references) {
+        if (match[1].trim() === AI_DNS_RULE_PROVIDER) {
+          fail(`[${AI_GROUP}] rules/sub-rules 不得引用专用 DNS 规则集“${AI_DNS_RULE_PROVIDER}”，请重命名自定义规则集`);
+        }
+      }
+    }
+  }
+  const dns = isPlainObject(config.dns) ? config.dns : {};
+  const sniffer = isPlainObject(config.sniffer) ? config.sniffer : {};
+  const policy = isPlainObject(dns["nameserver-policy"]) ? dns["nameserver-policy"] : {};
+  const domainLists = [
+    ["nameserver-policy", Object.keys(policy).filter((key) => key !== AI_DNS_POLICY_KEY)],
+    ["dns.fake-ip-filter", dns["fake-ip-filter"]],
+    ["sniffer.skip-domain", sniffer["skip-domain"]],
+    ["sniffer.force-domain", sniffer["force-domain"]]
+  ];
+  for (const [field, entries] of domainLists) {
+    for (const entry of toStringArray(entries)) {
+      const match = /^rule-set:(.*)$/i.exec(entry);
+      if (match && match[1].split(",").some((name) => name.trim() === AI_DNS_RULE_PROVIDER)) {
+        fail(`[${AI_GROUP}] 自定义 ${field} 不得引用专用 DNS 规则集“${AI_DNS_RULE_PROVIDER}”，请重命名自定义规则集`);
+      }
+    }
+  }
+}
+
+function rebuildRegexDnsProvider(config) {
+  const payload = activeDomainRegexes().map((pattern) => `DOMAIN-REGEX,${pattern}`);
+  const source = config["rule-providers"];
+  if (payload.length === 0 &&
+      (!source || !Object.prototype.hasOwnProperty.call(source, AI_DNS_RULE_PROVIDER))) return;
+
+  const providers = { ...source };
+  delete providers[AI_DNS_RULE_PROVIDER];
+  if (payload.length > 0) {
+    providers[AI_DNS_RULE_PROVIDER] = { type: "inline", behavior: "classical", payload };
+  }
+  if (Object.keys(providers).length > 0) config["rule-providers"] = providers;
+  else delete config["rule-providers"];
+}
+
 function buildManagedDnsPolicyKeySet() {
   const managed = new Set([
+    AI_DNS_POLICY_KEY,
     "geosite:cn",
     "geosite:private",
     "geosite:cn,private",
@@ -1681,6 +1755,7 @@ function buildNameserverPolicy(existingPolicy) {
     }
   }
 
+  if (activeDomainRegexes().length > 0) policy[AI_DNS_POLICY_KEY] = RESIDENTIAL_DOH;
   policy["geosite:private"] = PRIVATE_DNS;
   policy["geosite:cn"] = DIRECT_DOH;
   return policy;
@@ -1865,6 +1940,7 @@ function main(config, profileName) {
 
   // 1. 在任何覆盖前检查保留名称，防止静默破坏用户配置。
   validateReservedNameCollisions(working);
+  validateRegexDnsProviderOwnership(working);
 
   // 2. 为当前 Profile 动态解析一个真实存在的上游名称。
   const outboundIndex = buildOutboundIndex(working);
@@ -1893,7 +1969,8 @@ function main(config, profileName) {
     ...existingRules
   ]);
 
-  // 7. 重建严格 DNS 路径。
+  // 7. 重建严格 DNS 路径，正则策略仅引用本地托管规则集。
+  rebuildRegexDnsProvider(working);
   working.dns = buildDnsConfig(working.dns, upstreamName);
 
   // 8. 加固域名嗅探。查找进程写顶层 always；进程路由默认关闭。

@@ -524,6 +524,53 @@ test("本地 cursor_repository_indexing 缺字段补 false，显式 true 恢复 
   });
 });
 
+test("本地 Vertex/Cursor 开关控制生成脚本的正则住宅 DNS，缺省值不变", () => {
+  const providerName = "AI-家宽-DNS-REGEX";
+  const policyKey = `rule-set:${providerName}`;
+  const payloads = [
+    "DOMAIN-REGEX,^[a-z0-9-]+-aiplatform\\.googleapis\\.com$",
+    "DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$"
+  ];
+  const probeSource = [
+    '"use strict";',
+    "const script = require(process.argv[1]);",
+    "console.info = () => {};",
+    "const input = { proxies: [{ name: 'HK', type: 'socks5', server: 'airport.example.test', port: 1080, udp: true }],",
+    "  'proxy-groups': [{ name: '🚀节点选择', type: 'select', proxies: ['HK'] }], rules: ['MATCH,🚀节点选择'] };",
+    "const output = script.main(input, 'renderer-test');",
+    "process.stdout.write(JSON.stringify({ providers: output['rule-providers'], policy: output.dns['nameserver-policy'], rules: output.rules }));"
+  ].join("\n");
+  const originalTemplate = fs.readFileSync(templatePath, "utf8");
+  for (const [vertex, cursor] of [[true, false], [false, true], [true, true], [false, false], [undefined, undefined]]) {
+    withTemporaryDirectory((directory) => {
+      const configPath = path.join(directory, "proxy.toml");
+      const outputPath = path.join(directory, "proxy.local.js");
+      const overrides = vertex === undefined ? "" :
+        `\n[routing]\nvertex_ai_endpoints = ${vertex}\ncursor_repository_indexing = ${cursor}\n`;
+      fs.writeFileSync(configPath, validHomeProxyToml + overrides);
+      syncLocalConfig({ templatePath, configPath, outputPath });
+      const output = JSON.parse(childProcess.execFileSync(process.execPath,
+        ["-e", probeSource, outputPath], { encoding: "utf8" }));
+      const payload = payloads.filter((_, index) => index === 0 ? vertex !== false : cursor === true);
+      if (payload.length) {
+        assert.deepEqual(output.providers[providerName], { type: "inline", behavior: "classical", payload });
+        assert.deepEqual(output.policy[policyKey], [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ]);
+      } else {
+        assert.equal(output.providers, undefined);
+        assert.equal(policyKey in output.policy, false);
+      }
+      assert.equal(ruleMatchesHost(output.rules, "us-central1-aiplatform.googleapis.com", "AI-家宽"), vertex !== false);
+      assert.equal(ruleMatchesHost(output.rules, "repo42.cursor.sh", "AI-家宽"), cursor === true);
+      assert.equal("+.googleapis.com" in output.policy, false);
+      assert.equal("+.cursor.sh" in output.policy, false);
+    });
+  }
+  assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
+});
+
 test("本地 openai_core = false 让 GPT 域名不再走家宽，Claude 等核心域名不受影响", () => {
   withTemporaryDirectory((directory) => {
     const configPath = path.join(directory, "proxy.local.toml");

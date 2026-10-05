@@ -16,20 +16,26 @@ AI 应用请求
 ## DNS 路径
 
 ```text
-启用的 exact/suffix AI 域名查询 -> 经 AI-家宽 的住宅 DoH
+启用的 exact/suffix/regex AI 域名查询 -> 经 AI-家宽 的住宅 DoH
 其他海外查询        -> 经当前 Profile 上游的非 AI DoH
 国内域名查询        -> 经 DIRECT 的国内 DoH
 私网/局域网查询     -> 系统解析器
 代理服务器自身查找  -> bootstrap/直连解析，避免递归
 ```
 
-这与「全局 DNS leak test」配置不同。普通 leak test 可能显示机场或国内解析器，因为非 AI 查询不走家宽。配置对启用的 exact/suffix AI 域名写入住宅侧解析策略；正则域名存在下述例外，实际路径仍需结合宿主设置验证。
+这与「全局 DNS leak test」配置不同。普通 leak test 可能显示机场或国内解析器，因为非 AI 查询不走家宽。配置为启用的 exact/suffix AI 域名建立住宅策略，区域 Vertex 与可选 Cursor 索引正则通过专用本地规则集建立住宅策略；实际路径仍需结合宿主设置验证。
 
-解析时序：在 `enhanced-mode: fake-ip` 下，大多数 A/AAAA 查询由 fake-ip 地址池直接应答，不会访问上游解析器。因此 `nameserver-policy` 主要是回退路径，用于 fake-ip-filter、非 A/AAAA 查询，以及 L3 出站需要的真实 IP。SOCKS5 出站会直接转发主机名（RFC 1928 域名寻址），AI 连接通常由住宅 SOCKS5 服务器完成实际递归解析，这符合预期。Mihomo 必须自行解析时，已有 exact/suffix 策略指定住宅侧解析；不能把这项覆盖推广到正则域名。
+解析时序：在 `enhanced-mode: fake-ip` 下，大多数 A/AAAA 查询由 fake-ip 地址池直接应答，不会访问上游解析器。因此 `nameserver-policy` 主要是回退路径，用于 fake-ip-filter、非 A/AAAA 查询，以及 L3 出站需要的真实 IP。SOCKS5 出站会直接转发主机名（RFC 1928 域名寻址），AI 连接通常由住宅 SOCKS5 服务器完成实际递归解析，这符合预期。Mihomo 必须自行解析时，exact/suffix 条目与正则规则集策略指定住宅侧解析。
 
-## 正则域名与配置失败的边界
+## 正则 DNS 规则集与配置失败的边界
 
-区域 Vertex 的 `DOMAIN-REGEX` 和启用时的 Cursor `repo[0-9]+.cursor.sh` 只有业务路由，没有等价 `nameserver-policy`。这些主机需要本地真实查询时，可能使用默认的非 AI DoH；fake-IP 应答或 SOCKS 域名转发不证明所有查询都同出口。`respect-rules` 管理 DNS 连接，不会自动把业务正则转换为解析策略。脚本保留窄匹配，不添加 `+.googleapis.com`、`+.cursor.sh` 等宽策略。真实 DNS/UDP 路径仍为 UNVERIFIED。
+区域 Vertex 的 `DOMAIN-REGEX` 和启用时的 Cursor `repo[0-9]+.cursor.sh` 同时生成专用规则集 `AI-家宽-DNS-REGEX`。该规则集使用 `type: inline`、`behavior: classical`，payload 直接取自现有业务正则，不下载远程规则。`nameserver-policy` 通过 `rule-set:AI-家宽-DNS-REGEX` 将匹配查询指向住宅 DoH；`vertex_ai_endpoints` 与 `cursor_repository_indexing` 分别控制各自模式，两者全关时移除托管规则集和策略键。脚本不添加 `+.googleapis.com`、`+.cursor.sh`、标签内星号或裸正则 DNS 键。
+
+`AI-家宽-DNS-REGEX` 是保留名称。已有同名规则集必须具有脚本生成的三个字段和已知正则 payload；额外字段、远程来源或未知模式会报错。自定义 `RULE-SET`（包括 `sub-rules`）、其他复合 DNS 策略、`dns.fake-ip-filter`、`sniffer.skip-domain` 和 `sniffer.force-domain` 不得引用这个专用名称，避免关闭开关后留下悬空引用。未知普通规则集保持原样，所有拒绝均不修改输入。
+
+该机制已在 Mihomo v1.19.32 的隔离环境通过真实 DNS 查询与两级本地 SOCKS5 选路验证。其他内核版本需先验证支持情况；内核不支持时应修正版本或配置，不应扩大域名后缀。隔离验证不证明公网 DoH TLS、用户住宅服务商的 UDP 能力或固定公网 IP。fake-IP 应答、SOCKS 域名转发也不能替代实际查询证据。
+
+回退旧脚本时，应从原始 Profile 重新执行；旧脚本不能识别并清理新增的规则集与策略键，不要只把旧脚本套在新输出上。
 
 成功生成的 `AI-家宽` 组只有家宽 SOCKS5 成员。已有同名组的额外节点来源或筛选字段会报错；但 Clash Verge Rev 在脚本抛错后可能放弃脚本输出并使用原 Profile。拒绝生成配置不能证明流量被阻断；应先修正错误并确认配置生效，再验证业务命中链。供应商实际是否提供固定 IP 也需另行确认。
 
@@ -65,7 +71,7 @@ Clash Verge Rev v2.5.5 起，扩展改写这些字段后，应用会弹出提示
 
 ## 脚本能缓解的
 
-- 启用的 exact/suffix AI 域名在配置内的业务与 DNS 路径分叉。
+- 启用的 exact/suffix AI 域名及区域 Vertex、可选 Cursor 索引正则在配置内的业务与 DNS 路径分叉。
 - 无关媒体、市场、下载和共享服务误进家宽。
 - 经 `include-all` 组的递归链路。
 - DNS 层的 IPv6 查询（重建的 `dns.ipv6: false`，DNS 覆盖关闭时生效）。

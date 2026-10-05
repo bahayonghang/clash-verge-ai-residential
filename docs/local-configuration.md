@@ -66,7 +66,9 @@ test -e clash-verge-ai-residential.local.toml || \
 
 三个新增核心开关及专属兜底门控属于 **Unreleased**，默认都为 `true`，不会自动减少家宽用量。关闭核心开关会撤销该类别的脚本托管域名/DNS和专属兜底，剩余流量交回原 Profile；原规则可能选择机场、DIRECT、其他组或用户自定义家宽规则，不能保证一定走机场。认证、辅助、静态资源和全局实时/DNS开关继续独立。
 
-Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`、`gemini_api_core`、`vertex_ai_endpoints`、`antigravity_core`；相关可选认证、项目和更新开关另行控制。已知正则域名的 DNS 例外见 [DNS 与泄漏模型](dns-and-leak-model.md)。
+Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`、`gemini_api_core`、`vertex_ai_endpoints`、`antigravity_core`；相关可选认证、项目和更新开关另行控制。正则域名的住宅 DNS 策略及内核要求见 [DNS 与泄漏模型](dns-and-leak-model.md)。
+
+`vertex_ai_endpoints` 与 `cursor_repository_indexing` 同时控制各自正则的业务路由和住宅 DNS，默认值仍为 `true` / `false`，无需新增 TOML 字段。生成脚本使用专用本地规则集 `AI-家宽-DNS-REGEX`；两者全关时清理该规则集与 DNS 策略，自定义规则不得引用该保留名称。
 
 ### 路由范围
 
