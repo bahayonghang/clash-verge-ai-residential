@@ -1373,3 +1373,35 @@ extra 改为默关分类，新增 extra_anyrouter；AnyRouter 开启时只走 AI
 ### Status
 
 [OK] **Completed**
+
+
+## Session 48: 提交正则住宅 DNS 与空组回退并归档
+
+**Date**: 2026-10-04
+**Task**: 提交正则住宅 DNS 与空组回退并归档
+**Branch**: `dev`
+
+### Summary
+
+把空组回退校验和既有正则住宅 DNS 拆成两次本地提交，并归档父任务与两个子任务。
+
+### Main Changes
+
+- 拒绝可达上游 empty-fallback 指回住宅出站
+- 为既有 Vertex 与 Cursor 索引正则补齐本地住宅 DNS 规则集
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f77e9cf` | (see git log) |
+| `6dfa7fa` | (see git log) |
+
+### Testing
+
+- [OK] node --test tests/regression.test.js（空组回退提交，81 通过）
+- [OK] node --test tests/regression.test.js tests/sync-local-config.test.js（正则 DNS 提交，118 通过）
+
+### Status
+
+[OK] **Completed**
