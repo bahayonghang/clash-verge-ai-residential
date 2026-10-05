@@ -1,0 +1,33 @@
+{
+  "id": "upstream-empty-fallback-guard",
+  "name": "upstream-empty-fallback-guard",
+  "title": "校验可达上游的住宅节点空组回退",
+  "description": "拒绝可达上游 empty-fallback 引用脚本住宅出站造成的递归配置",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-10-04",
+  "completedAt": "2026-10-04",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "10-04-one-exit-routing-optimization",
+  "relatedFiles": [
+    "clash-verge-ai-residential.js",
+    "tests/regression.test.js",
+    "docs/configuration.md",
+    "docs/troubleshooting.md",
+    ".trellis/spec/frontend/state-management.md",
+    "CHANGELOG.md"
+  ],
+  "notes": "2026-10-04 用户批准实施。产品实现、81 项回归、独立审查、完整 just ci、docs-build 与隔离 Mihomo 空组选择验证均通过。未提交、未归档。",
+  "meta": {}
+}

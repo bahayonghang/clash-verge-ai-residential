@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/index.md","reason":"根扩展兼容与验证范围"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"克隆、保留名称、组图所有权"}
+{"file":".trellis/tasks/10-04-one-exit-routing-optimization/research/current-routing-evidence.md","reason":"F2 顶层及嵌套的最小复现"}
+{"file":".trellis/tasks/10-04-one-exit-routing-optimization/research/one-exit-reference.md","reason":"参考 empty-fallback 与 DIRECT 传输边界"}
