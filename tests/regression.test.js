@@ -631,6 +631,77 @@ test("include-all 上游排除家宽节点，避免动态递归", () => {
   assert.match(upstream["exclude-filter"], /\^过期节点\$/);
 });
 
+for (const fallback of [HOME_PROXY_NAME, AI_GROUP]) {
+  for (const nested of [false, true]) {
+    test(`${nested ? "嵌套" : "顶层"}上游 empty-fallback 拒绝引用 ${fallback} 且不改输入`, () => {
+      const groupName = nested ? "Nested" : "Proxy";
+      const upstream = group(groupName, [], {
+        type: "url-test",
+        "include-all-proxies": true,
+        filter: "^NoAirportMatches$",
+        "empty-fallback": fallback
+      });
+      const config = configFixture({
+        proxies: [airportNode("HK")],
+        groups: nested ? [group("Proxy", [groupName]), upstream] : [upstream]
+      });
+      const snapshot = structuredClone(config);
+      assert.throws(() => quietMain(config, "fixture"), (error) => {
+        assert.match(error.message, /empty-fallback/);
+        assert.ok(error.message.includes(`“${groupName}”`));
+        assert.ok(error.message.includes(`“${fallback}”`));
+        assert.ok(error.message.includes(`路径：${nested ? "Proxy -> Nested" : "Proxy"}`));
+        assert.doesNotMatch(error.message, /home-pass|airport-secret|home\.example\.test/);
+        return true;
+      });
+      assert.deepEqual(config, snapshot);
+    });
+  }
+}
+
+test("上游普通节点 empty-fallback 与未知字段保持，重复执行不变", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("Proxy", [], {
+      type: "url-test",
+      "include-all-proxies": true,
+      filter: "^NoAirportMatches$",
+      "empty-fallback": "HK",
+      "custom-option": "user-owned"
+    })]
+  });
+  const snapshot = structuredClone(config);
+  const output = quietMain(config, "fixture");
+  const upstream = findGroup(output, "Proxy");
+  assert.equal(upstream["empty-fallback"], "HK");
+  assert.equal(upstream["custom-option"], "user-owned");
+  assert.deepEqual(config, snapshot);
+  assert.deepEqual(quietMain(output, "fixture"), output);
+});
+
+test("上游缺省 empty-fallback 时不新增字段", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("Proxy", ["HK"])]
+  });
+  const output = quietMain(config, "fixture");
+  assert.equal("empty-fallback" in findGroup(output, "Proxy"), false);
+});
+
+for (const fallback of [HOME_PROXY_NAME, AI_GROUP]) {
+  test(`不可达组的 empty-fallback=${fallback} 保持原样`, () => {
+    const unused = group("Unused", ["HK"], { "empty-fallback": fallback });
+    const config = configFixture({
+      proxies: [airportNode("HK")],
+      groups: [group("Proxy", ["HK"]), unused]
+    });
+    const snapshot = structuredClone(config);
+    const output = quietMain(config, "fixture");
+    assert.deepEqual(findGroup(output, "Unused"), unused);
+    assert.deepEqual(config, snapshot);
+  });
+}
+
 test("拒绝选定上游可达的代理组循环依赖", () => {
   const config = configFixture({
     groups: [

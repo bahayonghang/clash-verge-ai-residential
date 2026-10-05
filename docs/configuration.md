@@ -42,6 +42,8 @@ const PROFILE_UPSTREAM_OVERRIDES = {
 
 最终写入 `HOME_PROXY_TEMPLATE["dialer-proxy"]` 的值仍是跨 Profile 的首选默认。解析顺序见 [多 Profile](multi-profile.md)。
 
+选定上游及其显式可达子组的 `empty-fallback` 不得引用 `家宽-SOCKS5` 或 `AI-家宽`。该字段在过滤后无成员时生效，住宅出站回指会造成递归。脚本拒绝该配置并报告组名与路径，不会删除字段或改成 `DIRECT` / `COMPATIBLE`。普通机场节点回退保持原值；缺省字段和不可达组不受这项检查影响。
+
 ## 开关
 
 `[routing]` 与 `[runtime]` 都是可选表，允许只覆盖需要改的键。同步时，本地 TOML 缺失的开关键（包括整个缺失的表）会按示例默认值补全并写回；已有键值、注释和行尾风格保持不变。默认值刻意压低家宽流量；打开共享依赖或进程级兜底会改变隐私、成本和范围。不要根据 `ROUTE_*` / `ENABLE_*` 前缀猜测键名。没有脱敏 Connections 证据时，保持共享依赖和进程级兜底关闭。步骤与校验见 [本地配置](local-configuration.md)。

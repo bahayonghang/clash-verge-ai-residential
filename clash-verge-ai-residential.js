@@ -1168,6 +1168,13 @@ function hardenReachableUpstreamGraph(config, upstreamName, outboundIndex) {
     visiting.add(groupName);
     stack.push(groupName);
 
+    if (injectedNames().includes(group["empty-fallback"])) {
+      fail(
+        `[${AI_GROUP}] 可达上游代理组“${groupName}”的 empty-fallback ` +
+        `不能引用“${group["empty-fallback"]}”（路径：${stack.join(" -> ")}），否则住宅链路会递归`
+      );
+    }
+
     removeInjectedReferencesFromGroup(group);
     appendHomeProxyExcludeFilter(group);
 

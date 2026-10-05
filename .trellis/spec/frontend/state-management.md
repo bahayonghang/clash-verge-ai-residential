@@ -62,6 +62,19 @@ Tests cover extra-key rejection, canonical reruns, display metadata and unchange
 input. A thrown script can make the host reuse its original configuration; this
 ownership check does not enforce runtime traffic blocking.
 
+### Reachable upstream empty fallback
+
+`hardenReachableUpstreamGraph(config, upstreamName, outboundIndex)` rejects
+`empty-fallback` equal to `家宽-SOCKS5` or `AI-家宽` on each visited group.
+Check after adding the group to the DFS path and before editing that group.
+An include-all exclusion does not remove an explicit fallback reference.
+The error must name the group, field and reachable path without credentials;
+`main` must leave its input unchanged. Never delete the field or substitute
+DIRECT/COMPATIBLE. Ordinary proxy fallbacks, absent fields and unreachable
+groups retain their behavior. Test both top-level and nested rejection,
+ordinary fallback preservation, unchanged input and repeated execution.
+Host fallback after a script error remains outside this validation contract.
+
 ## Idempotence
 
 Running `main` twice on the same object must not add duplicate proxies, groups,

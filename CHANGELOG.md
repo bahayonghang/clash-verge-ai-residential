@@ -36,6 +36,7 @@
 
 ### 修复
 
+- 拒绝可达上游组的 `empty-fallback` 引用 `家宽-SOCKS5` 或 `AI-家宽`，避免空组回退重新进入住宅链路。错误包含组名、字段和可达路径，且不改输入；普通节点回退、缺省字段和不可达组保持原行为。脚本失败不保证宿主阻断流量。
 - 扩展脚本不再写入 Clash Verge Rev 设置页管理的 `tun` 各键与顶层 `ipv6`。Clash Verge Rev v2.5.5 起，改写这些字段会弹出「Extensions wrote tun.dns-hijack, which Settings manages, so those values were discarded」提示，且写入被还原。脚本改为只读检查：TUN 已启用且 `dns-hijack` 缺少 `any:53` 或 `tcp://any:53`、开启 `runtime.enable_tun_strict_route` 但 `strict-route` 未开启、顶层 `ipv6` 为 `true` 时，各输出一条 `warn`，指向对应设置页。删除每次运行都输出的「新版会还原 tun/ipv6」`info` 提示。`runtime.harden_existing_tun_dns_hijack` 与 `runtime.enable_tun_strict_route` 保留，语义改为「检查并告警」。文档补充：启用 DNS 覆盖时，`dns_config.yaml` 中所有非空 `dns.*` 字段都以设置页为准。
 - 不含 `host:port` 的控制器地址会返回 `invalid_address`。免打扰时段会阻止 `Activated`，而不只是抑制 Toast。恢复壳中的 `create_backup` 会返回 `recovery_only`，且不会复制实时数据库。
 - `just tinstall` 使用 NSIS `/D=` 安装到 `%LOCALAPPDATA%\ResiWatch`。不会复用之前位于 `%TEMP%` 下或旧中文产品文件夹中的安装路径；数据会迁移到新的 `data\` 目录。
