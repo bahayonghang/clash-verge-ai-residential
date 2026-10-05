@@ -1,0 +1,29 @@
+{
+  "id": "one-exit-routing-optimization",
+  "name": "one-exit-routing-optimization",
+  "title": "参考 one-exit 优化 AI 家宽路由规则",
+  "description": "对照 one-exit 的单出口方案，规划正则 DNS 一致性和空组回退校验；本轮仅研究与创建任务",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-10-04",
+  "completedAt": "2026-10-04",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "10-04-regex-residential-dns",
+    "10-04-upstream-empty-fallback-guard"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "2026-10-04 已按用户批准顺序完成两个子任务的实施与验证。最终完整 CI、文档构建、实际内核隔离验证和审查问题复核均通过；详见两个子任务 research/validation.md。未提交、未归档，未修改用户 local 或生产配置。",
+  "meta": {}
+}
