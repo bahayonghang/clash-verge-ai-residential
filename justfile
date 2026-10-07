@@ -117,6 +117,10 @@ tinstall:
     @echo "家宽监控 v1 只提供 Windows 11 NSIS current-user 安装。"
     @exit 1
 
+# 检查本地 TOML 住宅代理 IP 连通性与纯净度（基于 safe-claude 规范）。
+check-proxy *args:
+    @node scripts/check-residential-proxy.js {{args}}
+
 # 单向渲染：本地 TOML + 公开模板 -> 被忽略的本地 Clash Verge 脚本。
 # 首次执行会创建本地配置，避免带着示例占位值生成脚本。
 # 本地 TOML 缺失的开关键会按示例默认值自动补全（含缺失的整个配置表）。
