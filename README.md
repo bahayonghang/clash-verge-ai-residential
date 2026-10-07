@@ -11,16 +11,16 @@ Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Googl
 
 当前版本：`v5.11.0`。
 
-**Unreleased**：新增默认开启的 `routing.anthropic_core`、`routing.gemini_api_core`、`routing.antigravity_core`；关闭核心开关会同时撤销其专属进程兜底，Claude 核心关闭还会撤销 Anthropic IP 回退。`routing.extra` 现为默认关闭的小站分类；`routing.extra_anyrouter` 默认打开，但只在 extra 打开时把 `anyrouter.top` 送入家宽，且不写住宅 DNS。实际节流收益需测量。已有 `AI-家宽` 组的额外节点来源或筛选配置会被拒绝；成功输出只保留家宽成员与允许的展示信息。详见 [配置](docs/configuration.md) 和 [变更记录](CHANGELOG.md)。
+**Unreleased**：新增默认开启的 `routing.anthropic_core`、`routing.gemini_api_core`、`routing.antigravity_core`；关闭核心开关会同时撤销其专属进程兜底，Claude 核心关闭还会撤销 Anthropic IP 回退。`routing.extra` 现为默认关闭的小站分类；`routing.extra_anyrouter` 默认打开，但只在 extra 打开时把 `anyrouter.top` 送入家宽，且不写住宅 DNS。`routing.openai_auth` 与 `routing.antigravity_google_auth` 改为默认开启；已有本地 TOML 里显式写成 `false` 的值不会被覆盖，缺键时按示例补成 `true`。实际节流收益需测量。已有 `AI-家宽` 组的额外节点来源或筛选配置会被拒绝；成功输出只保留家宽成员与允许的展示信息。详见 [配置](docs/configuration.md) 和 [变更记录](CHANGELOG.md)。
 
 ## 核心边界
 
 家宽链路包含：
 
 - Claude / Anthropic 产品域、模型 API、MCP 代理、资产代理、MCP 和会话内容。
-- ChatGPT / OpenAI 产品域、官方 9247338 列出的五个 `chat.openai.com` 家族 exact 主机、模型 API（含 Codex 的 `us.` / `eu.` 数据驻留前缀）、上传与生成内容。第一方登录主机可用 `routing.openai_auth` 独立选择家宽出口，`oaistatic.com` 则由 `routing.openai_web_assets` 独立控制；二者默认关闭。真实 ChatGPT 登录链路及桌面/iOS Connections 结果为 UNVERIFIED。
+- ChatGPT / OpenAI 产品域、官方 9247338 列出的五个 `chat.openai.com` 家族 exact 主机、模型 API（含 Codex 的 `us.` / `eu.` 数据驻留前缀）、上传与生成内容。第一方登录主机由 `routing.openai_auth` 控制，默认开启；`oaistatic.com` 仍由 `routing.openai_web_assets` 独立控制，默认关闭。真实 ChatGPT 登录链路及桌面/iOS Connections 结果为 UNVERIFIED。
 - Gemini Web、Google AI Studio 专用后端、Gemini Developer API、Vertex AI 区域/全局模型端点。
-- Google Antigravity / Gemini Code Assist 的产品域和核心 Agent API。
+- Google Antigravity / Gemini Code Assist 的产品域和核心 Agent API。共享 Google 登录入口由 `routing.antigravity_google_auth` 控制，默认开启，会影响使用同一账号体系的其他 Google 产品。
 - Cursor Chat、Tab、Agent、Cloud Agent/Bugbot、授权/SSO 门户、Cloud Agent VM 和产品专属认证；`routing.cursor_core` 默认是 `true`。
 - Cursor 仓库索引主机 `repo[0-9]+.cursor.sh` 由独立开关 `routing.cursor_repository_indexing` 控制，默认是 `false`，回落原 Profile / 机场上游。本地 TOML 缺该字段时按 `false` 补全；显式设为 `true` 可恢复 v5.8.1 的 repo 家宽路由，无需删除字段。`repo42.cursor.sh` 由官方网络文档与本机 2026-08-17 日志共同确认；`repo[0-9]+.cursor.sh` 是本项目的前向兼容策略，不是 Cursor 官方通配合同。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`；Clash 域名规则无法在该主机上隔离索引，`api2` 仍由 `cursor_core` 控制。因此默认关闭不能宣称已把全部仓库上传排除出家宽。
 - Grok Build（xAI grok CLI）推理 API 与产品域，以及 `auth.x.ai` 认证与 `api.x.ai` 直连 API；`routing.grok_core` 默认是 `true`。
@@ -30,7 +30,7 @@ Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Googl
 
 - Cursor Marketplace、扩展、更新、下载、CDN、Remote-SSH/WSL 资产。
 - Grok Build 的 Mixpanel 分析、安装脚本（x.ai）与共享 GCS 存储域名。
-- YouTube、Maps、Google Search、Fonts、Gstatic、广告和统计。
+- YouTube、Maps、Google Search、Fonts、广告和统计。未列入 Google 登录名单的 Gstatic 主机（如 `maps.gstatic.com`）仍留在原 Profile。
 - OpenAI/Claude 的 Intercom、Sentry、Datadog、Stripe 等共享依赖。
 - 公共 DoH/DoT、通用 STUN/TURN 和进程级全量代理。
 
@@ -54,7 +54,8 @@ udp = true
 dialer-proxy = "🚀节点选择"
 
 [routing]
-openai_auth = false
+openai_auth = true
+antigravity_google_auth = true
 openai_web_assets = false
 cursor_core = true
 cursor_repository_indexing = false

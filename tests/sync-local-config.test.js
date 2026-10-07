@@ -246,7 +246,7 @@ test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚�
     assert.match(output, /const ROUTE_CURSOR_CORE = true;/);
     assert.match(output, /const ROUTE_CURSOR_REPOSITORY_INDEXING = false;/);
     assert.match(output, /const ROUTE_GROK_CORE = true;/);
-    assert.match(output, /const ROUTE_OPENAI_AUTH = false;/);
+    assert.match(output, /const ROUTE_OPENAI_AUTH = true;/);
     assert.match(output, /const ROUTE_OPENAI_WEB_ASSETS = false;/);
     assert.match(output, /const ROUTE_EXTRA = false;/);
     assert.match(output, /const ROUTE_EXTRA_ANYROUTER = true;/);
@@ -683,7 +683,7 @@ openai_auth = true
     ));
     const publicScript = require(templatePath);
 
-    assert.equal(publicScript.constants.ROUTE_OPENAI_AUTH, false);
+    assert.equal(publicScript.constants.ROUTE_OPENAI_AUTH, true);
     assert.equal(publicScript.constants.ROUTE_OPENAI_WEB_ASSETS, false);
     assert.equal(probe.openaiAuth, true);
     assert.equal(probe.openaiWebAssets, false);
@@ -926,7 +926,7 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
 
     const reparsed = parseLocalToml(completed);
     assert.equal(reparsed.routing.openai_core, false, "用户已有值不应被覆盖");
-    assert.equal(reparsed.routing.openai_auth, false);
+    assert.equal(reparsed.routing.openai_auth, true);
     assert.equal(reparsed.routing.openai_web_assets, false);
     assert.equal(reparsed.routing.cursor_core, true, "用户已有值不应被覆盖");
     assert.equal(reparsed.routing.cursor_repository_indexing, false);
@@ -943,7 +943,7 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
       completed.indexOf("[runtime]")
     );
     assert.match(routingBlock, /^openai_core = false$/m);
-    assert.match(routingBlock, /^openai_auth = false$/m);
+    assert.match(routingBlock, /^openai_auth = true$/m);
     assert.match(routingBlock, /^openai_web_assets = false$/m);
     assert.match(routingBlock, /^grok_core = true$/m);
     assert.match(completed, /\[runtime\]\r?\nallow_final_rule_upstream_fallback = true/);
@@ -951,7 +951,7 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
     const output = fs.readFileSync(outputPath, "utf8");
     assert.match(output, /const ROUTE_GROK_CORE = true;/);
     assert.match(output, /const ROUTE_OPENAI_CORE = false;/);
-    assert.match(output, /const ROUTE_OPENAI_AUTH = false;/);
+    assert.match(output, /const ROUTE_OPENAI_AUTH = true;/);
     assert.match(output, /const ROUTE_OPENAI_WEB_ASSETS = false;/);
     assert.match(output, /const ENABLE_TUN_STRICT_ROUTE = false;/);
   });

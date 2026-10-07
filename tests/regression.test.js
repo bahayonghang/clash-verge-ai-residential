@@ -42,6 +42,7 @@ const {
   ROUTE_CURSOR_PROCESS_FALLBACK,
   ROUTE_OPENAI_AUTH,
   ROUTE_OPENAI_WEB_ASSETS,
+  ROUTE_ANTIGRAVITY_GOOGLE_AUTH,
   GEMINI_WEB_SUFFIX_DOMAINS,
   GEMINI_WEB_EXACT_DOMAINS,
   VERTEX_AI_EXACT_DOMAINS,
@@ -253,6 +254,34 @@ function withPatchedOpenAiSwitches(openaiAuth, openaiWebAssets, fn) {
 
 const REGEX_DNS_PROVIDER = "AI-家宽-DNS-REGEX";
 const REGEX_DNS_POLICY_KEY = `rule-set:${REGEX_DNS_PROVIDER}`;
+const RESIDENTIAL_DOH_URLS = [
+  "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+  "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+];
+const DEFAULT_AUTH_RULES = [
+  `DOMAIN-SUFFIX,auth.openai.com,${AI_GROUP}`,
+  `DOMAIN,auth0.openai.com,${AI_GROUP}`,
+  `DOMAIN,accounts.google.com,${AI_GROUP}`,
+  `DOMAIN,oauth2.googleapis.com,${AI_GROUP}`,
+  `DOMAIN,openidconnect.googleapis.com,${AI_GROUP}`,
+  `DOMAIN,people.googleapis.com,${AI_GROUP}`,
+  `DOMAIN,lh3.googleusercontent.com,${AI_GROUP}`,
+  `DOMAIN,lh5.googleusercontent.com,${AI_GROUP}`,
+  `DOMAIN,ssl.gstatic.com,${AI_GROUP}`,
+  `DOMAIN,www.gstatic.com,${AI_GROUP}`
+];
+const DEFAULT_AUTH_DNS_KEYS = [
+  "+.auth.openai.com",
+  "auth0.openai.com",
+  "accounts.google.com",
+  "oauth2.googleapis.com",
+  "openidconnect.googleapis.com",
+  "people.googleapis.com",
+  "lh3.googleusercontent.com",
+  "lh5.googleusercontent.com",
+  "ssl.gstatic.com",
+  "www.gstatic.com"
+];
 const REGEX_DNS_PAYLOAD = [
   "DOMAIN-REGEX,^[a-z0-9-]+-aiplatform\\.googleapis\\.com$",
   "DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$"
@@ -303,13 +332,14 @@ function normalizeDefaultProjection(projection) {
   return normalizeObjectKeys({ ...projection, rules });
 }
 
-test("默认输出仅在固定 v5.11 投影上增加正则住宅 DNS", () => {
+test("默认输出在固定 v5.11 投影上增加正则住宅 DNS 与默认认证路由", () => {
   assert.equal(routingBaseline.baselineCommit, "063c5561b9e81e42f89d7966a5d1a9772bdc44b3");
   const expected = structuredClone(routingBaseline.projection);
-  expected.dns["nameserver-policy"][REGEX_DNS_POLICY_KEY] = [
-    "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
-    "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
-  ];
+  expected.rules.splice(16, 0, ...DEFAULT_AUTH_RULES);
+  expected.dns["nameserver-policy"][REGEX_DNS_POLICY_KEY] = RESIDENTIAL_DOH_URLS;
+  for (const key of DEFAULT_AUTH_DNS_KEYS) {
+    expected.dns["nameserver-policy"][key] = RESIDENTIAL_DOH_URLS;
+  }
 
   const input = baselineProfile();
   const snapshot = structuredClone(input);
@@ -1241,6 +1271,7 @@ test("Antigravity language_server 的 daily cloudcode 端点走家宽", () => {
 
 test("Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走家宽", () => {
   const rules = buildInjectedRules();
+  assertAiRoute(rules, ["ssl.gstatic.com", "www.gstatic.com"]);
   assertNoAiRoute(rules, [
     "www.youtube.com",
     "i.ytimg.com",
@@ -1249,7 +1280,6 @@ test("Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走�
     "maps.gstatic.com",
     "www.google.com",
     "www.googleapis.com",
-    "ssl.gstatic.com",
     "fonts.googleapis.com",
     "www.googletagmanager.com",
     "www.google-analytics.com",
@@ -1600,6 +1630,9 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "desktop.chat.openai.com",
     "ios.chat.openai.com",
     "tcr9i.chat.openai.com",
+    "auth.openai.com",
+    "auth0.openai.com",
+    "accounts.google.com",
     "antigravity.google",
     "daily-cloudcode-pa.googleapis.com"
   ]);
@@ -1612,14 +1645,12 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "sentry.io",
     "statsigapi.net",
     "js.stripe.com",
-    "auth.openai.com",
     "www.anthropic.com",
     "www.openai.com",
     "docs.anthropic.com",
     "support.anthropic.com",
     "status.anthropic.com",
     "telemetry.anthropic.com",
-    "accounts.google.com",
     "serviceusage.googleapis.com",
     "update.googleapis.com",
     "open-vsx.org"
@@ -1628,8 +1659,9 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
   assert.equal(rules.includes(`DOMAIN-SUFFIX,openai.com,${AI_GROUP}`), false);
 });
 
-test("OpenAI 第一方认证与网页资源开关默认关闭且可独立组合", () => {
-  assert.equal(ROUTE_OPENAI_AUTH, false);
+test("OpenAI 第一方认证默认开启，网页资源默认关闭，二者可独立组合", () => {
+  assert.equal(ROUTE_OPENAI_AUTH, true);
+  assert.equal(ROUTE_ANTIGRAVITY_GOOGLE_AUTH, true);
   assert.equal(ROUTE_OPENAI_WEB_ASSETS, false);
   assert.deepEqual(OPENAI_AUTH_SUFFIX_DOMAINS, ["auth.openai.com"]);
   assert.deepEqual(OPENAI_AUTH_EXACT_DOMAINS, ["auth0.openai.com"]);
@@ -2020,8 +2052,13 @@ test("AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名", ()
     assert.deepEqual(policy[host], RESIDENTIAL_DOH);
   }
   assert.equal("+.chat.openai.com" in policy, false);
-  assert.equal("+.auth.openai.com" in policy, false);
-  assert.equal("auth0.openai.com" in policy, false);
+  assert.deepEqual(policy["+.auth.openai.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["auth0.openai.com"], RESIDENTIAL_DOH);
+  assert.equal("+.auth0.openai.com" in policy, false);
+  assert.deepEqual(policy["accounts.google.com"], RESIDENTIAL_DOH);
+  assert.equal("+.accounts.google.com" in policy, false);
+  assert.deepEqual(policy["ssl.gstatic.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["www.gstatic.com"], RESIDENTIAL_DOH);
   assert.equal("+.oaistatic.com" in policy, false);
 
   for (const key of [
@@ -2327,9 +2364,9 @@ test("最终注入规则不存在重复项", () => {
   assert.equal(new Set(rules).size, rules.length);
 });
 
-test("默认注入 45 条 AI-家宽 规则", () => {
+test("默认注入 55 条 AI-家宽 规则", () => {
   const rules = buildInjectedRules().filter((rule) => rule.includes(AI_GROUP));
-  assert.equal(rules.length, 45);
+  assert.equal(rules.length, 55);
 });
 
 test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", () => {

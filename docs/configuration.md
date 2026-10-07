@@ -63,10 +63,10 @@ Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`�
 | `routing.antigravity_core` | `ROUTE_ANTIGRAVITY_CORE` | `true` | 路由 Antigravity 产品域及 Code Assist 核心主机。 | 关闭时同时撤销 Antigravity 进程兜底；Vertex、认证、项目 API、更新与遥测开关独立。 |
 | `routing.openai_shared_dependencies` | `ROUTE_OPENAI_SHARED_DEPENDENCIES` | `false` | 路由 OpenAI 的 WorkOS、客服、遥测、支付等共享依赖。 | 会扩大到非模型流量。 |
 | `routing.openai_core` | `ROUTE_OPENAI_CORE` | `true` | 路由 ChatGPT 产品、OpenAI 模型 API 和用户上传/生成内容。 | 关闭时撤销 OpenAI 专属进程兜底，相关流量交回原 Profile。 |
-| `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `false` | 路由第一方登录主机 `auth.openai.com`（含其子域）和精确主机 `auth0.openai.com`。 | 与核心流量、网页资源和共享第三方依赖相互独立；不会匹配整个 `openai.com`。 |
+| `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `true` | 路由第一方登录主机 `auth.openai.com`（含其子域）和精确主机 `auth0.openai.com`。 | 与核心流量、网页资源和共享第三方依赖相互独立；不会匹配整个 `openai.com`。 |
 | `routing.openai_web_assets` | `ROUTE_OPENAI_WEB_ASSETS` | `false` | 路由 `oaistatic.com` 网页静态资源后缀。 | 与第一方登录及共享第三方依赖独立；仅在页面资源确需同出口时开启。 |
 | `routing.claude_shared_dependencies` | `ROUTE_CLAUDE_SHARED_DEPENDENCIES` | `false` | 路由 Claude 的统计、客服、风控等共享依赖。 | 会扩大到非模型流量。 |
-| `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `false` | 路由 Antigravity 使用的共享 Google 登录入口。 | 影响其他 Google 产品的认证流量。 |
+| `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `true` | 路由 Antigravity 使用的共享 Google 登录入口。 | 影响其他 Google 产品的认证流量。 |
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | 路由 Service Usage、Resource Manager、IAM、API Hub 等项目 API。 | 属于项目配置而非推理。 |
 | `routing.antigravity_update_and_telemetry` | `ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY` | `false` | 路由 Antigravity 更新、扩展市场和遥测。 | 会扩大到更新和统计流量。 |
 | `routing.gemini_web_core` | `ROUTE_GEMINI_WEB_CORE` | `true` | 路由 Gemini Web 和 Google AI Studio 产品入口。 | 无。 |

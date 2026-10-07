@@ -108,8 +108,8 @@ const ROUTE_GEMINI_API_CORE = true;
 // Antigravity / Gemini Code Assist 核心端点；同时约束 Antigravity 进程兜底。
 const ROUTE_ANTIGRAVITY_CORE = true;
 
-// OpenAI 第一方登录主机；默认保留在机场出口，按需与核心流量统一到家宽。
-const ROUTE_OPENAI_AUTH = false;
+// OpenAI 第一方登录主机；默认与核心流量同走家宽。网页资源与共享依赖仍独立。
+const ROUTE_OPENAI_AUTH = true;
 
 // ChatGPT 网页静态资源；与第一方认证及共享第三方依赖独立，默认不走家宽。
 const ROUTE_OPENAI_WEB_ASSETS = false;
@@ -117,8 +117,8 @@ const ROUTE_OPENAI_WEB_ASSETS = false;
 // Claude 的统计、客服、风控与共享第三方依赖默认不走家宽。
 const ROUTE_CLAUDE_SHARED_DEPENDENCIES = false;
 
-// Google OAuth 是所有 Google 产品共享入口，默认不通过家宽。
-const ROUTE_ANTIGRAVITY_GOOGLE_AUTH = false;
+// Google OAuth 是所有 Google 产品共享入口，默认走家宽；可在本地 TOML 关闭。
+const ROUTE_ANTIGRAVITY_GOOGLE_AUTH = true;
 
 // Service Usage / Resource Manager / IAM / API Hub 属于项目配置，不是推理流量。
 const ROUTE_ANTIGRAVITY_PROJECT_APIS = false;
@@ -2028,6 +2028,7 @@ if (typeof module !== "undefined" && module.exports) {
       ANTIGRAVITY_CORE_EXACT_DOMAINS,
       ROUTE_OPENAI_AUTH,
       ROUTE_OPENAI_WEB_ASSETS,
+      ROUTE_ANTIGRAVITY_GOOGLE_AUTH,
       OPENAI_CORE_SUFFIX_DOMAINS,
       OPENAI_CORE_EXACT_DOMAINS,
       OPENAI_AUTH_SUFFIX_DOMAINS,

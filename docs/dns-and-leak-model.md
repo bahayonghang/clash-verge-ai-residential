@@ -67,7 +67,7 @@ Clash Verge Rev v2.5.5 起，扩展改写这些字段后，应用会弹出提示
 
 ## 登录与模型出口分裂
 
-共享认证主机不在默认 AI-only 范围。因此 `auth.openai.com` 和 `accounts.google.com` 走原 Profile，核心聊天/模型请求走住宅出口。严格风控可能看到登录 IP 与模型流量 IP 不同，并要求额外验证。脚本不会仅为掩盖这次分裂而加入共享认证主机；共享依赖开关只在有证据且理解范围后打开。
+`routing.openai_auth` 与 `routing.antigravity_google_auth` 默认开启，因此 `auth.openai.com` 和 `accounts.google.com` 与核心聊天/模型请求同走住宅出口。`oaistatic.com` 以及 WorkOS、Intercom、Stripe、Cloudflare Challenge、Sentry、Datadog 等共享依赖默认仍走原 Profile。这些第三方跳转仍可能让风控看到不同出口。共享依赖开关只在有证据且理解范围后打开。
 
 ## 脚本能缓解的
 

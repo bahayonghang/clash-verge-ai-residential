@@ -11,8 +11,8 @@ udp = true
 dialer-proxy = "🚀节点选择"
 
 # 住宅链路范围开关：true 表示将对应规则、DNS 策略或兜底规则注入家宽代理链路。
-# 仅开启实际需要的产品流量；共享第三方服务、进程级代理和通用基础设施会扩大
-# 家宽的流量范围，默认均为关闭。
+# 仅开启实际需要的产品流量。共享第三方服务、进程级代理和通用基础设施会扩大
+# 家宽的流量范围，这些项默认关闭。
 [routing]
 
 # Claude 产品、Anthropic API 与产品代理；关闭后也撤销其专属进程及 IP 兜底。
@@ -26,8 +26,8 @@ antigravity_core = true
 # OpenAI / ChatGPT 的核心产品流量：ChatGPT 网页、模型 API 及用户上传、生成内容。
 openai_core = true
 # OpenAI 第一方登录：auth.openai.com（含 setup 子域）与 auth0.openai.com。
-# 默认关闭；按需与 ChatGPT 核心流量统一到家宽，不会开启共享第三方依赖。
-openai_auth = false
+# 默认开启，与 ChatGPT 核心流量同走家宽；不开启网页资源或共享第三方依赖。
+openai_auth = true
 # ChatGPT 网页静态资源 oaistatic.com；与登录、核心流量及共享第三方依赖独立。
 openai_web_assets = false
 # OpenAI 使用的共享第三方依赖：WorkOS、Intercom、Sentry、Datadog、Stripe 等。
@@ -38,8 +38,8 @@ openai_shared_dependencies = false
 claude_shared_dependencies = false
 
 # Antigravity 的可选非推理流量，按用途拆分，避免误将整套 Google 服务走家宽。
-# Google OAuth 登录：所有 Google 产品共用的授权入口。
-antigravity_google_auth = false
+# Google OAuth 登录：所有 Google 产品共用的授权入口。默认开启。
+antigravity_google_auth = true
 # Google Cloud 项目管理 API：Service Usage、Resource Manager、IAM、API Hub 等。
 antigravity_project_apis = false
 # Antigravity 更新、扩展市场及遥测上报。

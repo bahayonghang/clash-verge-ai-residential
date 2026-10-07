@@ -22,10 +22,10 @@
 | 产品 | 纳入的流量 |
 |---|---|
 | Claude / Anthropic | `routing.anthropic_core` 默认 `true`，控制 Claude 产品域名、Messages API、`mcp-proxy.anthropic.com` MCP 连接器代理、`assets-proxy.anthropic.com` 资源代理、`claudemcpcontent.com` MCP Apps widget 隔离域、`claudeusercontent.com` 会话内容，以及官方入站 IP 回退 |
-| ChatGPT / OpenAI | ChatGPT 产品域名（整域后缀，含 `ws.chatgpt.com`）、五个官方 exact 主机（`chat.openai.com`、`android.chat.openai.com`、`desktop.chat.openai.com`、`ios.chat.openai.com`、`tcr9i.chat.openai.com`）、OpenAI 模型 API 后缀 `api.openai.com`（覆盖 Codex 官方的 `us.` / `eu.` 数据驻留前缀），以及上传或生成的用户内容。可选的 `routing.openai_auth` 只增加 `auth.openai.com` 有界后缀与 `auth0.openai.com` 精确主机；`routing.openai_web_assets` 独立增加 `oaistatic.com` 后缀；二者默认关闭 |
+| ChatGPT / OpenAI | ChatGPT 产品域名（整域后缀，含 `ws.chatgpt.com`）、五个官方 exact 主机（`chat.openai.com`、`android.chat.openai.com`、`desktop.chat.openai.com`、`ios.chat.openai.com`、`tcr9i.chat.openai.com`）、OpenAI 模型 API 后缀 `api.openai.com`（覆盖 Codex 官方的 `us.` / `eu.` 数据驻留前缀），以及上传或生成的用户内容。`routing.openai_auth` 默认开启，只增加 `auth.openai.com` 有界后缀与 `auth0.openai.com` 精确主机；`routing.openai_web_assets` 独立增加 `oaistatic.com` 后缀，默认关闭 |
 | Gemini | `routing.gemini_web_core` 控制 Gemini Web 与 Google AI Studio 产品 RPC/streaming 主机；`routing.gemini_api_core` 独立控制 `generativelanguage.googleapis.com`，二者默认 `true` |
 | Vertex AI / Agent Platform | `routing.vertex_ai_endpoints` 默认 `true`，一次控制 `aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com` 与区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$` |
-| Google Antigravity / Gemini Code Assist | `routing.antigravity_core` 默认 `true`，控制 `cloudaicompanion.googleapis.com` 及精确主机 `antigravity.google`、生产 Code Assist 主机 `cloudcode-pa.googleapis.com`，以及 Antigravity `language_server` 的 `--cloud_code_endpoint` 主机 `daily-cloudcode-pa.googleapis.com` |
+| Google Antigravity / Gemini Code Assist | `routing.antigravity_core` 默认 `true`，控制 `cloudaicompanion.googleapis.com` 及精确主机 `antigravity.google`、生产 Code Assist 主机 `cloudcode-pa.googleapis.com`，以及 Antigravity `language_server` 的 `--cloud_code_endpoint` 主机 `daily-cloudcode-pa.googleapis.com`。共享 Google 登录由 `routing.antigravity_google_auth` 控制，默认 `true` |
 | Cursor | Chat/API、Tab、Agent、Cloud Agent/Bugbot API、authorize 端点、SSO 管理门户 `adminportal42.cursor.sh`、Cloud Agent VM 主机和产品专属认证；`routing.cursor_core` 默认 `true`。仓库索引主机 `repo[0-9]+.cursor.sh` 由独立开关 `routing.cursor_repository_indexing` 控制，默认 `false`，回落原 Profile |
 | Grok Build | `routing.grok_core` 默认 `true`。默认注入 `DOMAIN-SUFFIX,grok.com`（覆盖 `cli-chat-proxy.grok.com` 推理 API 与 `code.grok.com` 会话同步）、`auth.x.ai` OAuth 主机、`DOMAIN-SUFFIX,api.x.ai`（覆盖区域端点与 `mtls.api.x.ai`）。`routing.grok_web_assets = false` 时只把 `grok.com` 后缀换成三条精确主机：`grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`；`api.x.ai` 后缀仍注入 |
 | Extra 小站 | `routing.extra` 默认 `false`。打开后由站点开关控制；当前仅 `routing.extra_anyrouter`（默认 `true`）注入 `DOMAIN-SUFFIX,anyrouter.top`，不写 `+.anyrouter.top` 住宅 DNS。关闭分类或站点后交回原 Profile |
@@ -54,9 +54,9 @@ Cursor 依据：官方企业网络配置文档列出精确主机 `authenticate.c
 
 - Cursor Marketplace、扩展安装、应用下载、CDN、更新、Remote-SSH/WSL 服务端资产、网站、文档和论坛。
 - Grok Build 第三方分析（`api.mixpanel.com`）、`x.ai` 安装脚本/隐私端点，以及代码库上传用的共享 `storage.googleapis.com`。
-- YouTube、Maps、Google Search、Google Fonts、Gstatic、广告、统计和其他通用 Google 服务。
+- YouTube、Maps、Google Search、Google Fonts、广告、统计和其他通用 Google 服务。`maps.gstatic.com` 等未列入登录名单的 Gstatic 主机仍留在原 Profile；`ssl.gstatic.com` 与 `www.gstatic.com` 随默认开启的 `routing.antigravity_google_auth` 进入家宽。
 - OpenAI/Claude 的客服、遥测、功能开关、风控、支付和其他共享第三方基础设施。
-- OpenAI 第一方登录主机与 `oaistatic.com` 网页资源默认也留在原 Profile；分别显式开启 `routing.openai_auth`、`routing.openai_web_assets` 后才进入家宽，且不会因此开启共享第三方依赖。
+- `oaistatic.com` 网页资源默认留在原 Profile，显式开启 `routing.openai_web_assets` 后才进入家宽。`routing.openai_auth` 默认开启，但不会因此开启共享第三方依赖。
 - 公共 DoH/DoT、通用 STUN/TURN，以及宽泛 UDP 端口捕获。
 - Cursor、Grok、Claude、ChatGPT、Antigravity 的进程级全量路由。
 
@@ -100,11 +100,11 @@ v5.10 起不再注入、但仍保留在 `allPossible*` 中供升级清理的主�
 
 ## 认证出口分裂
 
-认证流量默认仍留在原 Profile。OpenAI 在 `routing.openai_auth = false` 时，`auth.openai.com`、其子域（如 `setup.auth.openai.com`）以及精确主机 `auth0.openai.com` 不进家宽，ChatGPT 核心会话和模型流量继续走家宽；`routing.openai_web_assets = false` 时，`oaistatic.com` 也留在原 Profile。这种默认分裂是有意的 AI-only 边界。
+`routing.openai_auth` 与 `routing.antigravity_google_auth` 默认开启。OpenAI 第一方主机 `auth.openai.com`（含 `setup.auth.openai.com` 等子域）和精确主机 `auth0.openai.com` 与 ChatGPT 核心流量同走家宽。Google 登录入口 `accounts.google.com`、`oauth2.googleapis.com`、`openidconnect.googleapis.com`、`people.googleapis.com`，以及 `lh3.googleusercontent.com`、`lh5.googleusercontent.com`、`ssl.gstatic.com`、`www.gstatic.com` 也默认走家宽。
 
-需要降低 OpenAI 第一方认证与核心流量的出口分裂时，可显式设置 `routing.openai_auth = true`。该开关只增加 `DOMAIN-SUFFIX,auth.openai.com` 与 `DOMAIN,auth0.openai.com`，不添加 `DOMAIN-SUFFIX,openai.com`，也不会联动 `routing.openai_web_assets` 或 `routing.openai_shared_dependencies`。因此 WorkOS、Intercom、Stripe、Cloudflare Challenge、Sentry、Datadog 等第三方跳转或依赖仍可能使用机场出口；开启该开关不等于证明整条登录链同出口，也不能保证减少平台验证。`oaistatic.com` 如确需同出口，应另行开启 `routing.openai_web_assets`。
+`routing.openai_web_assets` 仍默认关闭，`oaistatic.com` 留在原 Profile。OpenAI 开关不添加 `DOMAIN-SUFFIX,openai.com`，也不联动 `routing.openai_web_assets` 或 `routing.openai_shared_dependencies`。WorkOS、Intercom、Stripe、Cloudflare Challenge、Sentry、Datadog 等第三方跳转仍可能使用机场出口。默认开启不等于整条登录链同出口，也不能保证减少平台验证。`oaistatic.com` 如确需同出口，应另行开启 `routing.openai_web_assets`。
 
-Google 仍采用独立且范围更广的 `routing.antigravity_google_auth`。默认关闭时 `accounts.google.com` 等共享 Google 登录入口留在机场；开启会影响使用同一账号体系的其他 Google 产品，不因 OpenAI 开关而改变。
+Google 登录名单是所有 Google 产品共用的授权入口。默认开启后，Gmail、YouTube 等使用同一账号体系的登录也会走家宽。关闭 `routing.antigravity_google_auth` 后这些主机回到原 Profile，不因 OpenAI 开关而改变。把任一开关设为 `false` 后，对应主机不再进家宽，核心聊天和模型流量仍走家宽。
 
 ## v5.5 之后的托管规则归属
 

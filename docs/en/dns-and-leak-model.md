@@ -61,7 +61,7 @@ The script rebuilds DNS policy instead of inheriting arbitrary subscription path
 
 ## Login and model exit split
 
-Shared authentication hosts are outside the default AI-only scope. `auth.openai.com` and `accounts.google.com` therefore use the original Profile, while core chat/model requests use the residential exit. A strict risk-control system can observe different login and model-traffic IPs and request additional verification. The script does not add either shared authentication host merely to hide this split. Opt-in shared-dependency switches only with evidence and an understood scope.
+`routing.openai_auth` and `routing.antigravity_google_auth` are on by default, so `auth.openai.com` and `accounts.google.com` use the same residential exit as core chat and model requests. `oaistatic.com` and shared dependencies such as WorkOS, Intercom, Stripe, Cloudflare Challenge, Sentry, and Datadog stay on the original Profile. Those third-party redirects can still show a risk-control system a different exit. Enable a shared-dependency switch only with evidence and an understood scope.
 
 ## What the script mitigates
 
