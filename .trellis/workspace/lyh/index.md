@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 48
-- **Last Active**: 2026-10-04
+- **Total Sessions**: 49
+- **Last Active**: 2026-10-20
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1407 | Active |
+| `journal-1.md` | ~1440 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 49 | 2026-10-20 | FlClash null 兼容修复提交与归档 | `38b6fe0` | `dev` |
 | 48 | 2026-10-04 | 提交正则住宅 DNS 与空组回退并归档 | `f77e9cf`, `6dfa7fa` | `dev` |
 | 47 | 2026-09-24 | 收窄短窗口会话投影 | `e5d19b15e7e7cca78cca4c4adabd2d755560c724` | `dev` |
 | 46 | 2026-09-16 | 解耦 AnyRouter DNS 并将 extra 改为分类 | `44b9e32` | `dev` |

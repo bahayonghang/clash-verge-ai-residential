@@ -1405,3 +1405,36 @@ extra 改为默关分类，新增 extra_anyrouter；AnyRouter 开启时只走 AI
 ### Status
 
 [OK] **Completed**
+
+
+## Session 49: FlClash null 兼容修复提交与归档
+
+**Date**: 2026-10-20
+**Task**: FlClash null 兼容修复提交与归档
+**Branch**: `dev`
+
+### Summary
+
+修复FlClash0.9.1顶层null输入，保留非法类型及规则集校验；完成本机应用，按用户要求本地提交并归档，不推送。依赖告警暂不处理。
+
+### Main Changes
+
+- 公开脚本仅新增3行，补充回归、spec和完整任务研究验收资料；本机原脚本备份后最小修补。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `38b6fe0` | (see git log) |
+
+### Testing
+
+- [OK] just ci通过：前端300、Rust553通过6忽略、root259；独立check、旧模板红4、新模板窄16、renderer26及本机应用通过。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 依赖告警按用户要求暂不处理；本次不推送。

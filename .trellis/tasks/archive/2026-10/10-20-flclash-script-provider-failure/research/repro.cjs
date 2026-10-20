@@ -7,7 +7,7 @@ const path = require("node:path");
 const vm = require("node:vm");
 const { createHash } = require("node:crypto");
 
-const root = path.resolve(__dirname, "../../../..");
+const root = path.resolve(__dirname, "../../../../../..");
 const scriptPath = path.join(root, "clash-verge-ai-residential.js");
 const original = fs.readFileSync(scriptPath, "utf8");
 const message = "[AI-家宽] rule-providers 必须是对象，拒绝覆盖已有配置";
