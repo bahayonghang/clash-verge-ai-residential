@@ -69,7 +69,7 @@ function quietMainWith(scriptModule, config, profileName) {
   console.warn = () => {};
   console.error = () => {};
   try {
-    return scriptModule.main(config, profileName);
+    return profileName === undefined ? scriptModule.main(config) : scriptModule.main(config, profileName);
   } finally {
     console.info = originalInfo;
     console.warn = originalWarn;
@@ -542,6 +542,38 @@ test("关闭全部 Google 核心撤销原五个无开关端点，正则仍不生
 
 for (const vertex of [true, false]) {
   for (const cursor of [true, false]) {
+    test(`FlClash null 规则集与缺省等价：Vertex=${vertex}、Cursor 索引=${cursor}`, () => {
+      withPatchedSwitches({ ROUTE_VERTEX_AI_ENDPOINTS: vertex, ROUTE_CURSOR_REPOSITORY_INDEXING: cursor }, (patched) => {
+        for (const profileName of [undefined, "fixture"]) {
+          const absent = baselineProfile();
+          const input = { ...baselineProfile(), "rule-providers": null };
+          const snapshot = structuredClone(input);
+          const absentSnapshot = structuredClone(absent);
+          const output = quietMainWith(patched, input, profileName);
+          assert.deepEqual(output, quietMainWith(patched, absent, profileName));
+          assert.deepEqual(input, snapshot);
+          assert.deepEqual(absent, absentSnapshot);
+          assert.deepEqual(findProxy(output, "HK"), findProxy(input, "HK"));
+          assert.deepEqual(findGroup(output, "Proxy"), findGroup(input, "Proxy"));
+          assert.equal(findProxy(output, HOME_PROXY_NAME).type, "socks5");
+          assert.equal(findProxy(output, HOME_PROXY_NAME)["dialer-proxy"], "Proxy");
+          assert.deepEqual(findGroup(output, AI_GROUP).proxies, [HOME_PROXY_NAME]);
+          assert.deepEqual(output.rules, [...patched.buildInjectedRules(), ...baselineUserRules]);
+          const payload = REGEX_DNS_PAYLOAD.filter((_, index) => index === 0 ? vertex : cursor);
+          if (payload.length) {
+            assert.deepEqual(output["rule-providers"][REGEX_DNS_PROVIDER], { type: "inline", behavior: "classical", payload });
+            assert.deepEqual(output.dns["nameserver-policy"][REGEX_DNS_POLICY_KEY], RESIDENTIAL_DOH);
+          } else {
+            assert.equal("rule-providers" in output, false);
+            assert.equal(REGEX_DNS_POLICY_KEY in output.dns["nameserver-policy"], false);
+          }
+          const outputSnapshot = structuredClone(output);
+          assert.deepEqual(quietMainWith(patched, output, profileName), outputSnapshot);
+          assert.deepEqual(output, outputSnapshot);
+        }
+      });
+    });
+
     test(`正则住宅 DNS 服从 Vertex=${vertex}、Cursor 索引=${cursor}，不扩大匹配`, () => {
       withPatchedSwitches({ ROUTE_VERTEX_AI_ENDPOINTS: vertex, ROUTE_CURSOR_REPOSITORY_INDEXING: cursor }, (patched) => {
         const input = baselineProfile();
@@ -629,7 +661,7 @@ for (const enabled of [true, false]) {
         { ...valid, type: "http" }, { ...valid, behavior: "domain" }, { ...valid, payload: [] },
         { ...valid, payload: [...valid.payload, ...valid.payload] },
         { ...valid, payload: ["DOMAIN-SUFFIX,private.example.test"] }];
-      for (const providers of [null, [], "private-value", 42,
+      for (const providers of [[], "", "private-value", 0, 42, false, true,
         ...invalidProviders.map((value) => ({ [REGEX_DNS_PROVIDER]: value }))]) {
         const input = baselineProfile();
         input["rule-providers"] = providers;
@@ -660,16 +692,18 @@ for (const enabled of [true, false]) {
         ])
       ];
       for (const extra of conflictInputs) {
-        const input = {
-          ...baselineProfile(),
-          "rule-providers": {
-            [REGEX_DNS_PROVIDER]: { type: "inline", behavior: "classical", payload: [...REGEX_DNS_PAYLOAD] }
-          },
-          ...extra
-        };
-        const snapshot = structuredClone(input);
-        assert.throws(() => quietMainWith(patched, input, "fixture"), /专用 DNS 规则集/);
-        assert.deepEqual(input, snapshot);
+        for (const providers of [null, {
+          [REGEX_DNS_PROVIDER]: { type: "inline", behavior: "classical", payload: [...REGEX_DNS_PAYLOAD] }
+        }]) {
+          const input = { ...baselineProfile(), "rule-providers": providers, ...extra };
+          const snapshot = structuredClone(input);
+          assert.throws(() => quietMainWith(patched, input, "fixture"), (error) => {
+            assert.match(error.message, /专用 DNS 规则集/);
+            assert.doesNotMatch(error.message, /home-pass|airport-secret/);
+            return true;
+          });
+          assert.deepEqual(input, snapshot);
+        }
       }
       const input = baselineProfile();
       const otherName = `${REGEX_DNS_PROVIDER}-User`;

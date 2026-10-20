@@ -1,0 +1,27 @@
+{
+  "exit_code": 1,
+  "vulnerabilities": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 1,
+    "critical": 0,
+    "total": 1
+  },
+  "findings": [
+    {
+      "package": "source-map-js",
+      "severity": "high",
+      "isDirect": false,
+      "range": "1.0.0 - 1.2.1",
+      "fixAvailable": true,
+      "via": [
+        {
+          "name": "source-map-js",
+          "title": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+          "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q"
+        }
+      ]
+    }
+  ]
+}

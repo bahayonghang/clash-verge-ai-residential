@@ -81,6 +81,8 @@ Host fallback after a script error remains outside this validation contract.
 
 Existing Vertex and Cursor indexing regexes need residential DNS without wider
 Google or Cursor suffixes. Reuse `activeDomainRegexes()` and its existing gates.
+FlClash 0.9.1 can serialize an absent provider map as JSON `null`; treat only
+that top-level empty value as absent before applying ownership validation.
 
 ### 2. Signatures
 
@@ -89,6 +91,9 @@ Google or Cursor suffixes. Reuse `activeDomainRegexes()` and its existing gates.
 `dns["nameserver-policy"]["rule-set:AI-家宽-DNS-REGEX"]` when regexes are active.
 `buildNameserverPolicy(existingPolicy)` exposes the policy keys for tests;
 validate provider references through the complete `main` output.
+The host may call `main(config)` without a profile name. In
+`cloneConfigForEdit(config)`, delete `working["rule-providers"]` only when it
+is strictly `null`; never delete or rewrite the corresponding input field.
 
 ### 3. Contracts
 
@@ -106,8 +111,12 @@ Do not leave an empty provider map solely for managed output.
 
 ### 4. Validation & Error Matrix
 
-A non-object provider map, a noncanonical same-name provider, or a user rule/other
-policy reference to the reserved provider must fail without changing input.
+After the top-level null normalization, any other non-object provider map,
+a noncanonical same-name provider, or a user rule/other policy reference to the
+reserved provider must fail without changing input. Arrays, strings (including
+empty), numbers (including zero), and booleans remain invalid. A null value
+under the reserved provider name is still an ownership conflict, not an empty
+map. Normalization must not skip any ownership or reference validation.
 Check nested logical rules, sub-rules, multi-provider policy keys,
 `dns.fake-ip-filter`, `sniffer.skip-domain` and `sniffer.force-domain` for the
 reserved name. The canonical managed DNS policy reference is allowed on rerun.
@@ -117,6 +126,9 @@ Do not delete a provider while leaving a user reference unresolved.
 
 Base: Vertex on and indexing off produce only the Vertex pattern. Good: each
 switch controls its own pattern through on/off/on and repeated `main` calls.
+Top-level null and absent maps produce deeply equal output in all four switch
+combinations. With both regexes off, null leaves no provider key; an explicitly
+empty object retains its existing preservation behavior.
 Bad: use `+.googleapis.com`, `+.cursor.sh`, a raw regex key, or a wildcard inside
 a DNS label as a substitute for the provider.
 
@@ -125,8 +137,14 @@ a DNS label as a substitute for the provider.
 Test four switch combinations, positive and negative hosts, canonical provider
 ownership, user-reference rejection, stale policy cleanup with unmanaged-policy
 preservation on/off, unchanged input and renderer output. Preserve the historical
-v5.11 fixture; declare only the approved DNS delta explicitly. Test a real
-Mihomo process with fresh DNS queries and observed proxy hops. Loopback fixtures
+v5.11 fixture; declare only the approved DNS delta explicitly.
+Cover null through single-argument `main`, full-output equivalence to absent
+input, original proxy/group preservation, unchanged success/failure inputs,
+idempotence, and null plus conflicting references. Keep nested-null ownership
+and falsy-type rejection cases. Probe generated scripts with null input in a
+separate process, preserving template and post-render TOML contents. These
+checks establish host-input compatibility, not native application acceptance.
+Test a real Mihomo process with fresh DNS queries and observed proxy hops. Loopback fixtures
 prove matching and chain selection, not public DoH TLS or a supplier's egress.
 
 ### 7. Wrong vs Correct
@@ -134,6 +152,9 @@ prove matching and chain selection, not public DoH TLS or a supplier's egress.
 Wrong: infer real DNS routing from a fake-IP response or generated object alone.
 Correct: record the tested core version and actual resolver/proxy observations;
 keep untested production DNS/UDP behavior explicit.
+Wrong: use `value || {}` or loosen `isPlainObject` globally to accept null.
+Correct: normalize strictly top-level null in the working clone and retain
+all type, ownership, and reference guards.
 
 ## Idempotence
 

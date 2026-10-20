@@ -599,6 +599,9 @@ function cloneConfigForEdit(config) {
     dns: { ...dns }
   };
 
+  // FlClash 0.9.1 会将缺省规则集序列化为 null，仅在工作副本中按缺省处理。
+  if (working["rule-providers"] === null) delete working["rule-providers"];
+
   if (isPlainObject(config.tun)) {
     working.tun = { ...config.tun };
     if (Array.isArray(config.tun["dns-hijack"])) {

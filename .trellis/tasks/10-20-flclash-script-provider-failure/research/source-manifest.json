@@ -1,0 +1,71 @@
+{
+  "flclash_tag": "v0.9.1",
+  "flclash_commit": "8d4f9744948751f1273fe871e1d05276fac09b0e",
+  "mihomo_submodule_commit": "8380d0e7462f061a964323e9bf3129a236fcc5d5",
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/core/config.go",
+      "sha256": "7ff891192592e4f4d69ab20dc8d4213630dd3a677043ea19723328d40ee650a4"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/core/short_id.go",
+      "sha256": "0e804f0cdf3199df3da546b929b276e607850f7ecb579477361488faaf350b2a"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/core/method.go",
+      "sha256": "28abe85ac54eef85619170a4ffebfecb7f550767a9afb777e71f91feec6bf8da"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/core/proxy.go",
+      "sha256": "1dfd25ce4c19323f1424c51835a720f92fe3d92e432aa979de9afecb00f27779"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/lib/state.dart",
+      "sha256": "2f84da131783ea8b1449b9ba85b89c5c02e3df323cfa45fc6f9d0fff90c11355"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/lib/core/controller.dart",
+      "sha256": "62adee007fc8993aebd4f344ea76e4f6d1a354a2631716b9c3ae6568c3f3f80e"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/lib/core/interface.dart",
+      "sha256": "5767338b8f61ea4a230bf93664b484fdf4274b428e4fef3d816e82b158d7aae2"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/lib/common/javascript.dart",
+      "sha256": "523ebec43d4e158fd162e72f493ab5a23cd099127545119d9871c9218c14bd7e"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/lib/common/task.dart",
+      "sha256": "b0bdef572f3d753ea278a3221e4d083085fa074c6f74fe9e60c97d172a70d7fe"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/lib/providers/actions/setup.dart",
+      "sha256": "3707e3cd2d02d04fb13a2db218b145229e449fb09327e1cd72d29e8ca9596b42"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/lib/providers/actions/proxies.dart",
+      "sha256": "3c7055fb4dcbe09faf5e1e088aa77fcaa4f7670f13fa037c2321ca4e760d6b9c"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/lib/providers/state/proxies.dart",
+      "sha256": "46f8c284496d6d4e9e69b318a65695e766b0b5403e588cb7d17a43fd402ac739"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/lib/providers/state/navigation.dart",
+      "sha256": "73497550f2d96bc408b3a11d90df6aec8b22d4dc0ad7325a583f971f311766a2"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/lib/views/navigation.dart",
+      "sha256": "833af68755fe09442196c1da46696183fe8e2ecd36cc5cbaf1c815d289c30303"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/FlClash/8d4f9744948751f1273fe871e1d05276fac09b0e/plugins/rust_api/rust/src/script/mod.rs",
+      "sha256": "60df1ee19009aadc05bef4fd586dd33938389597464b12525c7b5284aae4bef2"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/chen08209/Clash.Meta/8380d0e7462f061a964323e9bf3129a236fcc5d5/config/config.go",
+      "sha256": "6abc55e0ce7e9cc191787e4f5614ea8e53d59ad67e05bdffb03e902062054941"
+    }
+  ]
+}

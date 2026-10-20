@@ -533,11 +533,16 @@ test("本地 Vertex/Cursor 开关控制生成脚本的正则住宅 DNS，缺省�
   ];
   const probeSource = [
     '"use strict";',
+    "const assert = require('node:assert/strict');",
     "const script = require(process.argv[1]);",
     "console.info = () => {};",
     "const input = { proxies: [{ name: 'HK', type: 'socks5', server: 'airport.example.test', port: 1080, udp: true }],",
-    "  'proxy-groups': [{ name: '🚀节点选择', type: 'select', proxies: ['HK'] }], rules: ['MATCH,🚀节点选择'] };",
-    "const output = script.main(input, 'renderer-test');",
+    "  'proxy-groups': [{ name: '🚀节点选择', type: 'select', proxies: ['HK'] }], rules: ['MATCH,🚀节点选择'], 'rule-providers': null };",
+    "const snapshot = structuredClone(input);",
+    "const output = script.main(input);",
+    "assert.deepEqual(input, snapshot);",
+    "assert.equal(output.proxies.find((proxy) => proxy.name === '家宽-SOCKS5').type, 'socks5');",
+    "assert.deepEqual(output['proxy-groups'].find((group) => group.name === 'AI-家宽').proxies, ['家宽-SOCKS5']);",
     "process.stdout.write(JSON.stringify({ providers: output['rule-providers'], policy: output.dns['nameserver-policy'], rules: output.rules }));"
   ].join("\n");
   const originalTemplate = fs.readFileSync(templatePath, "utf8");
@@ -549,8 +554,11 @@ test("本地 Vertex/Cursor 开关控制生成脚本的正则住宅 DNS，缺省�
         `\n[routing]\nvertex_ai_endpoints = ${vertex}\ncursor_repository_indexing = ${cursor}\n`;
       fs.writeFileSync(configPath, validHomeProxyToml + overrides);
       syncLocalConfig({ templatePath, configPath, outputPath });
+      // 渲染器会补全缺失开关；运行生成脚本不能再改写该 TOML。
+      const renderedToml = fs.readFileSync(configPath, "utf8");
       const output = JSON.parse(childProcess.execFileSync(process.execPath,
         ["-e", probeSource, outputPath], { encoding: "utf8" }));
+      assert.equal(fs.readFileSync(configPath, "utf8"), renderedToml);
       const payload = payloads.filter((_, index) => index === 0 ? vertex !== false : cursor === true);
       if (payload.length) {
         assert.deepEqual(output.providers[providerName], { type: "inline", behavior: "classical", payload });

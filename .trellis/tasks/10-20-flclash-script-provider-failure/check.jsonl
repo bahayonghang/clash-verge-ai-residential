@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "Root extension package boundary and compatibility model."}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Keep generic type guards and invalid-value rejection; null exception is narrowly scoped."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Node built-in regression tests, renderer child-process testing, required just ci gate."}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Host entrypoint and exception boundary; do not alter client failure behavior."}
+{"file": ".trellis/tasks/10-20-flclash-script-provider-failure/research/root-cause-report.md", "reason": "Pinned FlClash 0.9.1 null bridge and failure chain; native evidence limits."}
+{"file": ".trellis/tasks/10-20-flclash-script-provider-failure/research/local-provider-analysis.md", "reason": "Current null rejection, nested ownership matrix, switch behavior, and input immutability."}

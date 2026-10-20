@@ -1,0 +1,12 @@
+{
+  "source_proxy_count": 73,
+  "runtime_proxy_count": 74,
+  "source_group_count": 11,
+  "runtime_group_count": 12,
+  "original_proxy_names_preserved": true,
+  "original_group_names_preserved": true,
+  "mode": "rule",
+  "runtime_null_input_captured": false,
+  "input_evidence": "Subscription YAML omits rule-providers; null semantics tested deterministically. Actual FlClash failing argument was not instrumented.",
+  "native_success": "Patched client script applied to original target subscription in rule mode; original groups and AI residential group visible; target type-error toast absent."
+}
