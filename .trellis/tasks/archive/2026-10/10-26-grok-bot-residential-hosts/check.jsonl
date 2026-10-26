@@ -1,0 +1,3 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Exact-domain evidence, negative scope, bare DNS keys, just ci"}
+{"file": ".trellis/tasks/10-26-grok-bot-residential-hosts/research/grok-bot-live-hosts.md", "reason": "Live sockets, official sign-in hosts, wildcard TLS results"}
