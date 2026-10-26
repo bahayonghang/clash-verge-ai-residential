@@ -1438,3 +1438,24 @@ extra 改为默关分类，新增 extra_anyrouter；AnyRouter 开启时只走 AI
 ### Next Steps
 
 - 依赖告警按用户要求暂不处理；本次不推送。
+
+
+## Session 50: 为 Grok 登录补上四台精确主机
+
+**Date**: 2026-10-26
+**Task**: 为 Grok 登录补上四台精确主机
+**Branch**: `dev`
+
+### Summary
+
+本机 Grok Bot 实测连接已走家宽。公开模板在 grok_core 下新增 accounts.x.ai、accounts.spacex.ai、auth.grokusercontent.com、auth.grokipedia.com 四条精确规则，父域和 slack.hooks.x.ai 不进入家宽。npm test 260 通过，just ci 退出码 0。任务已归档。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8ae2439` | (see git log) |
+
+### Status
+
+[OK] **Completed**
