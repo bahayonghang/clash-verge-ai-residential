@@ -20,6 +20,7 @@
 
 ### 变更
 
+- `routing.grok_core` 额外注入四台精确登录主机：`accounts.x.ai`、`accounts.spacex.ai`、`auth.grokusercontent.com`、`auth.grokipedia.com`。来源是 xAI 登录域说明的最小主机名单。父域 `x.ai`、`spacex.ai`、`grokusercontent.com`、`grokipedia.com` 以及 `slack.hooks.x.ai` 仍不走家宽。默认注入的 `AI-家宽` 规则数量由 55 增至 59。
 - `routing.openai_auth` 与 `routing.antigravity_google_auth` 默认改为开启。前者覆盖 `auth.openai.com` 后缀和精确主机 `auth0.openai.com`；后者覆盖共享 Google 登录入口，包括 `accounts.google.com`、`ssl.gstatic.com` 和 `www.gstatic.com`。`routing.openai_web_assets` 与 `routing.openai_shared_dependencies` 仍默认关闭。已有本地 TOML 中显式写出的 `false` 不会被覆盖；缺失键按示例补成 `true`。默认注入的 `AI-家宽` 规则数量由 45 增至 55。
 - 更新日志统一改为简体中文，并精简扩展脚本文件头中与本文件重复的历史版本记录。
 - Claude、OpenAI、Antigravity 和 Cursor 的专用进程回退现在要求启用各自对应的核心开关。Anthropic IP 回退也要求启用 `routing.anthropic_core`。认证、辅助、资产和全局捕获开关仍保持独立；核心流量被禁用后会回到原始 Profile 规则，而不是被强制送往机场出口。

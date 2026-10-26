@@ -282,6 +282,23 @@ const DEFAULT_AUTH_DNS_KEYS = [
   "ssl.gstatic.com",
   "www.gstatic.com"
 ];
+const GROK_SIGNIN_EXACT_HOSTS = [
+  "accounts.x.ai",
+  "accounts.spacex.ai",
+  "auth.grokusercontent.com",
+  "auth.grokipedia.com"
+];
+const GROK_SIGNIN_NEGATIVE_HOSTS = [
+  "x.ai",
+  "www.x.ai",
+  "slack.hooks.x.ai",
+  "spacex.ai",
+  "www.spacex.ai",
+  "grokusercontent.com",
+  "www.grokusercontent.com",
+  "grokipedia.com",
+  "www.grokipedia.com"
+];
 const REGEX_DNS_PAYLOAD = [
   "DOMAIN-REGEX,^[a-z0-9-]+-aiplatform\\.googleapis\\.com$",
   "DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$"
@@ -332,12 +349,17 @@ function normalizeDefaultProjection(projection) {
   return normalizeObjectKeys({ ...projection, rules });
 }
 
-test("默认输出在固定 v5.11 投影上增加正则住宅 DNS 与默认认证路由", () => {
+test("默认输出在固定 v5.11 投影上增加正则住宅 DNS、默认认证路由与 Grok 登录精确主机", () => {
   assert.equal(routingBaseline.baselineCommit, "063c5561b9e81e42f89d7966a5d1a9772bdc44b3");
   const expected = structuredClone(routingBaseline.projection);
-  expected.rules.splice(16, 0, ...DEFAULT_AUTH_RULES);
+  expected.rules.splice(
+    16,
+    0,
+    ...DEFAULT_AUTH_RULES,
+    ...GROK_SIGNIN_EXACT_HOSTS.map((host) => `DOMAIN,${host},${AI_GROUP}`)
+  );
   expected.dns["nameserver-policy"][REGEX_DNS_POLICY_KEY] = RESIDENTIAL_DOH_URLS;
-  for (const key of DEFAULT_AUTH_DNS_KEYS) {
+  for (const key of [...DEFAULT_AUTH_DNS_KEYS, ...GROK_SIGNIN_EXACT_HOSTS]) {
     expected.dns["nameserver-policy"][key] = RESIDENTIAL_DOH_URLS;
   }
 
@@ -1466,7 +1488,10 @@ test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走
   assert.equal(ROUTE_GROK_CORE, true);
   assert.equal(ROUTE_GROK_WEB_ASSETS, true);
   assert.deepEqual(GROK_SUFFIX_DOMAINS, ["grok.com", "api.x.ai"]);
-  assert.deepEqual(GROK_EXACT_DOMAINS, ["auth.x.ai"]);
+  assert.deepEqual(GROK_EXACT_DOMAINS, [
+    "auth.x.ai",
+    ...GROK_SIGNIN_EXACT_HOSTS
+  ]);
   assert.deepEqual(
     GROK_STRICT_EXACT_DOMAINS,
     ["grok.com", "cli-chat-proxy.grok.com", "code.grok.com"]
@@ -1479,27 +1504,58 @@ test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走
     "code.grok.com",
     "assets.grok.com",
     "auth.x.ai",
+    ...GROK_SIGNIN_EXACT_HOSTS,
     "api.x.ai",
     "eu-west-1.api.x.ai",
     "mtls.api.x.ai"
   ]);
   assertNoAiRoute(rules, [
     "api.mixpanel.com",
-    "x.ai",
-    "www.x.ai",
+    ...GROK_SIGNIN_NEGATIVE_HOSTS,
     "storage.googleapis.com"
   ]);
   assert.equal(rules.includes(`DOMAIN-SUFFIX,grok.com,${AI_GROUP}`), true);
   assert.equal(rules.includes(`DOMAIN-SUFFIX,api.x.ai,${AI_GROUP}`), true);
   assert.equal(rules.includes(`DOMAIN,api.x.ai,${AI_GROUP}`), false);
+  for (const parent of ["x.ai", "spacex.ai", "grokusercontent.com", "grokipedia.com"]) {
+    assert.equal(rules.includes(`DOMAIN-SUFFIX,${parent},${AI_GROUP}`), false);
+  }
+  for (const host of ["auth.x.ai", ...GROK_SIGNIN_EXACT_HOSTS]) {
+    assert.equal(rules.includes(`DOMAIN,${host},${AI_GROUP}`), true);
+  }
 
   const policy = buildNameserverPolicy({});
   assert.deepEqual(policy["+.grok.com"], RESIDENTIAL_DOH);
-  assert.deepEqual(policy["auth.x.ai"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.api.x.ai"], RESIDENTIAL_DOH);
+  for (const host of ["auth.x.ai", ...GROK_SIGNIN_EXACT_HOSTS]) {
+    assert.deepEqual(policy[host], RESIDENTIAL_DOH, host);
+  }
   assert.equal("api.x.ai" in policy, false);
   assert.equal("api.mixpanel.com" in policy, false);
-  assert.equal("x.ai" in policy, false);
+  for (const host of GROK_SIGNIN_NEGATIVE_HOSTS) {
+    assert.equal(host in policy, false, host);
+    assert.equal(`+.${host}` in policy, false, `+.${host}`);
+  }
+  for (const parent of ["x.ai", "spacex.ai", "grokusercontent.com", "grokipedia.com"]) {
+    assert.equal(`+.${parent}` in policy, false, `+.${parent}`);
+  }
+});
+
+test("routing.grok_core 关闭后清掉四台登录精确主机的规则和 DNS", () => {
+  withPatchedSwitches({ ROUTE_GROK_CORE: false }, (patched) => {
+    const rules = patched.buildInjectedRules();
+    const target = patched.constants.AI_GROUP;
+    const policy = patched.buildNameserverPolicy({});
+    for (const host of GROK_SIGNIN_EXACT_HOSTS) {
+      assert.equal(
+        ruleMatchesHost(rules, host, target),
+        false,
+        `grok_core=false 时不应走家宽：${host}`
+      );
+      assert.equal(rules.includes(`DOMAIN,${host},${target}`), false, host);
+      assert.equal(host in policy, false, host);
+    }
+  });
 });
 
 function leftoverAnyRouterConfig(target) {
@@ -1861,6 +1917,10 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
     `DOMAIN,auth0.openai.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,oaistatic.com,${AI_GROUP}`,
     `DOMAIN,auth.x.ai,${AI_GROUP}`,
+    `DOMAIN,accounts.x.ai,${AI_GROUP}`,
+    `DOMAIN,accounts.spacex.ai,${AI_GROUP}`,
+    `DOMAIN,auth.grokusercontent.com,${AI_GROUP}`,
+    `DOMAIN,auth.grokipedia.com,${AI_GROUP}`,
     `DOMAIN,api.x.ai,${AI_GROUP}`,
     `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
     `DOMAIN-SUFFIX,authenticate.cursor.sh,${AI_GROUP}`,
@@ -2398,9 +2458,9 @@ test("最终注入规则不存在重复项", () => {
   assert.equal(new Set(rules).size, rules.length);
 });
 
-test("默认注入 55 条 AI-家宽 规则", () => {
+test("默认注入 59 条 AI-家宽 规则", () => {
   const rules = buildInjectedRules().filter((rule) => rule.includes(AI_GROUP));
-  assert.equal(rules.length, 55);
+  assert.equal(rules.length, 59);
 });
 
 test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", () => {
@@ -2413,6 +2473,10 @@ test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", ()
     "eu-west-1.api.x.ai",
     "mtls.api.x.ai",
     "api.x.ai",
+    "accounts.x.ai",
+    "accounts.spacex.ai",
+    "auth.grokusercontent.com",
+    "auth.grokipedia.com",
     "api2.cursor.sh",
     "authenticate.cursor.sh",
     "prod.authentication.cursor.sh",
@@ -2485,6 +2549,13 @@ test("grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话�
       true,
       "grok_web_assets=false 时 auth.x.ai 仍由 grok_core 覆盖"
     );
+    for (const host of GROK_SIGNIN_EXACT_HOSTS) {
+      assert.equal(
+        ruleMatchesHost(rules, host, target),
+        true,
+        `grok_web_assets=false 时 ${host} 仍由 grok_core 覆盖`
+      );
+    }
   });
 
   withPatchedGrokWebAssets(true, (patched) => {
@@ -2497,6 +2568,13 @@ test("grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话�
       true,
       "grok_web_assets=true 时 auth.x.ai 仍由 grok_core 覆盖"
     );
+    for (const host of GROK_SIGNIN_EXACT_HOSTS) {
+      assert.equal(
+        ruleMatchesHost(rules, host, target),
+        true,
+        `grok_web_assets=true 时 ${host} 仍由 grok_core 覆盖`
+      );
+    }
   });
 });
 

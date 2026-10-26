@@ -359,8 +359,16 @@ const GROK_STRICT_EXACT_DOMAINS = [
 
 // 官方企业部署文档（docs.x.ai/build/enterprise）列出的主机：
 // auth.x.ai 是 OAuth2/OIDC 认证（must-allow）；安装脚本域 x.ai 仍不走家宽。
+// xAI 登录域说明（https://docs.x.ai/x-subscription/sign-in-domains）的最小主机名单
+// 另含 accounts.x.ai、accounts.spacex.ai、auth.grokusercontent.com、
+// auth.grokipedia.com。2026-10-26 TLS 显示这些主机都是父域通配证书；
+// accounts.x.ai 与 slack.hooks.x.ai 共用 *.x.ai，兄弟主机与父域不走家宽。
 const GROK_EXACT_DOMAINS = [
-  "auth.x.ai"
+  "auth.x.ai",
+  "accounts.x.ai",
+  "accounts.spacex.ai",
+  "auth.grokusercontent.com",
+  "auth.grokipedia.com"
 ];
 
 // extra 站点登记表。分类与站点开关同时打开才注入规则。

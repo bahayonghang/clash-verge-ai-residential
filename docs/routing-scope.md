@@ -27,7 +27,7 @@
 | Vertex AI / Agent Platform | `routing.vertex_ai_endpoints` 默认 `true`，一次控制 `aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com` 与区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$` |
 | Google Antigravity / Gemini Code Assist | `routing.antigravity_core` 默认 `true`，控制 `cloudaicompanion.googleapis.com` 及精确主机 `antigravity.google`、生产 Code Assist 主机 `cloudcode-pa.googleapis.com`，以及 Antigravity `language_server` 的 `--cloud_code_endpoint` 主机 `daily-cloudcode-pa.googleapis.com`。共享 Google 登录由 `routing.antigravity_google_auth` 控制，默认 `true` |
 | Cursor | Chat/API、Tab、Agent、Cloud Agent/Bugbot API、authorize 端点、SSO 管理门户 `adminportal42.cursor.sh`、Cloud Agent VM 主机和产品专属认证；`routing.cursor_core` 默认 `true`。仓库索引主机 `repo[0-9]+.cursor.sh` 由独立开关 `routing.cursor_repository_indexing` 控制，默认 `false`，回落原 Profile |
-| Grok Build | `routing.grok_core` 默认 `true`。默认注入 `DOMAIN-SUFFIX,grok.com`（覆盖 `cli-chat-proxy.grok.com` 推理 API 与 `code.grok.com` 会话同步）、`auth.x.ai` OAuth 主机、`DOMAIN-SUFFIX,api.x.ai`（覆盖区域端点与 `mtls.api.x.ai`）。`routing.grok_web_assets = false` 时只把 `grok.com` 后缀换成三条精确主机：`grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`；`api.x.ai` 后缀仍注入 |
+| Grok Build | `routing.grok_core` 默认 `true`。默认注入 `DOMAIN-SUFFIX,grok.com`（覆盖 `cli-chat-proxy.grok.com` 推理 API 与 `code.grok.com` 会话同步）、`DOMAIN-SUFFIX,api.x.ai`（覆盖区域端点与 `mtls.api.x.ai`），以及精确主机 `auth.x.ai`、`accounts.x.ai`、`accounts.spacex.ai`、`auth.grokusercontent.com`、`auth.grokipedia.com`。这些精确主机由 `routing.grok_core` 注入；父域 `x.ai`、`spacex.ai`、`grokusercontent.com`、`grokipedia.com` 不进入家宽。`routing.grok_web_assets = false` 时只把 `grok.com` 后缀换成三条精确主机：`grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`；`api.x.ai` 后缀与上述登录精确主机仍注入 |
 | Extra 小站 | `routing.extra` 默认 `false`。打开后由站点开关控制；当前仅 `routing.extra_anyrouter`（默认 `true`）注入 `DOMAIN-SUFFIX,anyrouter.top`，不写 `+.anyrouter.top` 住宅 DNS。关闭分类或站点后交回原 Profile |
 
 官方来源：
@@ -38,13 +38,14 @@
 - Codex 数据驻留前缀：`us.api.openai.com` / `eu.api.openai.com`
 - Cursor 企业网络配置：https://cursor.com/docs/enterprise/network-configuration
 - xAI 企业部署：https://docs.x.ai/build/enterprise ；区域端点：https://docs.x.ai/developers/regions ；mTLS：https://docs.x.ai/developers/advanced-api-usage/mtls
+- xAI 登录域最小主机名单：https://docs.x.ai/x-subscription/sign-in-domains
 - Vertex AI 端点与 Antigravity Enterprise：https://antigravity.google/docs/enterprise
 - Anthropic 入站网段：https://platform.claude.com/docs/en/api/ip-addresses.md
 - AnyRouter 控制台：https://anyrouter.top/console
 - AnyRouter API / Claude Code：https://anyrouter.top
 - `www.anyrouter.top` 在健康 ESA 上仍可能返回 530，属第三方源站限制，不是本仓库路由修复的成功条件
 
-Cursor 依据：官方企业网络配置文档列出精确主机 `authenticate.cursor.sh`、`adminportal42.cursor.sh` 和 `*.cursorvm.com` 虚拟机主机，以及此前已覆盖的 API、Tab 和 Agent 端点。`api2.cursor.sh` 与 `authenticate.cursor.sh` 从 v5.10 起改为 `DOMAIN` 精确匹配。官方网络文档与本机 2026-08-17 Cursor 索引日志共同确认 `repo42.cursor.sh` 为仓库索引主机；`repo[0-9]+.cursor.sh` 是本项目的前向兼容策略，不是 Cursor 官方通配合同。默认 `routing.cursor_repository_indexing = false` 只让这些索引专属主机回落原 Profile，不阻止 Chat/Agent 发送代码上下文，也不能在 `disableHttp2` 或服务端强制 HTTP/1.1 把 RepositoryService 放到共享 `api2.cursor.sh` 时继续隔离索引。`api2.cursor.sh` 仍由 `routing.cursor_core` 控制。Privacy Mode 不会停止索引上传。Grok 依据：docs.x.ai/build/enterprise 把 `cli-chat-proxy.grok.com` 与 `auth.x.ai` 列为必需，把 `code.grok.com` 列为可选会话通道，把 `assets.grok.com` 标注为无功能影响。v5.7 依据：Claude Code 官方网络配置文档列出了 `mcp-proxy.anthropic.com` 和 `assets-proxy.anthropic.com`。
+Cursor 依据：官方企业网络配置文档列出精确主机 `authenticate.cursor.sh`、`adminportal42.cursor.sh` 和 `*.cursorvm.com` 虚拟机主机，以及此前已覆盖的 API、Tab 和 Agent 端点。`api2.cursor.sh` 与 `authenticate.cursor.sh` 从 v5.10 起改为 `DOMAIN` 精确匹配。官方网络文档与本机 2026-08-17 Cursor 索引日志共同确认 `repo42.cursor.sh` 为仓库索引主机；`repo[0-9]+.cursor.sh` 是本项目的前向兼容策略，不是 Cursor 官方通配合同。默认 `routing.cursor_repository_indexing = false` 只让这些索引专属主机回落原 Profile，不阻止 Chat/Agent 发送代码上下文，也不能在 `disableHttp2` 或服务端强制 HTTP/1.1 把 RepositoryService 放到共享 `api2.cursor.sh` 时继续隔离索引。`api2.cursor.sh` 仍由 `routing.cursor_core` 控制。Privacy Mode 不会停止索引上传。Grok 依据：docs.x.ai/build/enterprise 把 `cli-chat-proxy.grok.com` 与 `auth.x.ai` 列为必需，把 `code.grok.com` 列为可选会话通道，把 `assets.grok.com` 标注为无功能影响。登录域说明 https://docs.x.ai/x-subscription/sign-in-domains 的最小主机名单另含精确主机 `accounts.x.ai`、`accounts.spacex.ai`、`auth.grokusercontent.com`、`auth.grokipedia.com`，由 `routing.grok_core` 注入。2026-10-26 TLS 显示这些主机证书是父域通配符，且 `accounts.x.ai` 与 `slack.hooks.x.ai` 共用 `*.x.ai`，因此不注入 `x.ai`、`spacex.ai`、`grokusercontent.com`、`grokipedia.com` 后缀。v5.7 依据：Claude Code 官方网络配置文档列出了 `mcp-proxy.anthropic.com` 和 `assets-proxy.anthropic.com`。
 
 已知取舍：`downloads.claude.ai`（安装程序和自动更新主机）位于 `claude.ai` 后缀下，因此也会经过住宅链路。若将其拆出，需要注入包含动态解析上游名称的规则，而当前基于精确字符串的托管规则清理模型无法安全清理此类规则。更新下载频率较低，剩余影响仅为占用住宅链路带宽。`chatgpt.com` 后缀同样覆盖 `help.`、`status.`、`ab.`、`events.` 等子域。
 
@@ -53,7 +54,7 @@ Cursor 依据：官方企业网络配置文档列出精确主机 `authenticate.c
 下列类别留在原 Profile 路由：
 
 - Cursor Marketplace、扩展安装、应用下载、CDN、更新、Remote-SSH/WSL 服务端资产、网站、文档和论坛。
-- Grok Build 第三方分析（`api.mixpanel.com`）、`x.ai` 安装脚本/隐私端点，以及代码库上传用的共享 `storage.googleapis.com`。
+- Grok Build 第三方分析（`api.mixpanel.com`）、`x.ai` 安装脚本/隐私端点、`slack.hooks.x.ai`，父域 `spacex.ai`、`grokusercontent.com`、`grokipedia.com`，以及代码库上传用的共享 `storage.googleapis.com`。
 - YouTube、Maps、Google Search、Google Fonts、广告、统计和其他通用 Google 服务。`maps.gstatic.com` 等未列入登录名单的 Gstatic 主机仍留在原 Profile；`ssl.gstatic.com` 与 `www.gstatic.com` 随默认开启的 `routing.antigravity_google_auth` 进入家宽。
 - OpenAI/Claude 的客服、遥测、功能开关、风控、支付和其他共享第三方基础设施。
 - `oaistatic.com` 网页资源默认留在原 Profile，显式开启 `routing.openai_web_assets` 后才进入家宽。`routing.openai_auth` 默认开启，但不会因此开启共享第三方依赖。
