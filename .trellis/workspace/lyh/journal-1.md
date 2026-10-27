@@ -1459,3 +1459,38 @@ extra 改为默关分类，新增 extra_anyrouter；AnyRouter 开启时只走 AI
 ### Status
 
 [OK] **Completed**
+
+
+## Session 51: 修复并归档 Grok 核心登录路由
+
+**Date**: 2026-10-27
+**Task**: 修复并归档 Grok 核心登录路由
+**Branch**: `dev`
+
+### Summary
+
+修复 auth.grok.com 的核心路由与 DNS，纠正 TLS 通配证书的路由依据；独立复核、完整 just ci 和文档构建通过，按用户授权提交归档。
+
+### Main Changes
+
+- auth.grok.com 随 grok_core 保留精确规则及住宅 DNS，网页资源关闭不再影响登录主机。
+- 同步注释、中英文文档及 Trellis 规范，路由范围由业务名单与最小流量原则决定。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d6337ca` | (see git log) |
+
+### Testing
+
+- [OK] 修复前四组合回归 2 失败；修复后根目录 264、前端 300、Rust 553 passed/6 ignored。
+- [OK] 完整 just ci、独立 docs build、独立 trellis-check 和 git diff --check 通过。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 真实住宅 DoH 路径与完整登录流程尚未实测；未推送。

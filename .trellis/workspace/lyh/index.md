@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 50
-- **Last Active**: 2026-10-26
+- **Total Sessions**: 51
+- **Last Active**: 2026-10-27
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1461 | Active |
+| `journal-1.md` | ~1496 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 51 | 2026-10-27 | 修复并归档 Grok 核心登录路由 | `d6337ca` | `dev` |
 | 50 | 2026-10-26 | 为 Grok 登录补上四台精确主机 | `8ae2439` | `dev` |
 | 49 | 2026-10-20 | FlClash null 兼容修复提交与归档 | `38b6fe0` | `dev` |
 | 48 | 2026-10-04 | 提交正则住宅 DNS 与空组回退并归档 | `f77e9cf`, `6dfa7fa` | `dev` |
