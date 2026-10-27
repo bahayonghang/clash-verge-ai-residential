@@ -40,6 +40,16 @@ marketplace, update, CDN, media, advertising, telemetry, or public-DNS traffic.
 domains as the bare hostname. DNS on/off assertions must use those keys.
 A bare suffix name such as `chatgpt.com` is absent even when the route is
 on, so `host in policy` cannot prove that GPT DNS routing is disabled.
+Required login hosts must survive optional web-asset disabling. For Grok,
+`auth.grok.com` belongs in `GROK_EXACT_DOMAINS`: with `grok_core=true`,
+both values of `grok_web_assets` emit `DOMAIN,auth.grok.com,AI-家宽` and a
+bare `auth.grok.com` residential DNS key. With core disabled, rebuilding
+previous output must remove both. Test all four switch combinations, strict
+mode exclusions (`assets.grok.com` and subdomains of `auth.grok.com`), and
+idempotence. A wildcard certificate does not justify a suffix route or require
+an exact route; business-host evidence and the minimal traffic policy determine
+scope. A successful TLS handshake establishes certificate validation only for
+the tested path, not availability through another DNS/proxy vantage.
 Routing and nameserver-policy may be decoupled. An extra site with
 `residentialDns: false` still injects `DOMAIN` / `DOMAIN-SUFFIX` rules when
 its category and site switches are on, but `buildNameserverPolicy` must not

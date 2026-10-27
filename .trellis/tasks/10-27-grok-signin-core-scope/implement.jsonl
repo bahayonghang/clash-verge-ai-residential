@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Root extension and renderer scope"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Managed rules and DNS lifecycle and idempotence"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Routing evidence and verification gate"}
+{"file":".trellis/spec/guides/index.md","reason":"Domain and DNS boundary checks"}

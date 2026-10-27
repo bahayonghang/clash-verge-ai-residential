@@ -283,6 +283,7 @@ const DEFAULT_AUTH_DNS_KEYS = [
   "www.gstatic.com"
 ];
 const GROK_SIGNIN_EXACT_HOSTS = [
+  "auth.grok.com",
   "accounts.x.ai",
   "accounts.spacex.ai",
   "auth.grokusercontent.com",
@@ -1541,7 +1542,46 @@ test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走
   }
 });
 
-test("routing.grok_core 关闭后清掉四台登录精确主机的规则和 DNS", () => {
+for (const coreEnabled of [true, false]) {
+  for (const assetsEnabled of [true, false]) {
+    test(`Grok 登录核心路由与 DNS 随开关重建：core=${coreEnabled}, assets=${assetsEnabled}`, () => {
+      const customRule = `DOMAIN,custom-grok.example.test,${AI_GROUP}`;
+      const enabledOutput = quietMain(configFixture({
+        proxies: [airportNode("HK")],
+        groups: [group("Proxy", ["HK"])],
+        rules: [customRule, "MATCH,Proxy"]
+      }), "登录测试");
+      withPatchedSwitches({
+        ROUTE_GROK_CORE: coreEnabled,
+        ROUTE_GROK_WEB_ASSETS: assetsEnabled
+      }, (patched) => {
+        const snapshot = structuredClone(enabledOutput);
+        const output = quietMainWith(patched, enabledOutput, "登录测试");
+        const policy = output.dns["nameserver-policy"];
+        assert.deepEqual(enabledOutput, snapshot);
+        assert.equal(output.rules.includes(`DOMAIN,auth.grok.com,${AI_GROUP}`), coreEnabled);
+        assert.equal(ruleMatchesHost(output.rules, "auth.grok.com"), coreEnabled);
+        assert.equal("auth.grok.com" in policy, coreEnabled);
+        if (coreEnabled) assert.deepEqual(policy["auth.grok.com"], RESIDENTIAL_DOH);
+        assert.equal("+.auth.grok.com" in policy, false);
+        assert.equal("+.grok.com" in policy, coreEnabled && assetsEnabled);
+        assert.equal(
+          output.rules.includes(`DOMAIN-SUFFIX,grok.com,${AI_GROUP}`),
+          coreEnabled && assetsEnabled
+        );
+        for (const host of ["assets.grok.com", "connectors-gateway.grok.com", "child.auth.grok.com"]) {
+          assert.equal(ruleMatchesHost(output.rules, host), coreEnabled && assetsEnabled, host);
+          assert.equal(host in policy, false, host);
+        }
+        assert.equal(output.rules.includes(customRule), true);
+        assert.equal(new Set(output.rules).size, output.rules.length);
+        assert.deepEqual(quietMainWith(patched, output, "登录测试"), output);
+      });
+    });
+  }
+}
+
+test("routing.grok_core 关闭后清掉登录精确主机的规则和 DNS", () => {
   withPatchedSwitches({ ROUTE_GROK_CORE: false }, (patched) => {
     const rules = patched.buildInjectedRules();
     const target = patched.constants.AI_GROUP;
@@ -1917,6 +1957,7 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
     `DOMAIN,auth0.openai.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,oaistatic.com,${AI_GROUP}`,
     `DOMAIN,auth.x.ai,${AI_GROUP}`,
+    `DOMAIN,auth.grok.com,${AI_GROUP}`,
     `DOMAIN,accounts.x.ai,${AI_GROUP}`,
     `DOMAIN,accounts.spacex.ai,${AI_GROUP}`,
     `DOMAIN,auth.grokusercontent.com,${AI_GROUP}`,
@@ -2458,9 +2499,9 @@ test("最终注入规则不存在重复项", () => {
   assert.equal(new Set(rules).size, rules.length);
 });
 
-test("默认注入 59 条 AI-家宽 规则", () => {
+test("默认注入 60 条 AI-家宽 规则", () => {
   const rules = buildInjectedRules().filter((rule) => rule.includes(AI_GROUP));
-  assert.equal(rules.length, 59);
+  assert.equal(rules.length, 60);
 });
 
 test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", () => {

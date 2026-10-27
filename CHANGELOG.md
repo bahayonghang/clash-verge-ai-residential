@@ -38,6 +38,7 @@
 
 ### 修复
 
+- 将官方最小登录名单中的 `auth.grok.com` 加入 `routing.grok_core` 精确主机，关闭 `routing.grok_web_assets` 后仍保留其规则和住宅 DNS；关闭核心开关会清理旧规则与 DNS。默认 `AI-家宽` 规则数由 59 增至 60，默认域名覆盖范围不变。精确匹配以官方业务名单和最小流量原则为依据，TLS 通配证书不再作为路由范围依据。
 - 兼容 FlClash 0.9.1 将缺省 `rule-providers` 传为 `null` 的输入，仅在工作副本中按缺省处理，避免生成配置时报“rule-providers 必须是对象”。其它非法类型、同名规则集所有权和冲突引用校验仍保留，原输入不变。
 - 拒绝可达上游组的 `empty-fallback` 引用 `家宽-SOCKS5` 或 `AI-家宽`，避免空组回退重新进入住宅链路。错误包含组名、字段和可达路径，且不改输入；普通节点回退、缺省字段和不可达组保持原行为。脚本失败不保证宿主阻断流量。
 - 扩展脚本不再写入 Clash Verge Rev 设置页管理的 `tun` 各键与顶层 `ipv6`。Clash Verge Rev v2.5.5 起，改写这些字段会弹出「Extensions wrote tun.dns-hijack, which Settings manages, so those values were discarded」提示，且写入被还原。脚本改为只读检查：TUN 已启用且 `dns-hijack` 缺少 `any:53` 或 `tcp://any:53`、开启 `runtime.enable_tun_strict_route` 但 `strict-route` 未开启、顶层 `ipv6` 为 `true` 时，各输出一条 `warn`，指向对应设置页。删除每次运行都输出的「新版会还原 tun/ipv6」`info` 提示。`runtime.harden_existing_tun_dns_hijack` 与 `runtime.enable_tun_strict_route` 保留，语义改为「检查并告警」。文档补充：启用 DNS 覆盖时，`dns_config.yaml` 中所有非空 `dns.*` 字段都以设置页为准。

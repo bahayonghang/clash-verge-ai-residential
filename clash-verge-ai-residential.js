@@ -142,7 +142,7 @@ const ROUTE_CURSOR_REPOSITORY_INDEXING = false;
 const ROUTE_GROK_CORE = true;
 
 // Grok 网页静态资源。关闭后 grok.com 从后缀改为 grok.com、cli-chat-proxy.grok.com、
-// code.grok.com 精确主机；api.x.ai 后缀仍由 grok_core 注入。
+// code.grok.com 精确主机；api.x.ai 后缀和 auth.grok.com 登录仍由 grok_core 注入。
 const ROUTE_GROK_WEB_ASSETS = true;
 
 // extra 分类总开关。默认关闭；打开后仍需各站点开关才会注入规则。
@@ -360,11 +360,12 @@ const GROK_STRICT_EXACT_DOMAINS = [
 // 官方企业部署文档（docs.x.ai/build/enterprise）列出的主机：
 // auth.x.ai 是 OAuth2/OIDC 认证（must-allow）；安装脚本域 x.ai 仍不走家宽。
 // xAI 登录域说明（https://docs.x.ai/x-subscription/sign-in-domains）的最小主机名单
-// 另含 accounts.x.ai、accounts.spacex.ai、auth.grokusercontent.com、
-// auth.grokipedia.com。2026-10-26 TLS 显示这些主机都是父域通配证书；
-// accounts.x.ai 与 slack.hooks.x.ai 共用 *.x.ai，兄弟主机与父域不走家宽。
+// 另含 auth.grok.com、accounts.x.ai、accounts.spacex.ai、auth.grokusercontent.com、
+// auth.grokipedia.com。按业务名单与最小流量原则精确匹配，不扩大到父域或兄弟主机；
+// TLS 证书仅用于验证被测路径的身份，不决定路由范围，也不证明未测路径可用。
 const GROK_EXACT_DOMAINS = [
   "auth.x.ai",
+  "auth.grok.com",
   "accounts.x.ai",
   "accounts.spacex.ai",
   "auth.grokusercontent.com",

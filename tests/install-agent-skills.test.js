@@ -274,12 +274,14 @@ test("新增核心开关仅映射各自域名，不将 IP 或进程记为域名�
   }
 });
 
-test("grok_web_assets 不把 auth.x.ai 算作该开关独有流量", () => {
+test("grok_web_assets 不把核心登录主机算作该开关独有流量", () => {
   const built = buildInputs(path.join(__dirname, ".."));
   const grokCore = built.switches.supported.grok_core;
   const webAssets = built.switches.supported.grok_web_assets;
   assert.ok(Array.isArray(grokCore));
   assert.ok(Array.isArray(webAssets));
+  assert.equal(grokCore.includes("auth.grok.com"), true);
+  assert.equal(webAssets.includes("auth.grok.com"), false);
   for (const host of constants.GROK_EXACT_DOMAINS) {
     assert.equal(grokCore.includes(host), true, `grok_core 应包含 ${host}`);
     assert.equal(webAssets.includes(host), false, `grok_web_assets 不应包含 ${host}`);
