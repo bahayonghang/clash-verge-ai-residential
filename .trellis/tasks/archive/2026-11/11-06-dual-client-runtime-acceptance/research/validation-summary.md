@@ -44,7 +44,7 @@ Windows Ego 的官方 Trickle ICE 样本完成，host=1、srflx=1、relay=0、pr
 
 本次没有修改生产配置、订阅、节点、系统 DNS/TUN、浏览器策略或本地 TOML/JS，没有记录主机地址、账户、密码或原始配置。凭据仅用于用户授权的登录，未写入仓库。远端隔离测试临时目录已清理。
 
-宿主和运行子任务保留 in_progress，父任务保持协调用途；不归档、不提交、不声称四组合完整兼容通过。Ego Browser 获取网页的用户偏好已写入个人 memory note。
+验收结束时宿主和运行子任务保留 in_progress。用户随后明确要求提交全部改动并归档，现按用户要求结项；Trellis 的 completed 表示归档生命周期结束，不代表四组合完整兼容通过，所有 FAIL/UNVERIFIED 保留。Ego Browser 获取网页的用户偏好已写入个人 memory note。
 
 ## 用户决定
 

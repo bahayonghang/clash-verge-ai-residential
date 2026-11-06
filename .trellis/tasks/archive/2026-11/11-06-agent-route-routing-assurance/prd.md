@@ -41,10 +41,14 @@
 
 不整合 AgentRoute 全量规则、广告拦截、中国 IP 兜底或远程自动同步；不复制上游 GPL 工具/规则数据。不新增宽泛域名、进程全量捕获、全局 UDP/DoH 路由或 DIRECT 回退。不改用户规则优先级、私网 DIRECT 既有语义、开关默认值、控制器、凭据、ResiWatch UI/数据库或依赖。
 
-本轮不改 *.local.toml / *.local.js，不切换代理、安装客户端、重启或修改系统 DNS/TUN，不发 Issue、不提交/推送。P2 规则机器化账本和基于历史流量的收窄另行规划。
+本轮不改 *.local.toml / *.local.js，不切换代理、安装客户端、重启或修改系统 DNS/TUN，不发 Issue、不推送。用户后续明确授权本地提交与归档。P2 规则机器化账本和基于历史流量的收窄另行规划。
 
 ## Approval Boundary
 
-当前实施与验收汇总：[四组合验证结果](../11-06-dual-client-runtime-acceptance/research/validation-summary.md)。宿主合同/测试/文档已完成，实际运行仅部分验证，AC1 不满足，任务不归档。
+当前实施与验收汇总：[四组合验证结果](../11-06-dual-client-runtime-acceptance/research/validation-summary.md)。宿主合同/测试/文档已完成，实际运行仅部分验证，AC1 不满足；用户要求保留缺口并归档，未把 AC1 标为通过。
 
 用户于 2026-11-06 明确批准最终方案：先完成 Windows/Ubuntu 双客户端宿主兼容，再做运行验收。真实网络变更和本地 TOML 例外仍需对应明确授权。
+
+## 归档说明
+
+2026-11-06 用户明确要求提交全部改动并归档本轮三个任务；按用户要求结项，完整实机验收仍未完成，保留现有 FAIL/UNVERIFIED，不将归档等同四组合通过。

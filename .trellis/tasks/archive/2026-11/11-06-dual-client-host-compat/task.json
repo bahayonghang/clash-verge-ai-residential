@@ -3,7 +3,7 @@
   "name": "dual-client-host-compat",
   "title": "兼容 Windows 与 Ubuntu 上的 Clash Verge Rev 和 FlClash",
   "description": "共享脚本宿主合同、回归测试及接入文档已实施并审查；原生核心隔离验证通过，四组合完整宿主实机验收尚有缺口。不改变 AI-only 业务规则。",
-  "status": "in_progress",
+  "status": "completed",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -11,7 +11,7 @@
   "creator": "lyh",
   "assignee": "lyh",
   "createdAt": "2026-11-06",
-  "completedAt": null,
+  "completedAt": "2026-11-06",
   "branch": null,
   "base_branch": "main",
   "worktree_path": null,
@@ -21,7 +21,7 @@
   "children": [],
   "parent": "11-06-agent-route-routing-assurance",
   "relatedFiles": [],
-  "notes": "2026-11-06 用户批准最新方案：先 Windows/Ubuntu 双客户端宿主兼容，再运行验收；保持 AI-only 范围。未授权本地 TOML 修改、安装、代理切换、系统网络设置变更或推送。",
+  "notes": "2026-11-06 用户批准最新方案：先 Windows/Ubuntu 双客户端宿主兼容，再运行验收；保持 AI-only 范围。未授权本地 TOML 修改、安装、代理切换、系统网络设置变更或推送。 2026-11-06 用户明确要求提交全部改动并归档本轮三个任务；按用户要求结项，完整实机验收仍未完成，保留现有 FAIL/UNVERIFIED，不将归档等同四组合通过。",
   "meta": {
     "planning_only": false,
     "implementation_approved": true,
@@ -36,6 +36,8 @@
     "deferred_platforms": [
       "macOS",
       "Android (FlClash)"
-    ]
+    ],
+    "closure_reason": "user_requested_archive_with_validation_gaps",
+    "full_runtime_acceptance": false
   }
 }
