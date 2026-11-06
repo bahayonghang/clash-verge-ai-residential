@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 47
-- **Last Active**: 2026-09-24
+- **Total Sessions**: 52
+- **Last Active**: 2026-11-06
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1375 | Active |
+| `journal-1.md` | ~1529 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,11 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 52 | 2026-11-06 | 双客户端兼容文档与部分实机验收结项 | `bb37164a340967dd210b5d0bc726237c97d02f31` | `dev` |
+| 51 | 2026-10-27 | 修复并归档 Grok 核心登录路由 | `d6337ca` | `dev` |
+| 50 | 2026-10-26 | 为 Grok 登录补上四台精确主机 | `8ae2439` | `dev` |
+| 49 | 2026-10-20 | FlClash null 兼容修复提交与归档 | `38b6fe0` | `dev` |
+| 48 | 2026-10-04 | 提交正则住宅 DNS 与空组回退并归档 | `f77e9cf`, `6dfa7fa` | `dev` |
 | 47 | 2026-09-24 | 收窄短窗口会话投影 | `e5d19b15e7e7cca78cca4c4adabd2d755560c724` | `dev` |
 | 46 | 2026-09-16 | 解耦 AnyRouter DNS 并将 extra 改为分类 | `44b9e32` | `dev` |
 | 45 | 2026-09-16 | 新增 extra 小站路由 | `018f4c46c0035f6a2252cbac4f567093df76abf7` | `dev` |

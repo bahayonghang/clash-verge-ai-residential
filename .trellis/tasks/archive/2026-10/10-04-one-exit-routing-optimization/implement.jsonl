@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/index.md","reason":"根扩展运行契约与验证范围"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"配置所有权、幂等与托管清理"}
+{"file":".trellis/tasks/10-04-one-exit-routing-optimization/research/one-exit-reference.md","reason":"参考方案边界与筛选结果"}
+{"file":".trellis/tasks/10-04-one-exit-routing-optimization/research/current-routing-evidence.md","reason":"两个子任务的配置复现依据"}

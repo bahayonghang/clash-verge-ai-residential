@@ -16,6 +16,7 @@ const zhSidebar = [
       { text: "路由范围", link: "/routing-scope" },
       { text: "多 Profile", link: "/multi-profile" },
       { text: "DNS 与泄漏模型", link: "/dns-and-leak-model" },
+      { text: "双客户端运行验收", link: "/client-validation" },
       { text: "故障排查", link: "/troubleshooting" }
     ]
   },
@@ -40,6 +41,7 @@ const enSidebar = [
       { text: "Routing scope", link: "/en/routing-scope" },
       { text: "Multi-profile", link: "/en/multi-profile" },
       { text: "DNS and leak model", link: "/en/dns-and-leak-model" },
+      { text: "Client runtime validation", link: "/en/client-validation" },
       { text: "Troubleshooting", link: "/en/troubleshooting" }
     ]
   },

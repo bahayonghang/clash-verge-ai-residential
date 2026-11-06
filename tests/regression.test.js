@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const childProcess = require("node:child_process");
+const vm = require("node:vm");
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
@@ -42,6 +43,7 @@ const {
   ROUTE_CURSOR_PROCESS_FALLBACK,
   ROUTE_OPENAI_AUTH,
   ROUTE_OPENAI_WEB_ASSETS,
+  ROUTE_ANTIGRAVITY_GOOGLE_AUTH,
   GEMINI_WEB_SUFFIX_DOMAINS,
   GEMINI_WEB_EXACT_DOMAINS,
   VERTEX_AI_EXACT_DOMAINS,
@@ -68,7 +70,7 @@ function quietMainWith(scriptModule, config, profileName) {
   console.warn = () => {};
   console.error = () => {};
   try {
-    return scriptModule.main(config, profileName);
+    return profileName === undefined ? scriptModule.main(config) : scriptModule.main(config, profileName);
   } finally {
     console.info = originalInfo;
     console.warn = originalWarn;
@@ -251,6 +253,58 @@ function withPatchedOpenAiSwitches(openaiAuth, openaiWebAssets, fn) {
   }, fn);
 }
 
+const REGEX_DNS_PROVIDER = "AI-家宽-DNS-REGEX";
+const REGEX_DNS_POLICY_KEY = `rule-set:${REGEX_DNS_PROVIDER}`;
+const RESIDENTIAL_DOH_URLS = [
+  "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+  "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+];
+const DEFAULT_AUTH_RULES = [
+  `DOMAIN-SUFFIX,auth.openai.com,${AI_GROUP}`,
+  `DOMAIN,auth0.openai.com,${AI_GROUP}`,
+  `DOMAIN,accounts.google.com,${AI_GROUP}`,
+  `DOMAIN,oauth2.googleapis.com,${AI_GROUP}`,
+  `DOMAIN,openidconnect.googleapis.com,${AI_GROUP}`,
+  `DOMAIN,people.googleapis.com,${AI_GROUP}`,
+  `DOMAIN,lh3.googleusercontent.com,${AI_GROUP}`,
+  `DOMAIN,lh5.googleusercontent.com,${AI_GROUP}`,
+  `DOMAIN,ssl.gstatic.com,${AI_GROUP}`,
+  `DOMAIN,www.gstatic.com,${AI_GROUP}`
+];
+const DEFAULT_AUTH_DNS_KEYS = [
+  "+.auth.openai.com",
+  "auth0.openai.com",
+  "accounts.google.com",
+  "oauth2.googleapis.com",
+  "openidconnect.googleapis.com",
+  "people.googleapis.com",
+  "lh3.googleusercontent.com",
+  "lh5.googleusercontent.com",
+  "ssl.gstatic.com",
+  "www.gstatic.com"
+];
+const GROK_SIGNIN_EXACT_HOSTS = [
+  "auth.grok.com",
+  "accounts.x.ai",
+  "accounts.spacex.ai",
+  "auth.grokusercontent.com",
+  "auth.grokipedia.com"
+];
+const GROK_SIGNIN_NEGATIVE_HOSTS = [
+  "x.ai",
+  "www.x.ai",
+  "slack.hooks.x.ai",
+  "spacex.ai",
+  "www.spacex.ai",
+  "grokusercontent.com",
+  "www.grokusercontent.com",
+  "grokipedia.com",
+  "www.grokipedia.com"
+];
+const REGEX_DNS_PAYLOAD = [
+  "DOMAIN-REGEX,^[a-z0-9-]+-aiplatform\\.googleapis\\.com$",
+  "DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$"
+];
 const routingBaseline = require("./fixtures/routing-default-v5.11.json");
 const baselineUserRules = [
   "DOMAIN,custom.example.test,DIRECT",
@@ -297,9 +351,19 @@ function normalizeDefaultProjection(projection) {
   return normalizeObjectKeys({ ...projection, rules });
 }
 
-test("默认输出与固定 v5.11 投影一致", () => {
+test("默认输出在固定 v5.11 投影上增加正则住宅 DNS、默认认证路由与 Grok 登录精确主机", () => {
   assert.equal(routingBaseline.baselineCommit, "063c5561b9e81e42f89d7966a5d1a9772bdc44b3");
   const expected = structuredClone(routingBaseline.projection);
+  expected.rules.splice(
+    16,
+    0,
+    ...DEFAULT_AUTH_RULES,
+    ...GROK_SIGNIN_EXACT_HOSTS.map((host) => `DOMAIN,${host},${AI_GROUP}`)
+  );
+  expected.dns["nameserver-policy"][REGEX_DNS_POLICY_KEY] = RESIDENTIAL_DOH_URLS;
+  for (const key of [...DEFAULT_AUTH_DNS_KEYS, ...GROK_SIGNIN_EXACT_HOSTS]) {
+    expected.dns["nameserver-policy"][key] = RESIDENTIAL_DOH_URLS;
+  }
 
   const input = baselineProfile();
   const snapshot = structuredClone(input);
@@ -314,6 +378,9 @@ test("默认输出与固定 v5.11 投影一致", () => {
     home: { type: home.type, udp: home.udp, "dialer-proxy": home["dialer-proxy"] }
   };
   assert.deepEqual(normalizeDefaultProjection(projection), normalizeDefaultProjection(expected));
+  assert.deepEqual(output["rule-providers"], {
+    [REGEX_DNS_PROVIDER]: { type: "inline", behavior: "classical", payload: [REGEX_DNS_PAYLOAD[0]] }
+  });
   assert.deepEqual(quietMain(output, routingBaseline.profileName), output);
   assert.equal(output.rules.includes(`DOMAIN-SUFFIX,anyrouter.top,${AI_GROUP}`), false);
   assert.equal("+.anyrouter.top" in output.dns["nameserver-policy"], false);
@@ -485,6 +552,7 @@ test("关闭全部 Google 核心撤销原五个无开关端点，正则仍不生
   withPatchedSwitches({ ROUTE_CURSOR_REPOSITORY_INDEXING: true }, (patched) => {
     const policy = patched.buildNameserverPolicy();
     const rules = patched.buildInjectedRules();
+    assert.deepEqual(policy[REGEX_DNS_POLICY_KEY], RESIDENTIAL_DOH);
     for (const host of ["us-central1-aiplatform.googleapis.com", "repo42.cursor.sh"]) {
       assert.ok(ruleMatchesHost(rules, host));
       assert.equal(host in policy, false);
@@ -495,6 +563,190 @@ test("关闭全部 Google 核心撤销原五个无开关端点，正则仍不生
       "www.antigravity.google"]) assert.equal(ruleMatchesHost(rules, host), false, host);
   });
 });
+
+for (const vertex of [true, false]) {
+  for (const cursor of [true, false]) {
+    test(`FlClash null 规则集与缺省等价：Vertex=${vertex}、Cursor 索引=${cursor}`, () => {
+      withPatchedSwitches({ ROUTE_VERTEX_AI_ENDPOINTS: vertex, ROUTE_CURSOR_REPOSITORY_INDEXING: cursor }, (patched) => {
+        for (const profileName of [undefined, "fixture"]) {
+          const absent = baselineProfile();
+          const input = { ...baselineProfile(), "rule-providers": null };
+          const snapshot = structuredClone(input);
+          const absentSnapshot = structuredClone(absent);
+          const output = quietMainWith(patched, input, profileName);
+          assert.deepEqual(output, quietMainWith(patched, absent, profileName));
+          assert.deepEqual(input, snapshot);
+          assert.deepEqual(absent, absentSnapshot);
+          assert.deepEqual(findProxy(output, "HK"), findProxy(input, "HK"));
+          assert.deepEqual(findGroup(output, "Proxy"), findGroup(input, "Proxy"));
+          assert.equal(findProxy(output, HOME_PROXY_NAME).type, "socks5");
+          assert.equal(findProxy(output, HOME_PROXY_NAME)["dialer-proxy"], "Proxy");
+          assert.deepEqual(findGroup(output, AI_GROUP).proxies, [HOME_PROXY_NAME]);
+          assert.deepEqual(output.rules, [...patched.buildInjectedRules(), ...baselineUserRules]);
+          const payload = REGEX_DNS_PAYLOAD.filter((_, index) => index === 0 ? vertex : cursor);
+          if (payload.length) {
+            assert.deepEqual(output["rule-providers"][REGEX_DNS_PROVIDER], { type: "inline", behavior: "classical", payload });
+            assert.deepEqual(output.dns["nameserver-policy"][REGEX_DNS_POLICY_KEY], RESIDENTIAL_DOH);
+          } else {
+            assert.equal("rule-providers" in output, false);
+            assert.equal(REGEX_DNS_POLICY_KEY in output.dns["nameserver-policy"], false);
+          }
+          const outputSnapshot = structuredClone(output);
+          assert.deepEqual(quietMainWith(patched, output, profileName), outputSnapshot);
+          assert.deepEqual(output, outputSnapshot);
+        }
+      });
+    });
+
+    test(`正则住宅 DNS 服从 Vertex=${vertex}、Cursor 索引=${cursor}，不扩大匹配`, () => {
+      withPatchedSwitches({ ROUTE_VERTEX_AI_ENDPOINTS: vertex, ROUTE_CURSOR_REPOSITORY_INDEXING: cursor }, (patched) => {
+        const input = baselineProfile();
+        const userProvider = { type: "inline", behavior: "domain", payload: ["user.example.test"] };
+        input["rule-providers"] = {
+          User: userProvider,
+          [REGEX_DNS_PROVIDER]: { type: "inline", behavior: "classical", payload: [...REGEX_DNS_PAYLOAD] }
+        };
+        input.dns["nameserver-policy"][REGEX_DNS_POLICY_KEY] = ["https://old.example.test/dns-query"];
+        const snapshot = structuredClone(input);
+        const output = quietMainWith(patched, input, "fixture");
+        const payload = REGEX_DNS_PAYLOAD.filter((_, index) => index === 0 ? vertex : cursor);
+        const policy = output.dns["nameserver-policy"];
+        if (payload.length) {
+          assert.deepEqual(output["rule-providers"][REGEX_DNS_PROVIDER], { type: "inline", behavior: "classical", payload });
+          assert.deepEqual(policy[REGEX_DNS_POLICY_KEY], RESIDENTIAL_DOH);
+          assert.ok(Object.keys(policy).indexOf(REGEX_DNS_POLICY_KEY) < Object.keys(policy).indexOf("geosite:cn"));
+        } else {
+          assert.equal(REGEX_DNS_PROVIDER in output["rule-providers"], false);
+          assert.equal(REGEX_DNS_POLICY_KEY in policy, false);
+        }
+        assert.deepEqual(output["rule-providers"].User, userProvider);
+        assert.deepEqual(input, snapshot);
+        assert.deepEqual(quietMainWith(patched, output, "fixture"), output);
+        assert.deepEqual(output.rules, [...patched.buildInjectedRules(), ...baselineUserRules]);
+        const matches = (host) => payload.some((rule) => new RegExp(rule.slice("DOMAIN-REGEX,".length)).test(host));
+        for (const [host, enabled] of [
+          ["us-central1-aiplatform.googleapis.com", vertex],
+          ["europe-west4-aiplatform.googleapis.com", vertex], ["repo42.cursor.sh", cursor]
+        ]) assert.equal(matches(host), enabled, host);
+        for (const host of ["maps.googleapis.com", "fonts.googleapis.com", "storage.googleapis.com",
+          "repofoo.cursor.sh", "repo42.cursor.sh.example.test", "foo.us-central1-aiplatform.googleapis.com"]) {
+          assert.equal(matches(host), false, host);
+        }
+        for (const key of ["+.googleapis.com", "+.cursor.sh", "*-aiplatform.googleapis.com", "repo*.cursor.sh",
+          ...VERTEX_AI_DOMAIN_REGEXES, ...CURSOR_REPOSITORY_INDEXING_DOMAIN_REGEXES]) {
+          assert.equal(key in policy, false, key);
+        }
+        assert.equal("+.anyrouter.top" in policy, false);
+      });
+    });
+  }
+}
+
+for (const preserve of [false, true]) {
+  test(`正则住宅 DNS 开→关→开清理旧配置，保留未托管策略=${preserve}`, () => {
+    withPatchedSwitches({ ROUTE_CURSOR_REPOSITORY_INDEXING: true,
+      PRESERVE_UNMANAGED_NAMESERVER_POLICY: preserve }, (enabledScript) => {
+      const input = baselineProfile();
+      input["rule-providers"] = { User: { type: "inline", behavior: "domain", payload: ["user.example.test"] } };
+      const enabled = quietMainWith(enabledScript, input, "fixture");
+      const snapshot = structuredClone(enabled);
+      withPatchedSwitches({ ROUTE_VERTEX_AI_ENDPOINTS: false, ROUTE_CURSOR_REPOSITORY_INDEXING: false,
+        PRESERVE_UNMANAGED_NAMESERVER_POLICY: preserve }, (disabledScript) => {
+        const disabled = quietMainWith(disabledScript, enabled, "fixture");
+        assert.deepEqual(enabled, snapshot);
+        assert.equal(REGEX_DNS_PROVIDER in disabled["rule-providers"], false);
+        assert.equal(REGEX_DNS_POLICY_KEY in disabled.dns["nameserver-policy"], false);
+        assert.equal("custom.example.test" in disabled.dns["nameserver-policy"], preserve);
+        assert.deepEqual(disabled["rule-providers"].User, input["rule-providers"].User);
+        assert.deepEqual(quietMainWith(disabledScript, disabled, "fixture"), disabled);
+        assert.deepEqual(quietMainWith(enabledScript, disabled, "fixture"), enabled);
+      });
+    });
+  });
+}
+
+test("正则住宅 DNS 全关时不新建空映射，旧托管规则集完整移除", () => {
+  withPatchedSwitches({ ROUTE_VERTEX_AI_ENDPOINTS: false, ROUTE_CURSOR_REPOSITORY_INDEXING: false }, (patched) => {
+    const first = quietMainWith(patched, baselineProfile(), "fixture");
+    assert.equal("rule-providers" in first, false);
+    const existing = quietMain(baselineProfile(), "fixture");
+    assert.equal("rule-providers" in quietMainWith(patched, existing, "fixture"), false);
+    const empty = baselineProfile();
+    empty["rule-providers"] = {};
+    assert.deepEqual(quietMainWith(patched, empty, "fixture")["rule-providers"], {});
+  });
+});
+
+for (const enabled of [true, false]) {
+  test(`正则住宅 DNS 开关=${enabled} 时仍拒绝同名冲突和非法规则集映射`, () => {
+    withPatchedSwitches({ ROUTE_VERTEX_AI_ENDPOINTS: enabled, ROUTE_CURSOR_REPOSITORY_INDEXING: enabled }, (patched) => {
+      const valid = { type: "inline", behavior: "classical", payload: [REGEX_DNS_PAYLOAD[0]] };
+      const invalidProviders = [null, {}, [], { ...valid, url: "https://private.example.test/rules" },
+        { ...valid, type: "http" }, { ...valid, behavior: "domain" }, { ...valid, payload: [] },
+        { ...valid, payload: [...valid.payload, ...valid.payload] },
+        { ...valid, payload: ["DOMAIN-SUFFIX,private.example.test"] }];
+      for (const providers of [[], "", "private-value", 0, 42, false, true,
+        ...invalidProviders.map((value) => ({ [REGEX_DNS_PROVIDER]: value }))]) {
+        const input = baselineProfile();
+        input["rule-providers"] = providers;
+        const snapshot = structuredClone(input);
+        assert.throws(() => quietMainWith(patched, input, "fixture"), (error) => {
+          assert.match(error.message, /rule-providers|保留规则集/);
+          assert.doesNotMatch(error.message, /private-value|private\.example|home-pass|airport-secret/);
+          return true;
+        });
+        assert.deepEqual(input, snapshot);
+      }
+    });
+  });
+
+  test(`正则住宅 DNS 开关=${enabled} 时拒绝业务及复合策略引用，避免悬空规则集`, () => {
+    withPatchedSwitches({ ROUTE_VERTEX_AI_ENDPOINTS: enabled, ROUTE_CURSOR_REPOSITORY_INDEXING: enabled }, (patched) => {
+      const conflictInputs = [
+        { rules: [`RULE-SET,${REGEX_DNS_PROVIDER},Proxy`] },
+        { rules: [`rule-set, ${REGEX_DNS_PROVIDER} ,Proxy`] },
+        { rules: [`AND,((NETWORK,TCP),(RULE-SET,${REGEX_DNS_PROVIDER})),Proxy`] },
+        { "sub-rules": { custom: [`RULE-SET,${REGEX_DNS_PROVIDER},Proxy`] } },
+        ...[`rule-set:${REGEX_DNS_PROVIDER},User`, `rule-set:User, ${REGEX_DNS_PROVIDER}`,
+          `RULE-SET:${REGEX_DNS_PROVIDER}`].map((key) => ({ dns: { "nameserver-policy": { [key]: ["system"] } } })),
+        ...[`rule-set:${REGEX_DNS_PROVIDER}`, `RULE-SET:User, ${REGEX_DNS_PROVIDER}`].flatMap((entry) => [
+          { dns: { "fake-ip-filter": [entry] } },
+          { sniffer: { "skip-domain": [entry] } },
+          { sniffer: { "force-domain": [entry] } }
+        ])
+      ];
+      for (const extra of conflictInputs) {
+        for (const providers of [null, {
+          [REGEX_DNS_PROVIDER]: { type: "inline", behavior: "classical", payload: [...REGEX_DNS_PAYLOAD] }
+        }]) {
+          const input = { ...baselineProfile(), "rule-providers": providers, ...extra };
+          const snapshot = structuredClone(input);
+          assert.throws(() => quietMainWith(patched, input, "fixture"), (error) => {
+            assert.match(error.message, /专用 DNS 规则集/);
+            assert.doesNotMatch(error.message, /home-pass|airport-secret/);
+            return true;
+          });
+          assert.deepEqual(input, snapshot);
+        }
+      }
+      const input = baselineProfile();
+      const otherName = `${REGEX_DNS_PROVIDER}-User`;
+      input["rule-providers"] = { [otherName]: { type: "inline", behavior: "domain", payload: ["user.example.test"] } };
+      input.rules.unshift(`RULE-SET,${otherName},Proxy`);
+      input.dns["fake-ip-filter"] = [`rule-set:${otherName}`];
+      input.sniffer = {
+        "skip-domain": [`rule-set:${otherName}`],
+        "force-domain": [`rule-set:${otherName}`]
+      };
+      const output = quietMainWith(patched, input, "fixture");
+      assert.ok(output.rules.includes(`RULE-SET,${otherName},Proxy`));
+      assert.deepEqual(output["rule-providers"][otherName], input["rule-providers"][otherName]);
+      assert.ok(output.dns["fake-ip-filter"].includes(`rule-set:${otherName}`));
+      assert.deepEqual(output.sniffer["skip-domain"], input.sniffer["skip-domain"]);
+      assert.deepEqual(output.sniffer["force-domain"], input.sniffer["force-domain"]);
+    });
+  });
+}
 
 const CURSOR_CORE_HOSTS = [
   "api2.cursor.sh",
@@ -533,6 +785,46 @@ const CURSOR_NEGATIVE_HOSTS = [
 // ---------------------------------------------------------------------------
 // 基础配置与多 Profile
 // ---------------------------------------------------------------------------
+
+// 只验证无 CommonJS 的 JavaScript 调用合同，不模拟 Boa / QuickJS 或 GUI 覆写。
+for (const named of [false, true]) {
+  test(`无 Node 宿主 API 的 ${named ? "main(config, profileName)" : "main(config)"} 保持输出与错误合同`, () => {
+    const input = { ...baselineProfile(), "rule-providers": null };
+    const context = vm.createContext({ inputJson: JSON.stringify(input), console: undefined });
+    vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { timeout: 5000 });
+    assert.equal(vm.runInContext("typeof module + ',' + typeof require + ',' + typeof process", context),
+      "undefined,undefined,undefined");
+    vm.runInContext("var input = JSON.parse(inputJson)", context);
+    const call = named ? 'main(input, "宿主测试")' : "main(input)";
+    const actual = JSON.parse(vm.runInContext(`JSON.stringify(${call})`, context, { timeout: 5000 }));
+    assert.deepEqual(actual, quietMain(input, named ? "宿主测试" : undefined));
+    assert.equal(vm.runInContext("JSON.stringify(input)", context), JSON.stringify(input));
+    context.inputJson = JSON.stringify(actual);
+    vm.runInContext("input = JSON.parse(inputJson)", context);
+    assert.deepEqual(JSON.parse(vm.runInContext(`JSON.stringify(${call})`, context, { timeout: 5000 })), actual);
+    vm.runInContext('input["rule-providers"] = false', context);
+    const beforeFailure = vm.runInContext("JSON.stringify(input)", context);
+    assert.throws(() => vm.runInContext(call, context, { timeout: 5000 }), /rule-providers/);
+    assert.equal(vm.runInContext("JSON.stringify(input)", context), beforeFailure);
+  });
+}
+
+test("缺省 Profile 名不猜测专属上游，继续按通用候选解析", () => {
+  const name = "双客户端测试订阅";
+  const previous = overrides[name];
+  overrides[name] = ["专属出口"];
+  try {
+    const config = configFixture({
+      proxies: [airportNode("HK"), airportNode("JP")],
+      groups: [group("Proxy", ["HK"]), group("专属出口", ["JP"])]
+    });
+    assert.equal(findProxy(quietMain(config, name), HOME_PROXY_NAME)["dialer-proxy"], "专属出口");
+    assert.equal(findProxy(quietMain(config), HOME_PROXY_NAME)["dialer-proxy"], "Proxy");
+  } finally {
+    if (previous === undefined) delete overrides[name];
+    else overrides[name] = previous;
+  }
+});
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
   assert.equal(SCRIPT_VERSION, "5.11.0");
@@ -630,6 +922,77 @@ test("include-all 上游排除家宽节点，避免动态递归", () => {
   assert.match(upstream["exclude-filter"], /\^家宽-SOCKS5\$/);
   assert.match(upstream["exclude-filter"], /\^过期节点\$/);
 });
+
+for (const fallback of [HOME_PROXY_NAME, AI_GROUP]) {
+  for (const nested of [false, true]) {
+    test(`${nested ? "嵌套" : "顶层"}上游 empty-fallback 拒绝引用 ${fallback} 且不改输入`, () => {
+      const groupName = nested ? "Nested" : "Proxy";
+      const upstream = group(groupName, [], {
+        type: "url-test",
+        "include-all-proxies": true,
+        filter: "^NoAirportMatches$",
+        "empty-fallback": fallback
+      });
+      const config = configFixture({
+        proxies: [airportNode("HK")],
+        groups: nested ? [group("Proxy", [groupName]), upstream] : [upstream]
+      });
+      const snapshot = structuredClone(config);
+      assert.throws(() => quietMain(config, "fixture"), (error) => {
+        assert.match(error.message, /empty-fallback/);
+        assert.ok(error.message.includes(`“${groupName}”`));
+        assert.ok(error.message.includes(`“${fallback}”`));
+        assert.ok(error.message.includes(`路径：${nested ? "Proxy -> Nested" : "Proxy"}`));
+        assert.doesNotMatch(error.message, /home-pass|airport-secret|home\.example\.test/);
+        return true;
+      });
+      assert.deepEqual(config, snapshot);
+    });
+  }
+}
+
+test("上游普通节点 empty-fallback 与未知字段保持，重复执行不变", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("Proxy", [], {
+      type: "url-test",
+      "include-all-proxies": true,
+      filter: "^NoAirportMatches$",
+      "empty-fallback": "HK",
+      "custom-option": "user-owned"
+    })]
+  });
+  const snapshot = structuredClone(config);
+  const output = quietMain(config, "fixture");
+  const upstream = findGroup(output, "Proxy");
+  assert.equal(upstream["empty-fallback"], "HK");
+  assert.equal(upstream["custom-option"], "user-owned");
+  assert.deepEqual(config, snapshot);
+  assert.deepEqual(quietMain(output, "fixture"), output);
+});
+
+test("上游缺省 empty-fallback 时不新增字段", () => {
+  const config = configFixture({
+    proxies: [airportNode("HK")],
+    groups: [group("Proxy", ["HK"])]
+  });
+  const output = quietMain(config, "fixture");
+  assert.equal("empty-fallback" in findGroup(output, "Proxy"), false);
+});
+
+for (const fallback of [HOME_PROXY_NAME, AI_GROUP]) {
+  test(`不可达组的 empty-fallback=${fallback} 保持原样`, () => {
+    const unused = group("Unused", ["HK"], { "empty-fallback": fallback });
+    const config = configFixture({
+      proxies: [airportNode("HK")],
+      groups: [group("Proxy", ["HK"]), unused]
+    });
+    const snapshot = structuredClone(config);
+    const output = quietMain(config, "fixture");
+    assert.deepEqual(findGroup(output, "Unused"), unused);
+    assert.deepEqual(config, snapshot);
+  });
+}
 
 test("拒绝选定上游可达的代理组循环依赖", () => {
   const config = configFixture({
@@ -1006,6 +1369,7 @@ test("Antigravity language_server 的 daily cloudcode 端点走家宽", () => {
 
 test("Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走家宽", () => {
   const rules = buildInjectedRules();
+  assertAiRoute(rules, ["ssl.gstatic.com", "www.gstatic.com"]);
   assertNoAiRoute(rules, [
     "www.youtube.com",
     "i.ytimg.com",
@@ -1014,7 +1378,6 @@ test("Gemini 的 YouTube、Maps、广告、统计与通用 Google 资源不走�
     "maps.gstatic.com",
     "www.google.com",
     "www.googleapis.com",
-    "ssl.gstatic.com",
     "fonts.googleapis.com",
     "www.googletagmanager.com",
     "www.google-analytics.com",
@@ -1167,7 +1530,10 @@ test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走
   assert.equal(ROUTE_GROK_CORE, true);
   assert.equal(ROUTE_GROK_WEB_ASSETS, true);
   assert.deepEqual(GROK_SUFFIX_DOMAINS, ["grok.com", "api.x.ai"]);
-  assert.deepEqual(GROK_EXACT_DOMAINS, ["auth.x.ai"]);
+  assert.deepEqual(GROK_EXACT_DOMAINS, [
+    "auth.x.ai",
+    ...GROK_SIGNIN_EXACT_HOSTS
+  ]);
   assert.deepEqual(
     GROK_STRICT_EXACT_DOMAINS,
     ["grok.com", "cli-chat-proxy.grok.com", "code.grok.com"]
@@ -1180,27 +1546,97 @@ test("Grok Build 核心域默认走家宽，共享第三方与安装域名不走
     "code.grok.com",
     "assets.grok.com",
     "auth.x.ai",
+    ...GROK_SIGNIN_EXACT_HOSTS,
     "api.x.ai",
     "eu-west-1.api.x.ai",
     "mtls.api.x.ai"
   ]);
   assertNoAiRoute(rules, [
     "api.mixpanel.com",
-    "x.ai",
-    "www.x.ai",
+    ...GROK_SIGNIN_NEGATIVE_HOSTS,
     "storage.googleapis.com"
   ]);
   assert.equal(rules.includes(`DOMAIN-SUFFIX,grok.com,${AI_GROUP}`), true);
   assert.equal(rules.includes(`DOMAIN-SUFFIX,api.x.ai,${AI_GROUP}`), true);
   assert.equal(rules.includes(`DOMAIN,api.x.ai,${AI_GROUP}`), false);
+  for (const parent of ["x.ai", "spacex.ai", "grokusercontent.com", "grokipedia.com"]) {
+    assert.equal(rules.includes(`DOMAIN-SUFFIX,${parent},${AI_GROUP}`), false);
+  }
+  for (const host of ["auth.x.ai", ...GROK_SIGNIN_EXACT_HOSTS]) {
+    assert.equal(rules.includes(`DOMAIN,${host},${AI_GROUP}`), true);
+  }
 
   const policy = buildNameserverPolicy({});
   assert.deepEqual(policy["+.grok.com"], RESIDENTIAL_DOH);
-  assert.deepEqual(policy["auth.x.ai"], RESIDENTIAL_DOH);
   assert.deepEqual(policy["+.api.x.ai"], RESIDENTIAL_DOH);
+  for (const host of ["auth.x.ai", ...GROK_SIGNIN_EXACT_HOSTS]) {
+    assert.deepEqual(policy[host], RESIDENTIAL_DOH, host);
+  }
   assert.equal("api.x.ai" in policy, false);
   assert.equal("api.mixpanel.com" in policy, false);
-  assert.equal("x.ai" in policy, false);
+  for (const host of GROK_SIGNIN_NEGATIVE_HOSTS) {
+    assert.equal(host in policy, false, host);
+    assert.equal(`+.${host}` in policy, false, `+.${host}`);
+  }
+  for (const parent of ["x.ai", "spacex.ai", "grokusercontent.com", "grokipedia.com"]) {
+    assert.equal(`+.${parent}` in policy, false, `+.${parent}`);
+  }
+});
+
+for (const coreEnabled of [true, false]) {
+  for (const assetsEnabled of [true, false]) {
+    test(`Grok 登录核心路由与 DNS 随开关重建：core=${coreEnabled}, assets=${assetsEnabled}`, () => {
+      const customRule = `DOMAIN,custom-grok.example.test,${AI_GROUP}`;
+      const enabledOutput = quietMain(configFixture({
+        proxies: [airportNode("HK")],
+        groups: [group("Proxy", ["HK"])],
+        rules: [customRule, "MATCH,Proxy"]
+      }), "登录测试");
+      withPatchedSwitches({
+        ROUTE_GROK_CORE: coreEnabled,
+        ROUTE_GROK_WEB_ASSETS: assetsEnabled
+      }, (patched) => {
+        const snapshot = structuredClone(enabledOutput);
+        const output = quietMainWith(patched, enabledOutput, "登录测试");
+        const policy = output.dns["nameserver-policy"];
+        assert.deepEqual(enabledOutput, snapshot);
+        assert.equal(output.rules.includes(`DOMAIN,auth.grok.com,${AI_GROUP}`), coreEnabled);
+        assert.equal(ruleMatchesHost(output.rules, "auth.grok.com"), coreEnabled);
+        assert.equal("auth.grok.com" in policy, coreEnabled);
+        if (coreEnabled) assert.deepEqual(policy["auth.grok.com"], RESIDENTIAL_DOH);
+        assert.equal("+.auth.grok.com" in policy, false);
+        assert.equal("+.grok.com" in policy, coreEnabled && assetsEnabled);
+        assert.equal(
+          output.rules.includes(`DOMAIN-SUFFIX,grok.com,${AI_GROUP}`),
+          coreEnabled && assetsEnabled
+        );
+        for (const host of ["assets.grok.com", "connectors-gateway.grok.com", "child.auth.grok.com"]) {
+          assert.equal(ruleMatchesHost(output.rules, host), coreEnabled && assetsEnabled, host);
+          assert.equal(host in policy, false, host);
+        }
+        assert.equal(output.rules.includes(customRule), true);
+        assert.equal(new Set(output.rules).size, output.rules.length);
+        assert.deepEqual(quietMainWith(patched, output, "登录测试"), output);
+      });
+    });
+  }
+}
+
+test("routing.grok_core 关闭后清掉登录精确主机的规则和 DNS", () => {
+  withPatchedSwitches({ ROUTE_GROK_CORE: false }, (patched) => {
+    const rules = patched.buildInjectedRules();
+    const target = patched.constants.AI_GROUP;
+    const policy = patched.buildNameserverPolicy({});
+    for (const host of GROK_SIGNIN_EXACT_HOSTS) {
+      assert.equal(
+        ruleMatchesHost(rules, host, target),
+        false,
+        `grok_core=false 时不应走家宽：${host}`
+      );
+      assert.equal(rules.includes(`DOMAIN,${host},${target}`), false, host);
+      assert.equal(host in policy, false, host);
+    }
+  });
 });
 
 function leftoverAnyRouterConfig(target) {
@@ -1365,6 +1801,9 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "desktop.chat.openai.com",
     "ios.chat.openai.com",
     "tcr9i.chat.openai.com",
+    "auth.openai.com",
+    "auth0.openai.com",
+    "accounts.google.com",
     "antigravity.google",
     "daily-cloudcode-pa.googleapis.com"
   ]);
@@ -1377,14 +1816,12 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
     "sentry.io",
     "statsigapi.net",
     "js.stripe.com",
-    "auth.openai.com",
     "www.anthropic.com",
     "www.openai.com",
     "docs.anthropic.com",
     "support.anthropic.com",
     "status.anthropic.com",
     "telemetry.anthropic.com",
-    "accounts.google.com",
     "serviceusage.googleapis.com",
     "update.googleapis.com",
     "open-vsx.org"
@@ -1393,8 +1830,9 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
   assert.equal(rules.includes(`DOMAIN-SUFFIX,openai.com,${AI_GROUP}`), false);
 });
 
-test("OpenAI 第一方认证与网页资源开关默认关闭且可独立组合", () => {
-  assert.equal(ROUTE_OPENAI_AUTH, false);
+test("OpenAI 第一方认证默认开启，网页资源默认关闭，二者可独立组合", () => {
+  assert.equal(ROUTE_OPENAI_AUTH, true);
+  assert.equal(ROUTE_ANTIGRAVITY_GOOGLE_AUTH, true);
   assert.equal(ROUTE_OPENAI_WEB_ASSETS, false);
   assert.deepEqual(OPENAI_AUTH_SUFFIX_DOMAINS, ["auth.openai.com"]);
   assert.deepEqual(OPENAI_AUTH_EXACT_DOMAINS, ["auth0.openai.com"]);
@@ -1560,6 +1998,11 @@ test("开关关闭后清理当前托管规则，并保留退役或用户自写�
     `DOMAIN,auth0.openai.com,${AI_GROUP}`,
     `DOMAIN-SUFFIX,oaistatic.com,${AI_GROUP}`,
     `DOMAIN,auth.x.ai,${AI_GROUP}`,
+    `DOMAIN,auth.grok.com,${AI_GROUP}`,
+    `DOMAIN,accounts.x.ai,${AI_GROUP}`,
+    `DOMAIN,accounts.spacex.ai,${AI_GROUP}`,
+    `DOMAIN,auth.grokusercontent.com,${AI_GROUP}`,
+    `DOMAIN,auth.grokipedia.com,${AI_GROUP}`,
     `DOMAIN,api.x.ai,${AI_GROUP}`,
     `DOMAIN-SUFFIX,api2.cursor.sh,${AI_GROUP}`,
     `DOMAIN-SUFFIX,authenticate.cursor.sh,${AI_GROUP}`,
@@ -1785,8 +2228,13 @@ test("AI DNS policy 仅覆盖 AI 核心域名，排除相邻非核心域名", ()
     assert.deepEqual(policy[host], RESIDENTIAL_DOH);
   }
   assert.equal("+.chat.openai.com" in policy, false);
-  assert.equal("+.auth.openai.com" in policy, false);
-  assert.equal("auth0.openai.com" in policy, false);
+  assert.deepEqual(policy["+.auth.openai.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["auth0.openai.com"], RESIDENTIAL_DOH);
+  assert.equal("+.auth0.openai.com" in policy, false);
+  assert.deepEqual(policy["accounts.google.com"], RESIDENTIAL_DOH);
+  assert.equal("+.accounts.google.com" in policy, false);
+  assert.deepEqual(policy["ssl.gstatic.com"], RESIDENTIAL_DOH);
+  assert.deepEqual(policy["www.gstatic.com"], RESIDENTIAL_DOH);
   assert.equal("+.oaistatic.com" in policy, false);
 
   for (const key of [
@@ -2092,9 +2540,9 @@ test("最终注入规则不存在重复项", () => {
   assert.equal(new Set(rules).size, rules.length);
 });
 
-test("默认注入 45 条 AI-家宽 规则", () => {
+test("默认注入 60 条 AI-家宽 规则", () => {
   const rules = buildInjectedRules().filter((rule) => rule.includes(AI_GROUP));
-  assert.equal(rules.length, 45);
+  assert.equal(rules.length, 60);
 });
 
 test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", () => {
@@ -2107,6 +2555,10 @@ test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", ()
     "eu-west-1.api.x.ai",
     "mtls.api.x.ai",
     "api.x.ai",
+    "accounts.x.ai",
+    "accounts.spacex.ai",
+    "auth.grokusercontent.com",
+    "auth.grokipedia.com",
     "api2.cursor.sh",
     "authenticate.cursor.sh",
     "prod.authentication.cursor.sh",
@@ -2179,6 +2631,13 @@ test("grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话�
       true,
       "grok_web_assets=false 时 auth.x.ai 仍由 grok_core 覆盖"
     );
+    for (const host of GROK_SIGNIN_EXACT_HOSTS) {
+      assert.equal(
+        ruleMatchesHost(rules, host, target),
+        true,
+        `grok_web_assets=false 时 ${host} 仍由 grok_core 覆盖`
+      );
+    }
   });
 
   withPatchedGrokWebAssets(true, (patched) => {
@@ -2191,6 +2650,13 @@ test("grok_web_assets 关闭后排除 assets.grok.com，仍覆盖 CLI 与会话�
       true,
       "grok_web_assets=true 时 auth.x.ai 仍由 grok_core 覆盖"
     );
+    for (const host of GROK_SIGNIN_EXACT_HOSTS) {
+      assert.equal(
+        ruleMatchesHost(rules, host, target),
+        true,
+        `grok_web_assets=true 时 ${host} 仍由 grok_core 覆盖`
+      );
+    }
   });
 });
 

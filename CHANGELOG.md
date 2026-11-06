@@ -20,11 +20,13 @@
 
 ### 变更
 
+- `routing.grok_core` 额外注入四台精确登录主机：`accounts.x.ai`、`accounts.spacex.ai`、`auth.grokusercontent.com`、`auth.grokipedia.com`。来源是 xAI 登录域说明的最小主机名单。父域 `x.ai`、`spacex.ai`、`grokusercontent.com`、`grokipedia.com` 以及 `slack.hooks.x.ai` 仍不走家宽。默认注入的 `AI-家宽` 规则数量由 55 增至 59。
+- `routing.openai_auth` 与 `routing.antigravity_google_auth` 默认改为开启。前者覆盖 `auth.openai.com` 后缀和精确主机 `auth0.openai.com`；后者覆盖共享 Google 登录入口，包括 `accounts.google.com`、`ssl.gstatic.com` 和 `www.gstatic.com`。`routing.openai_web_assets` 与 `routing.openai_shared_dependencies` 仍默认关闭。已有本地 TOML 中显式写出的 `false` 不会被覆盖；缺失键按示例补成 `true`。默认注入的 `AI-家宽` 规则数量由 45 增至 55。
 - 更新日志统一改为简体中文，并精简扩展脚本文件头中与本文件重复的历史版本记录。
 - Claude、OpenAI、Antigravity 和 Cursor 的专用进程回退现在要求启用各自对应的核心开关。Anthropic IP 回退也要求启用 `routing.anthropic_core`。认证、辅助、资产和全局捕获开关仍保持独立；核心流量被禁用后会回到原始 Profile 规则，而不是被强制送往机场出口。
 - 现有的 `AI-家宽` 组只接受规范的单一家宽成员，以及 `name`、`type`、`proxies`、`disable-udp`、`icon` 和 `hidden` 字段。额外的提供方来源、过滤器和替代选择字段会被拒绝，且不会修改输入；输出仅保留受支持的展示元数据。配置被拒绝并不保证运行时流量一定会被阻断，因为脚本出错后，宿主可能保留其原始配置。
-- 记录了现有 DNS 策略针对区域 Vertex 和可选 Cursor 索引正则路由的例外情况。未引入宽泛的域名后缀或新的解析器提供方；实际 DNS/UDP 路径和流量节省仍需运行时证据验证。
-- ResiWatch 工具链：`typescript-eslint` 8.69.0、`@types/react-dom` 19.2.5，以及兼容范围内的 `cargo update`（`hyper` 1.11.1、`tauri-plugin-dialog` 2.7.3、`tauri-plugin-notification` 2.4.0）。GitHub Actions 的 `checkout` 和 `setup-node` 升级至 v7。破坏性升级包括：`lucide-react` 1.39.0、`sha2` 0.11、`rand` 0.10、`tokio-tungstenite` 0.30、`eslint-plugin-react-hooks` 7.1.1（扁平配置 `recommended`；`set-state-in-effect` 和 `refs` 仍关闭）、TypeScript 6.0.3、Vitest 4.1.11、Vite 8.2.2，以及 `@vitejs/plugin-react` 5.x 和作为可选压缩对等依赖的 `esbuild` 0.28。根目录的 `package.json` 仍保持零第三方依赖，且 `engines.node >=18`。本轮仍不引入 ESLint 10、TypeScript 7 和 plugin-react 6。
+- 为既有区域 Vertex 与可选 Cursor 索引正则补齐住宅 DNS 策略。专用本地 `inline/classical` 规则集与业务正则使用同一开关和模式，不扩大 Google/Cursor 后缀，不引入远程规则源；关闭开关会清理托管规则集与策略。同名非托管配置或用户规则引用保留名称时拒绝生成，且不修改输入。隔离内核验证不替代真实住宅服务商、公网 DoH 和 UDP 路径验证。
+- ResiWatch 工具链：`typescript-eslint` 8.72.1、`@types/react-dom` 19.2.5，以及兼容范围内的 `cargo update`（`hyper` 1.11.1、`tauri-plugin-dialog` 2.7.3、`tauri-plugin-notification` 2.4.0）。GitHub Actions 的 `checkout` 和 `setup-node` 升级至 v7。破坏性升级包括：`lucide-react` 1.39.0、`sha2` 0.11、`rand` 0.10、`tokio-tungstenite` 0.30、`eslint-plugin-react-hooks` 7.1.1（扁平配置 `recommended`；`set-state-in-effect` 和 `refs` 仍关闭）、TypeScript 6.0.3、Vitest 4.1.12、Vite 8.3.6，以及 `@vitejs/plugin-react` 5.x 和作为可选压缩对等依赖的 `esbuild` 0.28。根目录的 `package.json` 仍保持零第三方依赖，且 `engines.node >=18`。本轮仍不引入 ESLint 10、TypeScript 7 和 plugin-react 6。
 - 即使 `routing.ai_process_fallback` 为 `false`，扩展脚本也会写入顶层 `find-process-mode: always`。除非该开关已启用，否则仍不会注入 `PROCESS-NAME` / `PROCESS-PATH` 规则。Clash Verge 中嵌套在 `profile:` 下的值无法传递到内核。
 - 使用 React + Tailwind 桌面 UI 替换了原生 TypeScript + Catppuccin 壳。导航包含十个路由。概览、实时连接以及主机/规则/链路/进程页面已随新壳提供。已移除 `src/main.ts` 和 `src/styles.css`。
 - 家宽分类集中在一个模块中，并提供两个具名函数。统计使用目标的精确匹配。实时“仅家宽”仍会匹配已配置的目标，或名称中包含“家宽”的节点。
@@ -36,6 +38,10 @@
 
 ### 修复
 
+- 将 docs 与 ResiWatch 前端锁文件里的 high 审计项升到已修复版本：Vite 8.3.6、`source-map-js` 1.2.2、zod 4.6.7。Vitest 4.1.12 与 `typescript-eslint` 8.72.1 随非破坏性 `npm audit fix` 一起更新。未使用 `--force`，`minimatch` 的 moderate 项仍在，不阻断 `--audit-level=high`。
+- 将官方最小登录名单中的 `auth.grok.com` 加入 `routing.grok_core` 精确主机，关闭 `routing.grok_web_assets` 后仍保留其规则和住宅 DNS；关闭核心开关会清理旧规则与 DNS。默认 `AI-家宽` 规则数由 59 增至 60，默认域名覆盖范围不变。精确匹配以官方业务名单和最小流量原则为依据，TLS 通配证书不再作为路由范围依据。
+- 兼容 FlClash 0.9.1 将缺省 `rule-providers` 传为 `null` 的输入，仅在工作副本中按缺省处理，避免生成配置时报“rule-providers 必须是对象”。其它非法类型、同名规则集所有权和冲突引用校验仍保留，原输入不变。
+- 拒绝可达上游组的 `empty-fallback` 引用 `家宽-SOCKS5` 或 `AI-家宽`，避免空组回退重新进入住宅链路。错误包含组名、字段和可达路径，且不改输入；普通节点回退、缺省字段和不可达组保持原行为。脚本失败不保证宿主阻断流量。
 - 扩展脚本不再写入 Clash Verge Rev 设置页管理的 `tun` 各键与顶层 `ipv6`。Clash Verge Rev v2.5.5 起，改写这些字段会弹出「Extensions wrote tun.dns-hijack, which Settings manages, so those values were discarded」提示，且写入被还原。脚本改为只读检查：TUN 已启用且 `dns-hijack` 缺少 `any:53` 或 `tcp://any:53`、开启 `runtime.enable_tun_strict_route` 但 `strict-route` 未开启、顶层 `ipv6` 为 `true` 时，各输出一条 `warn`，指向对应设置页。删除每次运行都输出的「新版会还原 tun/ipv6」`info` 提示。`runtime.harden_existing_tun_dns_hijack` 与 `runtime.enable_tun_strict_route` 保留，语义改为「检查并告警」。文档补充：启用 DNS 覆盖时，`dns_config.yaml` 中所有非空 `dns.*` 字段都以设置页为准。
 - 不含 `host:port` 的控制器地址会返回 `invalid_address`。免打扰时段会阻止 `Activated`，而不只是抑制 Toast。恢复壳中的 `create_backup` 会返回 `recovery_only`，且不会复制实时数据库。
 - `just tinstall` 使用 NSIS `/D=` 安装到 `%LOCALAPPDATA%\ResiWatch`。不会复用之前位于 `%TEMP%` 下或旧中文产品文件夹中的安装路径；数据会迁移到新的 `data\` 目录。

@@ -62,6 +62,100 @@ Tests cover extra-key rejection, canonical reruns, display metadata and unchange
 input. A thrown script can make the host reuse its original configuration; this
 ownership check does not enforce runtime traffic blocking.
 
+### Reachable upstream empty fallback
+
+`hardenReachableUpstreamGraph(config, upstreamName, outboundIndex)` rejects
+`empty-fallback` equal to `家宽-SOCKS5` or `AI-家宽` on each visited group.
+Check after adding the group to the DFS path and before editing that group.
+An include-all exclusion does not remove an explicit fallback reference.
+The error must name the group, field and reachable path without credentials;
+`main` must leave its input unchanged. Never delete the field or substitute
+DIRECT/COMPATIBLE. Ordinary proxy fallbacks, absent fields and unreachable
+groups retain their behavior. Test both top-level and nested rejection,
+ordinary fallback preservation, unchanged input and repeated execution.
+Host fallback after a script error remains outside this validation contract.
+
+## Scenario: Regex residential DNS
+
+### 1. Scope / Trigger
+
+Existing Vertex and Cursor indexing regexes need residential DNS without wider
+Google or Cursor suffixes. Reuse `activeDomainRegexes()` and its existing gates.
+FlClash 0.9.1 can serialize an absent provider map as JSON `null`; treat only
+that top-level empty value as absent before applying ownership validation.
+
+### 2. Signatures
+
+`main(config, profileName)` returns a cloned configuration with a reserved
+`rule-providers["AI-家宽-DNS-REGEX"]` and
+`dns["nameserver-policy"]["rule-set:AI-家宽-DNS-REGEX"]` when regexes are active.
+`buildNameserverPolicy(existingPolicy)` exposes the policy keys for tests;
+validate provider references through the complete `main` output.
+The host may call `main(config)` without a profile name. In
+`cloneConfigForEdit(config)`, delete `working["rule-providers"]` only when it
+is strictly `null`; never delete or rewrite the corresponding input field.
+
+### 3. Contracts
+
+The provider is local `type: inline`, `behavior: classical`. Its payload contains
+only `DOMAIN-REGEX,<pattern>` entries derived from active patterns. The DNS
+policy uses `RESIDENTIAL_DOH`. No remote URL, subscription, new switch or business
+rule is added. Insert the policy before broad geosite entries. Keep private,
+bootstrap, non-AI and extra-site DNS exemptions unchanged.
+
+Recognize previous managed providers from the full known pattern catalog,
+independent of current switches. Require the canonical fields and a unique,
+nonempty known payload. Clone the provider map before changes; preserve unknown
+providers. When all regexes are off, remove the managed provider and policy.
+Do not leave an empty provider map solely for managed output.
+
+### 4. Validation & Error Matrix
+
+After the top-level null normalization, any other non-object provider map,
+a noncanonical same-name provider, or a user rule/other policy reference to the
+reserved provider must fail without changing input. Arrays, strings (including
+empty), numbers (including zero), and booleans remain invalid. A null value
+under the reserved provider name is still an ownership conflict, not an empty
+map. Normalization must not skip any ownership or reference validation.
+Check nested logical rules, sub-rules, multi-provider policy keys,
+`dns.fake-ip-filter`, `sniffer.skip-domain` and `sniffer.force-domain` for the
+reserved name. The canonical managed DNS policy reference is allowed on rerun.
+Do not delete a provider while leaving a user reference unresolved.
+
+### 5. Good / Base / Bad Cases
+
+Base: Vertex on and indexing off produce only the Vertex pattern. Good: each
+switch controls its own pattern through on/off/on and repeated `main` calls.
+Top-level null and absent maps produce deeply equal output in all four switch
+combinations. With both regexes off, null leaves no provider key; an explicitly
+empty object retains its existing preservation behavior.
+Bad: use `+.googleapis.com`, `+.cursor.sh`, a raw regex key, or a wildcard inside
+a DNS label as a substitute for the provider.
+
+### 6. Tests Required
+
+Test four switch combinations, positive and negative hosts, canonical provider
+ownership, user-reference rejection, stale policy cleanup with unmanaged-policy
+preservation on/off, unchanged input and renderer output. Preserve the historical
+v5.11 fixture; declare only the approved DNS delta explicitly.
+Cover null through single-argument `main`, full-output equivalence to absent
+input, original proxy/group preservation, unchanged success/failure inputs,
+idempotence, and null plus conflicting references. Keep nested-null ownership
+and falsy-type rejection cases. Probe generated scripts with null input in a
+separate process, preserving template and post-render TOML contents. These
+checks establish host-input compatibility, not native application acceptance.
+Test a real Mihomo process with fresh DNS queries and observed proxy hops. Loopback fixtures
+prove matching and chain selection, not public DoH TLS or a supplier's egress.
+
+### 7. Wrong vs Correct
+
+Wrong: infer real DNS routing from a fake-IP response or generated object alone.
+Correct: record the tested core version and actual resolver/proxy observations;
+keep untested production DNS/UDP behavior explicit.
+Wrong: use `value || {}` or loosen `isPlainObject` globally to accept null.
+Correct: normalize strictly top-level null in the working clone and retain
+all type, ownership, and reference guards.
+
 ## Idempotence
 
 Running `main` twice on the same object must not add duplicate proxies, groups,

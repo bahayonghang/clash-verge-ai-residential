@@ -1,0 +1,5 @@
+{"file":".trellis/spec/frontend/index.md","reason":"根扩展与 renderer 的包边界"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"新 provider 所有权与开关清理"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"旧 DNS 例外与固定基线不可伪造"}
+{"file":".trellis/tasks/10-04-one-exit-routing-optimization/research/current-routing-evidence.md","reason":"F1 的代码、测试与历史范围"}
+{"file":".trellis/tasks/10-04-one-exit-routing-optimization/research/external-evidence.md","reason":"inline/classical DNS 来源和真实内核 gate"}

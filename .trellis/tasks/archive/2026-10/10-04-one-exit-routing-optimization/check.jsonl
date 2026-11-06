@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"完整产品与文档 gate、业务投影边界"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"输入不变、托管与未知配置保留"}
+{"file":".trellis/tasks/10-04-one-exit-routing-optimization/research/current-routing-evidence.md","reason":"父级集成需求及验证边界"}
+{"file":".trellis/tasks/10-04-one-exit-routing-optimization/research/external-evidence.md","reason":"官方 DNS 能力与未验证事项"}

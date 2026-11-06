@@ -66,7 +66,9 @@ test -e clash-verge-ai-residential.local.toml || \
 
 三个新增核心开关及专属兜底门控属于 **Unreleased**，默认都为 `true`，不会自动减少家宽用量。关闭核心开关会撤销该类别的脚本托管域名/DNS和专属兜底，剩余流量交回原 Profile；原规则可能选择机场、DIRECT、其他组或用户自定义家宽规则，不能保证一定走机场。认证、辅助、静态资源和全局实时/DNS开关继续独立。
 
-Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`、`gemini_api_core`、`vertex_ai_endpoints`、`antigravity_core`；相关可选认证、项目和更新开关另行控制。已知正则域名的 DNS 例外见 [DNS 与泄漏模型](dns-and-leak-model.md)。
+Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`、`gemini_api_core`、`vertex_ai_endpoints`、`antigravity_core`；相关可选认证、项目和更新开关另行控制。正则域名的住宅 DNS 策略及内核要求见 [DNS 与泄漏模型](dns-and-leak-model.md)。
+
+`vertex_ai_endpoints` 与 `cursor_repository_indexing` 同时控制各自正则的业务路由和住宅 DNS，默认值仍为 `true` / `false`，无需新增 TOML 字段。生成脚本使用专用本地规则集 `AI-家宽-DNS-REGEX`；两者全关时清理该规则集与 DNS 策略，自定义规则不得引用该保留名称。
 
 ### 路由范围
 
@@ -77,18 +79,18 @@ Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`�
 | `routing.antigravity_core` | `ROUTE_ANTIGRAVITY_CORE` | `true` | 路由 Antigravity 产品域及 Code Assist 核心主机。 | 关闭时同时撤销 Antigravity 进程兜底；Vertex、认证、项目 API、更新与遥测开关独立。 |
 | `routing.openai_shared_dependencies` | `ROUTE_OPENAI_SHARED_DEPENDENCIES` | `false` | 路由 OpenAI 的 WorkOS、客服、遥测、支付等共享依赖。 | 会扩大到非模型流量。 |
 | `routing.openai_core` | `ROUTE_OPENAI_CORE` | `true` | 路由 ChatGPT 产品、OpenAI 模型 API 和用户上传/生成内容。 | 关闭时撤销 OpenAI 专属进程兜底，相关流量交回原 Profile。 |
-| `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `false` | 路由第一方登录主机 `auth.openai.com`（含其子域）和精确主机 `auth0.openai.com`。 | 与核心流量、网页资源和共享第三方依赖相互独立；不会匹配整个 `openai.com`。 |
+| `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `true` | 路由第一方登录主机 `auth.openai.com`（含其子域）和精确主机 `auth0.openai.com`。 | 与核心流量、网页资源和共享第三方依赖相互独立；不会匹配整个 `openai.com`。 |
 | `routing.openai_web_assets` | `ROUTE_OPENAI_WEB_ASSETS` | `false` | 路由 `oaistatic.com` 网页静态资源后缀。 | 与第一方登录及共享第三方依赖独立；仅在页面资源确需同出口时开启。 |
 | `routing.claude_shared_dependencies` | `ROUTE_CLAUDE_SHARED_DEPENDENCIES` | `false` | 路由 Claude 的统计、客服、风控等共享依赖。 | 会扩大到非模型流量。 |
-| `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `false` | 路由 Antigravity 使用的共享 Google 登录入口。 | 影响其他 Google 产品的认证流量。 |
+| `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `true` | 路由 Antigravity 使用的共享 Google 登录入口。 | 影响其他 Google 产品的认证流量。 |
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | 路由 Service Usage、Resource Manager、IAM、API Hub 等项目 API。 | 属于项目配置而非推理。 |
 | `routing.antigravity_update_and_telemetry` | `ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY` | `false` | 路由 Antigravity 更新、扩展市场和遥测。 | 会扩大到更新和统计流量。 |
 | `routing.gemini_web_core` | `ROUTE_GEMINI_WEB_CORE` | `true` | 路由 Gemini Web 和 Google AI Studio 产品入口。 | 无。 |
 | `routing.vertex_ai_endpoints` | `ROUTE_VERTEX_AI_ENDPOINTS` | `true` | 路由四条 Vertex AI / Agent Platform 规则：`aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com`，以及区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$`。 | 不使用 Antigravity 企业推理或其他 Vertex AI 流量时可改为 `false`，这些主机交回原 Profile。 |
 | `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `true` | 路由 Cursor AI API、Tab、Agent、授权/SSO 门户、Cloud Agent VM 和产品专属认证。 | 不需要 Cursor 核心流量走家宽时可显式改为 `false`。`api2.cursor.sh` 始终由本开关控制。 |
 | `routing.cursor_repository_indexing` | `ROUTE_CURSOR_REPOSITORY_INDEXING` | `false` | 路由 Cursor 仓库索引主机 `repo[0-9]+.cursor.sh`。 | 与 `routing.cursor_core` 独立。默认回落原 Profile；缺字段按 `false` 补全；显式 `true` 恢复 v5.8.1 的 repo 家宽路由。官方与本机 2026-08-17 日志共同确认的精确主机是 `repo42.cursor.sh`；数字通配是项目前向兼容策略，不是 Cursor 官方通配合同。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`，域名规则无法在保留多数 API 的同时隔离该路径，因此不能宣称已排除全部仓库上传。 |
-| `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | 路由 Grok Build（xAI grok CLI）推理 API（`cli-chat-proxy.grok.com`）、Grok 产品域、`auth.x.ai` 与 `api.x.ai`。 | 不需要 Grok 走家宽时可显式改为 `false`。 |
-| `routing.grok_web_assets` | `ROUTE_GROK_WEB_ASSETS` | `true` | 为 `true` 时注入 `DOMAIN-SUFFIX,grok.com`；为 `false` 时把该后缀换成精确主机 `grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`。`DOMAIN-SUFFIX,api.x.ai` 仍由 `routing.grok_core` 控制。 | 依赖 `routing.grok_core = true`。`false` 时 `assets.grok.com` 交回原 Profile。 |
+| `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | 路由 Grok Build（xAI grok CLI）推理 API（`cli-chat-proxy.grok.com`）、Grok 产品域、`api.x.ai`，以及精确登录主机 `auth.x.ai`、`auth.grok.com`、`accounts.x.ai`、`accounts.spacex.ai`、`auth.grokusercontent.com`、`auth.grokipedia.com`。这些精确主机由本开关注入。父域 `x.ai`、`spacex.ai`、`grokusercontent.com`、`grokipedia.com` 不走家宽。 | 不需要 Grok 走家宽时可显式改为 `false`。 |
+| `routing.grok_web_assets` | `ROUTE_GROK_WEB_ASSETS` | `true` | 为 `true` 时注入 `DOMAIN-SUFFIX,grok.com`；为 `false` 时把该后缀换成精确主机 `grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`。`DOMAIN-SUFFIX,api.x.ai` 与上述全部登录精确主机仍由 `routing.grok_core` 控制。 | 依赖 `routing.grok_core = true`。`false` 时 `assets.grok.com` 交回原 Profile。 |
 | `routing.extra` | `ROUTE_EXTRA` | `false` | extra 分类总开关。关闭时所有 extra 站点都不注入规则或 DNS。 | 打开后仍需各站点开关；当前站点见 `routing.extra_anyrouter`。 |
 | `routing.extra_anyrouter` | `ROUTE_EXTRA_ANYROUTER` | `true` | 在 extra 分类打开时，把 AnyRouter（`anyrouter.top` 及其子域）路由到 `AI-家宽`；不写住宅 DNS。 | 仅在 `routing.extra = true` 时生效。官方入口是 `https://anyrouter.top` 与 `/console`。`www` 的 ESA 530 不是本仓库能修的。 |
 | `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | 增加 Cursor 进程级兜底规则。 | 仅在 `routing.ai_process_fallback = true` 且 `routing.cursor_core = true` 时生效，仍会捕获非 AI 请求。 |
@@ -131,13 +133,17 @@ node scripts/sync-local-config.js
 
 ![Clash Verge Rev 的 Profiles 页面与 Global Extend Script 入口](../assets/clash-verge-rev-global-extend-script.png)
 
+在 FlClash v0.9.2 中，在脚本列表创建脚本并粘贴同一份**生成的本地脚本**，然后打开目标 Profile 的扩展设置，选择 **Script** 模式并选中该脚本，保存后重新应用 Profile。每个需要增强的 Profile 都要绑定；只创建脚本不会使它自动作用于全部订阅。此入口适用于普通文件/订阅 Profile；该版本的 Custom Profile 构建路径不执行这里的扩展脚本。
+
+两客户端均无需为脚本增加 Node.js 包装或手动调用 `main`。宿主字段覆盖顺序及生效检查见 [双客户端接入](configuration.md#dual-client-setup)。FlClash 不传入 Profile 名称，按名称定制上游的限制见 [多 Profile 上游解析](multi-profile.md)。
+
 `just sync` 仍作为兼容别名保留，但新文档和自动生成文件均使用 `just render-local`。
 
 ### 从 Windows 复制到 Ubuntu
 
-可以把 Windows 上由 `just render-local` 生成的 `clash-verge-ai-residential.local.js` 直接复制到 Ubuntu 的 Clash Verge Rev Global Extend Script；脚本本身不包含 Windows 路径、Shell 命令或操作系统分支。生成的 `.local.js` 已嵌入 TOML 中的住宅代理地址与认证凭据，本身也是敏感文件；应通过受信通道传输、限制读权限，且不得提交到仓库、上传到公开网盘或在日志中展示。复制已渲染的 `.local.js` 后无需也不应再复制本地 TOML，但这并不降低 `.local.js` 自身的凭据保护要求。
+可以把 Windows 上由 `just render-local` 生成的 `clash-verge-ai-residential.local.js` 复制到 Ubuntu，按上述 Clash Verge Rev 或 FlClash 的入口接入；脚本本身不包含 Windows 路径、Shell 命令或操作系统分支。生成的 `.local.js` 已嵌入 TOML 中的住宅代理地址与认证凭据，本身也是敏感文件；应通过受信通道传输、限制读权限，且不得提交到仓库、上传到公开网盘或在日志中展示。复制已渲染的 `.local.js` 后无需也不应再复制本地 TOML，但这并不降低 `.local.js` 自身的凭据保护要求。
 
-Ubuntu 的 Profile 仍必须能唯一解析脚本中的 `dialer-proxy` 名称，并提供可达的机场节点、UDP 能力和兼容的 Clash Verge/Mihomo 脚本环境。仓库的 Windows/Ubuntu Node 测试只验证语法、渲染与规则合同；复制后是否能在 Ubuntu 宿主执行、以及登录与模型请求是否命中同一出口，必须用脱敏 Connections 记录人工确认，目前为 **UNVERIFIED**。
+Ubuntu 的 Profile 仍必须能唯一解析脚本中的 `dialer-proxy` 名称，并提供可达的机场节点、UDP 能力和兼容的客户端/核心。Node 测试只验证语法、渲染与规则合同，不等于 Boa/QuickJS 宿主实测。复制后须确认脚本绑定、最终 DNS 和规则仍在，并用脱敏 Connections 验证登录与模型请求的出口；真实业务运行验收仍为 **UNVERIFIED**。
 
 同步会在写入前拒绝以下配置：未知或重复的表/键、非布尔开关、缺少代理字段、无效 TOML 字符串、非 SOCKS5 类型、端口超出范围、空上游名称，或 `name` 与模板保留名称不一致。每个开关必须在公开模板中恰好匹配一个布尔常量声明，否则也会在写入前失败。错误会直接显示字段或行号，且不会留下半成品；修正 TOML 后重新运行即可。
 
@@ -155,4 +161,4 @@ Ubuntu 的 Profile 仍必须能唯一解析脚本中的 `dialer-proxy` 名称，
 just ci
 ```
 
-`just ci` 包含监控端 `monitor-check` 和根目录 `npm run ci`。它不会读取或上传本地 TOML；本地生成脚本也会被模板安全扫描排除，以免凭据干扰公开仓库检查。完成后仍应在 Clash Verge Rev 中确认 `家宽-SOCKS5.dialer-proxy` 能解析到实际机场组，并从 Connections 验证 AI 请求命中 `AI-家宽`。
+`just ci` 包含监控端 `monitor-check` 和根目录 `npm run ci`。它不会读取或上传本地 TOML；本地生成脚本也会被模板安全扫描排除，以免凭据干扰公开仓库检查。完成后仍应在所用客户端中确认 `家宽-SOCKS5.dialer-proxy` 能解析到实际机场组，并从 Connections 验证 AI 请求命中 `AI-家宽`。

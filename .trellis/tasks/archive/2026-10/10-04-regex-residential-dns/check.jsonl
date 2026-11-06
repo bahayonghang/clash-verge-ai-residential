@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"正负域名、renderer、默认投影与完整 gate"}
+{"file":".trellis/spec/frontend/state-management.md","reason":"provider 冲突、幂等、输入及用户配置所有权"}
+{"file":".trellis/tasks/10-04-one-exit-routing-optimization/research/current-routing-evidence.md","reason":"F1 只证明配置差异，不证明真实泄漏"}
+{"file":".trellis/tasks/10-04-one-exit-routing-optimization/research/external-evidence.md","reason":"禁止裸正则/标签内星号与宽后缀替代"}

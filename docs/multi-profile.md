@@ -1,6 +1,6 @@
 # 多 Profile 上游解析
 
-Mihomo 的 `dialer-proxy` 只接受一个名字。脚本在运行时为当前 Clash Verge Rev Profile 解析出一个合法名称。
+Mihomo 的 `dialer-proxy` 只接受一个名字。脚本在运行时为当前 Profile 解析出一个合法名称。
 
 ## 解析顺序
 
@@ -11,6 +11,8 @@ Mihomo 的 `dialer-proxy` 只接受一个名字。脚本在运行时为当前 Cl
 5. 启用 `ALLOW_HEURISTIC_UPSTREAM_FALLBACK` 时，按组名语义猜测。该开关默认关闭。
 
 第一个存在且结构合法的代理或组会被选中。解析从不把数组写进 `dialer-proxy`，也从不静默回落到 `DIRECT`。
+
+Clash Verge Rev v2.5.8 / v2.5.10 调用 `main(config, profileName)`；FlClash v0.9.2 调用 `main(config)`，不提供 Profile 名称。因此 FlClash 会跳过按名称匹配的第 1 项，继续检查模板、通用候选与最后一条规则，不会猜测订阅名称。需要跨客户端复用时，应使用两个 Profile 都存在的明确上游名，或核对通用候选/最后 `MATCH` 的解析结果；不能依赖 `PROFILE_UPSTREAM_OVERRIDES` 在 FlClash 生效。来源与版本边界见 [双客户端接入](configuration.md#dual-client-setup)。
 
 上游名可以含空格和 emoji。不能含 `#` 或 `&`：Mihomo 把它们当作绑定到上游的 DoH URL 分隔符，脚本在构建 DNS 之前会拒绝这样的名字。
 
@@ -28,6 +30,8 @@ Mihomo 的 `dialer-proxy` 只接受一个名字。脚本在运行时为当前 Cl
 ## 运行时限制
 
 静态配置只能证明选择器存在，不能可靠读出它当前选中的项。不要把 `DIRECT`、`REJECT`、`家宽-SOCKS5` 或 `AI-家宽` 放进当作 `dialer-proxy` 的选择器里。
+
+切换 Profile、刷新订阅或重启后，应复查脚本绑定、解析出的上游及实际链路；四个 Windows/Ubuntu 客户端组合分别记录，见 [双客户端运行验收](client-validation.md)。
 
 ## 诊断
 

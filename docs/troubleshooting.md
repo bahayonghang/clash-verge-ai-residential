@@ -1,5 +1,7 @@
 # 故障排查
 
+先按 [双客户端运行验收](client-validation.md) 区分脚本输出、核心加载和真实请求；需要撤销已授权的配置改动时，使用其中的 [离线恢复步骤](client-validation.md#recovery)。
+
 ## 找不到可用上游
 
 异常信息通常提到 `dialer-proxy`、Profile 候选或 `MATCH/FINAL`。
@@ -12,6 +14,8 @@
 - Profile 是否有最后的 `MATCH` 或 `FINAL` 规则；
 - 候选是否为 `DIRECT`、`REJECT`、`AI-家宽` 或 `家宽-SOCKS5`。
 
+FlClash 不传入 Profile 名称，`PROFILE_UPSTREAM_OVERRIDES` 不会按订阅名生效；请检查模板上游、通用候选和最后一条规则，见 [多 Profile 上游解析](multi-profile.md)。
+
 ## 保留名冲突
 
 `AI-家宽` 和 `家宽-SOCKS5` 由脚本托管。Profile 里无关的代理或组若已占用这两个名字，请改名。
@@ -19,6 +23,10 @@
 ## 代理组递归错误
 
 选中的上游图最终引用了自己、`AI-家宽` 或 `家宽-SOCKS5`。从订阅覆盖里去掉该引用，或改选干净的顶层机场组。脚本会给 `include-all` 组加排除过滤，但不能安全修复任意组图。
+
+若错误包含 `empty-fallback`，检查错误路径中的上游组。过滤后无成员时，该组不能回退到 `家宽-SOCKS5`；`AI-家宽` 也不能作为上游回退。请将该字段改为实际机场节点名，或改选有效上游。脚本不会自动删除字段或改成 `DIRECT` / `COMPATIBLE`。
+
+修正后确认 Profile 重新加载成功。Clash Verge Rev 在脚本抛错后可能继续使用原 Profile，不能把异常当作流量阻断。
 
 ## 占位凭据错误
 
@@ -84,7 +92,7 @@ DOMAIN,marketplace.cursorapi.com,AI-家宽
 
 ## Script 日志提示 TUN DNS 劫持或 IPv6 需在设置页修改
 
-Clash Verge Rev 会在全局脚本运行后，把设置页管理的字段（`tun`、顶层 `ipv6`、模式、端口等）恢复为应用设置值。v2.5.5 起，扩展改写这些字段时应用会弹出「Extensions wrote …, which Settings manages, so those values were discarded」提示。
+已核对的 Clash Verge Rev v2.5.8 / v2.5.10 会在全局与 Profile 扩展运行后，把设置页管理的字段（`tun`、顶层 `ipv6`、模式、端口等）恢复为应用设置值，并可能提示「Extensions wrote …, which Settings manages, so those values were discarded」。
 
 脚本因此不写 `tun` 与顶层 `ipv6`，只在以下情况输出 `warn`：
 
@@ -92,7 +100,15 @@ Clash Verge Rev 会在全局脚本运行后，把设置页管理的字段（`tun
 - 开启了 `runtime.enable_tun_strict_route`，TUN 已启用但 `strict-route` 未开启：在 TUN 设置中开启严格路由。
 - 顶层 `ipv6` 为 `true`：在 Verge 设置页关闭 IPv6。
 
-条目齐全后这些 `warn` 不再出现。DNS 覆盖关闭时，脚本重建的 DNS 服务器、`nameserver-policy` 和 fake-ip 字段不受影响。DNS 覆盖开启时，`dns_config.yaml` 中非空的 `dns.*` 字段全部以设置页为准，脚本对这些字段的改写会被丢弃，应用可能弹出 `dns.*` 提示。
+条目齐全后这些 `warn` 不再出现。上述 Verge 版本在未启用应用 DNS 覆盖、且后续扩展未改写 DNS 时，保留脚本重建的 DNS。启用覆盖时，`dns_config.yaml` 中非空的 `dns.*` 字段会在脚本后恢复；非空 `nameserver-policy` 会替换整张策略表，应用可能弹出 `dns.*` 提示。详细顺序及与官网文字的差异见 [双客户端接入](configuration.md#dual-client-setup)。
+
+## FlClash 脚本保存成功，但 DNS 或进程查找仍不符
+
+先确认当前普通 Profile 已选择 Script 模式并绑定正确脚本。FlClash v0.9.2 在脚本之后生成最终配置：应用所选 DNS 覆盖可以替换整个 `nameserver-policy`，`appendSystemDns` 还会向 `nameserver` 追加 `system://`。查找进程的应用设置也会覆盖脚本写入的 `find-process-mode`；需要始终查找时，在应用设置选择 `always`，无需打开会扩大流量范围的进程路由兜底。
+
+预览最终配置，检查住宅 DNS 策略、规则集引用、`tun.dns-hijack`、顶层及 DNS 的 IPv6 字段，再确认核心加载成功。脚本中的 `warn` 发生在应用后续覆盖之前，没有警告不能证明最终设置正确。`system://` 表示使用系统解析器，不证明请求一定发往 LAN DNS；该版本另有 macOS 专用的系统 DNS 协调逻辑，不能套用到 Windows/Ubuntu。
+
+不要把 `FlClashCore` 当成独立 Mihomo 命令行程序执行 `-v` / `-h` / `-t`：该版本桌面入口把第一个参数作为宿主 IPC 地址。客户端版本、脚本预览、核心配置检查与实际 Connections 是不同证据；宿主来源及验收边界见 [双客户端接入](configuration.md#dual-client-setup)。
 
 ## 警告提示已从上游组移除引用
 

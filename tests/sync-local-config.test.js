@@ -246,7 +246,7 @@ test("旧版仅含 home_proxy 的 TOML 会补全缺失开关并生成本地脚�
     assert.match(output, /const ROUTE_CURSOR_CORE = true;/);
     assert.match(output, /const ROUTE_CURSOR_REPOSITORY_INDEXING = false;/);
     assert.match(output, /const ROUTE_GROK_CORE = true;/);
-    assert.match(output, /const ROUTE_OPENAI_AUTH = false;/);
+    assert.match(output, /const ROUTE_OPENAI_AUTH = true;/);
     assert.match(output, /const ROUTE_OPENAI_WEB_ASSETS = false;/);
     assert.match(output, /const ROUTE_EXTRA = false;/);
     assert.match(output, /const ROUTE_EXTRA_ANYROUTER = true;/);
@@ -524,6 +524,61 @@ test("本地 cursor_repository_indexing 缺字段补 false，显式 true 恢复 
   });
 });
 
+test("本地 Vertex/Cursor 开关控制生成脚本的正则住宅 DNS，缺省值不变", () => {
+  const providerName = "AI-家宽-DNS-REGEX";
+  const policyKey = `rule-set:${providerName}`;
+  const payloads = [
+    "DOMAIN-REGEX,^[a-z0-9-]+-aiplatform\\.googleapis\\.com$",
+    "DOMAIN-REGEX,^repo[0-9]+\\.cursor\\.sh$"
+  ];
+  const probeSource = [
+    '"use strict";',
+    "const assert = require('node:assert/strict');",
+    "const script = require(process.argv[1]);",
+    "console.info = () => {};",
+    "const input = { proxies: [{ name: 'HK', type: 'socks5', server: 'airport.example.test', port: 1080, udp: true }],",
+    "  'proxy-groups': [{ name: '🚀节点选择', type: 'select', proxies: ['HK'] }], rules: ['MATCH,🚀节点选择'], 'rule-providers': null };",
+    "const snapshot = structuredClone(input);",
+    "const output = script.main(input);",
+    "assert.deepEqual(input, snapshot);",
+    "assert.equal(output.proxies.find((proxy) => proxy.name === '家宽-SOCKS5').type, 'socks5');",
+    "assert.deepEqual(output['proxy-groups'].find((group) => group.name === 'AI-家宽').proxies, ['家宽-SOCKS5']);",
+    "process.stdout.write(JSON.stringify({ providers: output['rule-providers'], policy: output.dns['nameserver-policy'], rules: output.rules }));"
+  ].join("\n");
+  const originalTemplate = fs.readFileSync(templatePath, "utf8");
+  for (const [vertex, cursor] of [[true, false], [false, true], [true, true], [false, false], [undefined, undefined]]) {
+    withTemporaryDirectory((directory) => {
+      const configPath = path.join(directory, "proxy.toml");
+      const outputPath = path.join(directory, "proxy.local.js");
+      const overrides = vertex === undefined ? "" :
+        `\n[routing]\nvertex_ai_endpoints = ${vertex}\ncursor_repository_indexing = ${cursor}\n`;
+      fs.writeFileSync(configPath, validHomeProxyToml + overrides);
+      syncLocalConfig({ templatePath, configPath, outputPath });
+      // 渲染器会补全缺失开关；运行生成脚本不能再改写该 TOML。
+      const renderedToml = fs.readFileSync(configPath, "utf8");
+      const output = JSON.parse(childProcess.execFileSync(process.execPath,
+        ["-e", probeSource, outputPath], { encoding: "utf8" }));
+      assert.equal(fs.readFileSync(configPath, "utf8"), renderedToml);
+      const payload = payloads.filter((_, index) => index === 0 ? vertex !== false : cursor === true);
+      if (payload.length) {
+        assert.deepEqual(output.providers[providerName], { type: "inline", behavior: "classical", payload });
+        assert.deepEqual(output.policy[policyKey], [
+          "https://1.1.1.1/dns-query#AI-家宽&disable-ipv6=true",
+          "https://8.8.8.8/dns-query#AI-家宽&disable-ipv6=true"
+        ]);
+      } else {
+        assert.equal(output.providers, undefined);
+        assert.equal(policyKey in output.policy, false);
+      }
+      assert.equal(ruleMatchesHost(output.rules, "us-central1-aiplatform.googleapis.com", "AI-家宽"), vertex !== false);
+      assert.equal(ruleMatchesHost(output.rules, "repo42.cursor.sh", "AI-家宽"), cursor === true);
+      assert.equal("+.googleapis.com" in output.policy, false);
+      assert.equal("+.cursor.sh" in output.policy, false);
+    });
+  }
+  assert.equal(fs.readFileSync(templatePath, "utf8"), originalTemplate);
+});
+
 test("本地 openai_core = false 让 GPT 域名不再走家宽，Claude 等核心域名不受影响", () => {
   withTemporaryDirectory((directory) => {
     const configPath = path.join(directory, "proxy.local.toml");
@@ -636,7 +691,7 @@ openai_auth = true
     ));
     const publicScript = require(templatePath);
 
-    assert.equal(publicScript.constants.ROUTE_OPENAI_AUTH, false);
+    assert.equal(publicScript.constants.ROUTE_OPENAI_AUTH, true);
     assert.equal(publicScript.constants.ROUTE_OPENAI_WEB_ASSETS, false);
     assert.equal(probe.openaiAuth, true);
     assert.equal(probe.openaiWebAssets, false);
@@ -879,7 +934,7 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
 
     const reparsed = parseLocalToml(completed);
     assert.equal(reparsed.routing.openai_core, false, "用户已有值不应被覆盖");
-    assert.equal(reparsed.routing.openai_auth, false);
+    assert.equal(reparsed.routing.openai_auth, true);
     assert.equal(reparsed.routing.openai_web_assets, false);
     assert.equal(reparsed.routing.cursor_core, true, "用户已有值不应被覆盖");
     assert.equal(reparsed.routing.cursor_repository_indexing, false);
@@ -896,7 +951,7 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
       completed.indexOf("[runtime]")
     );
     assert.match(routingBlock, /^openai_core = false$/m);
-    assert.match(routingBlock, /^openai_auth = false$/m);
+    assert.match(routingBlock, /^openai_auth = true$/m);
     assert.match(routingBlock, /^openai_web_assets = false$/m);
     assert.match(routingBlock, /^grok_core = true$/m);
     assert.match(completed, /\[runtime\]\r?\nallow_final_rule_upstream_fallback = true/);
@@ -904,7 +959,7 @@ test("缺失开关键按示例默认值补全，用户已有键值与注释逐�
     const output = fs.readFileSync(outputPath, "utf8");
     assert.match(output, /const ROUTE_GROK_CORE = true;/);
     assert.match(output, /const ROUTE_OPENAI_CORE = false;/);
-    assert.match(output, /const ROUTE_OPENAI_AUTH = false;/);
+    assert.match(output, /const ROUTE_OPENAI_AUTH = true;/);
     assert.match(output, /const ROUTE_OPENAI_WEB_ASSETS = false;/);
     assert.match(output, /const ENABLE_TUN_STRICT_ROUTE = false;/);
   });

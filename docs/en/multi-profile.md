@@ -1,6 +1,6 @@
 # Multi-profile upstream resolution
 
-Mihomo's `dialer-proxy` field is a single name. The script resolves one valid name at runtime for the current Clash Verge Rev Profile.
+Mihomo's `dialer-proxy` field is a single name. The script resolves one valid name at runtime for the current Profile.
 
 ## Resolution order
 
@@ -11,6 +11,8 @@ Mihomo's `dialer-proxy` field is a single name. The script resolves one valid na
 5. Optional semantic-name guessing when `ALLOW_HEURISTIC_UPSTREAM_FALLBACK` is enabled. It is disabled by default.
 
 The first existing and structurally valid proxy or group is selected. Resolution never writes an array to `dialer-proxy` and never silently falls back to `DIRECT`.
+
+Clash Verge Rev v2.5.8 / v2.5.10 calls `main(config, profileName)`. FlClash v0.9.2 calls `main(config)` without a Profile name, so it skips the name-specific first step and checks the template, shared candidates, and final rule without guessing a subscription name. For reuse across clients, use an explicit upstream name present in both Profiles, or verify shared-candidate/final-`MATCH` resolution. Do not rely on `PROFILE_UPSTREAM_OVERRIDES` in FlClash. See [dual-client setup](configuration.md#dual-client-setup) for sources and version boundaries.
 
 Spaces and emoji are valid in an upstream name. `#` and `&` are not: Mihomo uses them as delimiters in the upstream-bound DoH URL, so the script rejects a selected name containing either character before building DNS configuration.
 
@@ -28,6 +30,8 @@ Before injecting the residential node, the script:
 ## Runtime limitation
 
 Static configuration can prove that a selector exists, but it cannot reliably read the selector's current runtime choice. Do not put `DIRECT`, `REJECT`, `家宽-SOCKS5`, or `AI-家宽` inside the selector used as `dialer-proxy`.
+
+After switching Profiles, refreshing a subscription, or restarting, recheck the script binding, resolved upstream, and actual chain. Record the four Windows/Ubuntu client combinations separately using [dual-client runtime validation](client-validation.md).
 
 ## Diagnostics
 

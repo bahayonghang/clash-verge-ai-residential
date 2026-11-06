@@ -18,10 +18,29 @@ dialer-proxy = "🚀节点选择"
 
 支持两种模式：
 
-- 在忽略的本地 TOML 里填写真实 endpoint 和凭据，再把生成的本地脚本粘进 Clash Verge Rev。
+- 在忽略的本地 TOML 里填写真实 endpoint 和凭据，再把生成的本地脚本接入 Clash Verge Rev 或 FlClash。
 - 在每个 Profile 里预置同名 `家宽-SOCKS5` 节点，把 `server`、`username`、`password` 留成 `xxx`；脚本复用该节点的 endpoint 和凭据。
 
 无认证 SOCKS5 必须把 `username` 和 `password` 都设为 `""`。任一字段仍是 `xxx`、且 Profile 里没有同名节点补值时，脚本会拒绝生成配置；宿主可能继续使用原 Profile，不能把异常当作流量阻断。
+
+## Windows / Ubuntu 双客户端接入 {#dual-client-setup}
+
+两个客户端共用同一份生成脚本和 AI-only 规则。以下是源码核对基线，不是最低版本要求，也不代表四个组合已经通过真实流量验收。macOS 和 FlClash Android 留待后续；Clash Verge Rev 不在本项目的 Android 支持范围内。
+
+| 客户端 | Windows 基线 | Ubuntu 基线 | 脚本入口与限制 |
+| --- | --- | --- | --- |
+| Clash Verge Rev | 2.5.10 | 2.5.8 | 全局扩展脚本调用 `main(config, profileName)`；订阅扩展和应用设置可能在它之后生效。 |
+| FlClash | 0.9.2 | 0.9.2 | 普通订阅/文件 Profile 选择“脚本”覆写模式并绑定脚本，调用 `main(config)`；自建配置构建器不走这条脚本路径。 |
+
+Clash Verge Rev 的规则编辑器先于全局脚本，随后依次执行全局扩展、订阅扩展，最后恢复应用接管的字段。在上述两版源码中，启用的 DNS 覆写会接管已填写的 DNS 子字段；`nameserver-policy` 整表可能被替换。当前官网文字与这些版本的源码存在差异，因此以实际版本和最终生成配置核对，不能只凭编辑器保存成功判定生效。[2.5.8 源码](https://github.com/clash-verge-rev/clash-verge-rev/blob/4337bd85758d54d7b9044b2da3c9ac1176eae1f3/src-tauri/src/enhance/mod.rs#L916)、[2.5.10 固定源码](https://github.com/clash-verge-rev/clash-verge-rev/blob/c83f7ad529c7c9cb3d2d54a0955ef8c1b22a411b/src-tauri/src/enhance/mod.rs#L916)。
+
+FlClash 0.9.2 先执行选中的脚本，再生成实际 Profile：应用设置会写入 `find-process-mode` 和 TUN 等字段；选中的 DNS 覆写字段在脚本之后合并，其中 `nameserver-policy` 是整表替换；“追加系统 DNS”还可向 `nameserver` 加入 `system://`。需要保留脚本的严格 DNS 时，先核对这些设置及最终配置，不能把“未改脚本”当作 DNS 没变。[生成顺序](https://github.com/chen08209/FlClash/blob/7fd417fb9a9a277c6a9339a8ac87f907df7c25f7/lib/providers/actions/setup.dart#L493)、[应用字段与 DNS](https://github.com/chen08209/FlClash/blob/7fd417fb9a9a277c6a9339a8ac87f907df7c25f7/lib/common/task.dart#L201)、[DNS 合并语义](https://github.com/chen08209/FlClash/blob/7fd417fb9a9a277c6a9339a8ac87f907df7c25f7/lib/models/clash_config.dart#L1483)。
+
+脚本不写 TUN 或顶层 IPv6。它读取到的是执行时输入，告警不能证明宿主后续写出的最终值；FlClash 的查找进程设置也可能覆盖脚本写出的 `always`。查找进程仅用于连接归因，不应为此开启全量进程路由。Windows 与 Ubuntu 的 TUN 权限、DNS 接管和系统解析路径须分别验证；不要用 Windows 的设置名称、驱动结论或日志路径推断 Ubuntu。
+
+首次接入和每次订阅刷新后，至少核对：`AI-家宽` 仅含 `家宽-SOCKS5`、`dialer-proxy` 解析正确、AI 规则与住宅 DNS 策略仍在、非 AI 样本仍交给原 Profile。FlClash 的 Profile 预览来自其配置生成链，可用于比较；预览本身不是已加载或真实网络路径的证明。安装版本、实际 Mihomo 版本和运行模式须另记，不能用 GUI 版本代替核心版本。
+
+两客户端都必须检查最终规则顺序。本脚本将私网直连与 AI 托管规则放在原规则前；保留用户规则不表示用户例外优先。FlClash 后续的附加规则或 Verge 的订阅扩展也可能改变最终顺序。不要为了通过验收悄悄更改这一策略。接入步骤见 [本地配置](local-configuration.md)，无 Profile 名的上游限制见 [多 Profile](multi-profile.md)。
 
 ## 家宽组的保留名称
 
@@ -42,13 +61,17 @@ const PROFILE_UPSTREAM_OVERRIDES = {
 
 最终写入 `HOME_PROXY_TEMPLATE["dialer-proxy"]` 的值仍是跨 Profile 的首选默认。解析顺序见 [多 Profile](multi-profile.md)。
 
+选定上游及其显式可达子组的 `empty-fallback` 不得引用 `家宽-SOCKS5` 或 `AI-家宽`。该字段在过滤后无成员时生效，住宅出站回指会造成递归。脚本拒绝该配置并报告组名与路径，不会删除字段或改成 `DIRECT` / `COMPATIBLE`。普通机场节点回退保持原值；缺省字段和不可达组不受这项检查影响。
+
 ## 开关
 
 `[routing]` 与 `[runtime]` 都是可选表，允许只覆盖需要改的键。同步时，本地 TOML 缺失的开关键（包括整个缺失的表）会按示例默认值补全并写回；已有键值、注释和行尾风格保持不变。默认值刻意压低家宽流量；打开共享依赖或进程级兜底会改变隐私、成本和范围。不要根据 `ROUTE_*` / `ENABLE_*` 前缀猜测键名。没有脱敏 Connections 证据时，保持共享依赖和进程级兜底关闭。步骤与校验见 [本地配置](local-configuration.md)。
 
 三个新增核心开关及专属兜底门控属于 **Unreleased**，默认都为 `true`，不会自动减少家宽用量。关闭核心开关会撤销该类别的脚本托管域名/DNS和专属兜底，剩余流量交回原 Profile；原规则可能选择机场、DIRECT、其他组或用户自定义家宽规则，不能保证一定走机场。认证、辅助、静态资源和全局实时/DNS开关继续独立。
 
-Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`、`gemini_api_core`、`vertex_ai_endpoints`、`antigravity_core`；相关可选认证、项目和更新开关另行控制。已知正则域名的 DNS 例外见 [DNS 与泄漏模型](dns-and-leak-model.md)。
+Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`、`gemini_api_core`、`vertex_ai_endpoints`、`antigravity_core`；相关可选认证、项目和更新开关另行控制。正则域名的住宅 DNS 策略及内核要求见 [DNS 与泄漏模型](dns-and-leak-model.md)。
+
+`vertex_ai_endpoints` 与 `cursor_repository_indexing` 同时控制各自正则的业务路由和住宅 DNS，默认值仍为 `true` / `false`，无需新增 TOML 字段。脚本保留本地规则集名称 `AI-家宽-DNS-REGEX`；自定义规则集请使用其他名称，也不要在自定义规则或复合 DNS 策略中引用该保留名称。
 
 ### 路由范围
 
@@ -59,18 +82,18 @@ Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`�
 | `routing.antigravity_core` | `ROUTE_ANTIGRAVITY_CORE` | `true` | 路由 Antigravity 产品域及 Code Assist 核心主机。 | 关闭时同时撤销 Antigravity 进程兜底；Vertex、认证、项目 API、更新与遥测开关独立。 |
 | `routing.openai_shared_dependencies` | `ROUTE_OPENAI_SHARED_DEPENDENCIES` | `false` | 路由 OpenAI 的 WorkOS、客服、遥测、支付等共享依赖。 | 会扩大到非模型流量。 |
 | `routing.openai_core` | `ROUTE_OPENAI_CORE` | `true` | 路由 ChatGPT 产品、OpenAI 模型 API 和用户上传/生成内容。 | 关闭时撤销 OpenAI 专属进程兜底，相关流量交回原 Profile。 |
-| `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `false` | 路由第一方登录主机 `auth.openai.com`（含其子域）和精确主机 `auth0.openai.com`。 | 与核心流量、网页资源和共享第三方依赖相互独立；不会匹配整个 `openai.com`。 |
+| `routing.openai_auth` | `ROUTE_OPENAI_AUTH` | `true` | 路由第一方登录主机 `auth.openai.com`（含其子域）和精确主机 `auth0.openai.com`。 | 与核心流量、网页资源和共享第三方依赖相互独立；不会匹配整个 `openai.com`。 |
 | `routing.openai_web_assets` | `ROUTE_OPENAI_WEB_ASSETS` | `false` | 路由 `oaistatic.com` 网页静态资源后缀。 | 与第一方登录及共享第三方依赖独立；仅在页面资源确需同出口时开启。 |
 | `routing.claude_shared_dependencies` | `ROUTE_CLAUDE_SHARED_DEPENDENCIES` | `false` | 路由 Claude 的统计、客服、风控等共享依赖。 | 会扩大到非模型流量。 |
-| `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `false` | 路由 Antigravity 使用的共享 Google 登录入口。 | 影响其他 Google 产品的认证流量。 |
+| `routing.antigravity_google_auth` | `ROUTE_ANTIGRAVITY_GOOGLE_AUTH` | `true` | 路由 Antigravity 使用的共享 Google 登录入口。 | 影响其他 Google 产品的认证流量。 |
 | `routing.antigravity_project_apis` | `ROUTE_ANTIGRAVITY_PROJECT_APIS` | `false` | 路由 Service Usage、Resource Manager、IAM、API Hub 等项目 API。 | 属于项目配置而非推理。 |
 | `routing.antigravity_update_and_telemetry` | `ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY` | `false` | 路由 Antigravity 更新、扩展市场和遥测。 | 会扩大到更新和统计流量。 |
 | `routing.gemini_web_core` | `ROUTE_GEMINI_WEB_CORE` | `true` | 路由 Gemini Web 和 Google AI Studio 产品入口。 | 无。 |
 | `routing.vertex_ai_endpoints` | `ROUTE_VERTEX_AI_ENDPOINTS` | `true` | 路由四条 Vertex AI / Agent Platform 规则：`aiplatform.googleapis.com`、`aiplatform.us.rep.googleapis.com`、`aiplatform.eu.rep.googleapis.com`，以及区域正则 `^[a-z0-9-]+-aiplatform\.googleapis\.com$`。 | 不使用 Antigravity 企业推理或其他 Vertex AI 流量时可改为 `false`，这些主机交回原 Profile。 |
 | `routing.cursor_core` | `ROUTE_CURSOR_CORE` | `true` | 路由 Cursor AI API、Tab、Agent、授权/SSO 门户、Cloud Agent VM 和产品专属认证。 | 不需要 Cursor 核心流量走家宽时可显式改为 `false`。`api2.cursor.sh` 始终由本开关控制。 |
 | `routing.cursor_repository_indexing` | `ROUTE_CURSOR_REPOSITORY_INDEXING` | `false` | 路由 Cursor 仓库索引主机 `repo[0-9]+.cursor.sh`。 | 与 `routing.cursor_core` 独立。默认回落原 Profile；缺字段按 `false` 补全；显式 `true` 恢复 v5.8.1 的 repo 家宽路由。官方与本机 2026-08-17 日志共同确认的精确主机是 `repo42.cursor.sh`；数字通配是项目前向兼容策略，不是 Cursor 官方通配合同。Privacy Mode 不会停止索引上传。`disableHttp2` 或服务端强制 HTTP/1.1 时，RepositoryService 可能改走共享的 `api2.cursor.sh`，域名规则无法在保留多数 API 的同时隔离该路径，因此不能宣称已排除全部仓库上传。 |
-| `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | 路由 Grok Build（xAI grok CLI）推理 API（`cli-chat-proxy.grok.com`）、Grok 产品域、`auth.x.ai` 与 `api.x.ai`。 | 不需要 Grok 走家宽时可显式改为 `false`。 |
-| `routing.grok_web_assets` | `ROUTE_GROK_WEB_ASSETS` | `true` | 为 `true` 时注入 `DOMAIN-SUFFIX,grok.com`；为 `false` 时把该后缀换成精确主机 `grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`。`DOMAIN-SUFFIX,api.x.ai` 仍由 `routing.grok_core` 控制。 | 依赖 `routing.grok_core = true`。`false` 时 `assets.grok.com` 交回原 Profile。 |
+| `routing.grok_core` | `ROUTE_GROK_CORE` | `true` | 路由 Grok Build（xAI grok CLI）推理 API（`cli-chat-proxy.grok.com`）、Grok 产品域、`api.x.ai`，以及精确登录主机 `auth.x.ai`、`auth.grok.com`、`accounts.x.ai`、`accounts.spacex.ai`、`auth.grokusercontent.com`、`auth.grokipedia.com`。这些精确主机由本开关注入。父域 `x.ai`、`spacex.ai`、`grokusercontent.com`、`grokipedia.com` 不走家宽。 | 不需要 Grok 走家宽时可显式改为 `false`。 |
+| `routing.grok_web_assets` | `ROUTE_GROK_WEB_ASSETS` | `true` | 为 `true` 时注入 `DOMAIN-SUFFIX,grok.com`；为 `false` 时把该后缀换成精确主机 `grok.com`、`cli-chat-proxy.grok.com`、`code.grok.com`。`DOMAIN-SUFFIX,api.x.ai` 与上述全部登录精确主机仍由 `routing.grok_core` 控制。 | 依赖 `routing.grok_core = true`。`false` 时 `assets.grok.com` 交回原 Profile。 |
 | `routing.extra` | `ROUTE_EXTRA` | `false` | extra 分类总开关。关闭时所有 extra 站点都不注入规则或 DNS。 | 打开后仍需各站点开关；当前站点见 `routing.extra_anyrouter`。 |
 | `routing.extra_anyrouter` | `ROUTE_EXTRA_ANYROUTER` | `true` | 在 extra 分类打开时，把 AnyRouter（`anyrouter.top` 及其子域）路由到 `AI-家宽`；不写住宅 DNS。 | 仅在 `routing.extra = true` 时生效。官方入口是 `https://anyrouter.top` 与 `/console`。`www` 的 ESA 530 不是本仓库能修的。 |
 | `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | 增加 Cursor 进程级兜底规则。 | 仅在 `routing.ai_process_fallback = true` 且 `routing.cursor_core = true` 时生效，仍会捕获非 AI 请求。 |

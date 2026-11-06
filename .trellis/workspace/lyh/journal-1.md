@@ -1373,3 +1373,157 @@ extra 改为默关分类，新增 extra_anyrouter；AnyRouter 开启时只走 AI
 ### Status
 
 [OK] **Completed**
+
+
+## Session 48: 提交正则住宅 DNS 与空组回退并归档
+
+**Date**: 2026-10-04
+**Task**: 提交正则住宅 DNS 与空组回退并归档
+**Branch**: `dev`
+
+### Summary
+
+把空组回退校验和既有正则住宅 DNS 拆成两次本地提交，并归档父任务与两个子任务。
+
+### Main Changes
+
+- 拒绝可达上游 empty-fallback 指回住宅出站
+- 为既有 Vertex 与 Cursor 索引正则补齐本地住宅 DNS 规则集
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f77e9cf` | (see git log) |
+| `6dfa7fa` | (see git log) |
+
+### Testing
+
+- [OK] node --test tests/regression.test.js（空组回退提交，81 通过）
+- [OK] node --test tests/regression.test.js tests/sync-local-config.test.js（正则 DNS 提交，118 通过）
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 49: FlClash null 兼容修复提交与归档
+
+**Date**: 2026-10-20
+**Task**: FlClash null 兼容修复提交与归档
+**Branch**: `dev`
+
+### Summary
+
+修复FlClash0.9.1顶层null输入，保留非法类型及规则集校验；完成本机应用，按用户要求本地提交并归档，不推送。依赖告警暂不处理。
+
+### Main Changes
+
+- 公开脚本仅新增3行，补充回归、spec和完整任务研究验收资料；本机原脚本备份后最小修补。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `38b6fe0` | (see git log) |
+
+### Testing
+
+- [OK] just ci通过：前端300、Rust553通过6忽略、root259；独立check、旧模板红4、新模板窄16、renderer26及本机应用通过。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 依赖告警按用户要求暂不处理；本次不推送。
+
+
+## Session 50: 为 Grok 登录补上四台精确主机
+
+**Date**: 2026-10-26
+**Task**: 为 Grok 登录补上四台精确主机
+**Branch**: `dev`
+
+### Summary
+
+本机 Grok Bot 实测连接已走家宽。公开模板在 grok_core 下新增 accounts.x.ai、accounts.spacex.ai、auth.grokusercontent.com、auth.grokipedia.com 四条精确规则，父域和 slack.hooks.x.ai 不进入家宽。npm test 260 通过，just ci 退出码 0。任务已归档。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8ae2439` | (see git log) |
+
+### Status
+
+[OK] **Completed**
+
+
+## Session 51: 修复并归档 Grok 核心登录路由
+
+**Date**: 2026-10-27
+**Task**: 修复并归档 Grok 核心登录路由
+**Branch**: `dev`
+
+### Summary
+
+修复 auth.grok.com 的核心路由与 DNS，纠正 TLS 通配证书的路由依据；独立复核、完整 just ci 和文档构建通过，按用户授权提交归档。
+
+### Main Changes
+
+- auth.grok.com 随 grok_core 保留精确规则及住宅 DNS，网页资源关闭不再影响登录主机。
+- 同步注释、中英文文档及 Trellis 规范，路由范围由业务名单与最小流量原则决定。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d6337ca` | (see git log) |
+
+### Testing
+
+- [OK] 修复前四组合回归 2 失败；修复后根目录 264、前端 300、Rust 553 passed/6 ignored。
+- [OK] 完整 just ci、独立 docs build、独立 trellis-check 和 git diff --check 通过。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 真实住宅 DoH 路径与完整登录流程尚未实测；未推送。
+
+
+## Session 52: 双客户端兼容文档与部分实机验收结项
+
+**Date**: 2026-11-06
+**Task**: 双客户端兼容文档与部分实机验收结项
+**Branch**: `dev`
+
+### Summary
+
+完成双客户端宿主合同、入口回归和中英文验收文档；Windows/Ubuntu 完成隔离核心及有限 FlClash 运行检查。用户暂不切换客户端，保留实机验收缺口，并明确要求提交全部改动、归档三个任务。
+
+### Main Changes
+
+- 保持 AI-only 路由和生产设置不变；归档保留 FAIL/UNVERIFIED。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bb37164a340967dd210b5d0bc726237c97d02f31` | (see git log) |
+
+### Testing
+
+- [OK] just ci、just docs-build、敏感信息扫描通过；两平台 regression 各 104 项及隔离核心探针通过。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 后续获明确授权后，单独继续客户端切换、真实路径及刷新/重启验收。

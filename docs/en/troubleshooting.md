@@ -1,5 +1,7 @@
 # Troubleshooting
 
+Use [dual-client runtime validation](client-validation.md) to separate script output, core loading, and real requests. To undo authorized configuration changes, follow its [offline recovery steps](client-validation.md#recovery).
+
 ## No usable upstream was found
 
 Symptoms include an exception mentioning `dialer-proxy`, Profile candidates, or `MATCH/FINAL`.
@@ -11,6 +13,8 @@ Check:
 - whether the selected upstream name contains `#` or `&`; these delimit Mihomo's DoH URL fragment and are rejected rather than encoded;
 - whether the Profile has a final `MATCH` or `FINAL` rule;
 - whether the candidate is `DIRECT`, `REJECT`, `AI-家宽`, or `家宽-SOCKS5`.
+
+FlClash passes no Profile name, so `PROFILE_UPSTREAM_OVERRIDES` cannot match a subscription name. Check the template upstream, shared candidates, and final rule instead; see [multi-profile upstream resolution](multi-profile.md).
 
 ## Reserved-name collision
 
@@ -84,7 +88,7 @@ The rebuilt DNS policy includes `geosite:cn` and `geosite:private`, both of whic
 
 ## Script log asks you to change TUN DNS hijack or IPv6 in settings
 
-After the global script runs, Clash Verge Rev restores the fields that its settings page manages (`tun`, top-level `ipv6`, mode, ports, and similar) from app settings. From v2.5.5, when an extension changes one of these fields, the app shows the notice "Extensions wrote …, which Settings manages, so those values were discarded".
+The reviewed Clash Verge Rev v2.5.8 / v2.5.10 restores settings-managed fields (`tun`, top-level `ipv6`, mode, ports, and similar) after global and Profile extensions. It can show the notice "Extensions wrote …, which Settings manages, so those values were discarded".
 
 The script therefore does not write `tun` or the top-level `ipv6`. It logs a `warn` only in these cases:
 
@@ -92,7 +96,15 @@ The script therefore does not write `tun` or the top-level `ipv6`. It logs a `wa
 - `runtime.enable_tun_strict_route` is on, TUN is on, and `strict-route` is off: turn on strict route in TUN settings.
 - The top-level `ipv6` is `true`: turn IPv6 off in the Verge settings page.
 
-When the values are correct, these `warn` lines stop. When DNS override is off, the DNS servers, `nameserver-policy`, and fake-ip fields that the script rebuilds are unaffected. When DNS override is on, the settings page owns all non-empty `dns.*` fields in `dns_config.yaml`. The host discards script changes to those fields and can show a `dns.*` notice.
+When the values are correct, these `warn` lines stop. These Verge versions retain script-built DNS when app DNS override is disabled and no later extension changes DNS. With override enabled, non-empty `dns.*` fields in `dns_config.yaml` are restored after scripts; a non-empty `nameserver-policy` replaces the entire policy map. The app can show a `dns.*` notice. See [dual-client setup](configuration.md#dual-client-setup) for ordering and the discrepancy with the website wording.
+
+## FlClash saved the script but DNS or process lookup still differs
+
+First confirm that the current ordinary Profile uses Script mode and selects the correct script. FlClash v0.9.2 builds the final config after running the script: selected app DNS overrides can replace the entire `nameserver-policy`, and `appendSystemDns` appends `system://` to `nameserver`. The app's process-lookup setting also overwrites the script's `find-process-mode`; choose `always` in app settings when needed, without enabling process-wide routing fallback that widens traffic scope.
+
+Preview the final config and check residential DNS policies, rule-provider references, `tun.dns-hijack`, and top-level/DNS IPv6 fields, then confirm that the core loaded it. Script warnings precede later app overrides, so no warning does not prove final settings are correct. `system://` selects the system resolver; it does not prove a request goes to LAN DNS. This version also has a macOS-specific system DNS coordinator that must not be assumed to apply to Windows/Ubuntu.
+
+Do not run `FlClashCore` with `-v` / `-h` / `-t` as though it were the standalone Mihomo CLI: this desktop entry treats its first argument as a host IPC address. Client versions, script previews, core configuration checks, and actual Connections are different evidence. See [dual-client setup](configuration.md#dual-client-setup) for sources and acceptance boundaries.
 
 ## Warning that references were removed from an upstream group
 
