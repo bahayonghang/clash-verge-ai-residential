@@ -1494,3 +1494,36 @@ extra 改为默关分类，新增 extra_anyrouter；AnyRouter 开启时只走 AI
 ### Next Steps
 
 - 真实住宅 DoH 路径与完整登录流程尚未实测；未推送。
+
+
+## Session 52: 双客户端兼容文档与部分实机验收结项
+
+**Date**: 2026-11-06
+**Task**: 双客户端兼容文档与部分实机验收结项
+**Branch**: `dev`
+
+### Summary
+
+完成双客户端宿主合同、入口回归和中英文验收文档；Windows/Ubuntu 完成隔离核心及有限 FlClash 运行检查。用户暂不切换客户端，保留实机验收缺口，并明确要求提交全部改动、归档三个任务。
+
+### Main Changes
+
+- 保持 AI-only 路由和生产设置不变；归档保留 FAIL/UNVERIFIED。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bb37164a340967dd210b5d0bc726237c97d02f31` | (see git log) |
+
+### Testing
+
+- [OK] just ci、just docs-build、敏感信息扫描通过；两平台 regression 各 104 项及隔离核心探针通过。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 后续获明确授权后，单独继续客户端切换、真实路径及刷新/重启验收。
