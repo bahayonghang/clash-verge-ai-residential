@@ -1,0 +1,41 @@
+{
+  "id": "dual-client-host-compat",
+  "name": "dual-client-host-compat",
+  "title": "兼容 Windows 与 Ubuntu 上的 Clash Verge Rev 和 FlClash",
+  "description": "共享脚本宿主合同、回归测试及接入文档已实施并审查；原生核心隔离验证通过，四组合完整宿主实机验收尚有缺口。不改变 AI-only 业务规则。",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-11-06",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "11-06-agent-route-routing-assurance",
+  "relatedFiles": [],
+  "notes": "2026-11-06 用户批准最新方案：先 Windows/Ubuntu 双客户端宿主兼容，再运行验收；保持 AI-only 范围。未授权本地 TOML 修改、安装、代理切换、系统网络设置变更或推送。",
+  "meta": {
+    "planning_only": false,
+    "implementation_approved": true,
+    "primary_platforms": [
+      "Windows",
+      "Ubuntu"
+    ],
+    "clients": [
+      "Clash Verge Rev",
+      "FlClash"
+    ],
+    "deferred_platforms": [
+      "macOS",
+      "Android (FlClash)"
+    ]
+  }
+}

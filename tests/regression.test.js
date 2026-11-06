@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const childProcess = require("node:child_process");
+const vm = require("node:vm");
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
@@ -784,6 +785,46 @@ const CURSOR_NEGATIVE_HOSTS = [
 // ---------------------------------------------------------------------------
 // 基础配置与多 Profile
 // ---------------------------------------------------------------------------
+
+// 只验证无 CommonJS 的 JavaScript 调用合同，不模拟 Boa / QuickJS 或 GUI 覆写。
+for (const named of [false, true]) {
+  test(`无 Node 宿主 API 的 ${named ? "main(config, profileName)" : "main(config)"} 保持输出与错误合同`, () => {
+    const input = { ...baselineProfile(), "rule-providers": null };
+    const context = vm.createContext({ inputJson: JSON.stringify(input), console: undefined });
+    vm.runInContext(fs.readFileSync(scriptPath, "utf8"), context, { timeout: 5000 });
+    assert.equal(vm.runInContext("typeof module + ',' + typeof require + ',' + typeof process", context),
+      "undefined,undefined,undefined");
+    vm.runInContext("var input = JSON.parse(inputJson)", context);
+    const call = named ? 'main(input, "宿主测试")' : "main(input)";
+    const actual = JSON.parse(vm.runInContext(`JSON.stringify(${call})`, context, { timeout: 5000 }));
+    assert.deepEqual(actual, quietMain(input, named ? "宿主测试" : undefined));
+    assert.equal(vm.runInContext("JSON.stringify(input)", context), JSON.stringify(input));
+    context.inputJson = JSON.stringify(actual);
+    vm.runInContext("input = JSON.parse(inputJson)", context);
+    assert.deepEqual(JSON.parse(vm.runInContext(`JSON.stringify(${call})`, context, { timeout: 5000 })), actual);
+    vm.runInContext('input["rule-providers"] = false', context);
+    const beforeFailure = vm.runInContext("JSON.stringify(input)", context);
+    assert.throws(() => vm.runInContext(call, context, { timeout: 5000 }), /rule-providers/);
+    assert.equal(vm.runInContext("JSON.stringify(input)", context), beforeFailure);
+  });
+}
+
+test("缺省 Profile 名不猜测专属上游，继续按通用候选解析", () => {
+  const name = "双客户端测试订阅";
+  const previous = overrides[name];
+  overrides[name] = ["专属出口"];
+  try {
+    const config = configFixture({
+      proxies: [airportNode("HK"), airportNode("JP")],
+      groups: [group("Proxy", ["HK"]), group("专属出口", ["JP"])]
+    });
+    assert.equal(findProxy(quietMain(config, name), HOME_PROXY_NAME)["dialer-proxy"], "专属出口");
+    assert.equal(findProxy(quietMain(config), HOME_PROXY_NAME)["dialer-proxy"], "Proxy");
+  } finally {
+    if (previous === undefined) delete overrides[name];
+    else overrides[name] = previous;
+  }
+});
 
 test("脚本版本与默认 dialer-proxy 正确", () => {
   assert.equal(SCRIPT_VERSION, "5.11.0");

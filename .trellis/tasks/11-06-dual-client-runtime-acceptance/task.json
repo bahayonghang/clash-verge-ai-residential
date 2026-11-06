@@ -1,0 +1,41 @@
+{
+  "id": "dual-client-runtime-acceptance",
+  "name": "dual-client-runtime-acceptance",
+  "title": "建立双客户端分流 DNS 与 WebRTC 运行验收",
+  "description": "已建立 Windows/Ubuntu 双客户端验收文档和四份脱敏报告，完成可用环境的只读检查及有限请求验证；完整路由、DNS、TUN、持久化验收仍未完成。",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "lyh",
+  "assignee": "lyh",
+  "createdAt": "2026-11-06",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": "11-06-agent-route-routing-assurance",
+  "relatedFiles": [],
+  "notes": "2026-11-06 用户批准 Windows/Ubuntu 双客户端宿主兼容及运行验收，保持 AI-only。已完成合同/文档/测试和部分只读实机检查；用户随后明确暂不切换客户端，保留验收缺口，停止推进切换及刷新/重启复查。未授权本地 TOML 修改、安装、系统网络设置变更或推送。",
+  "meta": {
+    "planning_only": false,
+    "implementation_approved": true,
+    "primary_platforms": [
+      "Windows",
+      "Ubuntu"
+    ],
+    "clients": [
+      "Clash Verge Rev",
+      "FlClash"
+    ],
+    "deferred_platforms": [
+      "macOS",
+      "Android (FlClash)"
+    ]
+  }
+}

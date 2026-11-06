@@ -25,6 +25,8 @@ AI 应用请求
 
 这与「全局 DNS leak test」配置不同。普通 leak test 可能显示机场或国内解析器，因为非 AI 查询不走家宽。配置为启用的 exact/suffix AI 域名建立住宅策略，区域 Vertex 与可选 Cursor 索引正则通过专用本地规则集建立住宅策略；实际路径仍需结合宿主设置验证。
 
+额外站点可有意分离业务与 DNS：`residentialDns: false`（如 AnyRouter）仅注入家宽业务路由，不注入住宅 DNS 策略。上图中的住宅 DNS 路径只适用于生成了该策略的域名，不能从业务规则目标推断 DNS 出站。
+
 解析时序：在 `enhanced-mode: fake-ip` 下，大多数 A/AAAA 查询由 fake-ip 地址池直接应答，不会访问上游解析器。因此 `nameserver-policy` 主要是回退路径，用于 fake-ip-filter、非 A/AAAA 查询，以及 L3 出站需要的真实 IP。SOCKS5 出站会直接转发主机名（RFC 1928 域名寻址），AI 连接通常由住宅 SOCKS5 服务器完成实际递归解析，这符合预期。Mihomo 必须自行解析时，exact/suffix 条目与正则规则集策略指定住宅侧解析。
 
 ## 正则 DNS 规则集与配置失败的边界
@@ -39,15 +41,17 @@ AI 应用请求
 
 成功生成的 `AI-家宽` 组只有家宽 SOCKS5 成员。已有同名组的额外节点来源或筛选字段会报错；但 Clash Verge Rev 在脚本抛错后可能放弃脚本输出并使用原 Profile。拒绝生成配置不能证明流量被阻断；应先修正错误并确认配置生效，再验证业务命中链。供应商实际是否提供固定 IP 也需另行确认。
 
-## Clash Verge Rev 强制恢复的字段
+## 客户端后置覆写与版本边界
 
-当前 Clash Verge Rev 会在全局脚本运行前保存设置页管理的字段，运行后再恢复。这些字段包括：
+已核对的 Clash Verge Rev v2.5.8 / v2.5.10 会在全局脚本运行前保存设置页管理的字段，运行后再恢复。这些字段包括：
 
 - 顶层控制平面字段：`external-controller*`、`secret`、各端口、`mode`、`allow-lan`、`log-level`、`ipv6`、`unified-delay`。
 - `tun.enable`，以及设置页已保存的 TUN 字段：`stack`、`device`、`auto-route`、`route-exclude-address`、`auto-redirect`（Linux）、`auto-detect-interface`、`dns-hijack`、`strict-route`、`mtu`。
 - 启用 DNS 覆盖时：`dns_config.yaml` 中所有非空 `dns.*` 字段，以及非空 `hosts`。
 
-Clash Verge Rev v2.5.5 起，扩展改写这些字段后，应用会弹出提示「Extensions wrote …, which Settings manages, so those values were discarded」，并丢弃写入的值。
+在这些版本中，扩展改写被设置页接管的字段会被丢弃，并可能出现字段归属提示。已接管的 `nameserver-policy` 会整表替换，不是逐条合并。其他版本需核对源码与最终配置；浮动文档不能代替目标版本事实。固定源码见 [双客户端接入](configuration.md#dual-client-setup)。
+
+FlClash v0.9.2 则在普通 Profile 的脚本执行后继续生成最终配置，重写进程查找与 TUN 设置、合并选中的 DNS 覆写字段，并可能追加 `system://` 或前置/替换规则。其选中的 `nameserver-policy` 同样整表替换。Profile 预览可检查这一生成结果，但仍需确认运行中核心加载状态。FlClash 的 macOS 系统 DNS 协调器不能作为 Windows/Ubuntu 的行为证明。
 
 因此脚本不写 `tun` 下任何键，也不写顶层 `ipv6`，只读取并在不安全时输出 `warn`：
 
@@ -55,7 +59,7 @@ Clash Verge Rev v2.5.5 起，扩展改写这些字段后，应用会弹出提示
 - `runtime.harden_existing_tun_dns_hijack` 与 `runtime.enable_tun_strict_route` 均为 `true`、TUN 已启用且 `strict-route` 未开启时告警。
 - 顶层 `ipv6: true` 时告警。
 
-请在设置页关闭 IPv6，并在 TUN 设置里配置 DNS 劫持。DNS 覆盖关闭时，脚本重建的 DNS 服务器、`nameserver-policy` 和 fake-ip 会保留。DNS 覆盖开启时，`dns_config.yaml` 中非空的 `dns.*` 字段全部以设置页为准，脚本对这些字段的改写会被丢弃，并可能出现 `dns.*` 提示。
+告警只反映脚本收到的配置，不覆盖执行后的宿主改写。先检查最终 IPv6、DNS 劫持与 DNS 策略，再按获准范围处理客户端设置，不能把缺少告警当作通过。在上述 Verge 版本中，DNS 覆盖关闭时不由该覆盖层恢复 DNS；开启时，非空 `dns.*` 字段以设置页为准。其他扩展仍可能改变输出。Windows/Ubuntu 的 resolver、真实查询和恢复步骤见 [双客户端运行验收](client-validation.md)。
 
 ## geosite 依赖
 
@@ -74,16 +78,16 @@ Clash Verge Rev v2.5.5 起，扩展改写这些字段后，应用会弹出提示
 - 启用的 exact/suffix AI 域名及区域 Vertex、可选 Cursor 索引正则在配置内的业务与 DNS 路径分叉。
 - 无关媒体、市场、下载和共享服务误进家宽。
 - 经 `include-all` 组的递归链路。
-- DNS 层的 IPv6 查询（重建的 `dns.ipv6: false`，DNS 覆盖关闭时生效）。
+- DNS 层的 IPv6 查询（重建的 `dns.ipv6: false`，需确认客户端最终保留）。
 - 顶层 `ipv6` 开启，或 TUN 已启用但缺失 DNS 拦截项：脚本输出 `warn`，需用户在设置页修改。
 
 ## 脚本单独保证不了的
 
-- 绕过 Clash Verge Rev 的操作系统流量。
+- 绕过当前代理客户端的操作系统流量。
 - 浏览器或应用把私有 DoH 指到未知 endpoint。
-- Mihomo/TUN 路由之外的 IPv6 泄漏。顶层 `ipv6` 由 Clash Verge Rev 设置页的 IPv6 开关决定，脚本不写入该字段。
+- Mihomo/TUN 路由之外的 IPv6 泄漏。顶层 `ipv6` 由宿主配置管理，脚本不写入该字段；它与 `dns.ipv6` 必须分别核对。
 - 当前所选机场节点的 UDP 能力。订阅节点经常省略 `udp`，Mihomo 默认视为 `false`；服务商未显式 `udp: true` 时，链路会静默丢弃 UDP。
 - 运行时选择器选中 `DIRECT` 这类值。
 - 未开启共享 STUN/TURN 捕获时，任意应用的 WebRTC 行为。
 
-用操作系统防火墙、TUN、浏览器 DNS 设置和脱敏连接检查作为补充控制。
+操作系统防火墙、TUN、浏览器 DNS 设置和脱敏连接检查属于补充控制；修改前保留恢复方法，按 [运行验收](client-validation.md) 分项验证。

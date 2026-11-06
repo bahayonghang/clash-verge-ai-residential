@@ -60,6 +60,67 @@ actual networking lifecycle.
   aborts, and the host discards every script change. Aggregate or cap host
   logs. Index keys must match `namedItems` (`item` truthy, `item.name` as-is).
 
+## Dual-Client Host Contract (2026-11)
+
+### Scope / Trigger
+
+Use this contract for Windows and Ubuntu entry-point compatibility. Source
+baselines are Verge 2.5.8/2.5.10 and FlClash 0.9.2; installed versions and
+effective runtime output still require separate verification. See the versioned
+source links in `docs/configuration.md` and the host-compat task research.
+
+### Signatures
+
+- Verge calls synchronous `main(config, profileName)` through Boa.
+- FlClash's Rust/QuickJS bridge calls `main(config)` for ordinary subscription
+  or file Profiles configured with a selected Script. Its Custom Profile
+  builder does not enter that script branch in the verified version.
+- Neither host is Node/CommonJS. `module`, `require`, `process`, and even
+  logging globals must not be required to evaluate the pasteable script.
+
+### Contracts
+
+Keep one business script. Missing `profileName` skips name-specific upstream
+overrides and uses the existing general candidates/final-rule fallback; never
+invent a Profile name. Preserve input, idempotence, managed ownership and the
+current AI-only rules/defaults. FlClash applies app fields, selected DNS
+overrides and optional system DNS after script evaluation. A selected
+`nameserver-policy` override replaces that table. App settings also determine
+`find-process-mode`; process lookup and process routing remain separate.
+
+### Validation / Error Matrix
+
+| Case | Required behavior or evidence |
+| --- | --- |
+| One or two arguments, no CommonJS globals | Same business output when no name override applies |
+| Named override with omitted name | Use general fallback, not the named upstream |
+| Top-level `rule-providers: null` | Normalize only the working copy; existing ownership guards still apply |
+| Invalid provider structure | Reject without mutating input |
+| App overwrites DNS / lookup / TUN | Inspect final config; do not infer success from the script log |
+| FlClashCore executable | Do not use standalone Mihomo `-v`, `-h` or `-t`; its first argument is an IPC address |
+
+### Good / Base / Bad Cases
+
+Base: a normal Profile selects the script and the output preserves its unknown
+rules. Good: regenerate twice, compare selected upstream and DNS, and then
+verify the host's final configuration. Bad: claim profile-name overrides work
+in FlClash or treat its YAML-unmarshal validation RPC as full Mihomo `-t`.
+
+### Tests Required
+
+The regression suite exercises the complete source in a VM without CommonJS,
+process or console, both argument shapes, unchanged input, idempotence,
+rejection and named/general upstream selection. These tests use V8 and do not
+prove native Boa/QuickJS execution. Keep native-core, generated-file and actual
+traffic evidence separate; public probes or zero ICE candidates are not proof
+of correct DNS/WebRTC paths.
+
+### Wrong vs Correct
+
+Wrong: both clients embed Mihomo, so one Node test proves both desktop apps.
+Correct: verify shared JS behavior, versioned host transforms, effective
+configuration and actual traffic as distinct layers for each OS/client pair.
+
 ## Node CLI Entry Point
 
 `scripts/sync-local-config.js` separates reusable functions from process side

@@ -133,13 +133,17 @@ node scripts/sync-local-config.js
 
 ![Clash Verge Rev 的 Profiles 页面与 Global Extend Script 入口](../assets/clash-verge-rev-global-extend-script.png)
 
+在 FlClash v0.9.2 中，在脚本列表创建脚本并粘贴同一份**生成的本地脚本**，然后打开目标 Profile 的扩展设置，选择 **Script** 模式并选中该脚本，保存后重新应用 Profile。每个需要增强的 Profile 都要绑定；只创建脚本不会使它自动作用于全部订阅。此入口适用于普通文件/订阅 Profile；该版本的 Custom Profile 构建路径不执行这里的扩展脚本。
+
+两客户端均无需为脚本增加 Node.js 包装或手动调用 `main`。宿主字段覆盖顺序及生效检查见 [双客户端接入](configuration.md#dual-client-setup)。FlClash 不传入 Profile 名称，按名称定制上游的限制见 [多 Profile 上游解析](multi-profile.md)。
+
 `just sync` 仍作为兼容别名保留，但新文档和自动生成文件均使用 `just render-local`。
 
 ### 从 Windows 复制到 Ubuntu
 
-可以把 Windows 上由 `just render-local` 生成的 `clash-verge-ai-residential.local.js` 直接复制到 Ubuntu 的 Clash Verge Rev Global Extend Script；脚本本身不包含 Windows 路径、Shell 命令或操作系统分支。生成的 `.local.js` 已嵌入 TOML 中的住宅代理地址与认证凭据，本身也是敏感文件；应通过受信通道传输、限制读权限，且不得提交到仓库、上传到公开网盘或在日志中展示。复制已渲染的 `.local.js` 后无需也不应再复制本地 TOML，但这并不降低 `.local.js` 自身的凭据保护要求。
+可以把 Windows 上由 `just render-local` 生成的 `clash-verge-ai-residential.local.js` 复制到 Ubuntu，按上述 Clash Verge Rev 或 FlClash 的入口接入；脚本本身不包含 Windows 路径、Shell 命令或操作系统分支。生成的 `.local.js` 已嵌入 TOML 中的住宅代理地址与认证凭据，本身也是敏感文件；应通过受信通道传输、限制读权限，且不得提交到仓库、上传到公开网盘或在日志中展示。复制已渲染的 `.local.js` 后无需也不应再复制本地 TOML，但这并不降低 `.local.js` 自身的凭据保护要求。
 
-Ubuntu 的 Profile 仍必须能唯一解析脚本中的 `dialer-proxy` 名称，并提供可达的机场节点、UDP 能力和兼容的 Clash Verge/Mihomo 脚本环境。仓库的 Windows/Ubuntu Node 测试只验证语法、渲染与规则合同；复制后是否能在 Ubuntu 宿主执行、以及登录与模型请求是否命中同一出口，必须用脱敏 Connections 记录人工确认，目前为 **UNVERIFIED**。
+Ubuntu 的 Profile 仍必须能唯一解析脚本中的 `dialer-proxy` 名称，并提供可达的机场节点、UDP 能力和兼容的客户端/核心。Node 测试只验证语法、渲染与规则合同，不等于 Boa/QuickJS 宿主实测。复制后须确认脚本绑定、最终 DNS 和规则仍在，并用脱敏 Connections 验证登录与模型请求的出口；真实业务运行验收仍为 **UNVERIFIED**。
 
 同步会在写入前拒绝以下配置：未知或重复的表/键、非布尔开关、缺少代理字段、无效 TOML 字符串、非 SOCKS5 类型、端口超出范围、空上游名称，或 `name` 与模板保留名称不一致。每个开关必须在公开模板中恰好匹配一个布尔常量声明，否则也会在写入前失败。错误会直接显示字段或行号，且不会留下半成品；修正 TOML 后重新运行即可。
 
@@ -157,4 +161,4 @@ Ubuntu 的 Profile 仍必须能唯一解析脚本中的 `dialer-proxy` 名称，
 just ci
 ```
 
-`just ci` 包含监控端 `monitor-check` 和根目录 `npm run ci`。它不会读取或上传本地 TOML；本地生成脚本也会被模板安全扫描排除，以免凭据干扰公开仓库检查。完成后仍应在 Clash Verge Rev 中确认 `家宽-SOCKS5.dialer-proxy` 能解析到实际机场组，并从 Connections 验证 AI 请求命中 `AI-家宽`。
+`just ci` 包含监控端 `monitor-check` 和根目录 `npm run ci`。它不会读取或上传本地 TOML；本地生成脚本也会被模板安全扫描排除，以免凭据干扰公开仓库检查。完成后仍应在所用客户端中确认 `家宽-SOCKS5.dialer-proxy` 能解析到实际机场组，并从 Connections 验证 AI 请求命中 `AI-家宽`。

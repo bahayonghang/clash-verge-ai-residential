@@ -18,10 +18,29 @@ The generated local script and local TOML are both excluded by `.gitignore`. The
 
 Two modes are supported:
 
-- Enter the actual endpoint and credentials in the ignored local TOML, then paste the generated local script into Clash Verge Rev.
+- Enter the actual endpoint and credentials in the ignored local TOML, then attach the generated local script in Clash Verge Rev or FlClash.
 - Define an existing `家宽-SOCKS5` proxy in each Profile and leave `server`, `username`, and `password` as `xxx`; the script reuses the existing endpoint and credentials.
 
 For an unauthenticated SOCKS5 service, set both `username` and `password` to empty strings. Leaving either value as `xxx` rejects configuration generation unless a same-name Profile node supplies it. The host may continue with the original Profile after an error; rejection does not prove traffic is blocked.
+
+## Windows / Ubuntu client integration {#dual-client-setup}
+
+Both clients use the same generated script and AI-only rules. These are source-review baselines, not minimum-version requirements or evidence that all four combinations have passed live validation. macOS and FlClash Android are later targets; Clash Verge Rev is outside this project's Android scope.
+
+| Client | Windows baseline | Ubuntu baseline | Script entry and limitations |
+| --- | --- | --- | --- |
+| Clash Verge Rev | 2.5.10 | 2.5.8 | Global Extend Script calls `main(config, profileName)`; profile extensions and app settings may take effect afterward. |
+| FlClash | 0.9.2 | 0.9.2 | An ordinary subscription/file Profile selects script override mode and a script, then calls `main(config)`; the custom-profile builder does not use this script path. |
+
+Clash Verge Rev processes the rule editor before the global script, then global and profile extensions, and finally restores app-owned fields. In both reviewed versions, enabled DNS override owns the filled DNS subfields, and can replace the entire `nameserver-policy` table. Current website wording differs from these versions' source. Check the actual version and final generated configuration; saving an editor is not evidence that the changes survived. [2.5.8 source](https://github.com/clash-verge-rev/clash-verge-rev/blob/4337bd85758d54d7b9044b2da3c9ac1176eae1f3/src-tauri/src/enhance/mod.rs#L916), [pinned 2.5.10 source](https://github.com/clash-verge-rev/clash-verge-rev/blob/c83f7ad529c7c9cb3d2d54a0955ef8c1b22a411b/src-tauri/src/enhance/mod.rs#L916).
+
+FlClash 0.9.2 runs the selected script before generating the effective Profile. App settings write `find-process-mode` and TUN fields; selected DNS override fields are applied afterward, with whole-table replacement of `nameserver-policy`. Append System DNS can also add `system://` to `nameserver`. To retain the script's strict DNS policy, inspect these settings and the resulting configuration; an unchanged script does not imply unchanged DNS. [Generation order](https://github.com/chen08209/FlClash/blob/7fd417fb9a9a277c6a9339a8ac87f907df7c25f7/lib/providers/actions/setup.dart#L493), [app fields and DNS](https://github.com/chen08209/FlClash/blob/7fd417fb9a9a277c6a9339a8ac87f907df7c25f7/lib/common/task.dart#L201), [DNS merge semantics](https://github.com/chen08209/FlClash/blob/7fd417fb9a9a277c6a9339a8ac87f907df7c25f7/lib/models/clash_config.dart#L1483).
+
+The script does not write TUN or top-level IPv6. Its warnings inspect the input at execution time, not the host's final values. FlClash process-lookup settings may also override the script's `always`. Process lookup supports connection attribution; do not enable process-wide routing to obtain it. Verify TUN permissions, DNS capture and system resolvers separately on Windows and Ubuntu; Windows setting names, driver behavior and log paths do not establish Ubuntu behavior.
+
+After initial setup and each subscription refresh, check at least that `AI-家宽` has only `家宽-SOCKS5`, `dialer-proxy` resolves correctly, AI rules and residential DNS policies survive, and non-AI samples still use the original Profile. FlClash Profile Preview uses its configuration-generation chain and helps compare output; a preview does not prove loading or actual network paths. Record the installed client, actual Mihomo version and mode separately.
+
+Inspect final rule order in both clients. This script prepends private DIRECT and managed AI rules to original rules; preserving user rules does not give exceptions precedence. Later FlClash added rules or Verge profile extensions may also change order. Do not silently change that policy to pass validation. See [Local configuration](local-configuration.md) for setup and [Multi-profile](multi-profile.md) for the missing-profile-name limitation.
 
 ## Reserved residential group
 

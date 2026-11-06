@@ -18,10 +18,29 @@ dialer-proxy = "🚀节点选择"
 
 支持两种模式：
 
-- 在忽略的本地 TOML 里填写真实 endpoint 和凭据，再把生成的本地脚本粘进 Clash Verge Rev。
+- 在忽略的本地 TOML 里填写真实 endpoint 和凭据，再把生成的本地脚本接入 Clash Verge Rev 或 FlClash。
 - 在每个 Profile 里预置同名 `家宽-SOCKS5` 节点，把 `server`、`username`、`password` 留成 `xxx`；脚本复用该节点的 endpoint 和凭据。
 
 无认证 SOCKS5 必须把 `username` 和 `password` 都设为 `""`。任一字段仍是 `xxx`、且 Profile 里没有同名节点补值时，脚本会拒绝生成配置；宿主可能继续使用原 Profile，不能把异常当作流量阻断。
+
+## Windows / Ubuntu 双客户端接入 {#dual-client-setup}
+
+两个客户端共用同一份生成脚本和 AI-only 规则。以下是源码核对基线，不是最低版本要求，也不代表四个组合已经通过真实流量验收。macOS 和 FlClash Android 留待后续；Clash Verge Rev 不在本项目的 Android 支持范围内。
+
+| 客户端 | Windows 基线 | Ubuntu 基线 | 脚本入口与限制 |
+| --- | --- | --- | --- |
+| Clash Verge Rev | 2.5.10 | 2.5.8 | 全局扩展脚本调用 `main(config, profileName)`；订阅扩展和应用设置可能在它之后生效。 |
+| FlClash | 0.9.2 | 0.9.2 | 普通订阅/文件 Profile 选择“脚本”覆写模式并绑定脚本，调用 `main(config)`；自建配置构建器不走这条脚本路径。 |
+
+Clash Verge Rev 的规则编辑器先于全局脚本，随后依次执行全局扩展、订阅扩展，最后恢复应用接管的字段。在上述两版源码中，启用的 DNS 覆写会接管已填写的 DNS 子字段；`nameserver-policy` 整表可能被替换。当前官网文字与这些版本的源码存在差异，因此以实际版本和最终生成配置核对，不能只凭编辑器保存成功判定生效。[2.5.8 源码](https://github.com/clash-verge-rev/clash-verge-rev/blob/4337bd85758d54d7b9044b2da3c9ac1176eae1f3/src-tauri/src/enhance/mod.rs#L916)、[2.5.10 固定源码](https://github.com/clash-verge-rev/clash-verge-rev/blob/c83f7ad529c7c9cb3d2d54a0955ef8c1b22a411b/src-tauri/src/enhance/mod.rs#L916)。
+
+FlClash 0.9.2 先执行选中的脚本，再生成实际 Profile：应用设置会写入 `find-process-mode` 和 TUN 等字段；选中的 DNS 覆写字段在脚本之后合并，其中 `nameserver-policy` 是整表替换；“追加系统 DNS”还可向 `nameserver` 加入 `system://`。需要保留脚本的严格 DNS 时，先核对这些设置及最终配置，不能把“未改脚本”当作 DNS 没变。[生成顺序](https://github.com/chen08209/FlClash/blob/7fd417fb9a9a277c6a9339a8ac87f907df7c25f7/lib/providers/actions/setup.dart#L493)、[应用字段与 DNS](https://github.com/chen08209/FlClash/blob/7fd417fb9a9a277c6a9339a8ac87f907df7c25f7/lib/common/task.dart#L201)、[DNS 合并语义](https://github.com/chen08209/FlClash/blob/7fd417fb9a9a277c6a9339a8ac87f907df7c25f7/lib/models/clash_config.dart#L1483)。
+
+脚本不写 TUN 或顶层 IPv6。它读取到的是执行时输入，告警不能证明宿主后续写出的最终值；FlClash 的查找进程设置也可能覆盖脚本写出的 `always`。查找进程仅用于连接归因，不应为此开启全量进程路由。Windows 与 Ubuntu 的 TUN 权限、DNS 接管和系统解析路径须分别验证；不要用 Windows 的设置名称、驱动结论或日志路径推断 Ubuntu。
+
+首次接入和每次订阅刷新后，至少核对：`AI-家宽` 仅含 `家宽-SOCKS5`、`dialer-proxy` 解析正确、AI 规则与住宅 DNS 策略仍在、非 AI 样本仍交给原 Profile。FlClash 的 Profile 预览来自其配置生成链，可用于比较；预览本身不是已加载或真实网络路径的证明。安装版本、实际 Mihomo 版本和运行模式须另记，不能用 GUI 版本代替核心版本。
+
+两客户端都必须检查最终规则顺序。本脚本将私网直连与 AI 托管规则放在原规则前；保留用户规则不表示用户例外优先。FlClash 后续的附加规则或 Verge 的订阅扩展也可能改变最终顺序。不要为了通过验收悄悄更改这一策略。接入步骤见 [本地配置](local-configuration.md)，无 Profile 名的上游限制见 [多 Profile](multi-profile.md)。
 
 ## 家宽组的保留名称
 

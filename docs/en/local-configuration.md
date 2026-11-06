@@ -133,13 +133,17 @@ In Clash Verge Rev open **Profiles -> Global Extend Script**, double-click the s
 
 ![Clash Verge Rev Profiles page and Global Extend Script entry](../../assets/clash-verge-rev-global-extend-script.png)
 
+In FlClash v0.9.2, create an entry in the scripts list and paste the same **generated local script**. Open the target Profile's extension settings, choose **Script** mode, select that script, save, and apply the Profile again. Bind every Profile that needs it; creating a script alone does not apply it to all subscriptions. This entry supports ordinary file/subscription Profiles; this version's Custom Profile build path does not execute this extension script.
+
+Neither client needs a Node.js wrapper or a manual `main` call. See [dual-client setup](configuration.md#dual-client-setup) for host overrides and effective-config checks. FlClash does not pass a Profile name; see [multi-profile upstream resolution](multi-profile.md) before relying on name-specific overrides.
+
 `just sync` remains as a compatibility alias. New docs and generated files use `just render-local`.
 
 ### Copy from Windows to Ubuntu
 
-You can copy the Windows `clash-verge-ai-residential.local.js` produced by `just render-local` into Ubuntu Clash Verge Rev Global Extend Script. The script contains no Windows paths, shell commands, or OS branches. The generated `.local.js` embeds the residential proxy address and credentials from the TOML, so it is sensitive: transfer over a trusted channel, restrict read permission, and do not commit it, upload it to a public drive, or print it in logs. After copying the rendered `.local.js` you should not also copy the local TOML, but that does not lower the protection required for `.local.js` itself.
+You can copy the Windows `clash-verge-ai-residential.local.js` produced by `just render-local` to Ubuntu and attach it through the Clash Verge Rev or FlClash entry above. The script contains no Windows paths, shell commands, or OS branches. The generated `.local.js` embeds the residential proxy address and credentials from the TOML, so it is sensitive: transfer over a trusted channel, restrict read permission, and do not commit it, upload it to a public drive, or print it in logs. After copying the rendered `.local.js` you should not also copy the local TOML, but that does not lower the protection required for `.local.js` itself.
 
-The Ubuntu Profile must still uniquely resolve the `dialer-proxy` name in the script and provide a reachable airport node, UDP capability, and a compatible Clash Verge/Mihomo script host. Repository Windows/Ubuntu Node tests only cover syntax, rendering, and the rule contract. Whether Ubuntu host execution works after the copy, and whether login and model requests share one exit, must be confirmed with sanitized Connections. That check is **UNVERIFIED**.
+The Ubuntu Profile must still uniquely resolve the `dialer-proxy` name in the script and provide a reachable airport node, UDP capability, and a compatible client/core. Node tests cover syntax, rendering, and the rule contract; they are not Boa/QuickJS host execution tests. After copying, check the script binding, final DNS and rules, then verify login and model-request exits with sanitized Connections. Real-service runtime acceptance remains **UNVERIFIED**.
 
 Sync refuses the following before writing: unknown or duplicate tables/keys, non-boolean switches, missing proxy fields, invalid TOML strings, a type other than SOCKS5, a port out of range, an empty upstream name, or a `name` that does not match the template reserved name. Each switch must match exactly one boolean constant declaration in the public template, or the write is refused. Errors name the field or line number and leave no partial output. Fix the TOML and rerun.
 
@@ -157,4 +161,4 @@ Run the public-template checks and regression tests:
 just ci
 ```
 
-`just ci` equals `npm run ci` plus the monitor gate. It does not read or upload the local TOML. Generated local scripts are excluded from the template safety scan so credentials do not trip the public-repo check. Afterward, still confirm in Clash Verge Rev that `家宽-SOCKS5.dialer-proxy` resolves to a real airport group, and that AI requests hit `AI-家宽` in Connections.
+`just ci` equals `npm run ci` plus the monitor gate. It does not read or upload the local TOML. Generated local scripts are excluded from the template safety scan so credentials do not trip the public-repo check. Afterward, still confirm in your client that `家宽-SOCKS5.dialer-proxy` resolves to a real airport group, and that AI requests hit `AI-家宽` in Connections.
