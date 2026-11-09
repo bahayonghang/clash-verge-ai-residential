@@ -49,6 +49,8 @@ Cursor evidence: the official enterprise network document lists exact hosts `aut
 
 Known trade-off: `downloads.claude.ai` (installer and auto-update host) sits under the `claude.ai` suffix, so it also uses the residential link. Splitting it out would require a rule that contains a dynamically resolved upstream name, which the current exact-string managed-rule cleanup model cannot safely remove. Update downloads are infrequent; the leftover cost is residential bandwidth. The `chatgpt.com` suffix also covers `help.`, `status.`, `ab.`, `events.`, and similar subdomains.
 
+Official inbound fallback is `160.79.104.0/23`, `153.61.224.0/22`, and `2607:6bc0::/48`. The English IP page listed these three ranges on 2026-11-08; the Chinese and French pages the same day still showed only the older `/23` and IPv6 `/48`. Social posts often mix those inbound ranges with outbound source ranges `160.79.104.0/21` and `153.61.208.0/20`. Outbound ranges are not client destination rules. Process captures from 2026-11-05 through 2026-11-07 listed `api.anthropic.com`, `platform.claude.com`, `bridge.claudeusercontent.com`, and `downloads.claude.ai`. The first three are already covered by an exact core rule or a product suffix, and `downloads.claude.ai` is the trade-off above. `http-intake.logs.us5.datadoghq.com` is injected only when `routing.claude_shared_dependencies` is on. Those captures are not admission evidence for new domains.
+
 ## Explicit exclusions
 
 The following classes stay on the original Profile route:

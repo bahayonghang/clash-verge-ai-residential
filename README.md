@@ -11,7 +11,7 @@ Clash Verge Rev 全局扩展脚本：默认把 Claude、ChatGPT、Gemini、Googl
 
 当前版本：`v5.11.0`。
 
-**Unreleased**：新增默认开启的 `routing.anthropic_core`、`routing.gemini_api_core`、`routing.antigravity_core`；关闭核心开关会同时撤销其专属进程兜底，Claude 核心关闭还会撤销 Anthropic IP 回退。`routing.extra` 现为默认关闭的小站分类；`routing.extra_anyrouter` 默认打开，但只在 extra 打开时把 `anyrouter.top` 送入家宽，且不写住宅 DNS。`routing.openai_auth` 与 `routing.antigravity_google_auth` 改为默认开启；已有本地 TOML 里显式写成 `false` 的值不会被覆盖，缺键时按示例补成 `true`。实际节流收益需测量。已有 `AI-家宽` 组的额外节点来源或筛选配置会被拒绝；成功输出只保留家宽成员与允许的展示信息。`routing.grok_core` 额外注入四台精确登录主机 `accounts.x.ai`、`accounts.spacex.ai`、`auth.grokusercontent.com`、`auth.grokipedia.com`；`auth.grok.com` 也由核心开关精确覆盖，关闭网页资源路由后仍保留规则与住宅 DNS。父域 `x.ai`、`spacex.ai`、`grokusercontent.com`、`grokipedia.com` 不走家宽。详见 [配置](docs/configuration.md) 和 [变更记录](CHANGELOG.md)。
+**Unreleased**：新增默认开启的 `routing.anthropic_core`、`routing.gemini_api_core`、`routing.antigravity_core`；关闭核心开关会同时撤销其专属进程兜底，Claude 核心关闭还会撤销 Anthropic IP 回退。Anthropic 入站回退新增 `153.61.224.0/22`，出站 `160.79.104.0/21` 与 `153.61.208.0/20` 不注入。`routing.extra` 现为默认关闭的小站分类；`routing.extra_anyrouter` 默认打开，但只在 extra 打开时把 `anyrouter.top` 送入家宽，且不写住宅 DNS。`routing.openai_auth` 与 `routing.antigravity_google_auth` 改为默认开启；已有本地 TOML 里显式写成 `false` 的值不会被覆盖，缺键时按示例补成 `true`。实际节流收益需测量。已有 `AI-家宽` 组的额外节点来源或筛选配置会被拒绝；成功输出只保留家宽成员与允许的展示信息。`routing.grok_core` 额外注入四台精确登录主机 `accounts.x.ai`、`accounts.spacex.ai`、`auth.grokusercontent.com`、`auth.grokipedia.com`；`auth.grok.com` 也由核心开关精确覆盖，关闭网页资源路由后仍保留规则与住宅 DNS。父域 `x.ai`、`spacex.ai`、`grokusercontent.com`、`grokipedia.com` 不走家宽。详见 [配置](docs/configuration.md) 和 [变更记录](CHANGELOG.md)。
 
 ## 核心边界
 

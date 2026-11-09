@@ -49,6 +49,8 @@ Cursor 依据：官方企业网络配置文档列出精确主机 `authenticate.c
 
 已知取舍：`downloads.claude.ai`（安装程序和自动更新主机）位于 `claude.ai` 后缀下，因此也会经过住宅链路。若将其拆出，需要注入包含动态解析上游名称的规则，而当前基于精确字符串的托管规则清理模型无法安全清理此类规则。更新下载频率较低，剩余影响仅为占用住宅链路带宽。`chatgpt.com` 后缀同样覆盖 `help.`、`status.`、`ab.`、`events.` 等子域。
 
+官方入站回退是 `160.79.104.0/23`、`153.61.224.0/22` 和 `2607:6bc0::/48`。2026-11-08 的英文 IP 页列出这三段；同日中文和法文页面仍只写旧的 `/23` 与 IPv6 `/48`。社交帖里常把出站源地址 `160.79.104.0/21`、`153.61.208.0/20` 和入站段写在一起，出站段不写入客户端目的规则。2026-11-05 至 2026-11-07 的进程监测列出 `api.anthropic.com`、`platform.claude.com`、`bridge.claudeusercontent.com`、`downloads.claude.ai`，前三者由核心精确规则或产品后缀覆盖，`downloads.claude.ai` 落在上面的取舍里。`http-intake.logs.us5.datadoghq.com` 仍只在 `routing.claude_shared_dependencies` 打开时注入。这些监测记录不是新域名的准入证据。
+
 ## 明确排除
 
 下列类别留在原 Profile 路由：

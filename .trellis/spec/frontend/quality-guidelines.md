@@ -36,6 +36,12 @@ Add focused assertions beside the relevant section in
 `tests/regression.test.js`. A new routed domain or regex requires both positive
 coverage for the intended AI endpoint and negative coverage for nearby shared,
 marketplace, update, CDN, media, advertising, telemetry, or public-DNS traffic.
+Anthropic IP fallback may add only official inbound destination ranges.
+Outbound ranges such as `160.79.104.0/21` and `153.61.208.0/20` are source
+addresses for Anthropic-originated connections and must stay out of
+`ANTHROPIC_INBOUND_IP_RULE_TEMPLATES`, with a negative test. Social-post host
+lists are not admission evidence. Telemetry hosts stay behind the default-off
+shared-dependency switch.
 `buildNameserverPolicy` writes suffix domains as `+.${domain}` and exact
 domains as the bare hostname. DNS on/off assertions must use those keys.
 A bare suffix name such as `chatgpt.com` is absent even when the route is

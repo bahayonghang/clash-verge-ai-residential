@@ -99,7 +99,7 @@ Google 核心全部交回原 Profile 时，需要同时关闭 `gemini_web_core`�
 | `routing.cursor_process_fallback` | `ROUTE_CURSOR_PROCESS_FALLBACK` | `false` | 增加 Cursor 进程级兜底规则。 | 仅在 `routing.ai_process_fallback = true` 且 `routing.cursor_core = true` 时生效，仍会捕获非 AI 请求。 |
 | `routing.claude_code_auxiliary` | `ROUTE_CLAUDE_CODE_AUXILIARY` | `false` | 路由 Claude Code 安装、更新、文档和包管理端点。 | 属于辅助流量而非推理。 |
 | `routing.ai_process_fallback` | `ENABLE_AI_PROCESS_FALLBACK` | `false` | 为核心开关开启的 Claude、OpenAI、Antigravity 增加进程兜底；Cursor 还需开启其进程开关。 | 会把进程中的非 AI 请求一并路由。查找进程由脚本写到 Mihomo 顶层 `find-process-mode: always`，与本开关无关。写在 `profile:` 下的值内核不用。 |
-| `routing.anthropic_ip_fallback` | `ENABLE_ANTHROPIC_IP_FALLBACK` | `true` | 使用 Anthropic 官方入站网段覆盖纯 IP 连接。 | 还需 `routing.anthropic_core = true`；可能捕获同网段的非核心主机。 |
+| `routing.anthropic_ip_fallback` | `ENABLE_ANTHROPIC_IP_FALLBACK` | `true` | 使用 Anthropic 官方入站网段 `160.79.104.0/23`、`153.61.224.0/22` 与 `2607:6bc0::/48` 覆盖纯 IP 连接。 | 还需 `routing.anthropic_core = true`；可能捕获同网段的非核心主机。不含出站 `160.79.104.0/21` 与 `153.61.208.0/20`。 |
 | `routing.shared_realtime_infrastructure` | `ROUTE_SHARED_REALTIME_INFRASTRUCTURE` | `false` | 路由通用 STUN/TURN 实时通信基础设施。 | 可能捕获其他应用的实时流量。 |
 | `routing.global_realtime_ports` | `ROUTE_GLOBAL_REALTIME_PORTS` | `false` | 按通用实时 UDP 端口增加规则。 | 仅在 `routing.shared_realtime_infrastructure = true` 时生效，范围很宽。 |
 | `routing.public_encrypted_dns` | `ROUTE_PUBLIC_ENCRYPTED_DNS` | `false` | 路由公共 DoH/DoT 服务。 | 会影响共享 DNS 流量。 |
