@@ -511,9 +511,12 @@ const PUBLIC_DOH_IPS = [
   "94.140.15.15/32"
 ];
 
-// Anthropic 官方“入站”网段。旧版 /21 是 Anthropic 发起外连时使用的 outbound 范围。
+// Anthropic 官方入站网段，只匹配客户端连向 API/Console 的目的地址。
+// 来源：https://platform.claude.com/docs/en/api/ip-addresses
+// 160.79.104.0/21 与 153.61.208.0/20 是 Anthropic 对外发起连接的出站范围，不注入。
 const ANTHROPIC_INBOUND_IP_RULE_TEMPLATES = [
   "IP-CIDR,160.79.104.0/23,{GROUP},no-resolve",
+  "IP-CIDR,153.61.224.0/22,{GROUP},no-resolve",
   "IP-CIDR6,2607:6bc0::/48,{GROUP},no-resolve"
 ];
 

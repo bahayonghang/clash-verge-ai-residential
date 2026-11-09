@@ -344,6 +344,7 @@ function normalizeDefaultProjection(projection) {
   assert.ok(!rules.slice(end).some(isAiDomain), "核心域名区段必须连续");
   assert.deepEqual(rules.slice(end, -baselineUserRules.length), [
     `IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`,
+    `IP-CIDR,153.61.224.0/22,${AI_GROUP},no-resolve`,
     `IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`
   ], "IP 兜底必须位于域名后、原规则前");
   assert.deepEqual(rules.slice(-baselineUserRules.length), baselineUserRules);
@@ -359,6 +360,14 @@ test("默认输出在固定 v5.11 投影上增加正则住宅 DNS、默认认证
     0,
     ...DEFAULT_AUTH_RULES,
     ...GROK_SIGNIN_EXACT_HOSTS.map((host) => `DOMAIN,${host},${AI_GROUP}`)
+  );
+  const anthropicIpv6 = `IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`;
+  const anthropicIpv6Index = expected.rules.indexOf(anthropicIpv6);
+  assert.ok(anthropicIpv6Index > 0, "v5.11 投影应保留既有 IPv6 入站规则");
+  expected.rules.splice(
+    anthropicIpv6Index,
+    0,
+    `IP-CIDR,153.61.224.0/22,${AI_GROUP},no-resolve`
   );
   expected.dns["nameserver-policy"][REGEX_DNS_POLICY_KEY] = RESIDENTIAL_DOH_URLS;
   for (const key of [...DEFAULT_AUTH_DNS_KEYS, ...GROK_SIGNIN_EXACT_HOSTS]) {
@@ -451,6 +460,7 @@ for (const entry of newCoreCases) {
       ]);
       if (entry.constant === "ROUTE_ANTHROPIC_CORE") {
         removedRules.add(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`);
+        removedRules.add(`IP-CIDR,153.61.224.0/22,${AI_GROUP},no-resolve`);
         removedRules.add(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`);
       }
       assert.deepEqual(disabled.rules, [
@@ -2136,6 +2146,8 @@ test("脚本执行两次保持幂等，并保留用户自定义非托管规则",
   assert.equal(output.rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), true);
   assert.equal(output.rules.includes(`IP-CIDR6,2607:6bc0::/32,${AI_GROUP},no-resolve`), true);
   assert.equal(output.rules.includes(`IP-CIDR,160.79.104.0/23,${AI_GROUP},no-resolve`), true);
+  assert.equal(output.rules.includes(`IP-CIDR,153.61.224.0/22,${AI_GROUP},no-resolve`), true);
+  assert.equal(output.rules.includes(`IP-CIDR,153.61.208.0/20,${AI_GROUP},no-resolve`), false);
   assert.equal(output.rules.includes(`IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`), true);
   assert.equal(new Set(output.rules).size, output.rules.length);
   assert.deepEqual(output.dns["nameserver-policy"], firstNameserverPolicy);
@@ -2540,9 +2552,20 @@ test("最终注入规则不存在重复项", () => {
   assert.equal(new Set(rules).size, rules.length);
 });
 
-test("默认注入 60 条 AI-家宽 规则", () => {
+test("默认注入 61 条 AI-家宽 规则", () => {
   const rules = buildInjectedRules().filter((rule) => rule.includes(AI_GROUP));
-  assert.equal(rules.length, 60);
+  assert.equal(rules.length, 61);
+});
+
+test("Anthropic 入站回退包含 153.61.224.0/22，不注入出站网段", () => {
+  const rules = buildInjectedRules();
+  assert.equal(rules.includes(`IP-CIDR,153.61.224.0/22,${AI_GROUP},no-resolve`), true);
+  assert.equal(rules.includes(`IP-CIDR,160.79.104.0/21,${AI_GROUP},no-resolve`), false);
+  assert.equal(rules.includes(`IP-CIDR,153.61.208.0/20,${AI_GROUP},no-resolve`), false);
+  assert.equal(
+    rules.filter((rule) => rule === `IP-CIDR,153.61.224.0/22,${AI_GROUP},no-resolve`).length,
+    1
+  );
 });
 
 test("v5.10 审计后的正向主机走家宽，退出与收窄主机不走", () => {
