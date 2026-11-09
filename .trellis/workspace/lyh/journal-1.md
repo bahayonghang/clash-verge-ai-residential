@@ -1527,3 +1527,37 @@ extra 改为默关分类，新增 extra_anyrouter；AnyRouter 开启时只走 AI
 ### Next Steps
 
 - 后续获明确授权后，单独继续客户端切换、真实路径及刷新/重启验收。
+
+
+## Session 53: 核对 Claude 监测主机并补入站网段
+
+**Date**: 2026-11-08
+**Task**: 核对 Claude 监测主机并补入站网段
+**Branch**: `dev`
+
+### Summary
+
+X 监测里的五台主机已有归属。公开模板只新增官方入站 153.61.224.0/22，出站网段和 Datadog 不进默认家宽。
+
+### Main Changes
+
+- 注入 IP-CIDR 153.61.224.0/22，并负向断言不含 160.79.104.0/21 与 153.61.208.0/20
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4dadcaa` | (see git log) |
+| `813012c` | (see git log) |
+
+### Testing
+
+- [OK] npm run ci，268 项通过；未跑真实 Clash Profile，未跑 just ci
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 本机需自行 just render-local 后，生成的 local.js 才会带上新网段
