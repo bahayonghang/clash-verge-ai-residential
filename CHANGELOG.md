@@ -20,6 +20,7 @@
 
 ### 变更
 
+- `routing.claude_shared_dependencies` 的精确主机增加 Android 版 Claude 实测的 Sift 风控主机 `api3.siftscience.com`（不收 `siftscience.com` / `sift.com` 后缀）。开关仍默认关闭；`browser-intake-us5-datadoghq.com` 早已在该组内。`firebaselogging.googleapis.com` 是所有 Firebase 应用共享的遥测主机，不纳入。
 - Anthropic IP 回退增加官方入站网段 `153.61.224.0/22`。英文 IP 页同时列出该段；出站范围 `160.79.104.0/21` 与 `153.61.208.0/20` 不注入。2026-11 进程监测里的 `api.anthropic.com`、`platform.claude.com`、`bridge.claudeusercontent.com`、`downloads.claude.ai` 已由现有规则覆盖；Datadog 日志主机与 `clau.de` 不进入默认家宽。默认 `AI-家宽` 规则数由 60 增至 61。
 - `routing.grok_core` 额外注入四台精确登录主机：`accounts.x.ai`、`accounts.spacex.ai`、`auth.grokusercontent.com`、`auth.grokipedia.com`。来源是 xAI 登录域说明的最小主机名单。父域 `x.ai`、`spacex.ai`、`grokusercontent.com`、`grokipedia.com` 以及 `slack.hooks.x.ai` 仍不走家宽。默认注入的 `AI-家宽` 规则数量由 55 增至 59。
 - `routing.openai_auth` 与 `routing.antigravity_google_auth` 默认改为开启。前者覆盖 `auth.openai.com` 后缀和精确主机 `auth0.openai.com`；后者覆盖共享 Google 登录入口，包括 `accounts.google.com`、`ssl.gstatic.com` 和 `www.gstatic.com`。`routing.openai_web_assets` 与 `routing.openai_shared_dependencies` 仍默认关闭。已有本地 TOML 中显式写出的 `false` 不会被覆盖；缺失键按示例补成 `true`。默认注入的 `AI-家宽` 规则数量由 45 增至 55。

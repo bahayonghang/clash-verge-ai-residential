@@ -422,7 +422,10 @@ const CLAUDE_SHARED_SUFFIX_DOMAINS = [
 const CLAUDE_SHARED_EXACT_DOMAINS = [
   "browser-intake-us5-datadoghq.com",
   "http-intake.logs.us5.datadoghq.com",
-  "cdn.usefathom.com"
+  "cdn.usefathom.com",
+  // Android 版 Claude 的 Sift 风控上报（Connections 实测）；只收 exact，
+  // 不收 siftscience.com / sift.com 后缀。
+  "api3.siftscience.com"
 ];
 
 const ANTIGRAVITY_GOOGLE_AUTH_DOMAINS = [

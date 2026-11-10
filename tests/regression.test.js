@@ -1840,6 +1840,25 @@ test("Claude、ChatGPT、Antigravity 核心域名仍走家宽，共享第三方�
   assert.equal(rules.includes(`DOMAIN-SUFFIX,openai.com,${AI_GROUP}`), false);
 });
 
+test("Claude 共享依赖：Android 实测的 Datadog 与 Sift 主机仅在开关打开时精确路由", () => {
+  const optInHosts = ["browser-intake-us5-datadoghq.com", "api3.siftscience.com"];
+  const neverRouted = [
+    "cdn.siftscience.com",
+    "siftscience.com",
+    "api.sift.com",
+    "browser-intake-datadoghq.com",
+    "firebaselogging.googleapis.com",
+    "firebaselogging-pa.googleapis.com"
+  ];
+  assertNoAiRoute(buildInjectedRules(), [...optInHosts, ...neverRouted]);
+  withPatchedSwitches({ ROUTE_CLAUDE_SHARED_DEPENDENCIES: true }, (patched) => {
+    const rules = patched.buildInjectedRules();
+    assertAiRoute(rules, optInHosts);
+    assertNoAiRoute(rules, neverRouted);
+    assert.equal(rules.includes(`DOMAIN,api3.siftscience.com,${AI_GROUP}`), true);
+  });
+});
+
 test("OpenAI 第一方认证默认开启，网页资源默认关闭，二者可独立组合", () => {
   assert.equal(ROUTE_OPENAI_AUTH, true);
   assert.equal(ROUTE_ANTIGRAVITY_GOOGLE_AUTH, true);
