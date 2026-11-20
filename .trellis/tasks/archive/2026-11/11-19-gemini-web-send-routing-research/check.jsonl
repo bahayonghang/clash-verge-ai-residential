@@ -1,0 +1,2 @@
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Validate target, negative controls and cleanup"}
+{"file":".trellis/tasks/archive/2026-11/11-19-gemini-web-send-routing-research/research/routing-findings.md","reason":"Validate code against observed host only"}
