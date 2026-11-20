@@ -1561,3 +1561,33 @@ X 监测里的五台主机已有归属。公开模板只新增官方入站 153.6
 ### Next Steps
 
 - 本机需自行 just render-local 后，生成的 local.js 才会带上新网段
+
+
+## Session 54: Gemini 网页会话分流与普通浏览器验收
+
+**Date**: 2026-11-19
+**Task**: Gemini 网页会话分流与普通浏览器验收
+**Branch**: `dev`
+
+### Summary
+
+用户将更新后的精确分流同步到 FlClash，在普通浏览器发出文字并收到 Gemini 回复。
+
+### Main Changes
+
+- 将 geminiweb-pa.clients6.google.com 纳入现有 Gemini 网页开关，并覆盖开关撤销和相邻主机排除。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `32e9f6f` | (see git log) |
+
+### Testing
+
+- [OK] 完整 just ci 通过，根目录 270 项测试通过；本机生成配置的精确规则优先于通用 Google 规则。
+- [OK] 用户提供普通浏览器成功对话的截图，脱敏结论已存入本任务归档。
+
+### Status
+
+[OK] **Completed**
