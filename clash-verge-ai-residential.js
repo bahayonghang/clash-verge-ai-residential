@@ -126,7 +126,7 @@ const ROUTE_ANTIGRAVITY_PROJECT_APIS = false;
 // Antigravity 更新、扩展市场和遥测默认关闭。
 const ROUTE_ANTIGRAVITY_UPDATE_AND_TELEMETRY = false;
 
-// Gemini Web / Google AI Studio 产品入口。
+// Gemini Web / Google AI Studio 产品入口与会话端点。
 const ROUTE_GEMINI_WEB_CORE = true;
 
 // Vertex AI / Agent Platform 全局、多区域与区域端点；Antigravity 企业推理走这些主机。
@@ -283,6 +283,8 @@ const GEMINI_WEB_SUFFIX_DOMAINS = [
 ];
 
 const GEMINI_WEB_EXACT_DOMAINS = [
+  // Gemini 网页版发送消息时使用的 processSession 主机。
+  "geminiweb-pa.clients6.google.com",
   // Google AI Studio 浏览器端 RPC、权限与流式通道。无官方防火墙清单，UNVERIFIED。
   "alkalicore-pa.clients6.google.com",
   "alkalimakersuite-pa.clients6.google.com",

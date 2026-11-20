@@ -20,6 +20,7 @@
 
 ### 变更
 
+- `routing.gemini_web_core` 新增 Gemini 网页版 `processSession` 的精确主机 `geminiweb-pa.clients6.google.com`，让发送消息和打开网页使用同一个家宽策略组。关闭该开关会同时撤销会话主机的路由和住宅 DNS 策略。
 - `routing.claude_shared_dependencies` 的精确主机增加 Android 版 Claude 实测的 Sift 风控主机 `api3.siftscience.com`（不收 `siftscience.com` / `sift.com` 后缀）。开关仍默认关闭；`browser-intake-us5-datadoghq.com` 早已在该组内。`firebaselogging.googleapis.com` 是所有 Firebase 应用共享的遥测主机，不纳入。
 - Anthropic IP 回退增加官方入站网段 `153.61.224.0/22`。英文 IP 页同时列出该段；出站范围 `160.79.104.0/21` 与 `153.61.208.0/20` 不注入。2026-11 进程监测里的 `api.anthropic.com`、`platform.claude.com`、`bridge.claudeusercontent.com`、`downloads.claude.ai` 已由现有规则覆盖；Datadog 日志主机与 `clau.de` 不进入默认家宽。默认 `AI-家宽` 规则数由 60 增至 61。
 - `routing.grok_core` 额外注入四台精确登录主机：`accounts.x.ai`、`accounts.spacex.ai`、`auth.grokusercontent.com`、`auth.grokipedia.com`。来源是 xAI 登录域说明的最小主机名单。父域 `x.ai`、`spacex.ai`、`grokusercontent.com`、`grokipedia.com` 以及 `slack.hooks.x.ai` 仍不走家宽。默认注入的 `AI-家宽` 规则数量由 55 增至 59。

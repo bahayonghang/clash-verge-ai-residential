@@ -283,6 +283,7 @@ const DEFAULT_AUTH_DNS_KEYS = [
   "ssl.gstatic.com",
   "www.gstatic.com"
 ];
+const GEMINI_WEB_SESSION_HOST = "geminiweb-pa.clients6.google.com";
 const GROK_SIGNIN_EXACT_HOSTS = [
   "auth.grok.com",
   "accounts.x.ai",
@@ -352,13 +353,14 @@ function normalizeDefaultProjection(projection) {
   return normalizeObjectKeys({ ...projection, rules });
 }
 
-test("默认输出在固定 v5.11 投影上增加正则住宅 DNS、默认认证路由与 Grok 登录精确主机", () => {
+test("默认输出与固定 v5.11 投影及已知路由和 DNS 增量一致", () => {
   assert.equal(routingBaseline.baselineCommit, "063c5561b9e81e42f89d7966a5d1a9772bdc44b3");
   const expected = structuredClone(routingBaseline.projection);
   expected.rules.splice(
     16,
     0,
     ...DEFAULT_AUTH_RULES,
+    `DOMAIN,${GEMINI_WEB_SESSION_HOST},${AI_GROUP}`,
     ...GROK_SIGNIN_EXACT_HOSTS.map((host) => `DOMAIN,${host},${AI_GROUP}`)
   );
   const anthropicIpv6 = `IP-CIDR6,2607:6bc0::/48,${AI_GROUP},no-resolve`;
@@ -370,7 +372,7 @@ test("默认输出在固定 v5.11 投影上增加正则住宅 DNS、默认认证
     `IP-CIDR,153.61.224.0/22,${AI_GROUP},no-resolve`
   );
   expected.dns["nameserver-policy"][REGEX_DNS_POLICY_KEY] = RESIDENTIAL_DOH_URLS;
-  for (const key of [...DEFAULT_AUTH_DNS_KEYS, ...GROK_SIGNIN_EXACT_HOSTS]) {
+  for (const key of [...DEFAULT_AUTH_DNS_KEYS, GEMINI_WEB_SESSION_HOST, ...GROK_SIGNIN_EXACT_HOSTS]) {
     expected.dns["nameserver-policy"][key] = RESIDENTIAL_DOH_URLS;
   }
 
@@ -1365,6 +1367,26 @@ test("Gemini 核心产品、Developer API 与 Vertex AI 端点走家宽", () => 
     "cloudcode-pa.googleapis.com",
     "daily-cloudcode-pa.googleapis.com"
   ]);
+});
+
+test("Gemini 网页会话主机精确分流，并随网页开关清理路由与 DNS", () => {
+  const host = GEMINI_WEB_SESSION_HOST;
+  const rule = `DOMAIN,${host},${AI_GROUP}`;
+  const googleRule = "DOMAIN-KEYWORD,google,Proxy";
+  const profile = baselineProfile();
+  profile.rules.unshift(googleRule);
+  const enabled = quietMain(profile, "fixture");
+  assert.ok(enabled.rules.includes(rule));
+  assert.ok(enabled.rules.indexOf(rule) < enabled.rules.indexOf(googleRule));
+  assert.deepEqual(enabled.dns["nameserver-policy"][host], RESIDENTIAL_DOH_URLS);
+  assertNoAiRoute(enabled.rules, [`sub.${host}`, "waa-pa.clients6.google.com", "play.google.com"]);
+
+  withPatchedSwitches({ ROUTE_GEMINI_WEB_CORE: false }, (patched) => {
+    const disabled = quietMainWith(patched, enabled, "fixture");
+    assertNoAiRoute(disabled.rules, [host]);
+    assert.equal(host in disabled.dns["nameserver-policy"], false);
+    assert.deepEqual(quietMain(disabled, "fixture"), enabled);
+  });
 });
 
 test("Antigravity language_server 的 daily cloudcode 端点走家宽", () => {
@@ -2571,9 +2593,9 @@ test("最终注入规则不存在重复项", () => {
   assert.equal(new Set(rules).size, rules.length);
 });
 
-test("默认注入 61 条 AI-家宽 规则", () => {
+test("默认注入 62 条 AI-家宽 规则", () => {
   const rules = buildInjectedRules().filter((rule) => rule.includes(AI_GROUP));
-  assert.equal(rules.length, 61);
+  assert.equal(rules.length, 62);
 });
 
 test("Anthropic 入站回退包含 153.61.224.0/22，不注入出站网段", () => {
